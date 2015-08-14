@@ -293,7 +293,7 @@ static int aducm360_write_block_sync(struct flash_bank *bank,
 	//  ----- Allocate space in the target's RAM for the user application's object code -----
 	while (target_alloc_working_area_try
 	       (target, target_buffer_size, &target_buffer) != ERROR_OK) {
-		LOG_ERROR("couldn't allocate a buffer space of 0x%08lX bytes in the target's SRAM.\n",
+		LOG_DEBUG("couldn't allocate a buffer space of 0x%08lX bytes in the target's SRAM.\n",
 		     (unsigned long)target_buffer_size);
 		target_buffer_size /= 2;
 		if (target_buffer_size <= 256) {	// No room available
@@ -442,7 +442,7 @@ static int aducm360_write_block_async(struct flash_bank *bank,
 	//  ----- Allocate space in the target's RAM for the user application's object code -----
 	while (target_alloc_working_area_try
 	       (target, target_buffer_size, &target_buffer) != ERROR_OK) {
-		LOG_ERROR("couldn't allocate a buffer space of 0x%08lX bytes in the target's SRAM.\n",
+		LOG_DEBUG("couldn't allocate a buffer space of 0x%08lX bytes in the target's SRAM.\n",
 		     (unsigned long)target_buffer_size);
 		target_buffer_size /= 2;
 		if (target_buffer_size <= 256) {	// No room available
