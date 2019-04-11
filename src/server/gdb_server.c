@@ -2004,52 +2004,58 @@ static int gdb_memory_map(struct connection *connection,
 				"length=\"" TARGET_ADDR_FMT "\"/>\n",
 				ram_start, p->base - ram_start);
 
-		/* Report adjacent groups of same-size sectors.  So for
-		 * example top boot CFI flash will list an initial region
-		 * with several large sectors (maybe 128KB) and several
-		 * smaller ones at the end (maybe 32KB).  STR7 will have
-		 * regions with 8KB, 32KB, and 64KB sectors; etc.
-		 */
-		for (unsigned int j = 0; j < p->num_sectors; j++) {
-
-			/* Maybe start a new group of sectors. */
-			if (sector_size == 0) {
-				if (p->sectors[j].offset + p->sectors[j].size > p->size) {
-					LOG_WARNING("The flash sector at offset 0x%08" PRIx32
-						" overflows the end of %s bank.",
-						p->sectors[j].offset, p->name);
-					LOG_WARNING("The rest of bank will not show in gdb memory map.");
-					break;
-				}
-				target_addr_t start;
-				start = p->base + p->sectors[j].offset;
-				xml_printf(&retval, &xml, &pos, &size,
-					"<memory type=\"flash\" "
-					"start=\"" TARGET_ADDR_FMT "\" ",
-					start);
-				sector_size = p->sectors[j].size;
-				group_len = sector_size;
-			} else {
-				group_len += sector_size; /* equal to p->sectors[j].size */
-			}
-
-			/* Does this finish a group of sectors?
-			 * If not, continue an already-started group.
-			 */
-			if (j < p->num_sectors - 1
-					&& p->sectors[j + 1].size == sector_size
-					&& p->sectors[j + 1].offset == p->sectors[j].offset + sector_size
-					&& p->sectors[j + 1].offset + p->sectors[j + 1].size <= p->size)
-				continue;
-
+		if (p->read_only) {
 			xml_printf(&retval, &xml, &pos, &size,
-				"length=\"0x%x\">\n"
-				"<property name=\"blocksize\">"
-				"0x%x</property>\n"
-				"</memory>\n",
-				group_len,
-				sector_size);
-			sector_size = 0;
+				"<memory type=\"rom\" start=\"" TARGET_ADDR_FMT "\" "
+				"length=\"0x%x\"/>\n",
+				p->base, p->size);
+		} else {
+			/* Report adjacent groups of same-size sectors.  So for
+			 * example top boot CFI flash will list an initial region
+			 * with several large sectors (maybe 128KB) and several
+			 * smaller ones at the end (maybe 32KB).  STR7 will have
+			 * regions with 8KB, 32KB, and 64KB sectors; etc.
+			 */
+			for (unsigned int j = 0; j < p->num_sectors; j++) {
+				// Maybe start a new group of sectors
+				if (sector_size == 0) {
+					if (p->sectors[j].offset + p->sectors[j].size > p->size) {
+						LOG_WARNING("The flash sector at offset 0x%08" PRIx32
+							" overflows the end of %s bank.",
+							p->sectors[j].offset, p->name);
+						LOG_WARNING("The rest of bank will not show in gdb memory map.");
+						break;
+					}
+					target_addr_t start;
+					start = p->base + p->sectors[j].offset;
+					xml_printf(&retval, &xml, &pos, &size,
+						"<memory type=\"flash\" "
+						"start=\"" TARGET_ADDR_FMT "\" ",
+						start);
+					sector_size = p->sectors[j].size;
+					group_len = sector_size;
+				} else {
+					group_len += sector_size; /* equal to p->sectors[j].size */
+				}
+
+				/* Does this finish a group of sectors?
+				 * If not, continue an already-started group.
+				 */
+				if (j < p->num_sectors - 1
+						&& p->sectors[j + 1].size == sector_size
+						&& p->sectors[j + 1].offset == p->sectors[j].offset + sector_size
+						&& p->sectors[j + 1].offset + p->sectors[j + 1].size <= p->size)
+					continue;
+
+				xml_printf(&retval, &xml, &pos, &size,
+					"length=\"0x%x\">\n"
+					"<property name=\"blocksize\">"
+					"0x%x</property>\n"
+					"</memory>\n",
+					group_len,
+					sector_size);
+				sector_size = 0;
+			}
 		}
 
 		ram_start = p->base + p->size;
