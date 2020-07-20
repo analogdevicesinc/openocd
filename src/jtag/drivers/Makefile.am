@@ -164,6 +164,9 @@ endif
 if OPENJTAG
 DRIVERFILES += %D%/openjtag.c
 endif
+if ICE_1000
+DRIVERFILES += %D%/ice1000.c
+endif
 if CMSIS_DAP
 DRIVERFILES += %D%/cmsis_dap_usb.c
 endif
