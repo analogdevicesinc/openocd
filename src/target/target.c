@@ -4634,6 +4634,8 @@ enum target_cfg_param {
 	TCFG_RTOS,
 	TCFG_DEFER_EXAMINE,
 	TCFG_GDB_PORT,
+	TCFG_RESTART_CTI_REG_ADDR,
+	TCFG_RESTART_CTI_CHANNEL,
 };
 
 static Jim_Nvp nvp_config_opts[] = {
@@ -4650,6 +4652,8 @@ static Jim_Nvp nvp_config_opts[] = {
 	{ .name = "-rtos",             .value = TCFG_RTOS },
 	{ .name = "-defer-examine",    .value = TCFG_DEFER_EXAMINE },
 	{ .name = "-gdb-port",         .value = TCFG_GDB_PORT },
+	{ .name = "-restart-cti-reg-addr", .value = TCFG_RESTART_CTI_REG_ADDR },
+	{ .name = "-restart-cti-channel", .value = TCFG_RESTART_CTI_CHANNEL },
 	{ .name = NULL, .value = -1 }
 };
 
@@ -4955,6 +4959,35 @@ no_params:
 					goto no_params;
 			}
 			Jim_SetResultString(goi->interp, target->gdb_port_override ? : "undefined", -1);
+			/* loop for more */
+			break;
+
+		case TCFG_RESTART_CTI_REG_ADDR:
+			if (goi->isconfigure) {
+				e = Jim_GetOpt_Wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				target->restart_cti_reg_addr = (uint32_t)w;
+				target->restart_use_cti = true;
+			} else {
+				if (goi->argc != 0)
+					goto no_params;
+			}
+			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->restart_cti_reg_addr));
+			/* loop for more */
+			break;
+
+		case TCFG_RESTART_CTI_CHANNEL:
+			if (goi->isconfigure) {
+				e = Jim_GetOpt_Wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				target->restart_cti_channel = (int32_t)w;
+			} else {
+				if (goi->argc != 0)
+					goto no_params;
+			}
+			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->restart_cti_channel));
 			/* loop for more */
 			break;
 		}
