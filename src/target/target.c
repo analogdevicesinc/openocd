@@ -176,10 +176,10 @@ static const Jim_Nvp nvp_error_target[] = {
 	{ .value = ERROR_TARGET_TIMEOUT, .name = "err-timeout" },
 	{ .value = ERROR_TARGET_NOT_HALTED, .name = "err-not-halted" },
 	{ .value = ERROR_TARGET_FAILURE, .name = "err-failure" },
-	{ .value = ERROR_TARGET_UNALIGNED_ACCESS, .name = "err-unaligned-access" },
-	{ .value = ERROR_TARGET_DATA_ABORT, .name = "err-data-abort" },
-	{ .value = ERROR_TARGET_RESOURCE_NOT_AVAILABLE, .name = "err-resource-not-available" },
-	{ .value = ERROR_TARGET_TRANSLATION_FAULT, .name = "err-translation-fault" },
+	{ .value = ERROR_TARGET_UNALIGNED_ACCESS   , .name = "err-unaligned-access" },
+	{ .value = ERROR_TARGET_DATA_ABORT , .name = "err-data-abort" },
+	{ .value = ERROR_TARGET_RESOURCE_NOT_AVAILABLE , .name = "err-resource-not-available" },
+	{ .value = ERROR_TARGET_TRANSLATION_FAULT  , .name = "err-translation-fault" },
 	{ .value = ERROR_TARGET_NOT_RUNNING, .name = "err-not-running" },
 	{ .value = ERROR_TARGET_NOT_EXAMINED, .name = "err-not-examined" },
 	{ .value = -1, .name = NULL }
@@ -229,10 +229,10 @@ static const Jim_Nvp nvp_target_event[] = {
 	{ .value = TARGET_EVENT_GDB_DETACH, .name = "gdb-detach" },
 
 	{ .value = TARGET_EVENT_GDB_FLASH_WRITE_START, .name = "gdb-flash-write-start" },
-	{ .value = TARGET_EVENT_GDB_FLASH_WRITE_END,   .name = "gdb-flash-write-end"   },
+	{ .value = TARGET_EVENT_GDB_FLASH_WRITE_END  , .name = "gdb-flash-write-end"   },
 
 	{ .value = TARGET_EVENT_GDB_FLASH_ERASE_START, .name = "gdb-flash-erase-start" },
-	{ .value = TARGET_EVENT_GDB_FLASH_ERASE_END,   .name = "gdb-flash-erase-end" },
+	{ .value = TARGET_EVENT_GDB_FLASH_ERASE_END  , .name = "gdb-flash-erase-end" },
 
 	{ .value = TARGET_EVENT_TRACE_CONFIG, .name = "trace-config" },
 
@@ -249,15 +249,15 @@ static const Jim_Nvp nvp_target_state[] = {
 };
 
 static const Jim_Nvp nvp_target_debug_reason[] = {
-	{ .name = "debug-request",             .value = DBG_REASON_DBGRQ },
-	{ .name = "breakpoint",                .value = DBG_REASON_BREAKPOINT },
-	{ .name = "watchpoint",                .value = DBG_REASON_WATCHPOINT },
+	{ .name = "debug-request"            , .value = DBG_REASON_DBGRQ },
+	{ .name = "breakpoint"               , .value = DBG_REASON_BREAKPOINT },
+	{ .name = "watchpoint"               , .value = DBG_REASON_WATCHPOINT },
 	{ .name = "watchpoint-and-breakpoint", .value = DBG_REASON_WPTANDBKPT },
-	{ .name = "single-step",               .value = DBG_REASON_SINGLESTEP },
-	{ .name = "target-not-halted",         .value = DBG_REASON_NOTHALTED  },
-	{ .name = "program-exit",              .value = DBG_REASON_EXIT },
-	{ .name = "exception-catch",           .value = DBG_REASON_EXC_CATCH },
-	{ .name = "undefined",                 .value = DBG_REASON_UNDEFINED },
+	{ .name = "single-step"              , .value = DBG_REASON_SINGLESTEP },
+	{ .name = "target-not-halted"        , .value = DBG_REASON_NOTHALTED  },
+	{ .name = "program-exit"             , .value = DBG_REASON_EXIT },
+	{ .name = "exception-catch"          , .value = DBG_REASON_EXC_CATCH },
+	{ .name = "undefined"                , .value = DBG_REASON_UNDEFINED },
 	{ .name = NULL, .value = -1 },
 };
 
@@ -271,10 +271,10 @@ static const Jim_Nvp nvp_target_endian[] = {
 
 static const Jim_Nvp nvp_reset_modes[] = {
 	{ .name = "unknown", .value = RESET_UNKNOWN },
-	{ .name = "run",     .value = RESET_RUN },
-	{ .name = "halt",    .value = RESET_HALT },
-	{ .name = "init",    .value = RESET_INIT },
-	{ .name = NULL,      .value = -1 },
+	{ .name = "run"    , .value = RESET_RUN },
+	{ .name = "halt"   , .value = RESET_HALT },
+	{ .name = "init"   , .value = RESET_INIT },
+	{ .name = NULL     , .value = -1 },
 };
 
 const char *debug_reason_name(struct target *t)
@@ -2892,7 +2892,7 @@ COMMAND_HANDLER(handle_reg_command)
 				} else {
 					command_print(CMD, "(%i) %s (/%" PRIu32 ")",
 							  count, reg->name,
-							  reg->size);
+							  reg->size) ;
 				}
 			}
 			cache = cache->next;
@@ -3344,12 +3344,15 @@ COMMAND_HANDLER(handle_mw_command)
 	if (CMD_ARGC < 2)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	bool physical = strcmp(CMD_ARGV[0], "phys") == 0;
+	bool ignore_data_abort = strcmp(CMD_ARGV[0], "ignore-data-abort") == 0;
 	target_write_fn fn;
-	if (physical) {
+	if (physical || ignore_data_abort) {
 		CMD_ARGC--;
 		CMD_ARGV++;
-		fn = target_write_phys_memory;
-	} else
+	} 
+	if (physical)
+	    fn = target_write_phys_memory;
+	else
 		fn = target_write_memory;
 	if ((CMD_ARGC < 2) || (CMD_ARGC > 3))
 		return ERROR_COMMAND_SYNTAX_ERROR;
@@ -3383,7 +3386,14 @@ COMMAND_HANDLER(handle_mw_command)
 			return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	return target_fill_mem(target, address, fn, wordsize, value, count);
+	int retval = target_fill_mem(target, address, fn, wordsize, value, count);
+
+	if (retval == ERROR_TARGET_DATA_ABORT && ignore_data_abort) {
+		LOG_DEBUG("data abort from command '%s' ignored as requested", CMD_NAME);
+		retval = ERROR_OK;
+	}
+
+	return retval;
 }
 
 static COMMAND_HELPER(parse_load_image_command_CMD_ARGV, struct image *image,
@@ -4645,7 +4655,7 @@ static Jim_Nvp nvp_config_opts[] = {
 	{ .name = "-work-area-phys",   .value = TCFG_WORK_AREA_PHYS },
 	{ .name = "-work-area-size",   .value = TCFG_WORK_AREA_SIZE },
 	{ .name = "-work-area-backup", .value = TCFG_WORK_AREA_BACKUP },
-	{ .name = "-endian",           .value = TCFG_ENDIAN },
+	{ .name = "-endian" ,          .value = TCFG_ENDIAN },
 	{ .name = "-coreid",           .value = TCFG_COREID },
 	{ .name = "-chain-position",   .value = TCFG_CHAIN_POSITION },
 	{ .name = "-dbgbase",          .value = TCFG_DBGBASE },
@@ -6342,21 +6352,21 @@ static const struct command_registration target_exec_command_handlers[] = {
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory word",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "mwh",
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory half-word",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "mwb",
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory byte",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "bp",
