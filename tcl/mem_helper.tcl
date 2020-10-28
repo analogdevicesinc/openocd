@@ -54,9 +54,9 @@ add_help_text pmrw "Returns value of word in physical memory."
 # pmmw: "physical memory modify word", updates value of $reg
 #       $reg <== ((value & ~$clearbits) | $setbits)
 proc pmmw {reg setbits clearbits} {
-set old [pmrw $reg]
-set new [expr ($old & ~$clearbits) | $setbits]
-mww phys $reg $new
+	set old [pmrw $reg]
+	set new [expr ($old & ~$clearbits) | $setbits]
+	mww phys $reg $new
 }
 
 add_usage_text pmmw "address setbits clearbits"
