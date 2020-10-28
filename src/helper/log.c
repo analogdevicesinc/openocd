@@ -43,6 +43,8 @@
 int debug_level = -1;
 
 static FILE *log_output;
+static FILE *warning_output;
+static FILE *error_output;
 static struct log_callback *log_callbacks;
 
 static int64_t last_time;
@@ -91,10 +93,19 @@ static void log_puts(enum log_levels level,
 	const char *string)
 {
 	char *f;
+	FILE *output;
+
+	if (level == LOG_LVL_WARNING)
+		output = warning_output;
+	else if (level == LOG_LVL_ERROR)
+		output = error_output;
+	else
+		output = log_output;
+	
 	if (level == LOG_LVL_OUTPUT) {
 		/* do not prepend any headers, just print out what we were given and return */
-		fputs(string, log_output);
-		fflush(log_output);
+		fputs(string, output);
+		fflush(output);
 		return;
 	}
 
@@ -110,7 +121,7 @@ static void log_puts(enum log_levels level,
 			struct mallinfo info;
 			info = mallinfo();
 #endif
-			fprintf(log_output, "%s%d %" PRId64 " %s:%d %s()"
+			fprintf(output, "%s%d %" PRId64 " %s:%d %s()"
 #ifdef _DEBUG_FREE_SPACE_
 				" %d"
 #endif
@@ -122,7 +133,7 @@ static void log_puts(enum log_levels level,
 		} else {
 			/* if we are using gdb through pipes then we do not want any output
 			 * to the pipe otherwise we get repeated strings */
-			fprintf(log_output, "%s%s",
+			fprintf(output, "%s%s",
 				(level > LOG_LVL_USER) ? log_strings[level + 1] : "", string);
 		}
 	} else {
@@ -130,7 +141,7 @@ static void log_puts(enum log_levels level,
 		 *nothing. */
 	}
 
-	fflush(log_output);
+	fflush(output);
 
 	/* Never forward LOG_LVL_DEBUG, too verbose and they can be found in the log if need be */
 	if (level <= LOG_LVL_INFO)
@@ -227,6 +238,21 @@ COMMAND_HANDLER(handle_log_output_command)
 		}
 		log_output = stderr;
 		LOG_DEBUG("set log_output to default");
+		
+		if (warning_output != stderr && warning_output != NULL) {
+			/* Close previous log file, if it was open and wasn't stderr. */
+			fclose(warning_output);
+		}
+		warning_output = stderr;
+		LOG_DEBUG("set warning_output to default");
+		
+		if (error_output != stderr && error_output != NULL) {
+			/* Close previous log file, if it was open and wasn't stderr. */
+			fclose(error_output);
+		}
+		error_output = stderr;
+		LOG_DEBUG("set error_output to default");
+		
 		return ERROR_OK;
 	}
 	if (CMD_ARGC == 1) {
@@ -241,6 +267,21 @@ COMMAND_HANDLER(handle_log_output_command)
 		}
 		log_output = file;
 		LOG_DEBUG("set log_output to \"%s\"", CMD_ARGV[0]);
+		
+		if (warning_output != stderr && warning_output != NULL) {
+			/* Close previous log file, if it was open and wasn't stderr. */
+			fclose(warning_output);
+		}
+		warning_output = file;
+		LOG_DEBUG("set warning_output to \"%s\"", CMD_ARGV[0]);
+		
+		if (error_output != stderr && error_output != NULL) {
+			/* Close previous log file, if it was open and wasn't stderr. */
+			fclose(error_output);
+		}
+		error_output = file;
+		LOG_DEBUG("set error_output to \"%s\"", CMD_ARGV[0]);
+		
 		return ERROR_OK;
 	}
 
@@ -292,6 +333,12 @@ void log_init(void)
 
 	if (log_output == NULL)
 		log_output = stderr;
+	
+	if (warning_output == NULL)
+		warning_output = stderr;
+	
+	if (error_output == NULL)
+		error_output = stderr;
 
 	start = last_time = timeval_ms();
 }
