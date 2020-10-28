@@ -1,7 +1,7 @@
 This is openocd.info, produced by makeinfo version 6.5 from
 openocd.texi.
 
-This User's Guide documents release 0.10.0+dev, dated 20 October 2020,
+This User's Guide documents release 0.10.0+dev, dated 28 October 2020,
 of the Open On-Chip Debugger (OpenOCD).
 
    * Copyright (C) 2008 The OpenOCD Project
@@ -27,7 +27,7 @@ File: openocd.info,  Node: Top,  Next: About,  Up: (dir)
 OpenOCD User's Guide
 ********************
 
-This User's Guide documents release 0.10.0+dev, dated 20 October 2020,
+This User's Guide documents release 0.10.0+dev, dated 28 October 2020,
 of the Open On-Chip Debugger (OpenOCD).
 
    * Copyright (C) 2008 The OpenOCD Project

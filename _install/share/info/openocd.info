@@ -1,7 +1,7 @@
 This is openocd.info, produced by makeinfo version 6.5 from
 openocd.texi.
 
-This User's Guide documents release 0.10.0+dev, dated 20 October 2020,
+This User's Guide documents release 0.10.0+dev, dated 28 October 2020,
 of the Open On-Chip Debugger (OpenOCD).
 
    * Copyright (C) 2008 The OpenOCD Project
@@ -91,34 +91,34 @@ Node: Flash Programming301994
 Node: PLD/FPGA Commands303607
 Node: General Commands305771
 Ref: debuglevel308306
-Ref: targetstatehandling309630
-Ref: resetcommand313387
-Ref: memoryaccess317011
-Ref: imageaccess318880
-Node: Architecture and Core Commands323676
-Ref: armhardwaretracing324146
-Ref: traceportdrivers332060
-Ref: armcrosstrigger334563
-Ref: arm9vectorcatch343477
-Ref: xscalevectorcatch351881
-Ref: add-reg-type-struct382821
-Ref: softwaredebugmessagesandtracing384756
-Node: JTAG Commands388225
-Node: Boundary Scan Commands395715
-Node: Utility Commands398840
-Node: TFTP400674
-Node: GDB and OpenOCD401543
-Ref: programmingusinggdb406624
-Ref: gdbmeminspect408270
-Ref: gdbrtossupport409856
-Ref: usingopenocdsmpwithgdb411703
-Node: Tcl Scripting API413903
-Node: FAQ418551
-Ref: faqrtck418661
-Ref: faqtaporder430550
-Node: Tcl Crash Course432316
-Node: License444319
-Node: OpenOCD Concept Index466730
-Node: Command and Driver Index489352
+Ref: targetstatehandling309695
+Ref: resetcommand313452
+Ref: memoryaccess317076
+Ref: imageaccess318945
+Node: Architecture and Core Commands323741
+Ref: armhardwaretracing324211
+Ref: traceportdrivers332125
+Ref: armcrosstrigger334628
+Ref: arm9vectorcatch343542
+Ref: xscalevectorcatch351946
+Ref: add-reg-type-struct382886
+Ref: softwaredebugmessagesandtracing384821
+Node: JTAG Commands388290
+Node: Boundary Scan Commands395780
+Node: Utility Commands398905
+Node: TFTP400739
+Node: GDB and OpenOCD401608
+Ref: programmingusinggdb406689
+Ref: gdbmeminspect408335
+Ref: gdbrtossupport409921
+Ref: usingopenocdsmpwithgdb411768
+Node: Tcl Scripting API413968
+Node: FAQ418616
+Ref: faqrtck418726
+Ref: faqtaporder430615
+Node: Tcl Crash Course432381
+Node: License444384
+Node: OpenOCD Concept Index466795
+Node: Command and Driver Index489417
 
 End Tag Table
