@@ -332,7 +332,7 @@ void log_init(void)
 	}
 
 	if (log_output == NULL)
-		log_output = stderr;
+		log_output = stdout;
 	
 	if (warning_output == NULL)
 		warning_output = stderr;
