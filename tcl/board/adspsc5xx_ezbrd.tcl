@@ -52,9 +52,9 @@ proc canfd_config { canfd_base } {
 
    # /* Wait for the Freeze acknowledgment. */
    # while((pCANFDRegs->CFG & BITM_CANFD_CFG_FRZACK) == 0u) { }
-   set data [memread32 phys $canfd_cfg]
+   set data [memread32_phys $canfd_cfg]
    while { ![expr {$data & 0x1000000}] } {
-      set data [memread32 phys $canfd_cfg]
+      set data [memread32_phys $canfd_cfg]
    }
 
    # /* Initialize the RAM area occupied by message buffers. */
@@ -89,9 +89,9 @@ proc canfd_config { canfd_base } {
 
    # /* Wait for the Freeze acknowledgment to clear. */
    # while(pCANFDRegs->CFG & BITM_CANFD_CFG_FRZACK) { }
-   set data [memread32 phys $canfd_cfg]
+   set data [memread32_phys $canfd_cfg]
    while { [expr {$data & 0x1000000}] } {
-      set data [memread32 phys $canfd_cfg]
+      set data [memread32_phys $canfd_cfg]
    }
 }
 
@@ -492,9 +492,9 @@ proc adspsc59x_init_ddr3 { dmc } {
    # Wait for Bypass to reflect in the status
    # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)) {};
    mww phys $cgu0_pllctl 0x9
-   set data [memread32 phys $cgu0_stat]
+   set data [memread32_phys $cgu0_stat]
    while { ![expr {$data & 0x2}] } {
-      set data [memread32 phys $cgu0_stat]
+      set data [memread32_phys $cgu0_stat]
    }
 
    # Program the CTL register
@@ -503,9 +503,9 @@ proc adspsc59x_init_ddr3 { dmc } {
 
    # Wait until the S1SELEXEN enable bit is actually set
    # while(!(pDevice->pCguRegs->CGU_CTL & BITM_CGU_CTL_S1SELEXEN)) {}
-   set data [memread32 phys $cgu0_ctl]
+   set data [memread32_phys $cgu0_ctl]
    while { ![expr {$data & 0x20000}] } {
-      set data [memread32 phys $cgu0_ctl]
+      set data [memread32_phys $cgu0_ctl]
    }
 
    # Take PLL out of Bypass Mode
@@ -516,12 +516,12 @@ proc adspsc59x_init_ddr3 { dmc } {
    # Wait until clocks are aligned
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
    mww phys $cgu0_pllctl 0xa
-   set data [memread32 phys $cgu0_stat]
+   set data [memread32_phys $cgu0_stat]
    while { [expr {$data & 0x2}] } {
-      set data [memread32 phys $cgu0_stat]
+      set data [memread32_phys $cgu0_stat]
    }
    while { [expr {$data & 0x8}] } {
-      set data [memread32 phys $cgu0_stat]
+      set data [memread32_phys $cgu0_stat]
    }
    
    # CGU1 Configuration
@@ -534,9 +534,9 @@ proc adspsc59x_init_ddr3 { dmc } {
    # Wait for Bypass to reflect in the status
    # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)) {};
    mww phys $cgu0_pllctl 0x9
-   set data [memread32 phys $cgu0_stat]
+   set data [memread32_phys $cgu0_stat]
    while { ![expr {$data & 0x2}] } {
-      set data [memread32 phys $cgu0_stat]
+      set data [memread32_phys $cgu0_stat]
    }
 
    # Update the new Divider values for S1SELEX via DIVEX
@@ -552,12 +552,12 @@ proc adspsc59x_init_ddr3 { dmc } {
 
    # Take PLL out of Bypass Mode and then wait for clocks to align
    mww phys $cgu0_pllctl 0xa
-   set data [memread32 phys $cgu0_stat]
+   set data [memread32_phys $cgu0_stat]
    while { [expr {$data & 0x2}] } {
-      set data [memread32 phys $cgu0_stat]
+      set data [memread32_phys $cgu0_stat]
    }
    while { [expr {$data & 0x8}] } {
-      set data [memread32 phys $cgu0_stat]
+      set data [memread32_phys $cgu0_stat]
    }
 
    # Enable PLL for CGU1
@@ -572,9 +572,9 @@ proc adspsc59x_init_ddr3 { dmc } {
    # Wait for alignment to be done
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN){};
    mww phys $cgu1_pllctl 0x2
-   set data [memread32 phys $cgu1_stat]
+   set data [memread32_phys $cgu1_stat]
    while { [expr {$data & 0x8}] } {
-      set data [memread32 phys $cgu1_stat]
+      set data [memread32_phys $cgu1_stat]
    }
 
    # Set CGU1_DIV
@@ -593,9 +593,9 @@ proc adspsc59x_init_ddr3 { dmc } {
    # Wait for Bypass to reflect in the status
    # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)) {}
    mww phys $cgu1_pllctl 0x9
-   set data [memread32 phys $cgu1_stat]
+   set data [memread32_phys $cgu1_stat]
    while { ![expr {$data & 0x2}] } {
-      set data [memread32 phys $cgu1_stat]
+      set data [memread32_phys $cgu1_stat]
    }
 
    # Program the CTL register
@@ -610,12 +610,12 @@ proc adspsc59x_init_ddr3 { dmc } {
    # Wait until clocks are aligned
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
    mww phys $cgu1_pllctl 0xa
-   set data [memread32 phys $cgu1_stat]
+   set data [memread32_phys $cgu1_stat]
    while { [expr {$data & 0x2}] } {
-      set data [memread32 phys $cgu1_stat]
+      set data [memread32_phys $cgu1_stat]
    }
    while { [expr {$data & 0x8}] } {
-      set data [memread32 phys $cgu1_stat]
+      set data [memread32_phys $cgu1_stat]
    }
 
    # Clear DMC Lane reset by clearing DMC_DDR_LANE0_CTL0.CB_RSTDLL
@@ -822,7 +822,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    # rd_cnt &= BITM_DMC_DLLCTL_DLLCALRDCNT;
    # *pREG_DMC0_DLLCTL =rd_cnt|data_cyc;
    # *pREG_DMC0_CTL = (pConfig->ulDDR_CTL & (~BITM_DMC_CTL_INIT) & (~BITM_DMC_CTL_RL_DQS));
-   set data_stat [memread32 phys $dmc_stat]
+   set data_stat [memread32_phys $dmc_stat]
    set phyphase [expr {$data_stat & 0x00f00000}]
    set phyphase [expr {$phyphase >> 20}]
    set datacyc [expr {$phyphase << 8}]
