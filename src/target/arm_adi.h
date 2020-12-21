@@ -119,14 +119,14 @@
  * AHB3: SBO, UNPREDICTABLE if zero */
 #define CSW_AHB_SPROT           (1UL << 30)
 /* AHB: initial value of csw_default */
-#define CSW_AHB_DEFAULT         (CSW_AHB_HPROT1 | CSW_AHB_MASTER_DEBUG | CSW_DBGSWENABLE)
+#define CSW_AHB_DEFAULT         (CSW_AHB_HPROT1 | CSW_DBGSWENABLE)
 
 /* AXI: Privileged */
 #define CSW_AXI_ARPROT0_PRIV    (1UL << 28)
 /* AXI: Non-secure */
 #define CSW_AXI_ARPROT1_NONSEC  (1UL << 29)
 /* AXI: initial value of csw_default */
-#define CSW_AXI_DEFAULT         (CSW_AXI_ARPROT0_PRIV | CSW_AXI_ARPROT1_NONSEC | CSW_DBGSWENABLE)
+#define CSW_AXI_DEFAULT         (CSW_AXI_ARPROT0_PRIV | CSW_DBGSWENABLE)
 
 /* APB: initial value of csw_default */
 #define CSW_APB_DEFAULT         (CSW_DBGSWENABLE)

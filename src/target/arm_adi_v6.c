@@ -94,14 +94,14 @@ void adiv6_dap_instance_init(struct adi_dap *dap)
 	for (i = 0; i <= DP_APSEL_MAX; i++) {
 		dap->ap[i].dap = dap;
 		dap->ap[i].ap_num = i;
-		/* by default init base address at 16-bit granularity */
-		dap->ap[i].base_addr = i << 16;
+		/* by default init base address at 24-bit granularity */
+		dap->ap[i].base_addr = i << 24;
 		/* default number of TCK clocks between AP accesses */
-		dap->ap[i].memaccess_tck = 20;
+		dap->ap[i].memaccess_tck = 80;
 		/* Number of bits for tar autoincrement, impl. dep. at least 10 */
 		dap->ap[i].tar_autoincr_block = (1<<10);
 		/* default CSW value */
-		dap->ap[i].csw_default = CSW_AHB_DEFAULT;
+		dap->ap[i].csw_default = (CSW_AHB_DEFAULT | 0x26000) & 0xFDFFFFFF;
 		dap->ap[i].cfg_reg = ADIV6_BAD_CFG; /* mem_ap configuration reg (large physical addr, etc. */
 	}
 	INIT_LIST_HEAD(&dap->cmd_journal);
@@ -129,7 +129,7 @@ static int adiv6_mem_ap_setup_csw(struct adi_ap *ap, uint32_t csw)
 	csw |= ap->csw_default;
 
 	if (csw != ap->csw_value) {
-		/* LOG_DEBUG("DAP: Set CSW %x",csw); */
+		LOG_DEBUG("DAP: Set CSW %x",csw);
 		int retval = dap_queue_ap_write(ap, MEM_AP_REG_CSW, csw);
 		if (retval != ERROR_OK) {
 			ap->csw_value = 0;
@@ -143,7 +143,7 @@ static int adiv6_mem_ap_setup_csw(struct adi_ap *ap, uint32_t csw)
 static int adiv6_mem_ap_setup_tar(struct adi_ap *ap, target_addr_t tar)
 {
 	if (!ap->tar_valid || tar != ap->tar_value) {
-		/* LOG_DEBUG("DAP: Set TAR " TARGET_ADDR_FMT " size is %d" ,tar, sizeof(tar));*/
+		LOG_DEBUG("DAP: Set TAR " TARGET_ADDR_FMT " size is %ld" ,tar, sizeof(tar));
 		int retval = dap_queue_ap_write(ap, MEM_AP_REG_TAR, (uint32_t) tar);
 		if (retval == ERROR_OK && (ap->cfg_reg & 2)) {
 			/* See if bits 63:32 of tar is different from last setting */
@@ -265,6 +265,11 @@ static int adiv6_mem_ap_read_u32(struct adi_ap *ap, target_addr_t address,
 		uint32_t *value)
 {
 	int retval;
+	//uint32_t temp = CSW_32BIT | (ap->csw_value & CSW_ADDRINC_MASK);
+	//unsigned int temp2 = MEM_AP_REG_BD0 | (address & 0xC);
+
+	//LOG_DEBUG("adiv6_mem_ap_read_u32 - temp = %x", temp);
+	//LOG_DEBUG("adiv6_mem_ap_read_u32 - reg = %x", temp2);
 
 	/* Use banked addressing (REG_BDx) to avoid some link traffic
 	 * (updating TAR) when reading several consecutive addresses.
@@ -317,6 +322,15 @@ static int adiv6_mem_ap_write_u32(struct adi_ap *ap, target_addr_t address,
 		uint32_t value)
 {
 	int retval;
+	uint32_t temp = CSW_32BIT | (ap->csw_value & CSW_ADDRINC_MASK);
+	unsigned int temp2 = MEM_AP_REG_BD0 | (address & 0xC);
+
+	//LOG_DEBUG("adiv6_mem_ap_write_u32 - CSW = 0x%x", temp);
+	LOG_DEBUG("adiv6_mem_ap_write_u32 - reg = 0x%x", temp2);
+	//LOG_DEBUG("adiv6_mem_ap_write_u32 - TAR = 0x%x", address & 0xFFFFFFFFFFFFFFF0ull);
+	target_addr_t compare = 0x20040000;
+	if(address == compare)
+		temp = 0;
 
 	/* Use banked addressing (REG_BDx) to avoid some link traffic
 	 * (updating TAR) when writing several consecutive addresses.
@@ -350,7 +364,10 @@ static int adiv6_mem_ap_write_atomic_u32(struct adi_ap *ap, target_addr_t addres
 	if (retval != ERROR_OK)
 		return retval;
 
-	return dap_run(ap->dap);
+	int ret = dap_run(ap->dap);
+	//LOG_DEBUG("adiv6_mem_ap_write_atomic_u32 - return = %d", ret);
+
+	return ret;
 }
 
 /**
@@ -370,10 +387,15 @@ static int adiv6_mem_ap_write(struct adi_ap *ap, const uint8_t *buffer, uint32_t
 {
 	struct adi_dap *dap = ap->dap;
 	size_t nbytes = size * count;
-	const uint32_t csw_addrincr = addrinc ? CSW_ADDRINC_SINGLE : CSW_ADDRINC_OFF;
+	//const uint32_t csw_addrincr = addrinc ? CSW_ADDRINC_SINGLE : CSW_ADDRINC_OFF;
+	uint32_t csw_addrincr = addrinc ? CSW_ADDRINC_SINGLE : CSW_ADDRINC_OFF;
 	uint32_t csw_size;
 	target_addr_t addr_xor;
 	int retval = ERROR_OK;
+
+	target_addr_t compare = 0x20040000;
+	if(address == compare)
+		csw_addrincr = CSW_ADDRINC_OFF;
 
 	/* TI BE-32 Quirks mode:
 	 * Writes on big-endian TMS570 behave very strangely. Observed behavior:
@@ -804,6 +826,9 @@ static int adiv6_mem_ap_init(struct adi_ap *ap)
 	if (retval != ERROR_OK)
 		return retval;
 
+	LOG_DEBUG("CSW value: %x", csw);
+	LOG_DEBUG("CFG value: %x", cfg);
+
 	if (csw & CSW_ADDRINC_PACKED)
 		ap->packed_transfers = true;
 	else
@@ -1017,6 +1042,9 @@ static int adiv6_dap_get_debugbase(struct adi_ap *ap,
 	retval = dap_run(dap);
 	if (retval != ERROR_OK)
 		return retval;
+
+	LOG_DEBUG("BASE LOWER = %x", baseptr_lower);
+	LOG_DEBUG("BASE UPPER = %x", baseptr_upper);
 
 	*dbgbase = (((target_addr_t) baseptr_upper) << 32) | baseptr_lower;
 
