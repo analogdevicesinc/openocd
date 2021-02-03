@@ -167,6 +167,9 @@ endif
 if ICE_1000
 DRIVERFILES += %D%/ice1000.c
 endif
+if ICE_2000
+DRIVERFILES += %D%/ice1000.c
+endif
 if CMSIS_DAP
 DRIVERFILES += %D%/cmsis_dap_usb.c
 endif
