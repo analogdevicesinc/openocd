@@ -496,7 +496,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    while { ![expr {$data & 0x2}] } {
       set data [memread32_phys $cgu0_stat]
    }
-
+   
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
    mww phys $cgu0_ctl 0x25000
@@ -559,7 +559,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    while { [expr {$data & 0x8}] } {
       set data [memread32_phys $cgu0_stat]
    }
-
+   
    # Enable PLL for CGU1
    # If PLL is disabled, then enable it
    # if(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN))
@@ -576,7 +576,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    while { [expr {$data & 0x8}] } {
       set data [memread32_phys $cgu1_stat]
    }
-
+   
    # Set CGU1_DIV
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_CSEL        = 2;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S0SEL       = 4;
@@ -597,7 +597,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    while { ![expr {$data & 0x2}] } {
       set data [memread32_phys $cgu1_stat]
    }
-
+   
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
    mww phys $cgu1_ctl 0x24000
@@ -767,7 +767,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    mww phys $dmc_mr1 0xc0
    mww phys $dmc_mr2 0x18
    mww phys $dmc_emr3 0x4
-
+   
    # program Dll timing register
    # *pREG_DMC0_DLLCTL = ((pConfig->ulDDR_DLLCTLCFG) >> 16ul) & 0xFFFFul;
    # dmcdelay(2000);
@@ -832,6 +832,6 @@ proc adspsc59x_init_ddr3 { dmc } {
    mww phys $dmc_ctl [expr {0x8000a05 & ~0x4 & ~0x04000000}]
 
    # Initialise CANFD
-   canfd_config $canfd0_base
-   canfd_config $canfd1_base
+   #canfd_config $canfd0_base
+   #canfd_config $canfd1_base
 }
