@@ -150,6 +150,9 @@ extern struct adapter_driver rshim_dap_adapter_driver;
 #if BUILD_ICE_1000
 extern struct adapter_driver ice1000_adapter_driver;
 #endif
+#if BUILD_ICE_2000
+extern struct adapter_driver ice2000_adapter_driver;
+#endif
 
 #endif /* standard drivers */
 
@@ -270,6 +273,9 @@ struct adapter_driver *adapter_drivers[] = {
 #endif
 #if BUILD_ICE_1000 == 1
 		&ice1000_adapter_driver,
+#endif
+#if BUILD_ICE_2000 == 1
+		&ice2000_adapter_driver,
 #endif
 #endif /* standard drivers */
 		NULL,
