@@ -1,6 +1,6 @@
 # Common routines for Analog Devices ADSP-SC5xx
 #
-# Copyright (c) 2015-2020 Analog Devices, Inc. All Rights Reserved.
+# Copyright (c) 2015-2021 Analog Devices, Inc. All Rights Reserved.
 # This software is proprietary to Analog Devices, Inc. and its licensors.
 
 # Unlock the processor
