@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2020 by Analog Devices, Inc.                     *
+*   Copyright (C) 2011 - 2021 by Analog Devices, Inc.                     *
 *   Based on ice100.c of UrJTAG                                           *
 *   Jie Zhang  <jie.zhang@analog.com>                                     *
 *                                                                         *

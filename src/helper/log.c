@@ -7,6 +7,9 @@
  *                                                                         *
  *   Copyright (C) 2008 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
+ * 
+ *   Copyright (C) 2021 by Chad Wentworth                                  *
+ *   chad.wentworth@analog.com                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
