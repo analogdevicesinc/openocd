@@ -9,6 +9,8 @@
  *   Copyright (C) 2012 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
  *                                                                         *
+ *   Copyright (C) 2020, Ampere Computing LLC                              *
+ *                                                                         *
  *   This code is based on https://github.com/texane/stlink                *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -3168,7 +3170,7 @@ static struct hl_interface_param_s stlink_dap_param;
 static DECLARE_BITMAP(opened_ap, DP_APSEL_MAX + 1);
 static int stlink_dap_error = ERROR_OK;
 
-static int stlink_dap_op_queue_dp_read(struct adiv5_dap *dap, unsigned reg,
+static int stlink_dap_op_queue_dp_read(struct adi_dap *dap, unsigned reg,
 		uint32_t *data);
 
 /** */
@@ -3270,7 +3272,7 @@ static int stlink_dap_reinit_interface(void)
 }
 
 /** */
-static int stlink_dap_op_connect(struct adiv5_dap *dap)
+static int stlink_dap_op_connect(struct adi_dap *dap)
 {
 	uint32_t idcode;
 	int retval;
@@ -3310,7 +3312,7 @@ static int stlink_dap_op_connect(struct adiv5_dap *dap)
 }
 
 /** */
-static int stlink_dap_check_reconnect(struct adiv5_dap *dap)
+static int stlink_dap_check_reconnect(struct adi_dap *dap)
 {
 	int retval;
 
@@ -3325,14 +3327,14 @@ static int stlink_dap_check_reconnect(struct adiv5_dap *dap)
 }
 
 /** */
-static int stlink_dap_op_send_sequence(struct adiv5_dap *dap, enum swd_special_seq seq)
+static int stlink_dap_op_send_sequence(struct adi_dap *dap, enum swd_special_seq seq)
 {
 	/* Ignore the request */
 	return ERROR_OK;
 }
 
 /** */
-static int stlink_dap_op_queue_dp_read(struct adiv5_dap *dap, unsigned reg,
+static int stlink_dap_op_queue_dp_read(struct adi_dap *dap, unsigned reg,
 		uint32_t *data)
 {
 	uint32_t dummy;
@@ -3366,7 +3368,7 @@ static int stlink_dap_op_queue_dp_read(struct adiv5_dap *dap, unsigned reg,
 }
 
 /** */
-static int stlink_dap_op_queue_dp_write(struct adiv5_dap *dap, unsigned reg,
+static int stlink_dap_op_queue_dp_write(struct adi_dap *dap, unsigned reg,
 		uint32_t data)
 {
 	int retval;
@@ -3396,11 +3398,17 @@ static int stlink_dap_op_queue_dp_write(struct adiv5_dap *dap, unsigned reg,
 	return stlink_dap_record_error(retval);
 }
 
+/* Return address of DAP AP IDR register */
+static inline uint32_t stlink_apidr_address(struct adi_dap *dap)
+{
+	return dap->dap_ops->dap_apidr_address();
+}
+
 /** */
-static int stlink_dap_op_queue_ap_read(struct adiv5_ap *ap, unsigned reg,
+static int stlink_dap_op_queue_ap_read(struct adi_ap *ap, unsigned reg,
 		uint32_t *data)
 {
-	struct adiv5_dap *dap = ap->dap;
+	struct adi_dap *dap = ap->dap;
 	uint32_t dummy;
 	int retval;
 
@@ -3408,7 +3416,7 @@ static int stlink_dap_op_queue_ap_read(struct adiv5_ap *ap, unsigned reg,
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (reg != AP_REG_IDR) {
+	if (reg != stlink_apidr_address(dap)) {
 		retval = stlink_dap_open_ap(ap->ap_num);
 		if (retval != ERROR_OK)
 			return retval;
@@ -3421,10 +3429,10 @@ static int stlink_dap_op_queue_ap_read(struct adiv5_ap *ap, unsigned reg,
 }
 
 /** */
-static int stlink_dap_op_queue_ap_write(struct adiv5_ap *ap, unsigned reg,
+static int stlink_dap_op_queue_ap_write(struct adi_ap *ap, unsigned reg,
 		uint32_t data)
 {
-	struct adiv5_dap *dap = ap->dap;
+	struct adi_dap *dap = ap->dap;
 	int retval;
 
 	retval = stlink_dap_check_reconnect(dap);
@@ -3442,14 +3450,14 @@ static int stlink_dap_op_queue_ap_write(struct adiv5_ap *ap, unsigned reg,
 }
 
 /** */
-static int stlink_dap_op_queue_ap_abort(struct adiv5_dap *dap, uint8_t *ack)
+static int stlink_dap_op_queue_ap_abort(struct adi_dap *dap, uint8_t *ack)
 {
 	LOG_WARNING("stlink_dap_op_queue_ap_abort()");
 	return ERROR_OK;
 }
 
 /** */
-static int stlink_dap_op_run(struct adiv5_dap *dap)
+static int stlink_dap_op_run(struct adi_dap *dap)
 {
 	uint32_t ctrlstat, pwrmask;
 	int retval, saved_retval;
@@ -3511,7 +3519,7 @@ static int stlink_dap_op_run(struct adiv5_dap *dap)
 }
 
 /** */
-static void stlink_dap_op_quit(struct adiv5_dap *dap)
+static void stlink_dap_op_quit(struct adi_dap *dap)
 {
 	int retval;
 
@@ -3763,7 +3771,7 @@ static int stlink_dap_speed_div(int speed, int *khz)
 	return ERROR_OK;
 }
 
-static const struct dap_ops stlink_dap_ops = {
+static const struct dp_ops stlink_dap_ops = {
 	.connect = stlink_dap_op_connect,
 	.send_sequence = stlink_dap_op_send_sequence,
 	.queue_dp_read = stlink_dap_op_queue_dp_read,

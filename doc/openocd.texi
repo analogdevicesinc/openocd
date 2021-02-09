@@ -7858,8 +7858,9 @@ echo "Downloading kernel -- please wait"
 @end deffn
 
 @deffn Command log_output [filename | "default"]
-Redirect logging to @var{filename} or set it back to default output;
-the default log output channel is stderr.
+Redirect logging, including errors and warnings, to @var{filename};
+the initial log output channel is stdout,
+except for errors and warnings, which by default use stderr.
 @end deffn
 
 @deffn Command add_script_search_dir [directory]

@@ -176,10 +176,10 @@ static const Jim_Nvp nvp_error_target[] = {
 	{ .value = ERROR_TARGET_TIMEOUT, .name = "err-timeout" },
 	{ .value = ERROR_TARGET_NOT_HALTED, .name = "err-not-halted" },
 	{ .value = ERROR_TARGET_FAILURE, .name = "err-failure" },
-	{ .value = ERROR_TARGET_UNALIGNED_ACCESS, .name = "err-unaligned-access" },
-	{ .value = ERROR_TARGET_DATA_ABORT, .name = "err-data-abort" },
-	{ .value = ERROR_TARGET_RESOURCE_NOT_AVAILABLE, .name = "err-resource-not-available" },
-	{ .value = ERROR_TARGET_TRANSLATION_FAULT, .name = "err-translation-fault" },
+	{ .value = ERROR_TARGET_UNALIGNED_ACCESS   , .name = "err-unaligned-access" },
+	{ .value = ERROR_TARGET_DATA_ABORT , .name = "err-data-abort" },
+	{ .value = ERROR_TARGET_RESOURCE_NOT_AVAILABLE , .name = "err-resource-not-available" },
+	{ .value = ERROR_TARGET_TRANSLATION_FAULT  , .name = "err-translation-fault" },
 	{ .value = ERROR_TARGET_NOT_RUNNING, .name = "err-not-running" },
 	{ .value = ERROR_TARGET_NOT_EXAMINED, .name = "err-not-examined" },
 	{ .value = -1, .name = NULL }
@@ -229,10 +229,10 @@ static const Jim_Nvp nvp_target_event[] = {
 	{ .value = TARGET_EVENT_GDB_DETACH, .name = "gdb-detach" },
 
 	{ .value = TARGET_EVENT_GDB_FLASH_WRITE_START, .name = "gdb-flash-write-start" },
-	{ .value = TARGET_EVENT_GDB_FLASH_WRITE_END,   .name = "gdb-flash-write-end"   },
+	{ .value = TARGET_EVENT_GDB_FLASH_WRITE_END  , .name = "gdb-flash-write-end"   },
 
 	{ .value = TARGET_EVENT_GDB_FLASH_ERASE_START, .name = "gdb-flash-erase-start" },
-	{ .value = TARGET_EVENT_GDB_FLASH_ERASE_END,   .name = "gdb-flash-erase-end" },
+	{ .value = TARGET_EVENT_GDB_FLASH_ERASE_END  , .name = "gdb-flash-erase-end" },
 
 	{ .value = TARGET_EVENT_TRACE_CONFIG, .name = "trace-config" },
 
@@ -249,15 +249,15 @@ static const Jim_Nvp nvp_target_state[] = {
 };
 
 static const Jim_Nvp nvp_target_debug_reason[] = {
-	{ .name = "debug-request",             .value = DBG_REASON_DBGRQ },
-	{ .name = "breakpoint",                .value = DBG_REASON_BREAKPOINT },
-	{ .name = "watchpoint",                .value = DBG_REASON_WATCHPOINT },
+	{ .name = "debug-request"            , .value = DBG_REASON_DBGRQ },
+	{ .name = "breakpoint"               , .value = DBG_REASON_BREAKPOINT },
+	{ .name = "watchpoint"               , .value = DBG_REASON_WATCHPOINT },
 	{ .name = "watchpoint-and-breakpoint", .value = DBG_REASON_WPTANDBKPT },
-	{ .name = "single-step",               .value = DBG_REASON_SINGLESTEP },
-	{ .name = "target-not-halted",         .value = DBG_REASON_NOTHALTED  },
-	{ .name = "program-exit",              .value = DBG_REASON_EXIT },
-	{ .name = "exception-catch",           .value = DBG_REASON_EXC_CATCH },
-	{ .name = "undefined",                 .value = DBG_REASON_UNDEFINED },
+	{ .name = "single-step"              , .value = DBG_REASON_SINGLESTEP },
+	{ .name = "target-not-halted"        , .value = DBG_REASON_NOTHALTED  },
+	{ .name = "program-exit"             , .value = DBG_REASON_EXIT },
+	{ .name = "exception-catch"          , .value = DBG_REASON_EXC_CATCH },
+	{ .name = "undefined"                , .value = DBG_REASON_UNDEFINED },
 	{ .name = NULL, .value = -1 },
 };
 
@@ -271,10 +271,10 @@ static const Jim_Nvp nvp_target_endian[] = {
 
 static const Jim_Nvp nvp_reset_modes[] = {
 	{ .name = "unknown", .value = RESET_UNKNOWN },
-	{ .name = "run",     .value = RESET_RUN },
-	{ .name = "halt",    .value = RESET_HALT },
-	{ .name = "init",    .value = RESET_INIT },
-	{ .name = NULL,      .value = -1 },
+	{ .name = "run"    , .value = RESET_RUN },
+	{ .name = "halt"   , .value = RESET_HALT },
+	{ .name = "init"   , .value = RESET_INIT },
+	{ .name = NULL     , .value = -1 },
 };
 
 const char *debug_reason_name(struct target *t)
@@ -2892,7 +2892,7 @@ COMMAND_HANDLER(handle_reg_command)
 				} else {
 					command_print(CMD, "(%i) %s (/%" PRIu32 ")",
 							  count, reg->name,
-							  reg->size);
+							  reg->size) ;
 				}
 			}
 			cache = cache->next;
@@ -3344,12 +3344,15 @@ COMMAND_HANDLER(handle_mw_command)
 	if (CMD_ARGC < 2)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	bool physical = strcmp(CMD_ARGV[0], "phys") == 0;
+	bool ignore_data_abort = strcmp(CMD_ARGV[0], "ignore-data-abort") == 0;
 	target_write_fn fn;
-	if (physical) {
+	if (physical || ignore_data_abort) {
 		CMD_ARGC--;
 		CMD_ARGV++;
-		fn = target_write_phys_memory;
-	} else
+	} 
+	if (physical)
+	    fn = target_write_phys_memory;
+	else
 		fn = target_write_memory;
 	if ((CMD_ARGC < 2) || (CMD_ARGC > 3))
 		return ERROR_COMMAND_SYNTAX_ERROR;
@@ -3383,7 +3386,14 @@ COMMAND_HANDLER(handle_mw_command)
 			return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	return target_fill_mem(target, address, fn, wordsize, value, count);
+	int retval = target_fill_mem(target, address, fn, wordsize, value, count);
+
+	if (retval == ERROR_TARGET_DATA_ABORT && ignore_data_abort) {
+		LOG_DEBUG("data abort from command '%s' ignored as requested", CMD_NAME);
+		retval = ERROR_OK;
+	}
+
+	return retval;
 }
 
 static COMMAND_HELPER(parse_load_image_command_CMD_ARGV, struct image *image,
@@ -4634,6 +4644,8 @@ enum target_cfg_param {
 	TCFG_RTOS,
 	TCFG_DEFER_EXAMINE,
 	TCFG_GDB_PORT,
+	TCFG_RESTART_CTI_REG_ADDR,
+	TCFG_RESTART_CTI_CHANNEL,
 };
 
 static Jim_Nvp nvp_config_opts[] = {
@@ -4643,13 +4655,15 @@ static Jim_Nvp nvp_config_opts[] = {
 	{ .name = "-work-area-phys",   .value = TCFG_WORK_AREA_PHYS },
 	{ .name = "-work-area-size",   .value = TCFG_WORK_AREA_SIZE },
 	{ .name = "-work-area-backup", .value = TCFG_WORK_AREA_BACKUP },
-	{ .name = "-endian",           .value = TCFG_ENDIAN },
+	{ .name = "-endian" ,          .value = TCFG_ENDIAN },
 	{ .name = "-coreid",           .value = TCFG_COREID },
 	{ .name = "-chain-position",   .value = TCFG_CHAIN_POSITION },
 	{ .name = "-dbgbase",          .value = TCFG_DBGBASE },
 	{ .name = "-rtos",             .value = TCFG_RTOS },
 	{ .name = "-defer-examine",    .value = TCFG_DEFER_EXAMINE },
 	{ .name = "-gdb-port",         .value = TCFG_GDB_PORT },
+	{ .name = "-restart-cti-reg-addr", .value = TCFG_RESTART_CTI_REG_ADDR },
+	{ .name = "-restart-cti-channel", .value = TCFG_RESTART_CTI_CHANNEL },
 	{ .name = NULL, .value = -1 }
 };
 
@@ -4955,6 +4969,35 @@ no_params:
 					goto no_params;
 			}
 			Jim_SetResultString(goi->interp, target->gdb_port_override ? : "undefined", -1);
+			/* loop for more */
+			break;
+
+		case TCFG_RESTART_CTI_REG_ADDR:
+			if (goi->isconfigure) {
+				e = Jim_GetOpt_Wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				target->restart_cti_reg_addr = (uint32_t)w;
+				target->restart_use_cti = true;
+			} else {
+				if (goi->argc != 0)
+					goto no_params;
+			}
+			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->restart_cti_reg_addr));
+			/* loop for more */
+			break;
+
+		case TCFG_RESTART_CTI_CHANNEL:
+			if (goi->isconfigure) {
+				e = Jim_GetOpt_Wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				target->restart_cti_channel = (int32_t)w;
+			} else {
+				if (goi->argc != 0)
+					goto no_params;
+			}
+			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->restart_cti_channel));
 			/* loop for more */
 			break;
 		}
@@ -6309,21 +6352,21 @@ static const struct command_registration target_exec_command_handlers[] = {
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory word",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "mwh",
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory half-word",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "mwb",
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory byte",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "bp",
