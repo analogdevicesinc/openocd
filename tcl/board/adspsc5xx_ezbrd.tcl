@@ -35,6 +35,7 @@ proc smpu_config { smpu } {
 }
 
 proc canfd_config { canfd_base } {
+   global _CHIPNAME
 
    set canfd_cfg $canfd_base
    set canfd_rx_mb_gmsk   [expr {$canfd_cfg + 0x10}]
@@ -43,6 +44,9 @@ proc canfd_config { canfd_base } {
    set canfd_rx_fifo_gmsk [expr {$canfd_cfg + 0x48}]
    set canfd_ram          [expr {$canfd_cfg + 0x80}]
    set canfd_rx_imsk0     [expr {$canfd_cfg + 0x880}]
+
+   # use axi-ap
+   set ap_num  2
 
    # /* Set the Freeze and Halt bit to enter freeze mode. */
    # pCANFDRegs->CFG |= BITM_CANFD_CFG_FRZ;
@@ -61,7 +65,7 @@ proc canfd_config { canfd_base } {
    # for (i=0u; i<(RAM_SIZE/sizeof(uint32_t)); i++)
    # ram[i] = 0x0u;
    for {set i 0} {$i < 256} {incr i} {
-      mww phys [expr {$canfd_ram + ($i * 4)}] 0x0
+      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_ram + ($i * 4)}] 0x0
    }
 
    # /* Initialize the RAM area occupied by some of the CAN registers. */
@@ -80,7 +84,7 @@ proc canfd_config { canfd_base } {
    # i++)
    # pCANFDRegs->RX_IMSK[i] = 0u;
    for {set i 0} {$i < 64} {incr i} {
-      mww phys [expr {$canfd_rx_imsk0 + ($i * 4)}] 0x0
+      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_rx_imsk0 + ($i * 4)}] 0x0
    }
 
    # /* Clear the Freeze and Halt bit to exit the freeze mode. */
@@ -107,7 +111,7 @@ proc adspsc5xx_init_ddr3 { dmc } {
    }
 
    set dmc_ctl			[expr {$dmc_baseaddr + 0x4}]
-   set dmc_stat			[expr {$dmc_baseaddr + 0x8}]
+   set dmc_stat		[expr {$dmc_baseaddr + 0x8}]
    set dmc_cfg			[expr {$dmc_baseaddr + 0x40}]
    set dmc_tr0			[expr {$dmc_baseaddr + 0x44}]
    set dmc_tr1			[expr {$dmc_baseaddr + 0x48}]
@@ -429,9 +433,6 @@ proc adspsc59x_init_ddr3 { dmc } {
 
    set cdu_stat      0x3108f040
    set cdu_clkinsel  [expr {$cdu_stat + 0x4}]
-
-   set canfd0_base 0x31046000
-   set canfd1_base 0x31047000
 
    # Reset DMC Lane by setting the DMC_DDR_LANE0_CTL0.CB_RSTDLL
    # and DMC_DDR_LANE1_CTL0.CB_RSTDLL bits
@@ -830,8 +831,4 @@ proc adspsc59x_init_ddr3 { dmc } {
    set rd_cnt 0xf0
    mww phys $dmc_dllctl [expr {$rd_cnt | $datacyc}]
    mww phys $dmc_ctl [expr {0x8000a05 & ~0x4 & ~0x04000000}]
-
-   # Initialise CANFD
-   #canfd_config $canfd0_base
-   #canfd_config $canfd1_base
 }
