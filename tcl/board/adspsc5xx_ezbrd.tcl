@@ -111,7 +111,7 @@ proc adspsc5xx_init_ddr3 { dmc } {
    }
 
    set dmc_ctl			[expr {$dmc_baseaddr + 0x4}]
-   set dmc_stat		[expr {$dmc_baseaddr + 0x8}]
+   set dmc_stat			[expr {$dmc_baseaddr + 0x8}]
    set dmc_cfg			[expr {$dmc_baseaddr + 0x40}]
    set dmc_tr0			[expr {$dmc_baseaddr + 0x44}]
    set dmc_tr1			[expr {$dmc_baseaddr + 0x48}]
