@@ -1723,6 +1723,7 @@ static const struct command_registration ice2000_command_handlers[] = {
 		.name = "ice2000_voltage",
 		.handler = &ice2000_handle_voltage_command,
 		.mode = COMMAND_CONFIG,
+		.usage = "voltage ['1'|'2'|'3']",
 	},
 	COMMAND_REGISTRATION_DONE
 };
