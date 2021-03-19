@@ -214,6 +214,21 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_FAR_EL3, 0), &value);
 		value_64 = value;
 		break;
+	case ARMV8_SCTLR_EL1:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_SCTLR_EL1, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_SCTLR_EL2:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_SCTLR_EL2, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_SCTLR_EL3:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_SCTLR_EL3, 0), &value);
+		value_64 = value;
+		break;
 		
 	default:
 		retval = ERROR_FAIL;
@@ -348,6 +363,21 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		value = value_64;
 		retval = dpm->instr_write_data_r0(dpm,
 				ARMV8_MSR_GP(SYSTEM_FAR_EL3, 0), value);
+		break;
+	case ARMV8_SCTLR_EL1:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL1, 0), value);
+		break;
+	case ARMV8_SCTLR_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL2, 0), value);
+		break;
+	case ARMV8_SCTLR_EL3:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL3, 0), value);
 		break;
 	default:
 		retval = ERROR_FAIL;
@@ -1448,6 +1478,8 @@ static const struct {
 														NULL},
 	{ ARMV8_FAR_EL1, "FAR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
 														NULL},
+	{ ARMV8_SCTLR_EL1, "SCTLR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
 
 
 	{ ARMV8_ELR_EL2, "ELR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_CODE_PTR, "banked", "net.sourceforge.openocd.banked",
@@ -1458,6 +1490,9 @@ static const struct {
 														NULL},
 	{ ARMV8_FAR_EL2, "FAR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
 														NULL},
+	{ ARMV8_SCTLR_EL2, "SCTLR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+
 
 	{ ARMV8_ELR_EL3, "ELR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_CODE_PTR, "banked", "net.sourceforge.openocd.banked",
 														NULL},
@@ -1466,6 +1501,8 @@ static const struct {
 	{ ARMV8_SPSR_EL3, "SPSR_EL3", 32, ARMV8_64_EL3H, REG_TYPE_UINT32, "banked", "net.sourceforge.openocd.banked",
 														NULL},
 	{ ARMV8_FAR_EL3, "FAR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
+														NULL},
+	{ ARMV8_SCTLR_EL3, "SCTLR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "banked", "net.sourceforge.openocd.banked",
 														NULL},
 };
 
