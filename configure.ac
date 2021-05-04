@@ -719,6 +719,8 @@ AS_IF([test "x$enable_jlink" != "xno"], [
   ])
 ])
 
+AC_CONFIG_SUBDIRS([src/jtag/drivers/libusbmux])
+
 # Presto needs the bitq module
 AS_IF([test "x$enable_presto" != "xno"], [
   build_bitq=yes
