@@ -167,9 +167,17 @@ endif
 
 if ICE_1000
 DRIVERFILES += %D%/ice1000.c
+SUBDIRS += %D%/libusbmux
+DIST_SUBDIRS += %D%/libusbmux
+
+%C%_libocdjtagdrivers_la_LIBADD += %D%/libusbmux/src/libusbmux.la
 else
 if ICE_2000
 DRIVERFILES += %D%/ice1000.c
+SUBDIRS += %D%/libusbmux
+DIST_SUBDIRS += %D%/libusbmux
+
+%C%_libocdjtagdrivers_la_LIBADD += %D%/libusbmux/src/libusbmux.la
 endif
 endif
 
