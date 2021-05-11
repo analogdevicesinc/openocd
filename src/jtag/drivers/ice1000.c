@@ -28,6 +28,7 @@
 #include <helper/log.h>
 #include <helper/configuration.h>
 #include "libusb_helper.h"
+#include "usbmux.h"
 
 /*
  * Internal Structures
@@ -82,6 +83,8 @@ typedef struct
 	int32_t r_timeout;				/* USB Read Timeout */
 	int32_t r_buf_sz;				/* USB Read Buffer Size */
 	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
+	bool use_usbmux;				/* If true, use USB MUX for USB communication */
+	HANDLE mux_handle;				/* USB MUX handle */
 } params_t;
 
 /* Emulators's USB Data structure */
@@ -162,6 +165,7 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data,
 /* Ice USB controls */
 #define ICE_1000_WRITE_ENDPOINT			0x06
 #define ICE_1000_READ_ENDPOINT			0x05
+#define ICE_1000_USB_CONNECTION_TIMEOUT	10000
 #define ICE_1000_USB_WRITE_TIMEOUT		10000
 #define ICE_1000_USB_READ_TIMEOUT		30000
 #define ICE_1000_WRITE_BUFFER_SIZE		0x9800
@@ -183,33 +187,52 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 
 #define adi_usb_read_or_ret(buf, len)									\
 	do {																\
-		int __ret, __actual, __size = (len);							\
-		__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
-								 cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
-								 (unsigned char *)(buf), __size,		\
-								 &__actual, cable_params.r_timeout);	\
-		if (__ret || __actual != __size)								\
+		if (cable_params.use_usbmux)									\
 		{																\
-			LOG_ERROR("unable to read from usb to " #buf ": "			\
-					  "wanted %i bytes but only received %i bytes",		\
-					  __size, __actual);								\
-			return ERROR_FAIL;											\
+			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, \
+				buf, len, cable_params.r_ep | LIBUSB_ENDPOINT_IN, cable_params.r_timeout);	\
+			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;				\
+		}																\
+		else															\
+		{																\
+			int __ret, __actual, __size = (len);						\
+			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
+									cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
+									(unsigned char *)(buf), __size,		\
+									&__actual, cable_params.r_timeout);	\
+			if (__ret || __actual != __size)							\
+			{															\
+				LOG_ERROR("unable to read from usb to " #buf ": "		\
+						"wanted %i bytes but only received %i bytes",	\
+						__size, __actual);								\
+				return ERROR_FAIL;										\
+			}															\
 		}																\
 	} while (0)
 
 #define adi_usb_write_or_ret(buf, len)									\
 	do {																\
-		int __ret, __actual, __size = (len);							\
-		__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
-								  cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
-								  (unsigned char *)(buf), __size,		\
-								  &__actual, cable_params.wr_timeout);	\
-		if (__ret || __actual != __size)								\
+		if (cable_params.use_usbmux)									\
 		{																\
-			LOG_ERROR("unable to write from " #buf " to usb: "			\
-					  "wanted %i bytes but only wrote %i bytes",		\
-					  __size, __actual);								\
-			return ERROR_FAIL;											\
+			USB_MUX_ERROR mux_ret = usbmux_write(cable_params.mux_handle,	\
+				buf, len, cable_params.wr_ep | LIBUSB_ENDPOINT_OUT,			\
+				cable_params.wr_timeout);									\
+			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;				\
+		}																\
+		else															\
+		{																\
+			int __ret, __actual, __size = (len);						\
+			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
+									cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
+									(unsigned char *)(buf), __size,		\
+									&__actual, cable_params.wr_timeout);\
+			if (__ret || __actual != __size)							\
+			{															\
+				LOG_ERROR("unable to write from " #buf " to usb: "		\
+						"wanted %i bytes but only wrote %i bytes",		\
+						__size, __actual);								\
+				return ERROR_FAIL;										\
+			}															\
 		}																\
 	} while (0)
 
@@ -486,35 +509,60 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	uint8_t configuration;
 	int i, ret;
 
-	ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
-	if (ret != ERROR_OK)
-		return ret;
+	dev = NULL;
+	cable_params.mux_handle = NULL;
 
-	udev = libusb_get_device(dev);
-	libusb_get_active_config_descriptor(udev, &config);
-	configuration = config->bConfigurationValue;
-	libusb_free_config_descriptor (config);
-	libusb_set_configuration(dev, configuration);
-	ret = libusb_claim_interface(dev, 0);
-	if (ret)
+	if (cable_params.use_usbmux)
 	{
-		LOG_ERROR("libusb_claim_interface failed: %d", ret);
-		libusb_close(dev);
-		return ERROR_FAIL;
+		ret = usbmux_open(&cable_params.mux_handle, ICE_1000_USB_CONNECTION_TIMEOUT);
+		if (ret)
+		{
+			LOG_DEBUG("failed to open USB MUX.");
+			return ERROR_FAIL;
+		}
 	}
+	else
+	{
+		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
+		if (ret != ERROR_OK)
+			return ret;
 
-	LOG_DEBUG("usb interface claimed!");
+		udev = libusb_get_device(dev);
+		libusb_get_active_config_descriptor(udev, &config);
+		configuration = config->bConfigurationValue;
+		libusb_free_config_descriptor (config);
+		libusb_set_configuration(dev, configuration);
+		ret = libusb_claim_interface(dev, 0);
+		if (ret)
+		{
+			LOG_ERROR("libusb_claim_interface failed: %d", ret);
+			libusb_close(dev);
+			return ERROR_FAIL;
+		}
 
-	/* For an unknown reason, this is needed for using ICE-1000/2000
-	   with xHCI controller on Linux. */
-	libusb_set_interface_alt_setting (dev, 0, 0);
+		LOG_DEBUG("usb interface claimed!");
+
+		/* For an unknown reason, this is needed for using ICE-1000/2000
+		with xHCI controller on Linux. */
+		libusb_set_interface_alt_setting (dev, 0, 0);
+	}
 
 	cable_params.tap_info.dat = malloc(sizeof(dat_dat) * DAT_SZ);
 	if (!cable_params.tap_info.dat)
 	{
 		LOG_ERROR("_malloc(%d) fails", (int)(sizeof(dat_dat) * DAT_SZ));
-		libusb_release_interface(dev, 0);
-		libusb_close(dev);
+		if (dev)
+		{
+			libusb_release_interface(dev, 0);
+			libusb_close(dev);
+			dev = NULL;
+		}
+
+		if (cable_params.mux_handle)
+		{
+			usbmux_close(cable_params.mux_handle);
+			cable_params.mux_handle = NULL;
+		}
 		return ERROR_FAIL;
 	}
 
@@ -736,10 +784,15 @@ static int ice1000_quit(void)
 {
 	do_host_cmd(HOST_DISCONNECT, 0, 0);
 
-	if (cable_params.usb_handle != NULL)
+	if (cable_params.usb_handle)
 	{
 		libusb_release_interface(cable_params.usb_handle, 0);
 		libusb_close(cable_params.usb_handle);
+	}
+
+	if (cable_params.mux_handle)
+	{
+		usbmux_close(cable_params.mux_handle);
 	}
 
 	free(cable_params.tap_info.dat);
@@ -754,10 +807,15 @@ static int ice2000_quit(void)
 
 	do_host_cmd(HOST_DISCONNECT, 0, 0);
 
-	if (cable_params.usb_handle != NULL)
+	if (cable_params.usb_handle)
 	{
 		libusb_release_interface(cable_params.usb_handle, 0);
 		libusb_close(cable_params.usb_handle);
+	}
+
+	if (cable_params.mux_handle)
+	{
+		usbmux_close(cable_params.mux_handle);
 	}
 
 	free(cable_params.tap_info.dat);
@@ -1374,6 +1432,15 @@ static int ice1000_execute_queue(void)
 	struct jtag_command *cmd = jtag_command_queue;
 	int retval = ERROR_OK;
 
+	if (cable_params.mux_handle)
+	{
+		// acquire USB lock
+		if (usbmux_lock(cable_params.mux_handle) != USB_MUX_OK)
+		{
+			return ERROR_TIMEOUT;
+		}
+	}
+
 	/* TODO add blink */
 	while (cmd != NULL)
 	{
@@ -1383,9 +1450,24 @@ static int ice1000_execute_queue(void)
 	}
 
 	if (retval != ERROR_OK)
+	{
+		if (cable_params.mux_handle)
+		{
+			// release USB lock
+			usbmux_unlock(cable_params.mux_handle);
+		}
 		return retval;
+	}
 
-	return ice1000_tap_execute();
+	retval = ice1000_tap_execute();
+
+	if (cable_params.mux_handle)
+	{
+		// release USB lock
+		usbmux_unlock(cable_params.mux_handle);
+	}
+
+	return retval;
 }
 
 /*
@@ -1409,7 +1491,7 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data
 	usb_cmd_blk.count = size;
 	usb_cmd_blk.buffer = 0;
 
-	adi_usb_write_or_ret(&usb_cmd_blk, sizeof(usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof(usb_cmd_blk));
 	i = 0;
 
 	/* send HOST_SET_SINGLE_REG command */
@@ -1425,7 +1507,7 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data
 	adi_usb_write_or_ret(cmd_buffer.b, size);
 
 	if (r_data)
-		adi_usb_read_or_ret(&count, sizeof (count));
+		adi_usb_read_or_ret((uint8_t*)&count, sizeof (count));
 
 	return count;
 }
@@ -1451,7 +1533,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 	usb_cmd_blk.count = size;
 	usb_cmd_blk.buffer = 0;
 
-	adi_usb_write_or_ret(&usb_cmd_blk, sizeof(usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof(usb_cmd_blk));
 
 	/* send command */
 	cmd_buffer.b[0] = 0;
@@ -1473,9 +1555,9 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 		usb_cmd_blk.count = 2;
 		usb_cmd_blk.buffer = 0;
 
-		adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_cmd_blk));
+		adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
 
-		adi_usb_read_or_ret (&results, sizeof (results));
+		adi_usb_read_or_ret ((uint8_t*)&results, sizeof (results));
 	}
 
 	return results;
@@ -1618,7 +1700,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	usb_cmd_blk.buffer = 0;
 
 	/* first send Xmit request with the count of what will be sent */
-	adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
 	i = 0;
 
 	/* send HOST_DO_SELECTIVE_RAW_SCAN command */
@@ -1663,7 +1745,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 			cur_rd_bytes = ((rd_bytes_left - tot_bytes_rd) > cable_params.r_buf_sz) ?
 				cable_params.r_buf_sz : (rd_bytes_left - tot_bytes_rd);
 
-			adi_usb_read_or_ret(out + tot_bytes_rd, cur_rd_bytes);
+			adi_usb_read_or_ret((uint8_t*)(out + tot_bytes_rd), cur_rd_bytes);
 			tot_bytes_rd += cur_rd_bytes;
 		}
 
@@ -1698,15 +1780,44 @@ COMMAND_HANDLER(ice2000_handle_voltage_command)
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(ice1000_use_usbmux)
+{
+	bool use_usbmux;
+
+	if (CMD_ARGC != 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	COMMAND_PARSE_BOOL(CMD_ARGV[0], use_usbmux, "true", "false");
+
+	/* This command can only be used before adi_connect */
+	if (cable_params.usb_handle)
+		return ERROR_FAIL;
+
+	cable_params.use_usbmux = use_usbmux;
+
+	return ERROR_OK;
+}
+
 static struct jtag_interface ice1000_interface = {
 	.supported = DEBUG_CAP_TMS_SEQ,
 	.execute_queue = ice1000_execute_queue,
 };
 
+static const struct command_registration ice1000_command_handlers[] = {
+	{
+		.name = "use_usbmux",
+		.handler = &ice1000_use_usbmux,
+		.mode = COMMAND_CONFIG,
+		.usage = "use_usbmux ['true'|'false']",
+	},
+
+	COMMAND_REGISTRATION_DONE
+};
+
 struct adapter_driver ice1000_adapter_driver = {
 	.name = "ice1000",
 	.transports = jtag_only,
-	.commands = NULL,
+	.commands = ice1000_command_handlers,
 
 	.init = ice1000_init,
 	.quit = ice1000_quit,
@@ -1717,7 +1828,6 @@ struct adapter_driver ice1000_adapter_driver = {
 	.jtag_ops = &ice1000_interface,	
 };
 
-
 static const struct command_registration ice2000_command_handlers[] = {
 	{
 		.name = "ice2000_voltage",
@@ -1725,6 +1835,14 @@ static const struct command_registration ice2000_command_handlers[] = {
 		.mode = COMMAND_CONFIG,
 		.usage = "voltage ['1'|'2'|'3']",
 	},
+
+	{
+		.name = "use_usbmux",
+		.handler = &ice1000_use_usbmux,
+		.mode = COMMAND_CONFIG,
+		.usage = "use_usbmux ['true'|'false']",
+	},
+
 	COMMAND_REGISTRATION_DONE
 };
 

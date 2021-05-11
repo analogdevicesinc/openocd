@@ -171,6 +171,7 @@ SUBDIRS += %D%/libusbmux
 DIST_SUBDIRS += %D%/libusbmux
 
 %C%_libocdjtagdrivers_la_LIBADD += %D%/libusbmux/src/libusbmux.la
+%C%_libocdjtagdrivers_la_CPPFLAGS += -I$(builddir)/%D%/libusbmux/inc
 else
 if ICE_2000
 DRIVERFILES += %D%/ice1000.c
@@ -178,6 +179,7 @@ SUBDIRS += %D%/libusbmux
 DIST_SUBDIRS += %D%/libusbmux
 
 %C%_libocdjtagdrivers_la_LIBADD += %D%/libusbmux/src/libusbmux.la
+%C%_libocdjtagdrivers_la_CPPFLAGS += -I$(builddir)/%D%/libusbmux/inc
 endif
 endif
 
