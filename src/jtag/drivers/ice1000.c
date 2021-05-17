@@ -188,9 +188,9 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
  * Internal Macros
  */
 
+#ifdef _WIN32
 #define adi_usb_read_or_ret(buf, len)									\
 	do {																\
-#ifdef _WIN32
 		if (cable_params.use_usbmux)									\
 		{																\
 			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, \
@@ -199,7 +199,6 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 		}																\
 		else															\
 		{																\
-#endif
 			int __ret, __actual, __size = (len);						\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
 									cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
@@ -212,14 +211,11 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 						__size, __actual);								\
 				return ERROR_FAIL;										\
 			}															\
-#ifdef _WIN32
 		}																\
-#endif
 	} while (0)
 
 #define adi_usb_write_or_ret(buf, len)									\
 	do {																\
-#ifdef _WIN32
 		if (cable_params.use_usbmux)									\
 		{																\
 			USB_MUX_ERROR mux_ret = usbmux_write(cable_params.mux_handle,	\
@@ -229,7 +225,6 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 		}																\
 		else															\
 		{																\
-#endif
 			int __ret, __actual, __size = (len);						\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
 									cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
@@ -242,10 +237,42 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 						__size, __actual);								\
 				return ERROR_FAIL;										\
 			}															\
-#ifdef _WIN32
 		}																\
-#endif
 	} while (0)
+
+#else
+#define adi_usb_read_or_ret(buf, len)								\
+	do {															\
+		int __ret, __actual, __size = (len);						\
+		__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
+								cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
+								(unsigned char *)(buf), __size,		\
+								&__actual, cable_params.r_timeout);	\
+		if (__ret || __actual != __size)							\
+		{															\
+			LOG_ERROR("unable to read from usb to " #buf ": "		\
+					"wanted %i bytes but only received %i bytes",	\
+					__size, __actual);								\
+			return ERROR_FAIL;										\
+		}															\
+	} while (0)
+
+#define adi_usb_write_or_ret(buf, len)								\
+	do {															\
+		int __ret, __actual, __size = (len);						\
+		__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
+								cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
+								(unsigned char *)(buf), __size,		\
+								&__actual, cable_params.wr_timeout);\
+		if (__ret || __actual != __size)							\
+		{															\
+			LOG_ERROR("unable to write from " #buf " to usb: "		\
+					"wanted %i bytes but only wrote %i bytes",		\
+					__size, __actual);								\
+			return ERROR_FAIL;										\
+		}															\
+	} while (0)
+#endif
 
 
 static params_t cable_params;
