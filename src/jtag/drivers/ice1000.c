@@ -28,7 +28,10 @@
 #include <helper/log.h>
 #include <helper/configuration.h>
 #include "libusb_helper.h"
+
+#ifdef _WIN32
 #include "usbmux.h"
+#endif
 
 /*
  * Internal Structures
@@ -187,6 +190,7 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 
 #define adi_usb_read_or_ret(buf, len)									\
 	do {																\
+#ifdef _WIN32
 		if (cable_params.use_usbmux)									\
 		{																\
 			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, \
@@ -195,6 +199,7 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 		}																\
 		else															\
 		{																\
+#endif
 			int __ret, __actual, __size = (len);						\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
 									cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
@@ -207,11 +212,14 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 						__size, __actual);								\
 				return ERROR_FAIL;										\
 			}															\
+#ifdef _WIN32
 		}																\
+#endif
 	} while (0)
 
 #define adi_usb_write_or_ret(buf, len)									\
 	do {																\
+#ifdef _WIN32
 		if (cable_params.use_usbmux)									\
 		{																\
 			USB_MUX_ERROR mux_ret = usbmux_write(cable_params.mux_handle,	\
@@ -221,6 +229,7 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 		}																\
 		else															\
 		{																\
+#endif
 			int __ret, __actual, __size = (len);						\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
 									cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
@@ -233,7 +242,9 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 						__size, __actual);								\
 				return ERROR_FAIL;										\
 			}															\
+#ifdef _WIN32
 		}																\
+#endif
 	} while (0)
 
 
@@ -514,12 +525,17 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 
 	if (cable_params.use_usbmux)
 	{
+#ifdef _WIN32
 		ret = usbmux_open(&cable_params.mux_handle, ICE_1000_USB_CONNECTION_TIMEOUT);
 		if (ret)
 		{
 			LOG_DEBUG("failed to open USB MUX.");
 			return ERROR_FAIL;
 		}
+#else
+		LOG_DEBUG("USB MUX not supported on this host.");
+		return ERROR_FAIL;
+#endif
 	}
 	else
 	{
@@ -558,11 +574,13 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 			dev = NULL;
 		}
 
+#ifdef _WIN32
 		if (cable_params.mux_handle)
 		{
 			usbmux_close(cable_params.mux_handle);
 			cable_params.mux_handle = NULL;
 		}
+#endif
 		return ERROR_FAIL;
 	}
 
@@ -790,10 +808,12 @@ static int ice1000_quit(void)
 		libusb_close(cable_params.usb_handle);
 	}
 
+#ifdef _WIN32
 	if (cable_params.mux_handle)
 	{
 		usbmux_close(cable_params.mux_handle);
 	}
+#endif
 
 	free(cable_params.tap_info.dat);
 
@@ -813,10 +833,12 @@ static int ice2000_quit(void)
 		libusb_close(cable_params.usb_handle);
 	}
 
+#ifdef _WIN32
 	if (cable_params.mux_handle)
 	{
 		usbmux_close(cable_params.mux_handle);
 	}
+#endif
 
 	free(cable_params.tap_info.dat);
 
@@ -1432,6 +1454,7 @@ static int ice1000_execute_queue(void)
 	struct jtag_command *cmd = jtag_command_queue;
 	int retval = ERROR_OK;
 
+#ifdef _WIN32
 	if (cable_params.mux_handle)
 	{
 		// acquire USB lock
@@ -1440,6 +1463,7 @@ static int ice1000_execute_queue(void)
 			return ERROR_TIMEOUT;
 		}
 	}
+#endif
 
 	/* TODO add blink */
 	while (cmd != NULL)
@@ -1451,21 +1475,25 @@ static int ice1000_execute_queue(void)
 
 	if (retval != ERROR_OK)
 	{
+#ifdef _WIN32
 		if (cable_params.mux_handle)
 		{
 			// release USB lock
 			usbmux_unlock(cable_params.mux_handle);
 		}
+#endif
 		return retval;
 	}
 
 	retval = ice1000_tap_execute();
 
+#ifdef _WIN32
 	if (cable_params.mux_handle)
 	{
 		// release USB lock
 		usbmux_unlock(cable_params.mux_handle);
 	}
+#endif
 
 	return retval;
 }
