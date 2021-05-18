@@ -87,7 +87,9 @@ typedef struct
 	int32_t r_buf_sz;				/* USB Read Buffer Size */
 	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
 	bool use_usbmux;				/* If true, use USB MUX for USB communication */
+#ifdef _WIN32
 	HANDLE mux_handle;				/* USB MUX handle */
+#endif
 } params_t;
 
 /* Emulators's USB Data structure */
@@ -548,7 +550,9 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	int i, ret;
 
 	dev = NULL;
+#ifdef _WIN32
 	cable_params.mux_handle = NULL;
+#endif
 
 	if (cable_params.use_usbmux)
 	{

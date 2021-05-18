@@ -370,6 +370,11 @@ AC_ARG_ENABLE([internal-libjaylink],
   [Disable building internal libjaylink]),
   [use_internal_libjaylink=$enableval], [use_internal_libjaylink=yes])
 
+AC_ARG_ENABLE([libusbmux],
+  AS_HELP_STRING([--enable-libusbmux],
+  [Enable building libusbmux]),
+  [use_libusbmux=$enableval], [use_libusbmux=no])
+
 build_minidriver=no
 AC_MSG_CHECKING([whether to enable ZY1000 minidriver])
 AS_IF([test "x$build_zy1000" = "xyes"], [
@@ -719,7 +724,7 @@ AS_IF([test "x$enable_jlink" != "xno"], [
   ])
 ])
 
-AS_IF([test "x$enable_libusbmux" != "xno"], [
+AS_IF([test "x$enable_libusbmux" = "xyes"], [
   AC_CONFIG_SUBDIRS([src/jtag/drivers/libusbmux])
 ])
 
@@ -761,6 +766,7 @@ AM_CONDITIONAL([USE_LIBGPIOD], [test "x$use_libgpiod" = "xyes"])
 AM_CONDITIONAL([USE_HIDAPI], [test "x$use_hidapi" = "xyes"])
 AM_CONDITIONAL([USE_LIBJAYLINK], [test "x$use_libjaylink" = "xyes"])
 AM_CONDITIONAL([RSHIM], [test "x$build_rshim" = "xyes"])
+AM_CONDITIONAL([USE_LIBUSBMUX], [test "x$use_libusbmux" = "xyes"])
 
 AM_CONDITIONAL([MINIDRIVER], [test "x$build_minidriver" = "xyes"])
 AM_CONDITIONAL([MINIDRIVER_DUMMY], [test "x$build_minidriver_dummy" = "xyes"])
