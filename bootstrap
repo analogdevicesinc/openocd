@@ -46,5 +46,12 @@ if [ -x src/jtag/drivers/libjaylink/autogen.sh ]; then
     )
 fi
 
+if [ -x src/jtag/drivers/libusbmux/bootstrap.sh ]; then
+    (
+    cd src/jtag/drivers/libusbmux
+    ./bootstrap.sh
+    )
+fi
+
 echo "Bootstrap complete. Quick build instructions:"
 echo "./configure ...."
