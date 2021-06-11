@@ -111,10 +111,10 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data,
  * Debug Macros
  */
 
-#if 0    /* set to 1 to output debug info about scans */
+#if 1   /* set to 1 to output debug info about scans */
 
 //#define DSP_SCAN_DATA
-#define DUMP_EACH_RCV_DATA
+//#define DUMP_EACH_RCV_DATA
 //#define DSP_SCAN_CAUSE
 #define DEBUG(...)    printf(__VA_ARGS__)
 
@@ -507,7 +507,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 
 	/* For an unknown reason, this is needed for using ICE-1000/2000
 	   with xHCI controller on Linux. */
-	libusb_set_interface_alt_setting (dev, 0, 0);
+	//libusb_set_interface_alt_setting (dev, 0, 0);
 
 	cable_params.tap_info.dat = malloc(sizeof(dat_dat) * DAT_SZ);
 	if (!cable_params.tap_info.dat)
@@ -828,6 +828,13 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 	int32_t bit_set = tap_info->dat[idx_dat].pos;
 	int32_t i;
 
+	puts("##############OUT#################\n");
+	for (i = 0; i < len+2; i++)
+	{
+		DEBUG("%02X ", rcv_data[i]);
+	}
+	putchar('\n');
+
 #ifdef DUMP_EACH_RCV_DATA
 	DEBUG("Idx = %d; Read len = %d\n", dat_idx, len);
 #endif
@@ -849,7 +856,7 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 
 #ifdef DUMP_EACH_RCV_DATA
 		if (i % 8 == 0 && i != 0)
-			DEBUG("%d", buf[i/8 - 1]);
+			DEBUG("%x", buf[i/8 - 1]);
 		if (((i + 1) % 64) == 0)
 			putchar('\n');
 		else if (((i + 1) % 8) == 0)
@@ -1186,6 +1193,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 	/* Build Scan.	If command is NULL, IN is TMS. Otherwise,
 	   TMS will always be zero except the last bit! */
+	int temp = 0;
 	for (i = 0; i < num_bits; i++)
 	{
 		if (command != NULL)
@@ -1202,12 +1210,21 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		{
 			bit_set = 0x80;
 			idx++;
+			//DEBUG("%02x ", tap_scan->tms);
+			//DEBUG("%02x ", tap_scan->tdi);
+			temp++;
+			if(temp == 16)
+			{
+				temp = 0;
+				putchar('\n');
+			}
 			tap_scan++;
 			tap_scan->tdi = 0;
 			tap_scan->tms = 0;
 		}
 	}
 
+	putchar('\n');
 	tap_info->cur_idx = idx;
 	tap_info->bit_pos = bit_set;
 
@@ -1649,6 +1666,13 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	{	/* only Ice emulators use this */
 		memcpy(raw_buf + i + 4, &dof_start, 4);
 	}
+
+	puts("*****************IN***************\n");
+	for (i = 0; i < size; i++)
+	{
+		DEBUG("%02X ", raw_buf[i]);
+	}
+	putchar('\n');
 
 	adi_usb_write_or_ret(raw_buf, size);
 
