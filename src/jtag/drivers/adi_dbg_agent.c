@@ -129,7 +129,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define ICE_DEFAULT_SCAN_LEN			0x7FF0	/* Max DIF is 0x2AAA8, but DMA is only 16 bits. */
 #define ICE_TRIGGER_SCAN_LEN			0x7FD8	/* Start checking for RTI/TLR for xmit */
 
-#define RAW_SCAN_HDR_SZ					12
+#define RAW_SCAN_HDR_SZ					8
 
 #define DAT_SZ							0x4000	/* size allocated for reading data */
 #define DAT_SZ_INC						0x40	/* size to increase if data full */
@@ -314,7 +314,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 
 	cable_params.tap_pair_start_idx = RAW_SCAN_HDR_SZ;
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
-	cable_params.num_rcv_hdr_bytes = 5;//cable_params.tap_pair_start_idx;
+	cable_params.num_rcv_hdr_bytes = 3;//cable_params.tap_pair_start_idx;
 
 	return ERROR_OK;
 }
@@ -463,9 +463,9 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 	int32_t i;
 
 	puts("##############OUT#################\n");
-	for (i = 0; i < len-5; i++)
+	for (i = 0; i < len-3; i++)
 	{
-		DEBUG("%02X ", rcv_data[i]);
+		DEBUG("%02X ", rcvBuf[i]);
 	}
 	putchar('\n');
 
@@ -847,19 +847,19 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 			bit_set = 0x80;
 			idx++;
 			//DEBUG("%02x ", tap_scan->tms);
-			DEBUG("%02x ", tap_scan->tdi);
+			//DEBUG("%02x ", tap_scan->tdi);
 			temp++;
 			if(temp == 16)
 			{
 				temp = 0;
-				//putchar('\n');
+				putchar('\n');
 			}
 			tap_scan++;
 			tap_scan->tdi = 0;
 			tap_scan->tms = 0;
 		}
 	}
-	//putchar('\n');
+	putchar('\n');
 	tap_info->cur_idx = idx;
 	tap_info->bit_pos = bit_set;
 
@@ -1123,7 +1123,7 @@ static int perform_scan(uint8_t **rdata)
 		tap_info->pairs[cur_len].tms = 0;
 		tap_info->pairs[cur_len].tdi = 0;
 	}
-
+	
 	tap_info->cur_idx = cur_len;
 	rem_len = cur_len * sizeof (tap_pairs);
 
@@ -1254,19 +1254,21 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	data = dif_cnt / 4;			/* dif count in longs */
 	memcpy(raw_buf + i, &data, 4);
 	data = tap_info->cur_idx / 4;  /* count in longs */
-	memcpy(raw_buf + i + 2, &data, 4);
+	memcpy(raw_buf + i + 2, &data, 2);
 
-	{	/* only Ice emulators use this */
-		memcpy(raw_buf + i + 4, &dof_start, 4);
-	}
-
-	/*puts("*****************IN***************\n");
-	for (i = 0; i < size; i++)
+	puts("*****************IN***************\n");
+	puts("TMS-TDI\n");
+	for (i = 8; i <= size-2; i+=2)
 	{
 		DEBUG("%02X ", raw_buf[i]);
 	}
 	putchar('\n');
-*/
+	for (i = 9; i <= (size-2)+1; i+=2)
+	{
+		DEBUG("%02X ", raw_buf[i]);
+	}
+	putchar('\n');
+
 	adi_usb_write_or_ret(raw_buf, size);
 
 	if (lastpkt)
