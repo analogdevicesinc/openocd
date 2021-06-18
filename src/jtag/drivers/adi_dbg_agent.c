@@ -149,14 +149,6 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define HOST_READ_EEPROM               	0x0B	/* read the target's EEPROM */
 #define HOST_WRITE_EEPROM              	0x0C	/* write to the target's EEPROM */
 
-/* Registers */
-#define REG_AUX							0x00
-#define REG_SCR							0x04
-#define REG_FREQ						0x40
-
-#define SCR_DEFAULT						0x30A0461
-#define SCR_TRST_BIT					0x0000040
-
 /* Ice USB controls */
 #define WRITE_ENDPOINT			0x02
 #define READ_ENDPOINT			0x01
@@ -314,7 +306,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 
 	cable_params.tap_pair_start_idx = RAW_SCAN_HDR_SZ;
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
-	cable_params.num_rcv_hdr_bytes = 3;//cable_params.tap_pair_start_idx;
+	cable_params.num_rcv_hdr_bytes = 3;  // this is where our TDO actually starts
 
 	return ERROR_OK;
 }
@@ -461,14 +453,14 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 	uint8_t *rcvBuf = rcv_data + cable_params.num_rcv_hdr_bytes + dat_idx;
 	int32_t bit_set = tap_info->dat[idx_dat].pos;
 	int32_t i;
-
+#if 0
 	puts("##############OUT#################\n");
 	for (i = 0; i < len-3; i++)
 	{
 		DEBUG("%02X ", rcvBuf[i]);
 	}
 	putchar('\n');
-
+#endif
 #ifdef DUMP_EACH_RCV_DATA
 	DEBUG("Idx = %d; Read len = %d\n", dat_idx, len);
 #endif
@@ -575,9 +567,8 @@ static int dbgagent_execute_reset(struct jtag_command *cmd)
 		tap_set_state(TAP_RESET);
 	}
 
-	//do_host_cmd(HOST_SET_TRST, cmd->cmd.reset->trst ? 0 : 1, 0);
-	do_host_cmd(HOST_SET_TRST, 0, 0);
-	do_host_cmd(HOST_SET_TRST, 1, 0);
+	do_host_cmd(HOST_SET_TRST, cmd->cmd.reset->trst ? 0 : 1, 0);
+
 	return ERROR_OK;
 }
 
@@ -829,7 +820,6 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 	/* Build Scan.	If command is NULL, IN is TMS. Otherwise,
 	   TMS will always be zero except the last bit! */
-	int temp = 0;
 	for (i = 0; i < num_bits; i++)
 	{
 		if (command != NULL)
@@ -846,20 +836,11 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		{
 			bit_set = 0x80;
 			idx++;
-			//DEBUG("%02x ", tap_scan->tms);
-			//DEBUG("%02x ", tap_scan->tdi);
-			temp++;
-			if(temp == 16)
-			{
-				temp = 0;
-				putchar('\n');
-			}
 			tap_scan++;
 			tap_scan->tdi = 0;
 			tap_scan->tms = 0;
 		}
 	}
-	putchar('\n');
 	tap_info->cur_idx = idx;
 	tap_info->bit_pos = bit_set;
 
@@ -1085,7 +1066,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 
 		adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_command_block));
 
-		adi_usb_read_or_ret (&results, sizeof (results));
+		adi_usb_read_or_ret(&results, sizeof (results));
 	}
 
 	return results;
@@ -1103,7 +1084,7 @@ static int perform_scan(uint8_t **rdata)
 	int32_t idx, collect_data = 0;
 	uint32_t cur_len = tap_info->cur_idx;
 	uint32_t rem_len;
-
+		
 	/* Data is scan as 32 bit words, so boundaries are adjusted here */
 	if (tap_info->bit_pos != 0x80) /* meaning no dangling bits? */
 	{	/* yes, so straighten out! */
@@ -1255,7 +1236,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	memcpy(raw_buf + i, &data, 4);
 	data = tap_info->cur_idx / 4;  /* count in longs */
 	memcpy(raw_buf + i + 2, &data, 2);
-
+#if 0
 	puts("*****************IN***************\n");
 	puts("TMS-TDI\n");
 	for (i = 8; i <= size-2; i+=2)
@@ -1268,14 +1249,14 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 		DEBUG("%02X ", raw_buf[i]);
 	}
 	putchar('\n');
-
+#endif
 	adi_usb_write_or_ret(raw_buf, size);
 
 	if (lastpkt)
 	{
 		int32_t cur_rd_bytes = 0, tot_bytes_rd = 0, rd_bytes_left;
 
-		rd_bytes_left = 8 + ((collect_dof) ? (tap_info->cur_idx - dof_start) : 0);
+		rd_bytes_left = RAW_SCAN_HDR_SZ + ((collect_dof) ? (tap_info->cur_idx - dof_start) : 0);
 
 		while (tot_bytes_rd < rd_bytes_left)
 		{
