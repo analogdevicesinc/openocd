@@ -699,6 +699,11 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		do_host_cmd(HOST_SET_TRST, 0, 0);
 	}
 
+	uint32_t value = 1;
+	do_single_reg_value(REG_AUX, 1, 1, value);
+	value = 0;
+	do_single_reg_value(REG_AUX, 1, 1, value);
+
 	cable_params.tap_pair_start_idx = SELECTIVE_RAW_SCAN_HDR_SZ;
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
 	cable_params.num_rcv_hdr_bytes = cable_params.tap_pair_start_idx;
@@ -1486,11 +1491,51 @@ static int ice1000_execute_queue(void)
 	int retval = ERROR_OK;
 
 #ifdef _WIN32
+#if 0
 	if (cable_params.mux_handle)
 	{
+		bool save_poll = jtag_poll_get_enabled();
+		jtag_poll_set_enabled(false);
 		// acquire USB lock
+		//LOG_DEBUG("USBMUX acquire lock");
 		if (usbmux_lock(cable_params.mux_handle) != USB_MUX_OK)
 		{
+			jtag_poll_set_enabled(save_poll);
+			LOG_DEBUG("USBMUX lock timeout");
+			return ERROR_TIMEOUT;
+		}
+		jtag_poll_set_enabled(save_poll);
+	}
+#endif
+	if (cable_params.mux_handle)
+	{
+		int attempt = 0;
+		
+		// Send the lock message header until it fails or we acquire the lock
+		for (attempt = 0; (attempt < USB_MUX_MAX_LOCK_ATTEMPTS); attempt++)
+		{
+			// Acquire the USB lock
+			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
+			if (mux_ret == USB_MUX_FAIL)
+			{
+				LOG_DEBUG("USBMUX lock timeout");
+				return ERROR_TIMEOUT;
+			}
+
+			if (mux_ret == USB_MUX_LOCK_ACQUIRED)
+			{
+				LOG_DEBUG("USBMUX lock acquired");
+				break;
+			}
+			usleep(100000);
+			keep_alive();
+			LOG_DEBUG("keep_alive sent");
+		}
+
+		if (attempt == USB_MUX_MAX_LOCK_ATTEMPTS)
+		{
+			// Failed to acquire lock (TIMEOUT)
+			LOG_DEBUG("USBMUX lock timeout, max attempts");
 			return ERROR_TIMEOUT;
 		}
 	}
@@ -1523,6 +1568,7 @@ static int ice1000_execute_queue(void)
 	{
 		// release USB lock
 		usbmux_unlock(cable_params.mux_handle);
+		//LOG_DEBUG("USBMUX release lock");
 	}
 #endif
 
