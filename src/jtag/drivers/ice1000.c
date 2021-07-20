@@ -1518,15 +1518,20 @@ static int ice1000_execute_queue(void)
 			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
 			if (mux_ret == USB_MUX_FAIL)
 			{
-				LOG_DEBUG("USBMUX lock timeout");
+				LOG_DEBUG("USBMUX lock failure");
 				return ERROR_TIMEOUT;
 			}
 
-			if (mux_ret == USB_MUX_LOCK_ACQUIRED)
+			if (mux_ret == USB_MUX_OK)
 			{
-				LOG_DEBUG("USBMUX lock acquired");
+				//LOG_DEBUG("USBMUX lock acquired");
 				break;
 			}
+			else
+			{
+				//LOG_DEBUG("USBMUX lock busy");
+			}
+			
 			usleep(100000);
 			keep_alive();
 			LOG_DEBUG("keep_alive sent");
