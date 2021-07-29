@@ -1491,22 +1491,6 @@ static int ice1000_execute_queue(void)
 	int retval = ERROR_OK;
 
 #ifdef _WIN32
-#if 0
-	if (cable_params.mux_handle)
-	{
-		bool save_poll = jtag_poll_get_enabled();
-		jtag_poll_set_enabled(false);
-		// acquire USB lock
-		//LOG_DEBUG("USBMUX acquire lock");
-		if (usbmux_lock(cable_params.mux_handle) != USB_MUX_OK)
-		{
-			jtag_poll_set_enabled(save_poll);
-			LOG_DEBUG("USBMUX lock timeout");
-			return ERROR_TIMEOUT;
-		}
-		jtag_poll_set_enabled(save_poll);
-	}
-#endif
 	if (cable_params.mux_handle)
 	{
 		int attempt = 0;
@@ -1516,22 +1500,20 @@ static int ice1000_execute_queue(void)
 		{
 			// Acquire the USB lock
 			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
-			if (mux_ret == USB_MUX_FAIL)
-			{
-				LOG_DEBUG("USBMUX lock failure");
-				return ERROR_TIMEOUT;
-			}
-
 			if (mux_ret == USB_MUX_OK)
 			{
-				//LOG_DEBUG("USBMUX lock acquired");
 				break;
+			}
+			else if (mux_ret == USB_MUX_BUSY)
+			{
+				LOG_DEBUG("USBMUX lock busy");
 			}
 			else
 			{
-				//LOG_DEBUG("USBMUX lock busy");
+				LOG_DEBUG("Failed to acquire USB lock");
+				return ERROR_TIMEOUT;
 			}
-			
+
 			usleep(100000);
 			keep_alive();
 			LOG_DEBUG("keep_alive sent");
