@@ -424,6 +424,66 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_VTTBR_EL2, 0), &value);
 		value_64 = value;
 		break;
+	case ARMV8_RMR_EL1:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_RMR_EL1, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_RMR_EL2:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_RMR_EL2, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_RMR_EL3:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_RMR_EL3, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_RVBAR_EL3:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_RVBAR_EL3, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_SDER32_EL3:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_SDER32_EL3, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_TPIDRRO_EL0:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_TPIDRRO_EL0, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_TPIDR_EL0:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_TPIDR_EL0, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_TPIDR_EL1:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_TPIDR_EL1, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_TPIDR_EL2:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_TPIDR_EL2, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_TPIDR_EL3:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_TPIDR_EL3, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_VDISR_EL2:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_VDISR_EL2, 0), &value);
+		value_64 = value;
+		break;
+	case ARMV8_VSESR_EL2:
+		retval = dpm->instr_read_data_r0(dpm,
+				ARMV8_MRS(SYSTEM_VSESR_EL2, 0), &value);
+		value_64 = value;
+		break;
 
 	default:
 		retval = ERROR_FAIL;
@@ -768,6 +828,66 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		value = value_64;
 		retval = dpm->instr_write_data_r0(dpm,
 				ARMV8_MSR_GP(SYSTEM_VTTBR_EL2, 0), value);
+		break;
+	case ARMV8_RMR_EL1:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_RMR_EL1, 0), value);
+		break;
+	case ARMV8_RMR_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_RMR_EL2, 0), value);
+		break;
+	case ARMV8_RMR_EL3:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_RMR_EL3, 0), value);
+		break;
+	case ARMV8_RVBAR_EL3:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_RVBAR_EL3, 0), value);
+		break;
+	case ARMV8_SDER32_EL3:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_SDER32_EL3, 0), value);
+		break;
+	case ARMV8_TPIDRRO_EL0:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_TPIDRRO_EL0, 0), value);
+		break;
+	case ARMV8_TPIDR_EL0:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_TPIDR_EL0, 0), value);
+		break;
+	case ARMV8_TPIDR_EL1:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_TPIDR_EL1, 0), value);
+		break;
+	case ARMV8_TPIDR_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_TPIDR_EL2, 0), value);
+		break;
+	case ARMV8_TPIDR_EL3:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_TPIDR_EL3, 0), value);
+		break;
+	case ARMV8_VDISR_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_VDISR_EL2, 0), value);
+		break;
+	case ARMV8_VSESR_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0(dpm,
+				ARMV8_MSR_GP(SYSTEM_VSESR_EL2, 0), value);
 		break;
 
 	default:
@@ -1868,6 +1988,8 @@ static const struct {
 	{ ARMV8_ELR_EL3, "ELR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_CODE_PTR, "debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_SPSR_EL3, "SPSR_EL3", 32, ARMV8_64_EL3H, REG_TYPE_UINT32, "debug", "net.sourceforge.openocd.debug", NULL},
 
+	{ ARMV8_TPIDR_EL0, "TPIDR_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_TPIDRRO_EL0, "TPIDRRO_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_ESR_EL1, "ESR_EL1", 32, ARMV8_64_EL1H, REG_TYPE_UINT32, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_FAR_EL1, "FAR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_VBAR_EL1, "VBAR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
@@ -1879,6 +2001,8 @@ static const struct {
 	{ ARMV8_CONTEXTIDR_EL1, "CONTEXTIDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_DISR_EL1, "DISR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_ISR_EL1, "ISR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_RMR_EL1, "RMR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_TPIDR_EL1, "TPIDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_ESR_EL2, "ESR_EL2", 32, ARMV8_64_EL2H, REG_TYPE_UINT32, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_FAR_EL2, "FAR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_VBAR_EL2, "VBAR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
@@ -1891,6 +2015,10 @@ static const struct {
 	{ ARMV8_HCR_EL2, "HCR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_HPFAR_EL2, "HPFAR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_IFSR32_EL2, "IFSR32_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_RMR_EL2, "RMR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_TPIDR_EL2, "TPIDR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_VDISR_EL2, "VDISR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_VSESR_EL2, "VSESR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_ESR_EL3, "ESR_EL3", 32, ARMV8_64_EL3H, REG_TYPE_UINT32, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_FAR_EL3, "FAR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_VBAR_EL3, "VBAR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
@@ -1900,6 +2028,10 @@ static const struct {
 	{ ARMV8_AFSR1_EL3, "AFSR1_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_CPTR_EL3, "CPTR_EL3", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_SCR_EL3, "SCR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_RMR_EL3, "RMR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_RVBAR_EL3, "RVBAR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_SDER32_EL3, "SDER32_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_TPIDR_EL3, "TPIDR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	
 	{ ARMV8_TTBR0_EL1, "TTBR0_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "MemoryManagement", "net.sourceforge.openocd.memory", NULL},
 	{ ARMV8_TTBR1_EL1, "TTBR1_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "MemoryManagement", "net.sourceforge.openocd.memory", NULL},
@@ -1917,7 +2049,7 @@ static const struct {
 	
 	{ ARMV8_CNTKCTL_EL1, "CNTKCTL_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 
-	{ ARMV8_CTR_EL0, "CTR_EL0", 32, ARMV8_64_EL0T, REG_TYPE_UINT32, "CacheControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_CTR_EL0, "CTR_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_CSSELR_EL1, "CSSELR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},	
 };
 
