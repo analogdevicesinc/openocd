@@ -1491,14 +1491,12 @@ static int ice1000_execute_queue(void)
 	int retval = ERROR_OK;
 
 #ifdef _WIN32
+#define USB_MUX_MAX_LOCK_ATTEMPTS 50
 	if (cable_params.mux_handle)
 	{
 		int attempt = 0;
-		
-		// Send the lock message header until it fails or we acquire the lock
-		for (attempt = 0; (attempt < USB_MUX_MAX_LOCK_ATTEMPTS); attempt++)
-		{
-			// Acquire the USB lock
+		do {
+			// attempt to acquire the USB lock
 			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
 			if (mux_ret == USB_MUX_OK)
 			{
@@ -1506,25 +1504,27 @@ static int ice1000_execute_queue(void)
 			}
 			else if (mux_ret == USB_MUX_BUSY)
 			{
-				LOG_DEBUG("USBMUX lock busy");
+				if (attempt < USB_MUX_MAX_LOCK_ATTEMPTS)
+				{
+					LOG_DEBUG("MUX is busy, retrying");
+				}
+				else
+				{
+					// Failed to acquire lock (TIMEOUT)
+					LOG_DEBUG("Timeout acquiring USB lock.");
+					return ERROR_TIMEOUT;
+				}
 			}
 			else
 			{
-				LOG_DEBUG("Failed to acquire USB lock");
-				return ERROR_TIMEOUT;
+				LOG_DEBUG("USB error: Failed to acquire USB lock (error %d).", mux_ret);
+				return ERROR_FAIL;
 			}
-
 			usleep(100000);
 			keep_alive();
 			LOG_DEBUG("keep_alive sent");
-		}
-
-		if (attempt == USB_MUX_MAX_LOCK_ATTEMPTS)
-		{
-			// Failed to acquire lock (TIMEOUT)
-			LOG_DEBUG("USBMUX lock timeout, max attempts");
-			return ERROR_TIMEOUT;
-		}
+			attempt++;
+		} while (1);
 	}
 #endif
 
@@ -1555,7 +1555,6 @@ static int ice1000_execute_queue(void)
 	{
 		// release USB lock
 		usbmux_unlock(cable_params.mux_handle);
-		//LOG_DEBUG("USBMUX release lock");
 	}
 #endif
 
