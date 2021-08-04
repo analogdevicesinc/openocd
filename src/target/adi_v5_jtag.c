@@ -720,8 +720,8 @@ static int jtag_ap_q_bankselect(struct adi_ap *ap, unsigned reg)
 	struct adi_dap *dap = ap->dap;
 	uint32_t sel = ((uint32_t)ap->ap_num << 24) | (reg & 0x000000F0);
 
-//	if (sel == dap->select)
-//		return ERROR_OK;
+	if (sel == dap->select)
+		return ERROR_OK;
 
 	dap->select = sel;
 

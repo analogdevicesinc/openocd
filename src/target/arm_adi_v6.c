@@ -128,7 +128,7 @@ static int adiv6_mem_ap_setup_csw(struct adi_ap *ap, uint32_t csw)
 {
 	csw |= ap->csw_default;
 
-	if (csw != ap->csw_value) {
+	//if (csw != ap->csw_value) {
 		LOG_DEBUG("DAP: Set CSW %x",csw);
 		int retval = dap_queue_ap_write(ap, MEM_AP_REG_CSW, csw);
 		if (retval != ERROR_OK) {
@@ -136,13 +136,13 @@ static int adiv6_mem_ap_setup_csw(struct adi_ap *ap, uint32_t csw)
 			return retval;
 		}
 		ap->csw_value = csw;
-	}
+	//}
 	return ERROR_OK;
 }
 
 static int adiv6_mem_ap_setup_tar(struct adi_ap *ap, target_addr_t tar)
 {
-	if (!ap->tar_valid || tar != ap->tar_value) {
+	//if (!ap->tar_valid || tar != ap->tar_value) {
 		LOG_DEBUG("DAP: Set TAR " TARGET_ADDR_FMT " size is %zu" ,tar, sizeof(tar));
 		int retval = dap_queue_ap_write(ap, MEM_AP_REG_TAR, (uint32_t) tar);
 		if (retval == ERROR_OK && (ap->cfg_reg & 2)) {
@@ -156,7 +156,7 @@ static int adiv6_mem_ap_setup_tar(struct adi_ap *ap, target_addr_t tar)
 		}
 		ap->tar_value = tar;
 		ap->tar_valid = true;
-	}
+	//}
 	return ERROR_OK;
 }
 
