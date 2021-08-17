@@ -699,6 +699,11 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		do_host_cmd(HOST_SET_TRST, 0, 0);
 	}
 
+	uint32_t value = 1;
+	do_single_reg_value(REG_AUX, 1, 1, value);
+	value = 0;
+	do_single_reg_value(REG_AUX, 1, 1, value);
+
 	cable_params.tap_pair_start_idx = SELECTIVE_RAW_SCAN_HDR_SZ;
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
 	cable_params.num_rcv_hdr_bytes = cable_params.tap_pair_start_idx;
@@ -1486,13 +1491,40 @@ static int ice1000_execute_queue(void)
 	int retval = ERROR_OK;
 
 #ifdef _WIN32
+#define USB_MUX_MAX_LOCK_ATTEMPTS 50
 	if (cable_params.mux_handle)
 	{
-		// acquire USB lock
-		if (usbmux_lock(cable_params.mux_handle) != USB_MUX_OK)
-		{
-			return ERROR_TIMEOUT;
-		}
+		int attempt = 0;
+		do {
+			// attempt to acquire the USB lock
+			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
+			if (mux_ret == USB_MUX_OK)
+			{
+				break;
+			}
+			else if (mux_ret == USB_MUX_BUSY)
+			{
+				if (attempt < USB_MUX_MAX_LOCK_ATTEMPTS)
+				{
+					LOG_DEBUG("MUX is busy, retrying");
+				}
+				else
+				{
+					// Failed to acquire lock (TIMEOUT)
+					LOG_DEBUG("Timeout acquiring USB lock.");
+					return ERROR_TIMEOUT;
+				}
+			}
+			else
+			{
+				LOG_DEBUG("USB error: Failed to acquire USB lock (error %d).", mux_ret);
+				return ERROR_FAIL;
+			}
+			usleep(100000);
+			keep_alive();
+			LOG_DEBUG("keep_alive sent");
+			attempt++;
+		} while (1);
 	}
 #endif
 
