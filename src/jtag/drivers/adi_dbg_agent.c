@@ -568,7 +568,7 @@ static int dbgagent_execute_reset(struct jtag_command *cmd)
 	}
 
 	do_host_cmd(HOST_SET_TRST, cmd->cmd.reset->trst ? 0 : 1, 0);
-
+	
 	return ERROR_OK;
 }
 
@@ -1081,9 +1081,9 @@ static int perform_scan(uint8_t **rdata)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t firstpkt = 1, lastpkt = 0, *in = NULL, *out = NULL;
-	int32_t idx, collect_data = 0;
+	int32_t idx_in, idx_out, collect_data = 0;
 	uint32_t cur_len = tap_info->cur_idx;
-	uint32_t rem_len;
+	uint32_t rem_len, total_len, my_len;
 		
 	/* Data is scan as 32 bit words, so boundaries are adjusted here */
 	if (tap_info->bit_pos != 0x80) /* meaning no dangling bits? */
@@ -1106,14 +1106,8 @@ static int perform_scan(uint8_t **rdata)
 	}
 	
 	tap_info->cur_idx = cur_len;
-	rem_len = cur_len * sizeof (tap_pairs);
-
-	if (cur_len > cable_params.default_scanlen)
-	{
-		LOG_ERROR("TAP Scan length %d is greater than DIF Memory",
-			tap_info->cur_idx);
-		return ERROR_FAIL;
-	}
+	rem_len = total_len = my_len = cur_len * sizeof (tap_pairs);
+	my_len /= 2;
 
 	if (tap_info->cur_dat != -1)
 	{	/* yes we have data, so allocate for data plus header */
@@ -1144,24 +1138,83 @@ static int perform_scan(uint8_t **rdata)
 	}
 
 	in = (uint8_t *)tap_info->pairs;
-	idx = 0;
+	idx_in = 0;
+	idx_out = 0;
 
-	/* Here if data is too large, we break it up into manageable chunks */
-	do
+	do{
+#if 1
+		// firmware is limited for TMS/TDI pair storage so we need to break up the scans
+		if (total_len > 896)//cable_params.default_scanlen)
+		{
+			rem_len = 896;//cable_params.default_scanlen;	
+		}
+		else
+		{
+			rem_len = total_len;
+		}
+#endif
+		/* Here if data is too large, we break it up into manageable chunks */
+		do
+		{
+			cur_len = (rem_len >= cable_params.max_raw_data_tx_items) ? cable_params.max_raw_data_tx_items : rem_len;
+
+			if( cur_len == cable_params.max_raw_data_tx_items)
+				cur_len = cable_params.max_raw_data_tx_items;
+
+			if (cur_len == rem_len)
+				lastpkt = 1;
+#if 0
+			uint8_t *pTemp = &in[idx_in] - cable_params.tap_pair_start_idx;
+			for (int j = 0; j < 8; j++)
+			{
+				DEBUG("%02X ", pTemp[j]);
+			}
+			for (int j = 9; j < cur_len + 8; j+=2)
+			{
+				DEBUG("%02X ", pTemp[j]);
+			}
+#endif
+			do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx_in] - cable_params.tap_pair_start_idx, &out[idx_out]);
+			int32_t out_inc = 0;
+			if(idx_in != 0)
+			{
+				uint8_t *pData = &out[idx_out+3];
+				for(int i = 0; i < cur_len/2 + 3; i++)
+				{
+					out[idx_out+i] = pData[i];
+				}
+				out_inc = (cur_len/2);	
+			}
+			else
+			{
+				out_inc = (cur_len/2) + 3;	
+			}
+#if 0
+			puts("*****************OUT***************\n");
+			for (int j = 0; j < (cur_len/2)+3; j++)
+			{
+				DEBUG("%02X ", out[idx_out+j]);
+			}
+			putchar('\n');
+#endif
+			rem_len -= cur_len;
+			total_len -= cur_len;
+			idx_in += cur_len;
+			idx_out += out_inc;
+			firstpkt = 0;
+
+		} while (rem_len);
+
+		firstpkt = 1; // reset to show this is the first packet
+	} while (total_len);
+#if 0
+	puts("*****************ALL OUT***************\n");
+	for (int j = 0; j < my_len; j++)
 	{
-		cur_len = (rem_len >= cable_params.max_raw_data_tx_items) ? cable_params.max_raw_data_tx_items : rem_len;
-
-		if (cur_len == rem_len)
-			lastpkt = 1;
-
-		do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx] - cable_params.tap_pair_start_idx, out);
-
-		rem_len -= cur_len;
-		idx += cur_len;
-		firstpkt = 0;
-
-	} while (rem_len);
-
+		DEBUG("%02X ", out[j]);
+	}
+	putchar('\n');
+#endif
 	if (tap_info->cur_dat == -1)
 	{	/* no data to return, so free it */
 		free(out);
@@ -1203,13 +1256,15 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	int32_t i, dof_start = 0;
 	uint32_t data;
 	uint32_t size = cable_params.tap_pair_start_idx + dif_cnt;
+	int32_t num_scan_pairs = (dif_cnt >= 2) ? dif_cnt / 2 : 2;
+	int32_t scan_pairs_in_longs = (num_scan_pairs >= 4) ? num_scan_pairs / 4 : 1;
 
 	usb_cmd_blk.command = HOST_REQUEST_TX_DATA;
 	usb_cmd_blk.count = size;
 	usb_cmd_blk.buffer = 0;
 
 	/* first send Xmit request with the count of what will be sent */
-	adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_command_block));
+	adi_usb_write_or_ret((uint8_t *)&usb_cmd_blk, sizeof (usb_command_block));
 	i = 0;
 
 	/* send HOST_DO_RAW_SCAN command */
@@ -1232,18 +1287,17 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	}
 
 	raw_buf[i++] = collect_dof ? 1 : 0;
-	data = dif_cnt / 4;			/* dif count in longs */
+	data = (dif_cnt >= 4) ? dif_cnt / 4 : 1;			/* dif count in longs */
 	memcpy(raw_buf + i, &data, 4);
-	data = tap_info->cur_idx / 4;  /* count in longs */
-	memcpy(raw_buf + i + 2, &data, 2);
+	memcpy(raw_buf + i + 2, &scan_pairs_in_longs, 2);
 #if 0
 	puts("*****************IN***************\n");
-	puts("TMS-TDI\n");
-	for (i = 8; i <= size-2; i+=2)
-	{
-		DEBUG("%02X ", raw_buf[i]);
-	}
-	putchar('\n');
+	//puts("TMS-TDI\n");
+	//for (i = 8; i <= size-2; i+=2)
+	//{
+	//	DEBUG("%02X ", raw_buf[i]);
+	//}
+	//putchar('\n');
 	for (i = 9; i <= (size-2)+1; i+=2)
 	{
 		DEBUG("%02X ", raw_buf[i]);
@@ -1255,23 +1309,30 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	if (lastpkt)
 	{
 		int32_t cur_rd_bytes = 0, tot_bytes_rd = 0, rd_bytes_left;
+		int32_t buf_index = 0;
 
-		rd_bytes_left = RAW_SCAN_HDR_SZ + ((collect_dof) ? (tap_info->cur_idx - dof_start) : 0);
+		rd_bytes_left = RAW_SCAN_HDR_SZ + ((collect_dof) ? ((scan_pairs_in_longs * 4) - dof_start) : 0);
 
 		while (tot_bytes_rd < rd_bytes_left)
 		{
 			cur_rd_bytes = ((rd_bytes_left - tot_bytes_rd) > cable_params.r_buf_sz) ?
 				cable_params.r_buf_sz : (rd_bytes_left - tot_bytes_rd);
 
-			adi_usb_read_or_ret(out + tot_bytes_rd, cur_rd_bytes);
+			adi_usb_read_or_ret(out + buf_index, cur_rd_bytes);
+			if ((out + buf_index)[0] != 2)
+			{
+				LOG_ERROR("Scan Error!");
+				return ERROR_FAIL;
+			}
 			tot_bytes_rd += cur_rd_bytes;
+			buf_index += (cur_rd_bytes - 8);
 		}
 
-		if (out[0] != 2)
-		{
-			LOG_ERROR("Scan Error!");
-			return ERROR_FAIL;
-		}
+		//if (out[0] != 2)
+		//{
+		//	LOG_ERROR("Scan Error!");
+		//	return ERROR_FAIL;
+		//}
 	}
 
 	return ERROR_OK;
