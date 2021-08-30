@@ -156,6 +156,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define USB_READ_TIMEOUT		30000
 #define WRITE_BUFFER_SIZE		0x4800
 #define READ_BUFFER_SIZE		0x4000
+#define MAX_DIF_SIZE			(27 * 1024)     /* 0x7008 is the max but leave some room */
 
 #define MAX_USB_IDS 8
 /* vid = pid = 0 marks the end of the list */
@@ -1080,10 +1081,12 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 static int perform_scan(uint8_t **rdata)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
-	uint8_t firstpkt = 1, lastpkt = 0, *in = NULL, *out = NULL;
+	uint8_t firstpkt = 1, lastpkt = 1, *in = NULL, *out = NULL;
 	int32_t idx_in, idx_out, collect_data = 0;
 	uint32_t cur_len = tap_info->cur_idx;
-	uint32_t rem_len, total_len, my_len;
+	uint32_t rem_len;
+	uint32_t scan_status_bytes = 3;		/* number of bytes letting us know if the scan was successful */
+	uint32_t out_inc = 0;
 		
 	/* Data is scan as 32 bit words, so boundaries are adjusted here */
 	if (tap_info->bit_pos != 0x80) /* meaning no dangling bits? */
@@ -1106,8 +1109,7 @@ static int perform_scan(uint8_t **rdata)
 	}
 	
 	tap_info->cur_idx = cur_len;
-	rem_len = total_len = my_len = cur_len * sizeof (tap_pairs);
-	my_len /= 2;
+	rem_len = cur_len * sizeof (tap_pairs);
 
 	if (tap_info->cur_dat != -1)
 	{	/* yes we have data, so allocate for data plus header */
@@ -1141,80 +1143,33 @@ static int perform_scan(uint8_t **rdata)
 	idx_in = 0;
 	idx_out = 0;
 
-	do{
-#if 1
-		// firmware is limited for TMS/TDI pair storage so we need to break up the scans
-		if (total_len > 896)//cable_params.default_scanlen)
+	/* Here if data is too large, we break it up into manageable chunks */
+	do
+	{
+		cur_len = (rem_len > MAX_DIF_SIZE) ? MAX_DIF_SIZE : rem_len;
+
+		do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx_in] - cable_params.tap_pair_start_idx, &out[idx_out]);
+		if(idx_in != 0)
 		{
-			rem_len = 896;//cable_params.default_scanlen;	
+			// each scan gives us scan status, remove it from our buffer
+			// if it is not the first scan
+			uint8_t *pData = &out[idx_out + scan_status_bytes];
+			for(size_t i = 0; i < cur_len/2 + scan_status_bytes; i++)
+			{
+				out[idx_out+i] = pData[i];
+			}
+			out_inc = (cur_len/2);	
 		}
 		else
 		{
-			rem_len = total_len;
+			out_inc = (cur_len/2) + scan_status_bytes;	
 		}
-#endif
-		/* Here if data is too large, we break it up into manageable chunks */
-		do
-		{
-			cur_len = (rem_len >= cable_params.max_raw_data_tx_items) ? cable_params.max_raw_data_tx_items : rem_len;
 
-			if( cur_len == cable_params.max_raw_data_tx_items)
-				cur_len = cable_params.max_raw_data_tx_items;
+		rem_len -= cur_len;
+		idx_in += cur_len;
+		idx_out += out_inc;
+	} while (rem_len);
 
-			if (cur_len == rem_len)
-				lastpkt = 1;
-#if 0
-			uint8_t *pTemp = &in[idx_in] - cable_params.tap_pair_start_idx;
-			for (int j = 0; j < 8; j++)
-			{
-				DEBUG("%02X ", pTemp[j]);
-			}
-			for (int j = 9; j < cur_len + 8; j+=2)
-			{
-				DEBUG("%02X ", pTemp[j]);
-			}
-#endif
-			do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx_in] - cable_params.tap_pair_start_idx, &out[idx_out]);
-			int32_t out_inc = 0;
-			if(idx_in != 0)
-			{
-				uint8_t *pData = &out[idx_out+3];
-				for(int i = 0; i < cur_len/2 + 3; i++)
-				{
-					out[idx_out+i] = pData[i];
-				}
-				out_inc = (cur_len/2);	
-			}
-			else
-			{
-				out_inc = (cur_len/2) + 3;	
-			}
-#if 0
-			puts("*****************OUT***************\n");
-			for (int j = 0; j < (cur_len/2)+3; j++)
-			{
-				DEBUG("%02X ", out[idx_out+j]);
-			}
-			putchar('\n');
-#endif
-			rem_len -= cur_len;
-			total_len -= cur_len;
-			idx_in += cur_len;
-			idx_out += out_inc;
-			firstpkt = 0;
-
-		} while (rem_len);
-
-		firstpkt = 1; // reset to show this is the first packet
-	} while (total_len);
-#if 0
-	puts("*****************ALL OUT***************\n");
-	for (int j = 0; j < my_len; j++)
-	{
-		DEBUG("%02X ", out[j]);
-	}
-	putchar('\n');
-#endif
 	if (tap_info->cur_dat == -1)
 	{	/* no data to return, so free it */
 		free(out);
@@ -1290,20 +1245,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	data = (dif_cnt >= 4) ? dif_cnt / 4 : 1;			/* dif count in longs */
 	memcpy(raw_buf + i, &data, 4);
 	memcpy(raw_buf + i + 2, &scan_pairs_in_longs, 2);
-#if 0
-	puts("*****************IN***************\n");
-	//puts("TMS-TDI\n");
-	//for (i = 8; i <= size-2; i+=2)
-	//{
-	//	DEBUG("%02X ", raw_buf[i]);
-	//}
-	//putchar('\n');
-	for (i = 9; i <= (size-2)+1; i+=2)
-	{
-		DEBUG("%02X ", raw_buf[i]);
-	}
-	putchar('\n');
-#endif
+
 	adi_usb_write_or_ret(raw_buf, size);
 
 	if (lastpkt)
@@ -1327,12 +1269,6 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 			tot_bytes_rd += cur_rd_bytes;
 			buf_index += (cur_rd_bytes - 8);
 		}
-
-		//if (out[0] != 2)
-		//{
-		//	LOG_ERROR("Scan Error!");
-		//	return ERROR_FAIL;
-		//}
 	}
 
 	return ERROR_OK;
