@@ -129,6 +129,208 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 	uint32_t value;
 	uint64_t value_64;
 
+	struct arm *arm = &armv8->arm;
+	uint32_t cur_el = armv8_curel_from_core_mode(arm->core_mode);
+	uint32_t expected_el;
+	bool check_el = true;
+
+	switch(regnum) {
+	case ARMV8_AMAIR_EL3:
+	case ARMV8_ELR_EL3:
+	case ARMV8_ESR_EL3:
+	case ARMV8_SPSR_EL3:
+	case ARMV8_FAR_EL3:
+	case ARMV8_SCTLR_EL3:
+	case ARMV8_TTBR0_EL3:
+	case ARMV8_VBAR_EL3:
+	case ARMV8_ACTLR_EL3:
+	case ARMV8_AFSR0_EL3:
+	case ARMV8_AFSR1_EL3:
+	case ARMV8_CPTR_EL3:
+	case ARMV8_MAIR_EL3:
+	case ARMV8_SCR_EL3:
+	case ARMV8_TCR_EL3:
+	case ARMV8_RMR_EL3:
+	case ARMV8_RVBAR_EL3:
+	case ARMV8_SDER32_EL3:
+	case ARMV8_TPIDR_EL3:
+	case ARMV8_ICC_CTLR_EL3:
+	case ARMV8_ICC_IGRPEN1_EL3:
+	case ARMV8_ICC_SRE_EL3:
+		expected_el = 3;
+		break;
+	case ARMV8_AMAIR_EL2:
+	case ARMV8_ELR_EL2:
+	case ARMV8_ESR_EL2:
+	case ARMV8_HACR_EL2:
+	case ARMV8_HSTR_EL2:
+	case ARMV8_SPSR_EL2:
+	case ARMV8_FAR_EL2:
+	case ARMV8_SCTLR_EL2:
+	case ARMV8_TTBR0_EL2:
+	case ARMV8_VBAR_EL2:
+	case ARMV8_ACTLR_EL2:
+	case ARMV8_AFSR0_EL2:
+	case ARMV8_AFSR1_EL2:
+	case ARMV8_CONTEXTIDR_EL2:
+	case ARMV8_CNTVOFF_EL2:
+	case ARMV8_CNTHCTL_EL2:
+	case ARMV8_CNTHP_TVAL_EL2:
+	case ARMV8_CNTHP_CTL_EL2:
+	case ARMV8_CNTHV_TVAL_EL2:
+	case ARMV8_CNTHV_CTL_EL2:
+	case ARMV8_CNTHV_CVAL_EL2:
+	case ARMV8_CPTR_EL2:
+	case ARMV8_DACR32_EL2:
+	case ARMV8_HCR_EL2:
+	case ARMV8_HPFAR_EL2:
+	case ARMV8_IFSR32_EL2:
+	case ARMV8_MAIR_EL2:
+	case ARMV8_TCR_EL2:
+	case ARMV8_TTBR1_EL2:
+	case ARMV8_VTCR_EL2:
+	case ARMV8_VTTBR_EL2:
+	case ARMV8_RMR_EL2:
+	case ARMV8_TPIDR_EL2:
+	case ARMV8_VDISR_EL2:
+	case ARMV8_VSESR_EL2:
+	case ARMV8_ICH_AP0R0_EL2:
+	case ARMV8_ICH_AP1R0_EL2:
+	case ARMV8_ICH_EISR_EL2:
+	case ARMV8_ICH_ELRSR_EL2:
+	case ARMV8_ICH_HCR_EL2:
+	case ARMV8_ICH_LR0_EL2:
+	case ARMV8_ICH_LR1_EL2:
+	case ARMV8_ICH_LR2_EL2:
+	case ARMV8_ICH_LR3_EL2:
+	case ARMV8_ICH_MISR_EL2:
+	case ARMV8_ICH_VMCR_EL2:
+	case ARMV8_ICH_VTR_EL2:
+	case ARMV8_ICC_SRE_EL2:
+		expected_el = 2;
+		break;
+	case ARMV8_AMAIR_EL1:
+	case ARMV8_CCSIDR_EL1:
+	case ARMV8_CLIDR_EL1:
+	case ARMV8_CPUCFR_EL1:
+	case ARMV8_CPUPWRCTLR_EL1:
+	case ARMV8_ELR_EL1:
+	case ARMV8_ESR_EL1:
+	case ARMV8_PAR_EL1:
+	case ARMV8_SPSR_EL1:
+	case ARMV8_FAR_EL1:
+	case ARMV8_SCTLR_EL1:
+	case ARMV8_TTBR0_EL1:
+	case ARMV8_VBAR_EL1:
+	case ARMV8_ACTLR_EL1:
+	case ARMV8_AFSR0_EL1:
+	case ARMV8_AFSR1_EL1:
+	case ARMV8_CONTEXTIDR_EL1:
+	case ARMV8_CNTKCTL_EL1:
+	case ARMV8_CNTPS_TVAL_EL1:
+	case ARMV8_CNTPS_CTL_EL1:
+	case ARMV8_CNTPS_CVAL_EL1:
+	case ARMV8_CPACR_EL1:
+	case ARMV8_CSSELR_EL1:
+	case ARMV8_DISR_EL1:
+	case ARMV8_ISR_EL1:
+	case ARMV8_MAIR_EL1:
+	case ARMV8_TCR_EL1:
+	case ARMV8_TTBR1_EL1:
+	case ARMV8_RMR_EL1:
+	case ARMV8_TPIDR_EL1:
+	case ARMV8_ICC_AP0R0_EL1:
+	case ARMV8_ICC_AP1R0_EL1:
+	case ARMV8_ICC_ASGI1R_EL1:
+	case ARMV8_ICC_BPR0_EL1:
+	case ARMV8_ICC_BPR1_EL1:
+	case ARMV8_ICC_CTLR_EL1:
+	case ARMV8_ICC_DIR_EL1:
+	case ARMV8_ICC_EOIR0_EL1:
+	case ARMV8_ICC_EOIR1_EL1:
+	case ARMV8_ICC_HPPIR0_EL1:
+	case ARMV8_ICC_HPPIR1_EL1:
+	case ARMV8_ICC_IAR0_EL1:
+	case ARMV8_ICC_IAR1_EL1:
+	case ARMV8_ICC_IGRPEN0_EL1:
+	case ARMV8_ICC_IGRPEN1_EL1:
+	case ARMV8_ICC_PMR_EL1:
+	case ARMV8_ICC_RPR_EL1:
+	case ARMV8_ICC_SGI0R_EL1:
+	case ARMV8_ICC_SGI1R_EL1:
+	case ARMV8_ICC_SRE_EL1:
+	case ARMV8_ICV_AP0R0_EL1:
+	case ARMV8_ICV_AP1R0_EL1:
+	case ARMV8_ICV_BPR0_EL1:
+	case ARMV8_ICV_BPR1_EL1:
+	case ARMV8_ICV_CTLR_EL1:
+	case ARMV8_ICV_DIR_EL1:
+	case ARMV8_ICV_EOIR0_EL1:
+	case ARMV8_ICV_EOIR1_EL1:
+	case ARMV8_ICV_HPPIR0_EL1:
+	case ARMV8_ICV_HPPIR1_EL1:
+	case ARMV8_ICV_IAR0_EL1:
+	case ARMV8_ICV_IAR1_EL1:
+	case ARMV8_ICV_IGRPEN0_EL1:
+	case ARMV8_ICV_IGRPEN1_EL1:
+	case ARMV8_ICV_PMR_EL1:
+	case ARMV8_ICV_RPR_EL1:
+	case ARMV8_PMINTENCLR_EL1:
+	case ARMV8_PMINTENSET_EL1:
+	case ARMV8_PMMIR_EL1:
+		expected_el = 1;
+		break;
+	case ARMV8_CTR_EL0:
+	case ARMV8_CNTFRQ_EL0:
+	case ARMV8_CNTPCT_EL0:
+	case ARMV8_CNTVCT_EL0:
+	case ARMV8_CNTP_TVAL_EL0:
+	case ARMV8_CNTP_CTL_EL0:
+	case ARMV8_CNTP_CVAL_EL0:
+	case ARMV8_CNTV_TVAL_EL0:
+	case ARMV8_CNTV_CTL_EL0:
+	case ARMV8_CNTV_CVAL_EL0:
+	case ARMV8_TPIDRRO_EL0:
+	case ARMV8_TPIDR_EL0:
+	case ARMV8_PMCCFILTR_EL0:
+	case ARMV8_PMCCNTR_EL0:
+	case ARMV8_PMCEID0_EL0:
+	case ARMV8_PMCEID1_EL0:
+	case ARMV8_PMCNTENCLR_EL0:
+	case ARMV8_PMCNTENSET_EL0:
+	case ARMV8_PMCR_EL0:
+	case ARMV8_PMEVCNTR0_EL0:
+	case ARMV8_PMEVCNTR1_EL0:
+	case ARMV8_PMEVCNTR2_EL0:
+	case ARMV8_PMEVCNTR3_EL0:
+	case ARMV8_PMEVCNTR4_EL0:
+	case ARMV8_PMEVCNTR5_EL0:
+	case ARMV8_PMEVTYPER0_EL0:
+	case ARMV8_PMEVTYPER1_EL0:
+	case ARMV8_PMEVTYPER2_EL0:
+	case ARMV8_PMEVTYPER3_EL0:
+	case ARMV8_PMEVTYPER4_EL0:
+	case ARMV8_PMEVTYPER5_EL0:
+	case ARMV8_PMOVSCLR_EL0:
+	case ARMV8_PMOVSSET_EL0:
+	case ARMV8_PMSELR_EL0:
+	case ARMV8_PMSWINC_EL0:
+	case ARMV8_PMUSERENR_EL0:
+		expected_el = 0;
+		break;
+	default:
+		check_el = false;
+		break;
+	}
+
+	// some registers can only be read at their exception level
+	if (check_el && (cur_el != expected_el)) {
+		if (regval != NULL)
+			*regval = 0xDEADBEEF;
+
+		return ERROR_TARGET_EXCEPTION_LEVEL;
+	}
+
 	switch (regnum) {
 	case 0 ... 30:
 		retval = dpm->instr_read_data_dcc_64(dpm,
@@ -486,12 +688,12 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		retval = dpm->instr_read_data_r0(dpm,
 				ARMV8_MRS(SYSTEM_DACR32_EL2, 0), &value);
 		value_64 = value;
-		break;	
+		break;
 	case ARMV8_DISR_EL1:
 		retval = dpm->instr_read_data_r0(dpm,
 				ARMV8_MRS(SYSTEM_DISR_EL1, 0), &value);
 		value_64 = value;
-		break;		
+		break;
 	case ARMV8_HCR_EL2:
 		retval = dpm->instr_read_data_r0(dpm,
 				ARMV8_MRS(SYSTEM_HCR_EL2, 0), &value);
@@ -2003,6 +2205,40 @@ static int armv8_read_reg32(struct armv8_common *armv8, int regnum, uint64_t *re
 	uint32_t value = 0;
 	int retval;
 
+	struct arm *arm = &armv8->arm;
+	uint32_t cur_el = armv8_curel_from_core_mode(arm->core_mode);
+	uint32_t expected_el;
+	bool check_el = true;
+
+	switch(regnum) {
+	case ARMV8_ELR_EL3:
+	case ARMV8_ESR_EL3:
+	case ARMV8_SPSR_EL3:
+		expected_el = 3;
+		break;
+	case ARMV8_ELR_EL2:
+	case ARMV8_ESR_EL2:
+	case ARMV8_SPSR_EL2:
+		expected_el = 2;
+		break;
+	case ARMV8_ELR_EL1:
+	case ARMV8_ESR_EL1:
+	case ARMV8_SPSR_EL1:
+		expected_el = 1;
+		break;
+	default:
+		check_el = false;
+		break;
+	}
+
+	// some registers can only be read at their exception level
+	if (check_el && (cur_el != expected_el)) {
+		if (regval != NULL)
+			*regval = 0xDEADBEEF;
+
+		return ERROR_TARGET_EXCEPTION_LEVEL;
+	}
+
 	switch (regnum) {
 	case ARMV8_R0 ... ARMV8_R14:
 		/* return via DCC:  "MCR p14, 0, Rnum, c0, c5, 0" */
@@ -3109,7 +3345,7 @@ static const struct {
 	{ ARMV8_RVBAR_EL3, "RVBAR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_SDER32_EL3, "SDER32_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_TPIDR_EL3, "TPIDR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
-	
+
 	{ ARMV8_AMAIR_EL1, "AMAIR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "MemoryManagement", "net.sourceforge.openocd.memory", NULL},
 	{ ARMV8_TTBR0_EL1, "TTBR0_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "MemoryManagement", "net.sourceforge.openocd.memory", NULL},
 	{ ARMV8_TTBR1_EL1, "TTBR1_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "MemoryManagement", "net.sourceforge.openocd.memory", NULL},
@@ -3209,7 +3445,7 @@ static const struct {
 	{ ARMV8_CCSIDR_EL1, "CCSIDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},
 	{ ARMV8_CLIDR_EL1, "CLIDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},
 	{ ARMV8_CSSELR_EL1, "CSSELR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},
-	{ ARMV8_CPUCFR_EL1, "CPUCFR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},	
+	{ ARMV8_CPUCFR_EL1, "CPUCFR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},
 	{ ARMV8_CPUPWRCTLR_EL1, "CPUPWRCTLR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},
 
 	{ ARMV8_PMCCFILTR_EL0, "PMCCFILTR_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "PerformanceMonitor", "net.sourceforge.openocd.performmon", NULL},
