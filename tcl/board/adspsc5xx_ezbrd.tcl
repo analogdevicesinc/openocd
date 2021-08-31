@@ -400,6 +400,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    set dmc_ddr_zq_ctl2    [expr {$dmc_baseaddr + 0x103C}]
    set dmc_ddr_ca_ctl     [expr {$dmc_baseaddr + 0x1068}]
    set dmc_ddr_scratch2   [expr {$dmc_baseaddr + 0x1074}]
+   set dmc_ddr_scratch3   [expr {$dmc_baseaddr + 0x1078}]
    set dmc_ddr_scratch6   [expr {$dmc_baseaddr + 0x1084}]
    set dmc_ddr_scratch7   [expr {$dmc_baseaddr + 0x1088}]
    
@@ -630,8 +631,127 @@ proc adspsc59x_init_ddr3 { dmc } {
    # 1ms should be enough
    after 1
 
-   # Begin DMC phy ZQ calibration routine
+   # Workaround for DDR calibration is required for SC59x 0.0 silicon
+   set ddr_workaround 1
 
+   if { $ddr_workaround } {
+      # /* DMC Phy Initialization function with workaround 2 */
+      # /* Reset trigger */
+      # *pREG_DMC0_DDR_CA_CTL = 0x0;
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      # DmcDelay(5000);
+      mww phys $dmc_ddr_ca_ctl 0
+      mww phys $dmc_ddr_root_ctl 0
+      after 1
+
+      # *pREG_DMC0_DDR_SCRATCH_3 = 0x0;
+      # *pREG_DMC0_DDR_SCRATCH_2 = 0x0;
+      # DmcDelay(5000);
+      mww phys $dmc_ddr_scratch3 0
+      mww phys $dmc_ddr_scratch2 0
+      after 1
+
+      # /* Writing internal registers IN calib pad to zero. Calib mode set to 1 [26], trig M1 S1 write [16],
+      # * this enables usage of scratch registers instead of ZQCTL registers */
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      # DmcDelay(5000);
+      mww phys $dmc_ddr_root_ctl 0x4010000
+      after 1
+
+      # /* TRIGGER FOR M2-S2 WRITE     -> slave id 31:26  trig m2,s2 write bit 1->1
+      # slave1 address is 4 */
+      # *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
+      # DmcDelay(5000);
+      mww phys $dmc_ddr_ca_ctl 0x10000002 
+      after 1
+
+      # /* reset Trigger */
+      # *pREG_DMC0_DDR_CA_CTL = 0x0;
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x0
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      # /* write to slave 1, make the power down bit high */
+      # *pREG_DMC0_DDR_SCRATCH_3 = 0x1<<12;
+      # *pREG_DMC0_DDR_SCRATCH_2 = 0x0;
+      # DmcDelay(5000);
+      mww $dmc_ddr_scratch3 0x1000
+      mww $dmc_ddr_scratch2 0
+      after 1
+
+      # /* Calib mode set to 1 [26], trig M1 S1 write [16] */
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      # DmcDelay(5000);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      # *pREG_DMC0_DDR_CA_CTL = 0x10000002;
+      # DmcDelay(5000);
+      mww $dmc_ddr_ca_ctl 0x10000002 
+      after 1
+
+      # *pREG_DMC0_DDR_CA_CTL = 0x0;
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      # DmcDelay(5000);
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+      after 1
+
+      # /* for slave 0 */
+      # *pREG_DMC0_DDR_SCRATCH_2 = pConfig->ulDDR_ZQCTL0;
+      # DmcDelay(5000);
+      mww $dmc_ddr_scratch2 0x786464
+      after 1
+
+      # /* Calib mode set to 1 [26], trig M1 S1 write [16] */
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      # DmcDelay(5000);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      # *pREG_DMC0_DDR_CA_CTL = 0x0C000002 ;
+      # DmcDelay(5000);
+      mww $dmc_ddr_ca_ctl 0x0c000002
+      after 1
+
+      # *pREG_DMC0_DDR_CA_CTL = 0x0;
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      # DmcDelay(5000);
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+      after 1
+
+      # /* writing to slave 1
+      # calstrt is 0, but other programming is done */
+      # *pREG_DMC0_DDR_SCRATCH_3 = 0x0; /* make power down LOW again, to kickstart BIAS circuit */
+      # *pREG_DMC0_DDR_SCRATCH_2 = 0x70000000;
+      #    DmcDelay(5000);
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x70000000
+      after 1
+
+      # /* write to ca_ctl lane, calib mode set to 1 [26], trig M1 S1 write [16]*/
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      # DmcDelay(5000);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      # /*  copies data to lane controller slave
+      # TRIGGER FOR M2-S2 WRITE     -> slave id 31:26  trig m2,s2 write bit 1->1
+      # slave1 address is 4 */
+      # *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
+      # DmcDelay(5000);
+      mww $dmc_ddr_ca_ctl 0x10000002
+      after 1
+
+      # /* reset Trigger */
+      # *pREG_DMC0_DDR_CA_CTL = 0x0;
+      # *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+   } else {
+   # Begin DMC phy ZQ calibration routine
    # Program the ODT and drive strength values
    # *pREG_DMC0_DDR_ZQ_CTL0 = 0x00786464;
    # *pREG_DMC0_DDR_ZQ_CTL1 = 0;
@@ -662,90 +782,29 @@ proc adspsc59x_init_ddr3 { dmc } {
    mww phys $dmc_ddr_ca_ctl 0
    mww phys $dmc_ddr_root_ctl 0
 
-   # Calibrate and program ODT
-   #
-   #  /* Reset trigger */
-   #  *pREG_DMC0_DDR_CA_CTL = 0u;
-   #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
-   #  dmcdelay(5000u);
-   mww phys $dmc_ddr_ca_ctl 0x0
-   mww phys $dmc_ddr_root_ctl 0x0
-   after 1
+   }
 
-   #  *pREG_DMC0_DDR_CA_CTL = 0x0C000004u; /* read data from calib pad slave0 */
-   #  dmcdelay(5000u);
-   mww phys $dmc_ddr_ca_ctl 0xc000004
-   after 1
 
-   #  *pREG_DMC0_DDR_ROOT_CTL = BITM_DMC_DDR_ROOT_CTL_TRIG_RD_XFER_ALL;
-   #  dmcdelay(5000u);
-   mww phys $dmc_ddr_root_ctl 0x200000
-   after 1
+   # The following are not required for EV-SC594-SOM DDR3 initialization
+   # /* Tdqs fine tune setting */
+   # if (pDMCInfo->DelayTrim)
+   # {
+   #    pDMCInfo->pPreg->Lane0Control1|= (((pDMCInfo->Bypasscode)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
+   #    pDMCInfo->pPreg->Lane1Control1|=(((pDMCInfo->Bypasscode)<<BITP_DMC_DDR_LANE1_CTL1_BYPCODE) & BITM_DMC_DDR_LANE1_CTL1_BYPCODE)|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN;
+   # }
 
-   #  /* data is now in scratch registers */
-   #  *pREG_DMC0_DDR_CA_CTL = 0u;
-   #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
-   mww phys $dmc_ddr_ca_ctl 0x0
-   mww phys $dmc_ddr_root_ctl 0x0
+   # /* DQS duty trim */
+   # if(pDMCInfo->DqsTrim)
+   # {
+   #    pDMCInfo->pPreg->Lane0Control0|= ((pDMCInfo->Dqscode)<<BITP_DMC_DDR_LANE0_CTL0_BYPENB) & (BITM_DMC_DDR_LANE1_CTL0_BYPENB|BITM_DMC_DDR_LANE0_CTL0_BYPSELP|BITM_DMC_DDR_LANE0_CTL0_BYPCODE);
+   #    pDMCInfo->pPreg->Lane1Control0|=((pDMCInfo->Dqscode)<<BITP_DMC_DDR_LANE1_CTL0_BYPENB) & (BITM_DMC_DDR_LANE1_CTL1_BYPCODE|BITM_DMC_DDR_LANE1_CTL0_BYPSELP|BITM_DMC_DDR_LANE1_CTL0_BYPCODE);
+   # }
 
-   #  stat_value = ((*pREG_DMC0_DDR_SCRATCH_7 & 0x0000FFFFu)<<16);
-   #  stat_value |= (*pREG_DMC0_DDR_SCRATCH_6 & 0xFFFF0000u)>>16;
-
-   #  /* calculate ODT PU and PD values */
-   #  drv_pu = stat_value & 0x0000003Fu;
-   #  drv_pd = (stat_value>>12) & 0x0000003Fu;
-   #  odt_pu = (drv_pu * ClkDqsDrvImpedance)/programROdt;
-   #  odt_pd = (drv_pd * ClkDqsDrvImpedance)/programROdt;
-
-   #  /* Write the values to REG_DMC0_DDR_SCRATCH_2 as follows:
-   #   * -  program Drive pulldown  [5:0]
-   #   * -  program ODT pulldown:   [11:6]
-   #   * -  program Drive pullup    [17:12]
-   #   * -  program ODT pullup      [23:18]
-   #   */
-   #  *pREG_DMC0_DDR_SCRATCH_2 |= ((1uL<<24)                      |
-   #                                ((drv_pd & 0x0000003Fu))       |
-   #                                ((odt_pd & 0x0000003Fu)<<6)    |
-   #                                ((drv_pu & 0x0000003Fu)<<12)   |
-   #                                ((odt_pu & 0x0000003Fu)<<18));
-
-   #Set DMC0_DDR_SCRATCH_2 directly
-   pmmw $dmc_ddr_scratch2 0x2ce28d 0x0
-
-   #  *pREG_DMC0_DDR_ROOT_CTL = 0x0C010000u;
-   #  dmcdelay(5000u);
-   mww phys $dmc_ddr_root_ctl 0xc010000
-   after 1
-
-   #  *pREG_DMC0_DDR_CA_CTL = 0x08000002u;
-   #  dmcdelay(5000u);
-   mww phys $dmc_ddr_ca_ctl 0x8000002
-   after 1
-
-   #  /* Resetting trigger */
-   #  *pREG_DMC0_DDR_CA_CTL = 0u;
-   #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
-   mww phys $dmc_ddr_ca_ctl 0
-   mww phys $dmc_ddr_root_ctl 0
-
-   #  /* write to lane 1 DQ DQSCLK LS */
-   #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000u;
-   #  dmcdelay(5000u);
-   mww phys $dmc_ddr_root_ctl 0x4010000
-   after 1
-
-   #  /* copies data to lane controller slave */
-   #  /* TRIGGER FOR M2-S2 WRITE     -> slave id 31:26 trigger m2,s2 write ->1 */
-   #  *pREG_DMC0_DDR_CA_CTL = 0x80000002u;
-   #  dmcdelay(5000u);
-   mww phys $dmc_ddr_ca_ctl 0x80000002
-   after 1
-
-   #  /* Resetting trigger */
-   #  *pREG_DMC0_DDR_CA_CTL = 0u;
-   #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
-   mww phys $dmc_ddr_ca_ctl 0
-   mww phys $dmc_ddr_root_ctl 0
+   # /* Clock duty trim */
+   # if(pDMCInfo->ClkTrim)
+   # {
+   #    pDMCInfo->pPreg->CaControl|=(((pDMCInfo->Clkcode) & 0xfu) <<BITP_DMC_DDR_CA_CTL_BYPENB)|(((pDMCInfo->Clkcode) >> 4u) <<BITP_DMC_DDR_CA_CTL_BYPCODE1);
+   # }
 
    # Initialize the DMC Controller
 
@@ -781,7 +840,6 @@ proc adspsc59x_init_ddr3 { dmc } {
    after 1
    mww phys $dmc_ddr_root_ctl 0x2800
 
-   # Start DMC initialization
    # *pREG_DMC0_CTL       = pConfig->ulDDR_CTL;
    # dmcdelay(722000);
    mww phys $dmc_ctl 0x8000a05
