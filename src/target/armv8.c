@@ -143,6 +143,24 @@ static int instr_read_data_r0(struct arm_dpm *dpm, uint32_t opcode, uint64_t *da
 	return retval;
 }
 
+static int instr_read_data_r0_32(struct arm_dpm *dpm, uint32_t opcode, uint32_t *data, uint32_t expected_el)
+{
+	if (armv8_curel_from_core_mode(dpm->arm->core_mode) != expected_el) {
+		return ERROR_TARGET_EXCEPTION_LEVEL;
+	}
+
+	return dpm->instr_read_data_r0(dpm, opcode, data);
+}
+
+static int instr_read_data_dcc(struct arm_dpm *dpm, uint32_t opcode, uint32_t *data, uint32_t expected_el)
+{
+	if (armv8_curel_from_core_mode(dpm->arm->core_mode) != expected_el) {
+		return ERROR_TARGET_EXCEPTION_LEVEL;
+	}
+
+	return dpm->instr_read_data_dcc(dpm, opcode, data);
+}
+
 static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regval)
 {
 	struct arm_dpm *dpm = &armv8->dpm;
@@ -1863,40 +1881,6 @@ static int armv8_read_reg32(struct armv8_common *armv8, int regnum, uint64_t *re
 	uint32_t value = 0;
 	int retval;
 
-	struct arm *arm = &armv8->arm;
-	uint32_t cur_el = armv8_curel_from_core_mode(arm->core_mode);
-	uint32_t expected_el;
-	bool check_el = true;
-
-	switch(regnum) {
-	case ARMV8_ELR_EL3:
-	case ARMV8_ESR_EL3:
-	case ARMV8_SPSR_EL3:
-		expected_el = 3;
-		break;
-	case ARMV8_ELR_EL2:
-	case ARMV8_ESR_EL2:
-	case ARMV8_SPSR_EL2:
-		expected_el = 2;
-		break;
-	case ARMV8_ELR_EL1:
-	case ARMV8_ESR_EL1:
-	case ARMV8_SPSR_EL1:
-		expected_el = 1;
-		break;
-	default:
-		check_el = false;
-		break;
-	}
-
-	// some registers can only be read at their exception level
-	if (check_el && (cur_el != expected_el)) {
-		if (regval != NULL)
-			*regval = 0xDEADBEEF;
-
-		return ERROR_TARGET_EXCEPTION_LEVEL;
-	}
-
 	switch (regnum) {
 	case ARMV8_R0 ... ARMV8_R14:
 		/* return via DCC:  "MCR p14, 0, Rnum, c0, c5, 0" */
@@ -1920,47 +1904,47 @@ static int armv8_read_reg32(struct armv8_common *armv8, int regnum, uint64_t *re
 			&value);
 		break;
 	case ARMV8_ELR_EL1: /* mapped to LR_svc */
-		retval = dpm->instr_read_data_dcc(dpm,
+		retval = instr_read_data_dcc(dpm,
 				ARMV4_5_MCR(14, 0, 14, 0, 5, 0),
-				&value);
+				&value, 1);
 		break;
 	case ARMV8_ELR_EL2: /* mapped to ELR_hyp */
-		retval = dpm->instr_read_data_r0(dpm,
+		retval = instr_read_data_r0_32(dpm,
 				ARMV8_MRS_T1(0, 14, 0, 1),
-				&value);
+				&value, 2);
 		break;
 	case ARMV8_ELR_EL3: /* mapped to LR_mon */
-		retval = dpm->instr_read_data_dcc(dpm,
+		retval = instr_read_data_dcc(dpm,
 				ARMV4_5_MCR(14, 0, 14, 0, 5, 0),
-				&value);
+				&value, 3);
 		break;
 	case ARMV8_ESR_EL1: /* mapped to DFSR */
-		retval = dpm->instr_read_data_r0(dpm,
+		retval = instr_read_data_r0_32(dpm,
 				ARMV4_5_MRC(15, 0, 0, 5, 0, 0),
-				&value);
+				&value, 1);
 		break;
 	case ARMV8_ESR_EL2: /* mapped to HSR */
-		retval = dpm->instr_read_data_r0(dpm,
+		retval = instr_read_data_r0_32(dpm,
 				ARMV4_5_MRC(15, 4, 0, 5, 2, 0),
-				&value);
+				&value, 2);
 		break;
 	case ARMV8_ESR_EL3: /* FIXME: no equivalent in aarch32? */
 		retval = ERROR_FAIL;
 		break;
 	case ARMV8_SPSR_EL1: /* mapped to SPSR_svc */
-		retval = dpm->instr_read_data_r0(dpm,
+		retval = instr_read_data_r0_32(dpm,
 				ARMV8_MRS_xPSR_T1(1, 0),
-				&value);
+				&value, 1);
 		break;
 	case ARMV8_SPSR_EL2: /* mapped to SPSR_hyp */
-		retval = dpm->instr_read_data_r0(dpm,
+		retval = instr_read_data_r0_32(dpm,
 				ARMV8_MRS_xPSR_T1(1, 0),
-				&value);
+				&value, 2);
 		break;
 	case ARMV8_SPSR_EL3: /* mapped to SPSR_mon */
-		retval = dpm->instr_read_data_r0(dpm,
+		retval = instr_read_data_r0_32(dpm,
 				ARMV8_MRS_xPSR_T1(1, 0),
-				&value);
+				&value, 3);
 		break;
 	case ARMV8_FPSR:
 		/* "VMRS r0, FPSCR"; then return via DCC */
@@ -1972,8 +1956,14 @@ static int armv8_read_reg32(struct armv8_common *armv8, int regnum, uint64_t *re
 		break;
 	}
 
-	if (retval == ERROR_OK && regval != NULL)
+	if (retval == ERROR_OK && regval != NULL) {
 		*regval = value;
+	}
+	else if (retval == ERROR_TARGET_EXCEPTION_LEVEL && regval != NULL) {
+		*regval = 0xDEADBEEF;
+	}
+	else
+		retval = ERROR_FAIL;
 
 	return retval;
 }
