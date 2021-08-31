@@ -216,7 +216,7 @@ static const char *adi_cable_name(void)
 		return "";
 
 	if (strcmp(adapter_driver->name, "dbgagent") == 0)
-		return "ADSP-SC594W via debug agent";
+		return "ADI Debug Agent";
 	else
 		return "unknown";
 }
@@ -254,10 +254,6 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	}
 
 	LOG_DEBUG("usb interface claimed!");
-
-	/* For an unknown reason, this is needed
-	   with xHCI controller on Linux. */
-	//libusb_set_interface_alt_setting (dev, 0, 0);
 
 	cable_params.tap_info.dat = malloc(sizeof(dat_dat) * DAT_SZ);
 	if (!cable_params.tap_info.dat)
@@ -444,7 +440,7 @@ static int dbgagent_speed_div(int speed, int *khz)
 }
 /*
  * Takes Data received (rcv_dataptr) and puts it in
- * todo date out transfer
+ * todo data out transfer
  */
 static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 {
@@ -454,14 +450,6 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 	uint8_t *rcvBuf = rcv_data + cable_params.num_rcv_hdr_bytes + dat_idx;
 	int32_t bit_set = tap_info->dat[idx_dat].pos;
 	int32_t i;
-#if 0
-	puts("##############OUT#################\n");
-	for (i = 0; i < len-3; i++)
-	{
-		DEBUG("%02X ", rcvBuf[i]);
-	}
-	putchar('\n');
-#endif
 #ifdef DUMP_EACH_RCV_DATA
 	DEBUG("Idx = %d; Read len = %d\n", dat_idx, len);
 #endif
