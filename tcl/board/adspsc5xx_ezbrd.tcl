@@ -378,6 +378,8 @@ proc adspsc5xx_init_ddr2 { } {
 proc adspsc59x_init_ddr3 { dmc } {
    global CHIPNAME
 
+   puts "Called adspsc59x_init_ddr3"
+
    set dmc_baseaddr       0x31070000
    set dmc_ctl            [expr {$dmc_baseaddr + 0x4}]
    set dmc_stat           [expr {$dmc_baseaddr + 0x8}]
@@ -836,8 +838,9 @@ proc adspsc59x_init_ddr3 { dmc } {
 
 proc adspsc598_init_ddr3 { dmc } {
    global CHIPNAME
+   global _CHIPNAME
 
-   /********************** START ************************/
+   puts "Called adspsc598_init_ddr3"
    set dmc_baseaddr       0x31070000
    set dmc_ctl            [expr {$dmc_baseaddr + 0x4}]
    set dmc_stat           [expr {$dmc_baseaddr + 0x8}]
@@ -895,7 +898,6 @@ proc adspsc598_init_ddr3 { dmc } {
 
    set cdu_stat      0x3108f040
    set cdu_clkinsel  [expr {$cdu_stat + 0x4}]
-
    # Reset DMC Lane by setting the DMC_DDR_LANE0_CTL0.CB_RSTDLL
    # and DMC_DDR_LANE1_CTL0.CB_RSTDLL bits
    # *pREG_DMC0_DDR_LANE0_CTL0 |= BITM_DMC_DDR_LANE0_CTL0_CB_RSTDLL;
@@ -927,26 +929,26 @@ proc adspsc598_init_ddr3 { dmc } {
    mww phys $cdu_cfg13 $cdu_cfg_in1_en
    mww phys $cdu_cfg14 $cdu_cfg_in1_en
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
    # CGU0 Configuration
    # If PLL is disabled, then enable it
    # if(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN))
    #  {pDevice->pCguRegs->CGU_CTL |= BITM_CGU_PLLCTL_PLLEN;}
-   if { ![expr {$cgu0_stat & 0x1}] } {
+   set data [memread32_phys $cgu0_stat]
+   if { ![expr {$data & 0x1}] } {
       pmmw $cgu0_ctl 0x8 0x0
    }
 
+   
+
    # If PLL is bypassed, then switch power mode from Active to Full on
-   # if(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)
    # pDevice->pCguRegs->CGU_PLLCTL = BITM_CGU_PLLCTL_PLLBPCL;
-   if { [expr {$cgu0_stat & 0x2}] } {
-      mww phys $cgu0_pllctl 0x2
-   }
+   mww phys $cgu0_pllctl 0x2
+   
    # Wait for alignment to be done
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN){}
    set data [memread32_phys $cgu0_stat]
-   while { ![expr {$data & 0x8}]  {}
+   while { [expr {$data & 0x8}] } {
+      puts $data
       set data [memread32_phys $cgu0_stat]
    }
 
@@ -958,19 +960,29 @@ proc adspsc598_init_ddr3 { dmc } {
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_DSEL        = 3;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_OSEL        = 8;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.divex_S1SELEX   = 6;
-   mww phys $cgu0_div 0x2034482
+   mww phys $cgu0_div 0xa034482
 
    # adi_pwr_WriteDIVCTLLocal()
    # Put PLL in to Bypass Mode - call adi_pwr_ConfigurePLLControlReg()
-   # regValue = BITM_CGU_PLLCTL_PLLEN | BITM_CGU_PLLCTL_PLLBPST;
-   # pDevice->pCguRegs->CGU_PLLCTL = regValue;
-   mww phys $cgu0_pllctl 0x9
-   # Wait for Bypass to reflect in the status
+   # Enable PLL
+   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN
+   pmmw $cgu0_pllctl 0x8 0
+   # Wait till PLL is enabled
+   # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN)) {};
+   set data [memread32_phys $cgu0_stat]
+   while { ![expr {$data & 0x1}] } {
+      set data [memread32_phys $cgu0_stat]
+   }
+
+   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLBPST
+   pmmw $cgu0_pllctl 0x1 0
+   # Wait till PLL is bypassed
    # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)) {};
    set data [memread32_phys $cgu0_stat]
    while { ![expr {$data & 0x2}] } {
       set data [memread32_phys $cgu0_stat]
    }
+
    # Wait until clocks are aligned
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
    set data [memread32_phys $cgu0_stat]
@@ -978,11 +990,43 @@ proc adspsc598_init_ddr3 { dmc } {
       set data [memread32_phys $cgu0_stat]
    }
 
-   
-   # adi_pwr_WriteDIVCTLLocal()
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
    mww phys $cgu0_ctl 0x25000
+   
+   ###################################################################
+   #
+    ######### START WORKAROUND ##########
+    # Take PLL out of Bypass Mode
+    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
+    pmmw $cgu0_pllctl 0x8 0
+
+   # Wait till PLL is enabled */
+   # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
+   set data [memread32_phys $cgu0_stat]
+   while { ![expr {$data & 0x1}] } {
+      set data [memread32_phys $cgu0_stat]
+   }
+
+   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLBPCL;
+   pmmw $cgu0_pllctl 0x2 0
+
+   # Wait until clocks are aligned
+   # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
+   set data [memread32_phys $cgu0_stat]
+   while { [expr {$data & 0x8}] } {
+      set data [memread32_phys $cgu0_stat]
+      puts $data
+   }
+
+   # Wait for No-Bypass to reflect in the status*/
+   # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP) {}
+   set data [memread32_phys $cgu0_stat]
+   while { [expr {$data & 0x2}] } {
+      set data [memread32_phys $cgu0_stat]
+   }
+   ######### END WORKAROUND ##########
+
 
    # adi_pwr_WriteDIVCTLLocal()
    # Wait until the S0SELEXEN or S1SELEXEN enable bit is actually set
@@ -992,26 +1036,10 @@ proc adspsc598_init_ddr3 { dmc } {
       set data [memread32_phys $cgu0_ctl]
    }
 
-
    # Update the new Divider values for S1SELEX via DIVEX
    # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv;
    # Line 2590, adi_pwr_2156x.c, adi_pwr_WriteDIVCTLLocal()
    mww phys $cgu0_divex 0x60030
-   
-
-   # Line 2597, adi_pwr_2156x.c, adi_pwr_WriteDIVCTLLocal()
-   # Take PLL out of Bypass Mode - call adi_pwr_ConfigurePLLControlReg()
-   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
-   # Wait till PLL is enabled */
-   # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
-   mmw phys $cgu0_pllctl 0x8 0
-   set data [memread32_phys $cgu0_stat]
-   while { [expr {$data & 0x1}] } {
-      set data [memread32_phys $cgu0_stat]
-   }
-
-   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLBPCL
-   mmw phys $cgu0_pllctl 0x2 0
 
    # Wait until clocks are aligned
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
@@ -1022,30 +1050,26 @@ proc adspsc598_init_ddr3 { dmc } {
 
 
    # /* Update the new Divider values with UPDT bit*/
-   # Line 2609, adi_pwr_2156x.c, adi_pwr_WriteDIVCTLLocal()
+   # Line 2619, adi_pwr_2156x.c, adi_pwr_WriteDIVCTLLocal()
    # pDevice->pCguRegs->CGU_DIV =  dNewCguDiv | BITM_CGU_DIV_UPDT;
    mww phys $cgu0_div 0x42034482
 
    # /* Wait until Update bit is set*/
    # while(!(pDevice->pCguRegs->CGU_DIV & BITM_CGU_DIV_UPDT)) {}
    set data [memread32_phys $cgu0_div]
-   while { [expr {$data & 0x40000000}] } {
+   while { ![expr {$data & 0x40000000}] } {
       set data [memread32_phys $cgu0_div]
    }
 
-   # /*Wait until clocks are aligned, and PLL is locked*/
+   # Wait until clocks are aligned, and PLL is locked
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
    set data [memread32_phys $cgu0_stat]
    while { [expr {$data & 0x8}] } {
       set data [memread32_phys $cgu0_stat]
    }
 
-// ------------------------------------------------------------------------
-
    # CGU1 Configuration
 
-   # Configure CDU_CLKINSEL, which requires us to bypass CGU0 PLL
-   #
    # If PLL is disabled, then enable it
    # if(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN))
    #  {pDevice->pCguRegs->CGU_CTL |= BITM_CGU_PLLCTL_PLLEN;}
@@ -1054,7 +1078,6 @@ proc adspsc598_init_ddr3 { dmc } {
       pmmw $cgu1_ctl 0x8 0x0
    }
 
-
    # If PLL is bypassed, then switch power mode from Active to Full on
    # if(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)
    # pDevice->pCguRegs->CGU_PLLCTL = BITM_CGU_PLLCTL_PLLBPCL;
@@ -1062,50 +1085,74 @@ proc adspsc598_init_ddr3 { dmc } {
    mww phys $cgu1_pllctl 0x2
    # Wait for alignment to be done
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN){}
-   set data [memread32_phys $cgu0_stat]
-   while { ![expr {$data & 0x8}] } {
-     set data [memread32_phys $cgu0_stat]
+   set data [memread32_phys $cgu1_stat]
+   while { [expr {$data & 0x8}] } {
+     set data [memread32_phys $cgu1_stat]
   }
-
 
    # Put PLL in to Bypass Mode
    # regValue = BITM_CGU_PLLCTL_PLLEN | BITM_CGU_PLLCTL_PLLBPST;
    # pDevice->pCguRegs->CGU_PLLCTL = regValue;
    # Wait for Bypass to reflect in the status
    # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)) {};
-   mww phys $cgu0_pllctl 0x9
-   set data [memread32_phys $cgu0_stat]
+   mww phys $cgu1_pllctl 0x9
+   set data [memread32_phys $cgu1_stat]
    while { ![expr {$data & 0x2}] } {
-      set data [memread32_phys $cgu0_stat]
+      set data [memread32_phys $cgu1_stat]
    }
 
-   # adi_pwr_WriteDIVCTLLocal()
+   # Wait till clocks are aligned
+   # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
+   set data [memread32_phys $cgu1_stat]
+   while { [expr {$data & 0x8}] } {
+      set data [memread32_phys $cgu1_stat]
+   }
+
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
    mww phys $cgu1_ctl 0x34800
 
+    ######### START WORKAROUND ##########
+    # Take PLL out of Bypass Mode
+    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
+    pmmw $cgu1_pllctl 0x8 0
+
+   # Wait till PLL is enabled */
+   # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
+   set data [memread32_phys $cgu1_stat]
+   while { ![expr {$data & 0x1}] } {
+      set data [memread32_phys $cgu1_stat]
+   }
+
+   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLBPCL;
+   pmmw $cgu1_pllctl 0x2 0
+
+   # Wait until clocks are aligned
+   # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
+   set data [memread32_phys $cgu1_stat]
+   while { [expr {$data & 0x8}] } {
+      set data [memread32_phys $cgu1_stat]
+   }
+
+   # Wait for No-Bypass to reflect in the status*/
+   # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP) {}
+   set data [memread32_phys $cgu1_stat]
+   while { [expr {$data & 0x2}] } {
+      set data [memread32_phys $cgu1_stat]
+   }
+    ######### END WORKAROUND ##########
+
    # adi_pwr_WriteDIVCTLLocal()
    # Wait until the S1SELEXEN enable or S0SELEXEN enable bit is actually set
    # while(!(pDevice->pCguRegs->CGU_CTL & (BITM_CGU_CTL_S1SELEXEN|BITM_CGU_CTL_S0SELEXEN))) {}
-   set data [memread32_phys $cgu0_ctl]
+   set data [memread32_phys $cgu1_ctl]
    while { ![expr {$data & 0x30000}] } {
-      set data [memread32_phys $cgu0_ctl]
+      set data [memread32_phys $cgu1_ctl]
    }
 
    # Update the new Divider values for S1SELEX via DIVEX */
    # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv;
-   mww phys $cgu0_divex 0x5a005a
-
-   # Take PLL out of Bypass Mode*/
-   # Wait till PLL is enabled */
-   # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
-   mmw phys $cgu1_pllctl 0x8 0
-   set data [memread32_phys $cgu1_stat]
-   while { [expr {$data & 0x1}] } {
-      set data [memread32_phys $cgu1_stat]
-   }
-   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLBPCL;
-   mmw phys $cgu1_pllctl 0x2 0
+   mww phys $cgu1_divex 0x5a0024
 
    # wait till clocks are aligned
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
@@ -1117,7 +1164,6 @@ proc adspsc598_init_ddr3 { dmc } {
    # Update the new Divider values with UPDT bit
    # pDevice->pCguRegs->CGU_DIV =  dNewCguDiv | BITM_CGU_DIV_UPDT;
    mww phys $cgu1_divex 0x44824890
-
 
    # Wait until Update bit is set
    # while(!(pDevice->pCguRegs->CGU_DIV & BITM_CGU_DIV_UPDT)) {}
@@ -1190,6 +1236,7 @@ proc adspsc598_init_ddr3 { dmc } {
    after 1
 
 
+
    # adi_dmc_phy_calibration()
    # Begin DMC phy ZQ calibration routine
 
@@ -1256,7 +1303,7 @@ proc adspsc598_init_ddr3 { dmc } {
    mww phys $dmc_mr [expr {($ulDDR_MREMR1 >> 16) & 0xffff} ]
    mww phys $dmc_mr1 [expr {$ulDDR_MREMR1 & 0xffff} ]
    mww phys $dmc_mr2 [expr {($ulDDR_EMR2EMR3 >> 16) & 0xffff} ]
-   mww phys $dmc_mr3 [expr {$ulDDR_EMR2EMR3 & 0xffff} ]
+   mww phys $dmc_emr3 [expr {$ulDDR_EMR2EMR3 & 0xffff} ]
 
    # program Dll timing register
    # *pREG_DMC0_DLLCTL = ((pConfig->ulDDR_DLLCTLCFG) >> 16ul) & 0xFFFFul;
@@ -1266,13 +1313,13 @@ proc adspsc598_init_ddr3 { dmc } {
    after 1
 
    # *pREG_DMC0_DDR_CA_CTL |= BITM_DMC_DDR_CA_CTL_SW_REFRESH;
-   pmmw dmc_ddr_ca_ctl 0x4000 0
+   pmmw $dmc_ddr_ca_ctl 0x4000 0
 
    # dmcdelay(5u);
    after 1
 
    # *pREG_DMC0_DDR_ROOT_CTL |= BITM_DMC_DDR_ROOT_CTL_SW_REFRESH | (OfstdCycle << BITP_DMC_DDR_ROOT_CTL_PIPE_OFSTDCYCLE);
-   pmmw dmc_ddr_root_ctl 0x2800 0
+   pmmw $dmc_ddr_root_ctl 0x2800 0
 
    # Start DMC initialization
    # *pREG_DMC0_CTL = pConfig->ulDDR_CTL;
@@ -1281,32 +1328,26 @@ proc adspsc598_init_ddr3 { dmc } {
    # dmcdelay(722000u);
    after 1
 
-
-   # ===== ASSUME THESE DELAYS AREN'T REQUIRED ====
    # Add necessary delay depending on the configuration
-   # t_EMR1 = (pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL;
-   # if(t_EMR1 != 0u)
-   # {
-   #   dmcdelay(600u);
-   #   while(((*pREG_DMC0_MR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL) != 0ul) { }
-   # }
-   # t_EMR3 = (pConfig->ulDDR_EMR2EMR3 & BITM_DMC_EMR3_MPR)>>BITP_DMC_EMR3_MPR;
-   # if(t_EMR3 != 0u)
-   # {
-   #   dmcdelay(2000u);
-   #   while(((*pREG_DMC0_EMR3 & BITM_DMC_EMR3_MPR)>>BITP_DMC_EMR3_MPR) != 0ul) { }
-   # }
-   # t_CTL = (pConfig->ulDDR_CTL & BITM_DMC_CTL_RL_DQS)>>BITP_DMC_CTL_RL_DQS;
-   # if(t_CTL != 0u)
-   # {
-   #   dmcdelay(600u);
-   #   while(((*pREG_DMC0_CTL & BITM_DMC_CTL_RL_DQS)>>BITP_DMC_CTL_RL_DQS) != 0ul)
-   #   {
-   #   }
-   # }
+   # while(((*pREG_DMC0_MR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL) != 0ul) { }
+   set data [memread32_phys $dmc_mr1]
+   while { [expr {$data & 0x80}] } {
+      set data [memread32_phys $dmc_mr1]
+   }
+
+   # while(((*pREG_DMC0_EMR3 & BITM_DMC_EMR3_MPR)>>BITP_DMC_EMR3_MPR) != 0ul) { }
+   set data [memread32_phys $dmc_emr3]
+   while { [expr {$data & 0x4}] } {
+      set data [memread32_phys $dmc_emr3]
+   }
+
    # check if DMC initialization finished, if not return error
    # while((*pREG_DMC0_STAT & BITM_DMC_STAT_INITDONE) != BITM_DMC_STAT_INITDONE) {
    # }
+   set data [memread32_phys $dmc_stat]
+   while { ![expr {$data & 0x4}] } {
+      set data [memread32_phys $dmc_stat]
+   }
 
    # adi_dmc_crtl_init()
 
@@ -1314,26 +1355,27 @@ proc adspsc598_init_ddr3 { dmc } {
    # *pREG_DMC0_DDR_LANE0_CTL1 |= BITM_DMC_DDR_LANE0_CTL1_COMP_DCYCLE;
    # *pREG_DMC0_DDR_LANE1_CTL1 |= BITM_DMC_DDR_LANE1_CTL1_COMP_DCYCLE;
    # dmcdelay(10u);
-   pmmw dmc_ddr_lane0_ctl0 0x2 0
-   pmmw dmc_ddr_lane0_ctl1 0x2 0
+   pmmw $dmc_ddr_lane0_ctl1 0x2 0
+   pmmw $dmc_ddr_lane1_ctl1 0x2 0
 
    # *pREG_DMC0_DDR_LANE0_CTL1 &= (~BITM_DMC_DDR_LANE0_CTL1_COMP_DCYCLE);
    # *pREG_DMC0_DDR_LANE1_CTL1 &= (~BITM_DMC_DDR_LANE1_CTL1_COMP_DCYCLE);
-   pmmw dmc_ddr_lane0_ctl0 0 0x2
-   pmmw dmc_ddr_lane0_ctl1 0 0x2
+   pmmw $dmc_ddr_lane0_ctl1 0 0x2
+   pmmw $dmc_ddr_lane1_ctl1 0 0x2
 
    # toggle RSTDAT
    # *pREG_DMC0_DDR_LANE0_CTL0 |= BITM_DMC_DDR_LANE0_CTL0_CB_RSTDAT;
    # *pREG_DMC0_DDR_LANE0_CTL0 &= (~BITM_DMC_DDR_LANE0_CTL0_CB_RSTDAT);
-   pmmw dmc_ddr_lane0_ctl0 0x08000000 0
-   pmmw dmc_ddr_lane0_ctl1 0x08000000 0
+   pmmw $dmc_ddr_lane0_ctl0 0x08000000 0
+   pmmw $dmc_ddr_lane0_ctl0 0 0x08000000
 
    # *pREG_DMC0_DDR_LANE1_CTL0 |= BITM_DMC_DDR_LANE1_CTL0_CB_RSTDAT;
    # *pREG_DMC0_DDR_LANE1_CTL0 &= (~BITM_DMC_DDR_LANE1_CTL0_CB_RSTDAT);
-   pmmw dmc_ddr_lane0_ctl0 0 0x08000000
-   pmmw dmc_ddr_lane0_ctl1 0 0x08000000
+   pmmw $dmc_ddr_lane1_ctl0 0x08000000 0
+   pmmw $dmc_ddr_lane1_ctl0 0 0x08000000
 
    # dmcdelay(2500u);
+   wait 1
 
    # Program phyphase
 
@@ -1354,5 +1396,5 @@ proc adspsc598_init_ddr3 { dmc } {
    set rd_cnt [expr {$rd_cnt & 0xff} ]
 
    mww phys $dmc_dllctl [expr {$rd_cnt | $datacyc}]
-   mww phys $dmc_ctl [expr {ulDDR_CTL & ~0x4 & ~0x04000000}]
+   mww phys $dmc_ctl [expr {$ulDDR_CTL & 0xfffffffb & 0xffbfffff} ]
 }
