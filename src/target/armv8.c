@@ -589,8 +589,9 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_ICC_AP1R0_EL1, 0), &value_64, 1);
 		break;
 	case ARMV8_ICC_ASGI1R_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICC_ASGI1R_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICC_BPR0_EL1:
 		retval = instr_read_data_r0(dpm,
@@ -605,16 +606,19 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_ICC_CTLR_EL1, 0), &value_64, 1);
 		break;
 	case ARMV8_ICC_DIR_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICC_DIR_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICC_EOIR0_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICC_EOIR0_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICC_EOIR1_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICC_EOIR1_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICC_HPPIR0_EL1:
 		retval = instr_read_data_r0(dpm,
@@ -649,12 +653,14 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_ICC_RPR_EL1, 0), &value_64, 1);
 		break;
 	case ARMV8_ICC_SGI0R_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICC_SGI0R_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICC_SGI1R_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICC_SGI1R_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICC_SRE_EL1:
 		retval = instr_read_data_r0(dpm,
@@ -681,16 +687,19 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_ICV_CTLR_EL1, 0), &value_64, 1);
 		break;
 	case ARMV8_ICV_DIR_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICV_DIR_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICV_EOIR0_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICV_EOIR0_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICV_EOIR1_EL1:
-		retval = instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_ICV_EOIR1_EL1, 0), &value_64, 1);
+		// write only, skip
+		value_64 = 0x0;
+		retval = ERROR_OK;
 		break;
 	case ARMV8_ICV_HPPIR0_EL1:
 		retval = instr_read_data_r0(dpm,
