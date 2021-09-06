@@ -929,7 +929,7 @@ proc adspsc598_init_ddr3 { dmc } {
    # CGU0 Configuration
    # If PLL is disabled, then enable it
    # if(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN))
-   #  {pDevice->pCguRegs->CGU_CTL |= BITM_CGU_PLLCTL_PLLEN;}
+   #  {pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;}
    set data [memread32_phys $cgu0_stat]
    if { ![expr {$data & 0x1}] } {
       pmmw $cgu0_pllctl 0x8 0x0
@@ -1157,7 +1157,6 @@ proc adspsc598_init_ddr3 { dmc } {
    # Wait until Update bit is set
    # while(!(pDevice->pCguRegs->CGU_DIV & BITM_CGU_DIV_UPDT)) {}
    set data [memread32_phys $cgu1_div]
-   # KMC
    while { ![expr {$data & 0x40000000}] } {
       set data [memread32_phys $cgu1_div]
    }
