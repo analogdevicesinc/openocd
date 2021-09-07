@@ -1181,38 +1181,6 @@ proc adspsc598_init_ddr3 { dmc } {
       set data [memread32_phys $cgu1_stat]
    }
 
-   # Put PLL in to Bypass Mode
-   # regValue = BITM_CGU_PLLCTL_PLLEN | BITM_CGU_PLLCTL_PLLBPST;
-   # pDevice->pCguRegs->CGU_PLLCTL = regValue;
-   # Wait for Bypass to reflect in the status
-   # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)) {}
-   mww phys $cgu1_pllctl 0x9
-   set data [memread32_phys $cgu1_stat]
-   while { ![expr {$data & 0x2}] } {
-      set data [memread32_phys $cgu1_stat]
-   }
-   
-   # Program the CTL register
-   # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
-   mww phys $cgu1_ctl 0x24000
-
-   # Take PLL out of Bypass Mode
-   # regValue = BITM_CGU_PLLCTL_PLLEN | BITM_CGU_PLLCTL_PLLBPCL;
-   # pDevice->pCguRegs->CGU_PLLCTL = regValue;
-   # Wait for No-Bypass to reflect in the status
-   # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP) {}
-   # Wait until clocks are aligned
-   # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
-   mww phys $cgu1_pllctl 0xa
-   set data [memread32_phys $cgu1_stat]
-   while { [expr {$data & 0x2}] } {
-      set data [memread32_phys $cgu1_stat]
-   }
-   while { [expr {$data & 0x8}] } {
-      set data [memread32_phys $cgu1_stat]
-   }
-
-
    # Clear DMC Lane reset by clearing DMC_DDR_LANE0_CTL0.CB_RSTDLL
    # and DMC_DDR_LANE1_CTL0.CB_RSTDLL bits
    # *pREG_DMC0_DDR_LANE0_CTL0 &= ~BITM_DMC_DDR_LANE0_CTL0_CB_RSTDLL;
