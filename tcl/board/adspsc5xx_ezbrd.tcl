@@ -375,7 +375,7 @@ proc adspsc5xx_init_ddr2 { } {
    mww phys $dmc_phy_ctl0 [expr {$data & ~0x1000}]
 }
 
-proc adspsc59x_init_ddr3 { dmc } {
+proc adspsc594_init_ddr3 { dmc } {
    global CHIPNAME
 
    set dmc_baseaddr       0x31070000
@@ -417,22 +417,21 @@ proc adspsc59x_init_ddr3 { dmc } {
    set cgu1_clkoutsel     [expr {$cgu1_ctl + 0x10}]
    set cgu1_divex         [expr {$cgu1_ctl + 0x40}]
 
-   set cdu_cfg0  0x3108f000
-   set cdu_cfg1  [expr {$cdu_cfg0 + 0x4}]
-   set cdu_cfg2  [expr {$cdu_cfg0 + 0x8}]
-   set cdu_cfg3  [expr {$cdu_cfg0 + 0xc}]
-   set cdu_cfg4  [expr {$cdu_cfg0 + 0x10}]
-   set cdu_cfg5  [expr {$cdu_cfg0 + 0x14}]
-   set cdu_cfg6  [expr {$cdu_cfg0 + 0x18}]
-   set cdu_cfg7  [expr {$cdu_cfg0 + 0x1C}]
-   set cdu_cfg8  [expr {$cdu_cfg0 + 0x20}]
-   set cdu_cfg9  [expr {$cdu_cfg0 + 0x24}]
-   set cdu_cfg10 [expr {$cdu_cfg0 + 0x28}]
-   set cdu_cfg11 [expr {$cdu_cfg0 + 0x2C}]
-   set cdu_cfg12 [expr {$cdu_cfg0 + 0x30}]
-
-   set cdu_stat      0x3108f040
-   set cdu_clkinsel  [expr {$cdu_stat + 0x4}]
+   set cdu_cfg0     0x3108f000
+   set cdu_cfg1     [expr {$cdu_cfg0 + 0x4}]
+   set cdu_cfg2     [expr {$cdu_cfg0 + 0x8}]
+   set cdu_cfg3     [expr {$cdu_cfg0 + 0xc}]
+   set cdu_cfg4     [expr {$cdu_cfg0 + 0x10}]
+   set cdu_cfg5     [expr {$cdu_cfg0 + 0x14}]
+   set cdu_cfg6     [expr {$cdu_cfg0 + 0x18}]
+   set cdu_cfg7     [expr {$cdu_cfg0 + 0x1C}]
+   set cdu_cfg8     [expr {$cdu_cfg0 + 0x20}]
+   set cdu_cfg9     [expr {$cdu_cfg0 + 0x24}]
+   set cdu_cfg10    [expr {$cdu_cfg0 + 0x28}]
+   set cdu_cfg11    [expr {$cdu_cfg0 + 0x2C}]
+   set cdu_cfg12    [expr {$cdu_cfg0 + 0x30}]
+   set cdu_stat     [expr {$cdu_cfg0 + 0x40}]
+   set cdu_clkinsel [expr {$cdu_cfg0 + 0x44}]
 
    # Reset DMC Lane by setting the DMC_DDR_LANE0_CTL0.CB_RSTDLL
    # and DMC_DDR_LANE1_CTL0.CB_RSTDLL bits
@@ -835,8 +834,6 @@ proc adspsc59x_init_ddr3 { dmc } {
 
 
 proc adspsc598_init_ddr3 { dmc } {
-   global CHIPNAME
-   global _CHIPNAME
 
    set dmc_baseaddr       0x31070000
    set dmc_ctl            [expr {$dmc_baseaddr + 0x4}]
@@ -877,24 +874,24 @@ proc adspsc598_init_ddr3 { dmc } {
    set cgu1_clkoutsel     [expr {$cgu1_ctl + 0x10}]
    set cgu1_divex         [expr {$cgu1_ctl + 0x40}]
 
-   set cdu_cfg0  0x3108f000
-   set cdu_cfg1  [expr {$cdu_cfg0 + 0x4}]
-   set cdu_cfg2  [expr {$cdu_cfg0 + 0x8}]
-   set cdu_cfg3  [expr {$cdu_cfg0 + 0xc}]
-   set cdu_cfg4  [expr {$cdu_cfg0 + 0x10}]
-   set cdu_cfg5  [expr {$cdu_cfg0 + 0x14}]
-   set cdu_cfg6  [expr {$cdu_cfg0 + 0x18}]
-   set cdu_cfg7  [expr {$cdu_cfg0 + 0x1C}]
-   set cdu_cfg8  [expr {$cdu_cfg0 + 0x20}]
-   set cdu_cfg9  [expr {$cdu_cfg0 + 0x24}]
-   set cdu_cfg10 [expr {$cdu_cfg0 + 0x28}]
-   set cdu_cfg11 [expr {$cdu_cfg0 + 0x2C}]
-   set cdu_cfg12 [expr {$cdu_cfg0 + 0x30}]
-   set cdu_cfg13 [expr {$cdu_cfg0 + 0x34}]
-   set cdu_cfg14 [expr {$cdu_cfg0 + 0x38}]
+   set cdu_cfg0     0x3108f000
+   set cdu_cfg1     [expr {$cdu_cfg0 + 0x4}]
+   set cdu_cfg2     [expr {$cdu_cfg0 + 0x8}]
+   set cdu_cfg3     [expr {$cdu_cfg0 + 0xc}]
+   set cdu_cfg4     [expr {$cdu_cfg0 + 0x10}]
+   set cdu_cfg5     [expr {$cdu_cfg0 + 0x14}]
+   set cdu_cfg6     [expr {$cdu_cfg0 + 0x18}]
+   set cdu_cfg7     [expr {$cdu_cfg0 + 0x1C}]
+   set cdu_cfg8     [expr {$cdu_cfg0 + 0x20}]
+   set cdu_cfg9     [expr {$cdu_cfg0 + 0x24}]
+   set cdu_cfg10    [expr {$cdu_cfg0 + 0x28}]
+   set cdu_cfg11    [expr {$cdu_cfg0 + 0x2C}]
+   set cdu_cfg12    [expr {$cdu_cfg0 + 0x30}]
+   set cdu_cfg13    [expr {$cdu_cfg0 + 0x34}]
+   set cdu_cfg14    [expr {$cdu_cfg0 + 0x38}]
+   set cdu_stat     [expr {$cdu_cfg0 + 0x40}]
+   set cdu_clkinsel [expr {$cdu_cfg0 + 0x44}]
 
-   set cdu_stat      0x3108f040
-   set cdu_clkinsel  [expr {$cdu_stat + 0x4}]
    # Reset DMC Lane by setting the DMC_DDR_LANE0_CTL0.CB_RSTDLL
    # and DMC_DDR_LANE1_CTL0.CB_RSTDLL bits
    # *pREG_DMC0_DDR_LANE0_CTL0 |= BITM_DMC_DDR_LANE0_CTL0_CB_RSTDLL;
@@ -954,7 +951,7 @@ proc adspsc598_init_ddr3 { dmc } {
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_DSEL        = 3;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_OSEL        = 8;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.divex_S1SELEX   = 6;
-   mww phys $cgu0_div 0xa034482
+   mww phys $cgu0_div 0x2034482
 
    # adi_pwr_WriteDIVCTLLocal()
    # Put PLL in to Bypass Mode - call adi_pwr_ConfigurePLLControlReg()
@@ -1103,9 +1100,9 @@ proc adspsc598_init_ddr3 { dmc } {
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
    mww phys $cgu1_ctl 0x34800
 
-    # Take PLL out of Bypass Mode
-    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
-    pmmw $cgu1_pllctl 0x8 0
+   # Take PLL out of Bypass Mode
+   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
+   pmmw $cgu1_pllctl 0x8 0
 
    # Wait till PLL is enabled */
    # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
