@@ -465,14 +465,16 @@ proc adspsc594_init_ddr3 { dmc } {
    # If PLL is disabled, then enable it
    # if(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN))
    #  {pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;}
-   if { ![expr {$cgu0_stat & 0x1}] } {
+   set data [memread32_phys $cgu0_stat]
+   if { ![expr {$data & 0x1}] } {
       pmmw $cgu0_pllctl 0x8 0x0
    }
 
    # If PLL is bypassed, then switch power mode from Active to Full on
    # if(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)
-   # pDevice->pCguRegs->CGU_PLLCTL = BITM_CGU_PLLCTL_PLLBPCL;
-   if { [expr {$cgu0_stat & 0x2}] } {
+   # {pDevice->pCguRegs->CGU_PLLCTL = BITM_CGU_PLLCTL_PLLBPCL;}
+   set data [memread32_phys $cgu0_stat]
+   if { [expr {$data & 0x2}] } {
       mww phys $cgu0_pllctl 0x2
    }
 
@@ -933,8 +935,12 @@ proc adspsc598_init_ddr3 { dmc } {
    }
 
    # If PLL is bypassed, then switch power mode from Active to Full on
-   # pDevice->pCguRegs->CGU_PLLCTL = BITM_CGU_PLLCTL_PLLBPCL;
-   mww phys $cgu0_pllctl 0x2
+   # if(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)
+   # {pDevice->pCguRegs->CGU_PLLCTL = BITM_CGU_PLLCTL_PLLBPCL;}
+   set data [memread32_phys $cgu0_stat]
+   if { [expr {$data & 0x2}] } {
+      mww phys $cgu0_pllctl 0x2
+   }
    
    # Wait for alignment to be done
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN){}
