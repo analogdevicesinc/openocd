@@ -1153,6 +1153,16 @@ proc adspsc598_init_ddr3 { dmc } {
       set data [memread32_phys $cgu1_stat]
    }
 
+   # Set CGU1_DIV
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_MSEL        = 72;
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_CSEL        = 16;
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_SYSSEL      = 8;
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S0SEL       = 4;
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S1SEL       = 2;
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_DSEL        = 2;
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_OSEL        = 18;
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 90;
+
    # Update the new Divider values with UPDT bit
    # pDevice->pCguRegs->CGU_DIV =  dNewCguDiv | BITM_CGU_DIV_UPDT;
    mww phys $cgu1_div 0x44824890
@@ -1170,16 +1180,6 @@ proc adspsc598_init_ddr3 { dmc } {
    while { [expr {$data & 0x8}] } {
       set data [memread32_phys $cgu1_stat]
    }
-
-   # Set CGU1_DIV
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_CSEL        = 2;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S0SEL       = 4;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_SYSSEL      = 4;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S1SEL       = 2;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_DSEL        = 2;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_OSEL        = 16;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 0;
-   mww phys $cgu1_div 0x4024482
 
    # Put PLL in to Bypass Mode
    # regValue = BITM_CGU_PLLCTL_PLLEN | BITM_CGU_PLLCTL_PLLBPST;
