@@ -1154,7 +1154,6 @@ proc adspsc598_init_ddr3 { dmc } {
    }
 
    # Set CGU1_DIV
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_MSEL        = 72;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_CSEL        = 16;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_SYSSEL      = 8;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S0SEL       = 4;
