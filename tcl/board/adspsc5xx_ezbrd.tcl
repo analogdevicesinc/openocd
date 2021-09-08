@@ -45,11 +45,11 @@ proc canfd_config { canfd_base } {
    set canfd_ram          [expr {$canfd_cfg + 0x80}]
    set canfd_rx_imsk0     [expr {$canfd_cfg + 0x880}]
 
-   if { $CHIPNAME == "adspsc598" } {
+   if { $_CHIPNAME == "adspsc598" } {
       # use axi-ap
       set ap_num  2
    }
-   if { $CHIPNAME == "adspsc594" } {
+   if { $_CHIPNAME == "adspsc594" } {
       # use ahb-ap
       set ap_num 0
    }
