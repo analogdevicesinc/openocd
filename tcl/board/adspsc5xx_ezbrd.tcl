@@ -485,7 +485,6 @@ proc adspsc594_init_ddr3 { dmc } {
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_S1SEL       = 2;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_DSEL        = 2;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_OSEL        = 8;
-   # pADI_CGU_Param_List.cgu0_settings.clocksettings.divex_S1SELEX   = 6;
    mww phys $cgu0_div 0x2024482
 
    # Put PLL in to Bypass Mode
@@ -542,6 +541,7 @@ proc adspsc594_init_ddr3 { dmc } {
    }
 
    # Update the new Divider values for S1SELEX via DIVEX
+   # pADI_CGU_Param_List.cgu0_settings.clocksettings.divex_S1SELEX   = 6;
    # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv | ADI_PWR_SCLK0EXDIV_DEF_VAL;
    mww phys $cgu0_divex 0x60030
 
@@ -586,7 +586,6 @@ proc adspsc594_init_ddr3 { dmc } {
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S1SEL       = 2;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_DSEL        = 2;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_OSEL        = 16;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 0;
    mww phys $cgu1_div 0x4024482
 
    # Put PLL in to Bypass Mode
@@ -956,7 +955,6 @@ proc adspsc598_init_ddr3 { dmc } {
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_S1SEL       = 2;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_DSEL        = 3;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_OSEL        = 8;
-   # pADI_CGU_Param_List.cgu0_settings.clocksettings.divex_S1SELEX   = 6;
    mww phys $cgu0_div 0x2034482
 
    # adi_pwr_WriteDIVCTLLocal()
@@ -1028,8 +1026,8 @@ proc adspsc598_init_ddr3 { dmc } {
    }
 
    # Update the new Divider values for S1SELEX via DIVEX
+   # pADI_CGU_Param_List.cgu0_settings.clocksettings.divex_S1SELEX   = 6;
    # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv;
-   # Line 2590, adi_pwr_2156x.c, adi_pwr_WriteDIVCTLLocal()
    mww phys $cgu0_divex 0x60030
 
    # Wait until clocks are aligned
@@ -1143,6 +1141,7 @@ proc adspsc598_init_ddr3 { dmc } {
    }
 
    # Update the new Divider values for S1SELEX via DIVEX */
+   # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 90;
    # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv;
    mww phys $cgu1_divex 0x5a0024
 
@@ -1160,7 +1159,6 @@ proc adspsc598_init_ddr3 { dmc } {
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S1SEL       = 2;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_DSEL        = 2;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_OSEL        = 18;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 90;
 
    # Update the new Divider values with UPDT bit
    # pDevice->pCguRegs->CGU_DIV =  dNewCguDiv | BITM_CGU_DIV_UPDT;
