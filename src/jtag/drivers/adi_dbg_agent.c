@@ -1,7 +1,7 @@
 /***************************************************************************
 *   Copyright (C) 2011 - 2021 by Analog Devices, Inc.                     *
-*   Based on ice1000.c of UrJTAG                                           *
-*   Chad Wentworth  <chad.wentworth@analog.com>                                     *
+*   Based on ice1000.c of UrJTAG                                          *
+*   Chad Wentworth  <chad.wentworth@analog.com>                           *
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
 *   it under the terms of the GNU General Public License as published by  *
