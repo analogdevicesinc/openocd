@@ -197,7 +197,6 @@ static int mdr_erase(struct flash_bank *bank, unsigned int first,
 			if (retval != ERROR_OK)
 				goto reset_pg_and_lock;
 		}
-		bank->sectors[i].is_erased = 1;
 	}
 
 reset_pg_and_lock:
@@ -328,7 +327,7 @@ static int mdr_write(struct flash_bank *bank, const uint8_t *buffer,
 	int rem = count % 4;
 	if (rem) {
 		new_buffer = malloc(count + rem);
-		if (new_buffer == NULL) {
+		if (!new_buffer) {
 			LOG_ERROR("odd number of bytes to write and no memory for padding buffer");
 			return ERROR_FAIL;
 		}
@@ -458,8 +457,7 @@ reset_pg_and_lock:
 		retval = retval2;
 
 free_buffer:
-	if (new_buffer)
-		free(new_buffer);
+	free(new_buffer);
 
 	/* read some bytes bytes to flush buffer in flash accelerator.
 	 * See errata for 1986VE1T and 1986VE3. Error 0007 */
@@ -573,10 +571,7 @@ static int mdr_probe(struct flash_bank *bank)
 	page_count = mdr_info->page_count;
 	page_size = bank->size / page_count;
 
-	if (bank->sectors) {
-		free(bank->sectors);
-		bank->sectors = NULL;
-	}
+	free(bank->sectors);
 
 	bank->num_sectors = page_count;
 	bank->sectors = malloc(sizeof(struct flash_sector) * page_count);
@@ -601,11 +596,11 @@ static int mdr_auto_probe(struct flash_bank *bank)
 	return mdr_probe(bank);
 }
 
-static int get_mdr_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_mdr_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct mdr_flash_bank *mdr_info = bank->driver_priv;
-	snprintf(buf, buf_size, "MDR32Fx - %s",
-		 mdr_info->mem_type ? "info memory" : "main memory");
+	command_print_sameline(cmd, "MDR32Fx - %s",
+			mdr_info->mem_type ? "info memory" : "main memory");
 
 	return ERROR_OK;
 }

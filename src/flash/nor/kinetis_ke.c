@@ -434,7 +434,7 @@ static int kinetis_ke_prepare_flash(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-int kinetis_ke_stop_watchdog(struct target *target)
+static int kinetis_ke_stop_watchdog(struct target *target)
 {
 	struct working_area *watchdog_algorithm;
 	struct armv7m_algorithm armv7m_info;
@@ -945,7 +945,7 @@ COMMAND_HANDLER(kinetis_ke_securing_test)
 	if (result != ERROR_OK)
 		return result;
 
-	assert(bank != NULL);
+	assert(bank);
 
 	if (target->state != TARGET_HALTED) {
 		LOG_ERROR("Target not halted");
@@ -1000,8 +1000,6 @@ static int kinetis_ke_erase(struct flash_bank *bank, unsigned int first,
 			return ERROR_FLASH_OPERATION_FAILED;
 		}
 
-		bank->sectors[i].is_erased = 1;
-
 		if (i == 2)
 			fcf_erased = true;
 	}
@@ -1046,7 +1044,7 @@ static int kinetis_ke_write(struct flash_bank *bank, const uint8_t *buffer,
 		uint32_t old_count = count;
 		count = (old_count | 3) + 1;
 		new_buffer = malloc(count);
-		if (new_buffer == NULL) {
+		if (!new_buffer) {
 			LOG_ERROR("odd number of bytes to write and no memory "
 				"for padding buffer");
 			return ERROR_FAIL;
@@ -1145,10 +1143,7 @@ static int kinetis_ke_probe(struct flash_bank *bank)
 			break;
 	}
 
-	if (bank->sectors) {
-		free(bank->sectors);
-		bank->sectors = NULL;
-	}
+	free(bank->sectors);
 
 	assert(bank->num_sectors > 0);
 	bank->sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
@@ -1174,10 +1169,9 @@ static int kinetis_ke_auto_probe(struct flash_bank *bank)
 	return kinetis_ke_probe(bank);
 }
 
-static int kinetis_ke_info(struct flash_bank *bank, char *buf, int buf_size)
+static int kinetis_ke_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
-	(void) snprintf(buf, buf_size,
-			"%s driver for flash bank %s at " TARGET_ADDR_FMT,
+	command_print_sameline(cmd, "%s driver for flash bank %s at " TARGET_ADDR_FMT,
 			bank->driver->name,	bank->name, bank->base);
 
 	return ERROR_OK;
@@ -1229,7 +1223,7 @@ static int kinetis_ke_blank_check(struct flash_bank *bank)
 			if (result == ERROR_OK)	{
 				bank->sectors[i].is_erased = !(fstat & (FTMRX_FSTAT_MGSTAT0_MASK | FTMRX_FSTAT_MGSTAT1_MASK));
 			} else {
-				LOG_DEBUG("Ignoring errored PFlash sector blank-check");
+				LOG_DEBUG("Ignoring error on PFlash sector blank-check");
 				bank->sectors[i].is_erased = -1;
 			}
 		}

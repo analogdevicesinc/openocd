@@ -34,7 +34,7 @@
 #include "bitq.h"
 
 /* PRESTO access library includes */
-#include <ftdi.h>
+#include "libftdi_helper.h"
 
 /* -------------------------------------------------------------------------- */
 
@@ -160,8 +160,8 @@ static int presto_open_libftdi(char *req_serial)
 		return ERROR_JTAG_DEVICE_ERROR;
 	}
 
-	if (ftdi_usb_purge_buffers(&presto->ftdic) < 0) {
-		LOG_ERROR("unable to purge PRESTO buffers");
+	if (ftdi_tcioflush(&presto->ftdic) < 0) {
+		LOG_ERROR("unable to flush PRESTO buffers");
 		return ERROR_JTAG_DEVICE_ERROR;
 	}
 
@@ -174,7 +174,7 @@ static int presto_open_libftdi(char *req_serial)
 	if (presto_read(&presto_data, 1) != ERROR_OK) {
 		LOG_DEBUG("no response from PRESTO, retrying");
 
-		if (ftdi_usb_purge_buffers(&presto->ftdic) < 0)
+		if (ftdi_tcioflush(&presto->ftdic) < 0)
 			return ERROR_JTAG_DEVICE_ERROR;
 
 		presto_data = 0xD0;
@@ -351,7 +351,7 @@ static int presto_bitq_out(int tms, int tdi, int tdo_req)
 	unsigned char cmd;
 
 	if (presto->jtag_tck == 0)
-		presto_sendbyte(0xA4);	/* LED idicator - JTAG active */
+		presto_sendbyte(0xA4);	/* LED indicator - JTAG active */
 	else if (presto->jtag_speed == 0 && !tdo_req && tms == presto->jtag_tms) {
 		presto->jtag_tdi_data |= (tdi != 0) << presto->jtag_tdi_count;
 
@@ -392,7 +392,7 @@ static int presto_bitq_flush(void)
 	presto_tdi_flush();
 	presto_tck_idle();
 
-	presto_sendbyte(0xA0);	/* LED idicator - JTAG idle */
+	presto_sendbyte(0xA0);	/* LED indicator - JTAG idle */
 
 	return presto_flush();
 }
@@ -511,8 +511,7 @@ static char *presto_serial;
 COMMAND_HANDLER(presto_handle_serial_command)
 {
 	if (CMD_ARGC == 1) {
-		if (presto_serial)
-			free(presto_serial);
+		free(presto_serial);
 		presto_serial = strdup(CMD_ARGV[0]);
 	} else
 		return ERROR_COMMAND_SYNTAX_ERROR;
@@ -520,9 +519,9 @@ COMMAND_HANDLER(presto_handle_serial_command)
 	return ERROR_OK;
 }
 
-static const struct command_registration presto_command_handlers[] = {
+static const struct command_registration presto_subcommand_handlers[] = {
 	{
-		.name = "presto_serial",
+		.name = "serial",
 		.handler = presto_handle_serial_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Configure USB serial number of Presto device.",
@@ -531,11 +530,22 @@ static const struct command_registration presto_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
+static const struct command_registration presto_command_handlers[] = {
+	{
+		.name = "presto",
+		.mode = COMMAND_ANY,
+		.help = "perform presto management",
+		.chain = presto_subcommand_handlers,
+		.usage = "",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
 static int presto_jtag_init(void)
 {
 	if (presto_open(presto_serial) != ERROR_OK) {
 		presto_close();
-		if (presto_serial != NULL)
+		if (presto_serial)
 			LOG_ERROR("Cannot open PRESTO, serial number '%s'", presto_serial);
 		else
 			LOG_ERROR("Cannot open PRESTO");
@@ -553,10 +563,8 @@ static int presto_jtag_quit(void)
 	presto_close();
 	LOG_INFO("PRESTO closed");
 
-	if (presto_serial) {
-		free(presto_serial);
-		presto_serial = NULL;
-	}
+	free(presto_serial);
+	presto_serial = NULL;
 
 	return ERROR_OK;
 }

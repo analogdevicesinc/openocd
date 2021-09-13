@@ -168,7 +168,7 @@ static void bitq_scan_field(struct scan_field *field, int do_pause)
 	else
 		tdo_req = 0;
 
-	if (field->out_value == NULL) {
+	if (!field->out_value) {
 		/* just send zeros and request data from TDO */
 		for (bit_cnt = field->num_bits; bit_cnt > 1; bit_cnt--)
 			bitq_io(0, 0, tdo_req);
@@ -245,7 +245,7 @@ int bitq_execute_queue(void)
 		case JTAG_TLR_RESET:
 			LOG_DEBUG_IO("statemove end in %i", cmd->cmd.statemove->end_state);
 			bitq_end_state(cmd->cmd.statemove->end_state);
-			bitq_state_move(tap_get_end_state());   /* uncoditional TAP move */
+			bitq_state_move(tap_get_end_state());   /* unconditional TAP move */
 			break;
 
 		case JTAG_PATHMOVE:
@@ -264,7 +264,7 @@ int bitq_execute_queue(void)
 			break;
 
 		case JTAG_SLEEP:
-			LOG_DEBUG_IO("sleep %i", cmd->cmd.sleep->us);
+			LOG_DEBUG_IO("sleep %" PRIu32, cmd->cmd.sleep->us);
 			bitq_interface->sleep(cmd->cmd.sleep->us);
 			if (bitq_interface->in_rdy())
 				bitq_in_proc();

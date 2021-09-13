@@ -358,11 +358,10 @@ int bitbang_execute_queue(void)
 					return ERROR_FAIL;
 				if (jtag_read_buffer(buffer, cmd->cmd.scan) != ERROR_OK)
 					retval = ERROR_JTAG_QUEUE_FAILED;
-				if (buffer)
-					free(buffer);
+				free(buffer);
 				break;
 			case JTAG_SLEEP:
-				LOG_DEBUG_IO("sleep %" PRIi32, cmd->cmd.sleep->us);
+				LOG_DEBUG_IO("sleep %" PRIu32, cmd->cmd.sleep->us);
 				jtag_sleep(cmd->cmd.sleep->us);
 				break;
 			case JTAG_TMS:
@@ -394,6 +393,11 @@ static void bitbang_swd_exchange(bool rnw, uint8_t buf[], unsigned int offset, u
 {
 	LOG_DEBUG("bitbang_swd_exchange");
 
+	if (bitbang_interface->blink) {
+		/* FIXME: we should manage errors */
+		bitbang_interface->blink(1);
+	}
+
 	for (unsigned int i = offset; i < bit_cnt + offset; i++) {
 		int bytec = i/8;
 		int bcval = 1 << (i % 8);
@@ -409,6 +413,11 @@ static void bitbang_swd_exchange(bool rnw, uint8_t buf[], unsigned int offset, u
 		}
 
 		bitbang_interface->swd_write(1, swdio);
+	}
+
+	if (bitbang_interface->blink) {
+		/* FIXME: we should manage errors */
+		bitbang_interface->blink(0);
 	}
 }
 
@@ -446,7 +455,7 @@ static void swd_clear_sticky_errors(void)
 static void bitbang_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay_clk)
 {
 	LOG_DEBUG("bitbang_swd_read_reg");
-	assert(cmd & SWD_CMD_RnW);
+	assert(cmd & SWD_CMD_RNW);
 
 	if (queued_retval != ERROR_OK) {
 		LOG_DEBUG("Skip bitbang_swd_read_reg because queued_retval=%d", queued_retval);
@@ -469,8 +478,8 @@ static void bitbang_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay
 
 		LOG_DEBUG("%s %s %s reg %X = %08"PRIx32,
 			  ack == SWD_ACK_OK ? "OK" : ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK",
-			  cmd & SWD_CMD_APnDP ? "AP" : "DP",
-			  cmd & SWD_CMD_RnW ? "read" : "write",
+			  cmd & SWD_CMD_APNDP ? "AP" : "DP",
+			  cmd & SWD_CMD_RNW ? "read" : "write",
 			  (cmd & SWD_CMD_A32) >> 1,
 			  data);
 
@@ -483,7 +492,7 @@ static void bitbang_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay
 			}
 			if (value)
 				*value = data;
-			if (cmd & SWD_CMD_APnDP)
+			if (cmd & SWD_CMD_APNDP)
 				bitbang_swd_exchange(true, NULL, 0, ap_delay_clk);
 			return;
 		 case SWD_ACK_WAIT:
@@ -505,7 +514,7 @@ static void bitbang_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay
 static void bitbang_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_delay_clk)
 {
 	LOG_DEBUG("bitbang_swd_write_reg");
-	assert(!(cmd & SWD_CMD_RnW));
+	assert(!(cmd & SWD_CMD_RNW));
 
 	if (queued_retval != ERROR_OK) {
 		LOG_DEBUG("Skip bitbang_swd_write_reg because queued_retval=%d", queued_retval);
@@ -528,14 +537,14 @@ static void bitbang_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_delay
 		int ack = buf_get_u32(trn_ack_data_parity_trn, 1, 3);
 		LOG_DEBUG("%s %s %s reg %X = %08"PRIx32,
 			  ack == SWD_ACK_OK ? "OK" : ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK",
-			  cmd & SWD_CMD_APnDP ? "AP" : "DP",
-			  cmd & SWD_CMD_RnW ? "read" : "write",
+			  cmd & SWD_CMD_APNDP ? "AP" : "DP",
+			  cmd & SWD_CMD_RNW ? "read" : "write",
 			  (cmd & SWD_CMD_A32) >> 1,
 			  buf_get_u32(trn_ack_data_parity_trn, 1 + 3 + 1, 32));
 
 		switch (ack) {
 		 case SWD_ACK_OK:
-			if (cmd & SWD_CMD_APnDP)
+			if (cmd & SWD_CMD_APNDP)
 				bitbang_swd_exchange(true, NULL, 0, ap_delay_clk);
 			return;
 		 case SWD_ACK_WAIT:

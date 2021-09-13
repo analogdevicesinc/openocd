@@ -114,10 +114,6 @@ static const uint8_t write_code_arm[] = {
 #include "../../contrib/loaders/flash/max32xxx/max32xxx_write_arm.inc"
 };
 
-static const uint8_t write_code_riscv[] = {
-#include "../../contrib/loaders/flash/max32xxx/max32xxx_write_riscv.inc"
-};
-
 FLASH_BANK_COMMAND_HANDLER(max32xxx_flash_bank_command)
 {
 	struct max32xxx_flash_bank *info;
@@ -139,14 +135,14 @@ FLASH_BANK_COMMAND_HANDLER(max32xxx_flash_bank_command)
 	return ERROR_OK;
 }
 
-static int get_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct max32xxx_flash_bank *info = bank->driver_priv;
 
 	if (!info->probed)
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
-	snprintf(buf, buf_size, "\nMaxim Integrated max32xxx flash driver\n");
+	command_print_sameline(cmd, "\nMaxim Integrated max32xxx flash driver\n");
 	return ERROR_OK;
 }
 
@@ -316,8 +312,8 @@ static int max32xxx_erase(struct flash_bank *bank, unsigned int first,
 		} while ((--retry > 0) && max32xxx_flash_busy(flash_cn));
 
 		if (retry <= 0) {
-			LOG_ERROR("Timed out waiting for flash page erase @ 0x%08x",
-			          banknr * info->sector_size);
+			LOG_ERROR("Timed out waiting for flash page erase @ 0x%08" PRIx32,
+				(banknr * info->sector_size));
 			return ERROR_FLASH_OPERATION_FAILED;
 		}
 
@@ -329,8 +325,6 @@ static int max32xxx_erase(struct flash_bank *bank, unsigned int first,
 			max32xxx_flash_op_post(bank);
 			return ERROR_FLASH_OPERATION_FAILED;
 		}
-
-		bank->sectors[banknr].is_erased = 1;
 	}
 
 	if (!erased) {
@@ -409,9 +403,6 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 		write_code = (uint8_t*)write_code_arm;
 		write_code_size = sizeof(write_code_arm);
 	} else {
-		/* TODO: RISCV algorithm not currently working */
-		write_code = (uint8_t*)write_code_riscv;
-		write_code_size = sizeof(write_code_riscv);
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 	}
 
@@ -578,7 +569,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 			} while ((--retry > 0) && max32xxx_flash_busy(flash_cn));
 
 			if (retry <= 0) {
-				LOG_ERROR("Timed out waiting for flash write @ 0x%08x", address);
+				LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32, address);
 				max32xxx_flash_op_post(bank);
 				return ERROR_FLASH_OPERATION_FAILED;
 			}
@@ -599,7 +590,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 			target_write_u32(target, info->flc_base + FLC_ADDR, address);
 
 			if ((address & 0xFFF) == 0)
-				LOG_DEBUG("Writing @ 0x%08x", address);
+				LOG_DEBUG("Writing @ 0x%08" PRIx32, address);
 
 			target_write_buffer(target, info->flc_base + FLC_DATA0, 16, buffer);
 			flash_cn |= FLC_CN_WR;
@@ -612,7 +603,8 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 			} while ((--retry > 0) && max32xxx_flash_busy(flash_cn));
 
 			if (retry <= 0) {
-				LOG_ERROR("Timed out waiting for flash write @ 0x%08x", address);
+
+				LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32, address);
 				max32xxx_flash_op_post(bank);
 				return ERROR_FLASH_OPERATION_FAILED;
 			}
@@ -651,7 +643,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		} while ((--retry > 0) && max32xxx_flash_busy(flash_cn));
 
 		if (retry <= 0) {
-			LOG_ERROR("Timed out waiting for flash write @ 0x%08x", address);
+			LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32, address);
 			max32xxx_flash_op_post(bank);
 			return ERROR_FLASH_OPERATION_FAILED;
 		}
@@ -700,7 +692,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		} while ((--retry > 0) && (flash_cn & FLC_CN_PEND));
 
 		if (retry <= 0) {
-			LOG_ERROR("Timed out waiting for flash write @ 0x%08x", address);
+			LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32, address);
 			max32xxx_flash_op_post(bank);
 			return ERROR_FLASH_OPERATION_FAILED;
 		}
@@ -709,7 +701,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 	/* Check access violations */
 	target_read_u32(target, info->flc_base + FLC_INT, &flash_int);
 	if (flash_int & FLC_INT_AF) {
-		LOG_ERROR("Flash Error writing 0x%x bytes at 0x%08x", count, offset);
+		LOG_ERROR("Flash Error writing 0x%" PRIx32 " bytes at 0x%08" PRIx32, count, offset);
 		max32xxx_flash_op_post(bank);
 		return ERROR_FLASH_OPERATION_FAILED;
 	}
@@ -724,14 +716,10 @@ static int max32xxx_probe(struct flash_bank *bank)
 {
 	struct max32xxx_flash_bank *info = bank->driver_priv;
 	struct target *target = bank->target;
-	const char* target_type_name = (const char*)target->type->name;
 	uint32_t arm_id[2];
 	uint16_t arm_pid;
 
-	if (bank->sectors) {
-		free(bank->sectors);
-		bank->sectors = NULL;
-	}
+	free(bank->sectors);
 
 	/* provide this for the benefit of the NOR flash framework */
 	bank->size = info->flash_size;
@@ -747,22 +735,18 @@ static int max32xxx_probe(struct flash_bank *bank)
 
 	/* Probe to determine if this part is in the max326xx family */
 	info->max326xx = 0;
+	target_read_u32(target, ARM_PID_REG, &arm_id[0]);
+	target_read_u32(target, ARM_PID_REG+4, &arm_id[1]);
+	arm_pid = (arm_id[1] << 8) + arm_id[0];
+	LOG_DEBUG("arm_pid = 0x%x", arm_pid);
 
-	/* If this is an arm core we're debugging */
-	if(strcmp(target_type_name, "cortex_m") == 0) {
-		target_read_u32(target, ARM_PID_REG, &arm_id[0]);
-		target_read_u32(target, ARM_PID_REG+4, &arm_id[1]);
-		arm_pid = (arm_id[1] << 8) + arm_id[0];
-		LOG_DEBUG("arm_pid = 0x%x", arm_pid);
-
-		if ((arm_pid == ARM_PID_DEFAULT_CM3) || arm_pid == ARM_PID_DEFAULT_CM4) {
-			uint32_t max326xx_id;
-			target_read_u32(target, MAX326XX_ID_REG, &max326xx_id);
-			LOG_DEBUG("max326xx_id = 0x%x", max326xx_id);
-			max326xx_id = ((max326xx_id & 0xFF000000) >> 24);
-			if (max326xx_id == MAX326XX_ID)
-				info->max326xx = 1;
-		}
+	if ((arm_pid == ARM_PID_DEFAULT_CM3) || arm_pid == ARM_PID_DEFAULT_CM4) {
+		uint32_t max326xx_id;
+		target_read_u32(target, MAX326XX_ID_REG, &max326xx_id);
+		LOG_DEBUG("max326xx_id = 0x%" PRIx32, max326xx_id);
+		max326xx_id = ((max326xx_id & 0xFF000000) >> 24);
+		if (max326xx_id == MAX326XX_ID)
+			info->max326xx = 1;
 	}
 	LOG_DEBUG("info->max326xx = %d", info->max326xx);
 
@@ -855,16 +839,12 @@ COMMAND_HANDLER(max32xxx_handle_mass_erase_command)
 		return ERROR_OK;
 	}
 
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
-	if (max32xxx_mass_erase(bank) == ERROR_OK) {
-		/* set all sectors as erased */
-		for (unsigned i = 0; i < bank->num_sectors; i++)
-			bank->sectors[i].is_erased = 1;
-
+	if (max32xxx_mass_erase(bank) == ERROR_OK)
 		command_print(CMD, "max32xxx mass erase complete");
-	} else
+	else
 		command_print(CMD, "max32xxx mass erase failed");
 
 	return ERROR_OK;
@@ -883,12 +863,12 @@ COMMAND_HANDLER(max32xxx_handle_protection_set_command)
 	}
 
 	retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 	info = bank->driver_priv;
 
 	/* Convert the range to the page numbers */
-	if (1 != sscanf(CMD_ARGV[1], "0x%"SCNx32, &addr)) {
+	if (sscanf(CMD_ARGV[1], "0x%"SCNx32, &addr) != 1) {
 		LOG_WARNING("Error parsing address");
 		command_print(CMD, "max32xxx protection_set <bank> <addr> <size>");
 		return ERROR_FAIL;
@@ -896,7 +876,7 @@ COMMAND_HANDLER(max32xxx_handle_protection_set_command)
 	/* Mask off the top portion on the address */
 	addr = (addr & 0x0FFFFFFF);
 
-	if (1 != sscanf(CMD_ARGV[2], "0x%"SCNx32, &len)) {
+	if (sscanf(CMD_ARGV[2], "0x%"SCNx32, &len) != 1) {
 		LOG_WARNING("Error parsing length");
 		command_print(CMD, "max32xxx protection_set <bank> <addr> <size>");
 		return ERROR_FAIL;
@@ -939,12 +919,12 @@ COMMAND_HANDLER(max32xxx_handle_protection_clr_command)
 	}
 
 	retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 	info = bank->driver_priv;
 
 	/* Convert the range to the page numbers */
-	if (1 != sscanf(CMD_ARGV[1], "0x%"SCNx32, &addr)) {
+	if (sscanf(CMD_ARGV[1], "0x%"SCNx32, &addr) != 1) {
 		LOG_WARNING("Error parsing address");
 		command_print(CMD, "max32xxx protection_clr <bank> <addr> <size>");
 		return ERROR_FAIL;
@@ -952,7 +932,7 @@ COMMAND_HANDLER(max32xxx_handle_protection_clr_command)
 	/* Mask off the top portion on the address */
 	addr = (addr & 0x0FFFFFFF);
 
-	if (1 != sscanf(CMD_ARGV[2], "0x%"SCNx32, &len)) {
+	if (sscanf(CMD_ARGV[2], "0x%"SCNx32, &len) != 1) {
 		LOG_WARNING("Error parsing length");
 		command_print(CMD, "max32xxx protection_clr <bank> <addr> <size>");
 		return ERROR_FAIL;
@@ -994,13 +974,13 @@ COMMAND_HANDLER(max32xxx_handle_protection_check_command)
 	}
 
 	retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 	info = bank->driver_priv;
 
 	/* Update the protection array */
 	retval = max32xxx_protect_check(bank);
-	if (ERROR_OK != retval) {
+	if (retval != ERROR_OK) {
 		LOG_WARNING("Error updating the protection array");
 		return retval;
 	}

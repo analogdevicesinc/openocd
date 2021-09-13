@@ -31,10 +31,10 @@
 #include <target/cortex_m.h>
 
 /* A note to prefixing.
- * Definitions and functions ingerited from at91samd.c without
- * any change retained the original prefix samd_ so they eventualy
+ * Definitions and functions inherited from at91samd.c without
+ * any change retained the original prefix samd_ so they eventually
  * may go to samd_common.h and .c
- * As currently there are olny 3 short functions identical with
+ * As currently there are only 3 short functions identical with
  * the original source, no common file was created. */
 
 #define SAME5_PAGES_PER_BLOCK	16
@@ -113,7 +113,7 @@ struct samd_part {
 };
 
 /* See SAM D5x/E5x Family Silicon Errata and Data Sheet Clarification
- * DS80000748B */
+ * DS80000748K */
 /* Known SAMD51 parts. */
 static const struct samd_part samd51_parts[] = {
 	{ 0x00, "SAMD51P20A", 1024, 256 },
@@ -134,6 +134,8 @@ static const struct samd_part same51_parts[] = {
 	{ 0x02, "SAME51J19A", 512, 192 },
 	{ 0x03, "SAME51J18A", 256, 128 },
 	{ 0x04, "SAME51J20A", 1024, 256 },
+	{ 0x05, "SAME51G19A", 512, 192 },	/* New in rev D */
+	{ 0x06, "SAME51G18A", 256, 128 },	/* New in rev D */
 };
 
 /* Known SAME53 parts. */
@@ -218,7 +220,7 @@ static const struct samd_part *samd_find_part(uint32_t id)
 {
 	uint8_t devsel = SAMD_GET_DEVSEL(id);
 	const struct samd_family *family = samd_find_family(id);
-	if (family == NULL)
+	if (!family)
 		return NULL;
 
 	for (unsigned i = 0; i < family->num_parts; i++) {
@@ -285,7 +287,7 @@ static int same5_probe(struct flash_bank *bank)
 	}
 
 	part = samd_find_part(id);
-	if (part == NULL) {
+	if (!part) {
 		LOG_ERROR("Couldn't find part corresponding to DID %08" PRIx32, id);
 		return ERROR_FAIL;
 	}
@@ -731,9 +733,7 @@ static int same5_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 
 free_pb:
-	if (pb)
-		free(pb);
-
+	free(pb);
 	return res;
 }
 
@@ -742,7 +742,7 @@ FLASH_BANK_COMMAND_HANDLER(same5_flash_bank_command)
 {
 	if (bank->base != SAMD_FLASH) {
 		LOG_ERROR("Address " TARGET_ADDR_FMT " invalid bank address (try "
-			"0x%08" PRIx32 "[same5] )", bank->base, SAMD_FLASH);
+			"0x%08x[same5] )", bank->base, SAMD_FLASH);
 		return ERROR_FAIL;
 	}
 
@@ -797,11 +797,12 @@ COMMAND_HANDLER(same5_handle_userpage_command)
 	}
 
 	if (CMD_ARGC >= 1) {
-		uint64_t mask = NVMUSERROW_SAM_E5_D5_MASK;
-		uint64_t value = strtoull(CMD_ARGV[0], NULL, 0);
+		uint64_t value, mask = NVMUSERROW_SAM_E5_D5_MASK;
+		COMMAND_PARSE_NUMBER(u64, CMD_ARGV[0], value);
 
 		if (CMD_ARGC == 2) {
-			uint64_t mask_temp = strtoull(CMD_ARGV[1], NULL, 0);
+			uint64_t mask_temp;
+			COMMAND_PARSE_NUMBER(u64, CMD_ARGV[1], mask_temp);
 			mask &= mask_temp;
 		}
 
@@ -837,7 +838,9 @@ COMMAND_HANDLER(same5_handle_bootloader_command)
 		return ERROR_FAIL;
 
 	if (CMD_ARGC >= 1) {
-		unsigned long size = strtoul(CMD_ARGV[0], NULL, 0);
+		unsigned long size;
+
+		COMMAND_PARSE_NUMBER(ulong, CMD_ARGV[0], size);
 		uint32_t code = (size + 8191) / 8192;
 		if (code > 15) {
 			command_print(CMD, "Invalid bootloader size.  Please "

@@ -240,13 +240,13 @@ static int w600_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 
 	if ((offset % W600_FLASH_PAGESIZE) != 0) {
-		LOG_WARNING("offset 0x%" PRIx32 " breaks required %" PRIu32 "-byte alignment",
+		LOG_WARNING("offset 0x%" PRIx32 " breaks required %d-byte alignment",
 			offset, W600_FLASH_PAGESIZE);
 		return ERROR_FLASH_DST_BREAKS_ALIGNMENT;
 	}
 
 	if ((count % W600_FLASH_PAGESIZE) != 0) {
-		LOG_WARNING("count 0x%" PRIx32 " breaks required %" PRIu32 "-byte alignment",
+		LOG_WARNING("count 0x%" PRIx32 " breaks required %d-byte alignment",
 			offset, W600_FLASH_PAGESIZE);
 		return ERROR_FLASH_DST_BREAKS_ALIGNMENT;
 	}
@@ -323,7 +323,7 @@ static int w600_probe(struct flash_bank *bank)
 		flash_size = 1 << flash_size;
 	}
 
-	LOG_INFO("flash size = %dkbytes", flash_size / 1024);
+	LOG_INFO("flash size = %" PRIu32 "kbytes", flash_size / 1024);
 
 	/* calculate numbers of pages */
 	size_t num_pages = flash_size / W600_FLASH_SECSIZE;
@@ -331,10 +331,8 @@ static int w600_probe(struct flash_bank *bank)
 	/* check that calculation result makes sense */
 	assert(num_pages > 0);
 
-	if (bank->sectors) {
-		free(bank->sectors);
-		bank->sectors = NULL;
-	}
+	free(bank->sectors);
+	bank->sectors = NULL;
 
 	bank->base = W600_FLASH_BASE;
 	bank->size = num_pages * W600_FLASH_SECSIZE;
@@ -347,7 +345,7 @@ static int w600_probe(struct flash_bank *bank)
 		bank->sectors[i].offset = i * W600_FLASH_SECSIZE;
 		bank->sectors[i].size = W600_FLASH_SECSIZE;
 		bank->sectors[i].is_erased = -1;
-		/* offset 0 to W600_FLASH_PROTECT_SIZE shoule be protected */
+		/* offset 0 to W600_FLASH_PROTECT_SIZE should be protected */
 		bank->sectors[i].is_protected = (i < W600_FLASH_PROTECT_SIZE / W600_FLASH_SECSIZE);
 	}
 
@@ -364,7 +362,7 @@ static int w600_auto_probe(struct flash_bank *bank)
 	return w600_probe(bank);
 }
 
-static int get_w600_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_w600_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	uint32_t flash_id;
 
@@ -373,7 +371,7 @@ static int get_w600_info(struct flash_bank *bank, char *buf, int buf_size)
 	if (retval != ERROR_OK)
 		return retval;
 
-	snprintf(buf, buf_size, "w600 : 0x%08" PRIx32 "", flash_id);
+	command_print_sameline(cmd, "w600 : 0x%08" PRIx32 "", flash_id);
 	return ERROR_OK;
 }
 

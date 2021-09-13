@@ -139,9 +139,9 @@ static int lpc3180_init(struct nand_device *nand)
 {
 	struct lpc3180_nand_controller *lpc3180_info = nand->controller_priv;
 	struct target *target = nand->target;
-	int bus_width = nand->bus_width ? : 8;
-	int address_cycles = nand->address_cycles ? : 3;
-	int page_size = nand->page_size ? : 512;
+	int bus_width = nand->bus_width ? nand->bus_width : 8;
+	int address_cycles = nand->address_cycles ? nand->address_cycles : 3;
+	int page_size = nand->page_size ? nand->page_size : 512;
 
 	if (target->state != TARGET_HALTED) {
 		LOG_ERROR("target must be halted to use LPC3180 NAND flash controller");
@@ -232,7 +232,7 @@ static int lpc3180_init(struct nand_device *nand)
 		/* FLASHCLK_CTRL = 0x05 (enable clock for SLC flash controller) */
 		target_write_u32(target, 0x400040c8, 0x05);
 
-		/* after reset set other registers of SLC so reset calling is here at the begining*/
+		/* after reset set other registers of SLC so reset calling is here at the beginning */
 		lpc3180_reset(nand);
 
 		/* SLC_CFG = 0x (Force nCE assert, DMA ECC enabled, ECC enabled, DMA burst enabled,
@@ -589,7 +589,7 @@ static int lpc3180_write_page(struct nand_device *nand,
 					oob_size);
 			}
 			retval = nand_page_command(nand, page, NAND_CMD_SEQIN, !data);
-			if (ERROR_OK != retval)
+			if (retval != ERROR_OK)
 				return retval;
 
 			/* allocate a working area */
@@ -970,7 +970,7 @@ static int lpc3180_read_page(struct nand_device *nand,
 			/* read always the data and also oob areas*/
 
 			retval = nand_page_command(nand, page, NAND_CMD_READ0, 0);
-			if (ERROR_OK != retval)
+			if (retval != ERROR_OK)
 				return retval;
 
 			/* allocate a working area */

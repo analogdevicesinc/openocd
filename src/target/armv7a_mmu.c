@@ -245,7 +245,7 @@ COMMAND_HANDLER(armv7a_mmu_dump_table)
 	LOG_USER("Page Directory at (phys): %8.8" TARGET_PRIxADDR, ttb);
 
 	first_lvl_ptbl = malloc(sizeof(uint32_t)*(max_pt_idx+1));
-	if (first_lvl_ptbl == NULL)
+	if (!first_lvl_ptbl)
 		return ERROR_FAIL;
 
 	/*
@@ -266,7 +266,7 @@ COMMAND_HANDLER(armv7a_mmu_dump_table)
 		uint32_t first_lvl_descriptor = target_buffer_get_u32(target,
 						(uint8_t *)&first_lvl_ptbl[pt_idx]);
 
-		LOG_DEBUG("L1 desc[%8.8"PRIx32"]: %8.8"PRIx32, pt_idx << 20, first_lvl_descriptor);
+		LOG_DEBUG("L1 desc[%8.8x]: %8.8"PRIx32, pt_idx << 20, first_lvl_descriptor);
 
 		/* skip empty entries in the first level table */
 		if ((first_lvl_descriptor & 3) == 0) {

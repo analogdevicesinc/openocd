@@ -58,6 +58,8 @@ static void buspirate_stableclocks(int num_cycles);
 #define CMD_RAW_SPEED     0x60
 #define CMD_RAW_MODE      0x80
 
+#define CMD_TAP_SHIFT_HEADER_LEN 3
+
 /* raw-wire mode configuration */
 #define CMD_RAW_CONFIG_HIZ 0x00
 #define CMD_RAW_CONFIG_3V3 0x08
@@ -70,6 +72,9 @@ static void buspirate_stableclocks(int num_cycles);
 #if !defined(B1000000)
 #define  B1000000 0010010
 #endif
+
+#define SHORT_TIMEOUT  1  /* Must be at least 1. */
+#define NORMAL_TIMEOUT 10
 
 enum {
 	MODE_HIZ = 0,
@@ -106,9 +111,6 @@ enum {
 static bool swd_mode;
 static int  queued_retval;
 static char swd_features;
-
-static const cc_t SHORT_TIMEOUT  = 1; /* Must be at least 1. */
-static const cc_t NORMAL_TIMEOUT = 10;
 
 static int buspirate_fd = -1;
 static int buspirate_pinmode = MODE_JTAG_OD;
@@ -214,7 +216,7 @@ static int buspirate_execute_queue(void)
 
 			break;
 		case JTAG_SLEEP:
-			LOG_DEBUG_IO("sleep %i", cmd->cmd.sleep->us);
+			LOG_DEBUG_IO("sleep %" PRIu32, cmd->cmd.sleep->us);
 			buspirate_tap_execute();
 			jtag_sleep(cmd->cmd.sleep->us);
 				break;
@@ -283,7 +285,7 @@ static bool read_and_discard_all_data(const int fd)
 
 static int buspirate_init(void)
 {
-	if (buspirate_port == NULL) {
+	if (!buspirate_port) {
 		LOG_ERROR("You need to specify the serial port!");
 		return ERROR_JTAG_INIT_FAILED;
 	}
@@ -352,10 +354,8 @@ static int buspirate_quit(void)
 
 	buspirate_serial_close(buspirate_fd);
 
-	if (buspirate_port) {
-		free(buspirate_port);
-		buspirate_port = NULL;
-	}
+	free(buspirate_port);
+	buspirate_port = NULL;
 	return ERROR_OK;
 }
 
@@ -466,62 +466,73 @@ COMMAND_HANDLER(buspirate_handle_port_command)
 	if (CMD_ARGC < 1)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
-	if (buspirate_port == NULL)
+	if (!buspirate_port)
 		buspirate_port = strdup(CMD_ARGV[0]);
 
 	return ERROR_OK;
 
 }
 
-static const struct command_registration buspirate_command_handlers[] = {
+static const struct command_registration buspirate_subcommand_handlers[] = {
 	{
-		.name = "buspirate_adc",
+		.name = "adc",
 		.handler = &buspirate_handle_adc_command,
 		.mode = COMMAND_EXEC,
 		.help = "reads voltages on adc pins",
 		.usage = "",
 	},
 	{
-		.name = "buspirate_vreg",
+		.name = "vreg",
 		.usage = "<1|0>",
 		.handler = &buspirate_handle_vreg_command,
 		.mode = COMMAND_CONFIG,
 		.help = "changes the state of voltage regulators",
 	},
 	{
-		.name = "buspirate_pullup",
+		.name = "pullup",
 		.usage = "<1|0>",
 		.handler = &buspirate_handle_pullup_command,
 		.mode = COMMAND_CONFIG,
 		.help = "changes the state of pullup",
 	},
 	{
-		.name = "buspirate_led",
+		.name = "led",
 		.usage = "<1|0>",
 		.handler = &buspirate_handle_led_command,
 		.mode = COMMAND_EXEC,
 		.help = "changes the state of led",
 	},
 	{
-		.name = "buspirate_speed",
+		.name = "speed",
 		.usage = "<normal|fast>",
 		.handler = &buspirate_handle_speed_command,
 		.mode = COMMAND_CONFIG,
 		.help = "speed of the interface",
 	},
 	{
-		.name = "buspirate_mode",
+		.name = "mode",
 		.usage = "<normal|open-drain>",
 		.handler = &buspirate_handle_mode_command,
 		.mode = COMMAND_CONFIG,
 		.help = "pin mode of the interface",
 	},
 	{
-		.name = "buspirate_port",
+		.name = "port",
 		.usage = "/dev/ttyUSB0",
 		.handler = &buspirate_handle_port_command,
 		.mode =	COMMAND_CONFIG,
 		.help = "name of the serial port to open",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration buspirate_command_handlers[] = {
+	{
+		.name = "buspirate",
+		.mode = COMMAND_ANY,
+		.help = "perform buspirate management",
+		.chain = buspirate_subcommand_handlers,
+		.usage = "",
 	},
 	COMMAND_REGISTRATION_DONE
 };
@@ -710,8 +721,6 @@ static void buspirate_tap_init(void)
 
 static int buspirate_tap_execute(void)
 {
-	static const int CMD_TAP_SHIFT_HEADER_LEN = 3;
-
 	uint8_t tmp[4096];
 	uint8_t *in_buf;
 	int i;
@@ -802,7 +811,7 @@ static void buspirate_tap_append(int tms, int tdi)
 		int bit_index = tap_chain_index % 8;
 		uint8_t bit = 1 << bit_index;
 
-		if (0 == bit_index) {
+		if (bit_index == 0) {
 			/* Let's say that the TAP shift operation wants to shift 9 bits,
 			   so we will be sending to the Bus Pirate a bit count of 9 but still
 			   full 16 bits (2 bytes) of shift data.
@@ -1049,7 +1058,7 @@ static void buspirate_jtag_reset(int fd)
 	tmp[0] = 0x00; /* exit OCD1 mode */
 	buspirate_serial_write(fd, tmp, 1);
 	usleep(10000);
-	/* We ignore the return value here purposly, nothing we can do */
+	/* We ignore the return value here on purpose, nothing we can do */
 	buspirate_serial_read(fd, tmp, 5);
 	if (strncmp((char *)tmp, "BBIO1", 5) == 0) {
 		tmp[0] = 0x0F; /*  reset BP */
@@ -1180,13 +1189,13 @@ static int buspirate_serial_setspeed(int fd, char speed, cc_t timeout)
 
 	/* set the serial port parameters */
 	fcntl(fd, F_SETFL, 0);
-	if (0 != tcgetattr(fd, &t_opt))
+	if (tcgetattr(fd, &t_opt) != 0)
 		return -1;
 
-	if (0 != cfsetispeed(&t_opt, baud))
+	if (cfsetispeed(&t_opt, baud) != 0)
 		return -1;
 
-	if (0 != cfsetospeed(&t_opt, baud))
+	if (cfsetospeed(&t_opt, baud) != 0)
 		return -1;
 
 	t_opt.c_cflag |= (CLOCAL | CREAD);
@@ -1208,7 +1217,7 @@ static int buspirate_serial_setspeed(int fd, char speed, cc_t timeout)
 	/* Note that, in the past, TCSANOW was used below instead of TCSADRAIN,
 	   and CMD_UART_SPEED did not work properly then, at least with
 	   the Bus Pirate v3.5 (USB). */
-	if (0 != tcsetattr(fd, TCSADRAIN, &t_opt)) {
+	if (tcsetattr(fd, TCSADRAIN, &t_opt) != 0) {
 		/* According to the Linux documentation, this is actually not enough
 		   to detect errors, you need to call tcgetattr() and check that
 		   all changes have been performed successfully. */
@@ -1367,7 +1376,7 @@ static uint8_t buspirate_swd_write_header(uint8_t cmd)
 	tmp[5] = 0x07; /* write mode trn_1 */
 	tmp[6] = 0x07; /* write mode trn_2 */
 
-	to_send = ((cmd & SWD_CMD_RnW) == 0) ? 7 : 5;
+	to_send = ((cmd & SWD_CMD_RNW) == 0) ? 7 : 5;
 	buspirate_serial_write(buspirate_fd, tmp, to_send);
 
 	/* read ack */
@@ -1413,7 +1422,7 @@ static void buspirate_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_del
 	uint8_t tmp[16];
 
 	LOG_DEBUG("buspirate_swd_read_reg");
-	assert(cmd & SWD_CMD_RnW);
+	assert(cmd & SWD_CMD_RNW);
 
 	if (queued_retval != ERROR_OK) {
 		LOG_DEBUG("Skip buspirate_swd_read_reg because queued_retval=%d", queued_retval);
@@ -1443,8 +1452,8 @@ static void buspirate_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_del
 
 	LOG_DEBUG("%s %s %s reg %X = %08"PRIx32,
 			ack == SWD_ACK_OK ? "OK" : ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK",
-			cmd & SWD_CMD_APnDP ? "AP" : "DP",
-			cmd & SWD_CMD_RnW ? "read" : "write",
+			cmd & SWD_CMD_APNDP ? "AP" : "DP",
+			cmd & SWD_CMD_RNW ? "read" : "write",
 			(cmd & SWD_CMD_A32) >> 1,
 			data);
 
@@ -1457,7 +1466,7 @@ static void buspirate_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_del
 		}
 		if (value)
 			*value = data;
-		if (cmd & SWD_CMD_APnDP)
+		if (cmd & SWD_CMD_APNDP)
 			buspirate_swd_idle_clocks(ap_delay_clk);
 		return;
 	 case SWD_ACK_WAIT:
@@ -1480,7 +1489,7 @@ static void buspirate_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_del
 	uint8_t tmp[16];
 
 	LOG_DEBUG("buspirate_swd_write_reg");
-	assert(!(cmd & SWD_CMD_RnW));
+	assert(!(cmd & SWD_CMD_RNW));
 
 	if (queued_retval != ERROR_OK) {
 		LOG_DEBUG("Skip buspirate_swd_write_reg because queued_retval=%d", queued_retval);
@@ -1501,14 +1510,14 @@ static void buspirate_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_del
 
 	LOG_DEBUG("%s %s %s reg %X = %08"PRIx32,
 			ack == SWD_ACK_OK ? "OK" : ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK",
-			cmd & SWD_CMD_APnDP ? "AP" : "DP",
-			cmd & SWD_CMD_RnW ? "read" : "write",
+			cmd & SWD_CMD_APNDP ? "AP" : "DP",
+			cmd & SWD_CMD_RNW ? "read" : "write",
 			(cmd & SWD_CMD_A32) >> 1,
 			value);
 
 	switch (ack) {
 	 case SWD_ACK_OK:
-		if (cmd & SWD_CMD_APnDP)
+		if (cmd & SWD_CMD_APNDP)
 			buspirate_swd_idle_clocks(ap_delay_clk);
 		return;
 	 case SWD_ACK_WAIT:
@@ -1538,5 +1547,3 @@ static int buspirate_swd_run_queue(void)
 	LOG_DEBUG("SWD queue return value: %02x", retval);
 	return retval;
 }
-
-

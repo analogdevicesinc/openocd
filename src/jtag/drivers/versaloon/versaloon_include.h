@@ -18,6 +18,7 @@
 #ifndef OPENOCD_JTAG_DRIVERS_VERSALOON_VERSALOON_INCLUDE_H
 #define OPENOCD_JTAG_DRIVERS_VERSALOON_VERSALOON_INCLUDE_H
 
+#include "helper/system.h"
 /* This file is used to include different header and macros */
 /* according to different platform */
 #include <jtag/interface.h>
@@ -26,7 +27,6 @@
 #define PARAM_CHECK							1
 
 #define sleep_ms(ms)						jtag_sleep((ms) * 1000)
-#define dimof(arr)							(sizeof(arr) / sizeof((arr)[0]))
 #define TO_STR(name)						#name
 
 #define RESULT								int
@@ -41,7 +41,7 @@
 #define ERRMSG_INVALID_USAGE				"Invalid usage of %s"
 #define ERRMSG_INVALID_TARGET				"Invalid %s"
 #define ERRMSG_INVALID_PARAMETER			"Invalid parameter of %s."
-#define ERRMSG_INVALID_INTERFACE_NUM		"invalid inteface %d"
+#define ERRMSG_INVALID_INTERFACE_NUM		"invalid interface %d"
 #define ERRMSG_INVALID_BUFFER				"Buffer %s is not valid."
 #define ERRCODE_INVALID_BUFFER				ERROR_FAIL
 #define ERRCODE_INVALID_PARAMETER			ERROR_FAIL

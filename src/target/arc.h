@@ -45,9 +45,52 @@
 #define AUX_STATUS32_REG_HALT_BIT       BIT(0)
 #define AUX_STATUS32_REG_IE_BIT         BIT(31)    /* STATUS32[31] = IE field */
 
-/* Reserved core registers */
-#define CORE_R61_NUM			(61)
-#define CORE_R62_NUM			(62)
+/* ARC register numbers */
+enum {
+	ARC_R0,
+	ARC_R1,
+	ARC_R2,
+	ARC_R3,
+	ARC_R4,
+	ARC_R5,
+	ARC_R6,
+	ARC_R7,
+	ARC_R8,
+	ARC_R9,
+	ARC_R10,
+	ARC_R11,
+	ARC_R12,
+	ARC_R13,
+	ARC_R14,
+	ARC_R15,
+	ARC_R16,
+	ARC_R17,
+	ARC_R18,
+	ARC_R19,
+	ARC_R20,
+	ARC_R21,
+	ARC_R22,
+	ARC_R23,
+	ARC_R24,
+	ARC_R25,
+	ARC_GP		= 26,
+	ARC_FP		= 27,
+	ARC_SP		= 28,
+	ARC_ILINK	= 29,
+	ARC_R30,
+	ARC_BLINK	= 31,
+	ARC_LP_COUNT	= 60,
+
+	/* Reserved registers */
+	ARC_R61		= 61,
+	ARC_R62		= 62,
+
+	ARC_PCL		= 63,
+	ARC_PC		= 64,
+	ARC_LP_START	= 65,
+	ARC_LP_END	= 66,
+	ARC_STATUS32	= 67,
+};
 
 #define CORE_REG_MAX_NUMBER		(63)
 
@@ -55,7 +98,7 @@
 #define REG_TYPE_MAX_NAME_LENGTH	20
 
 /* ARC 32bits opcodes */
-#define ARC_SDBBP_32 0x256F003F  /* BRK */
+#define ARC_SDBBP_32 0x256F003FU  /* BRK */
 
 /* ARC 16bits opcodes */
 #define ARC_SDBBP_16 0x7FFF      /* BRK_S */
@@ -78,6 +121,16 @@
 #define SLC_AUX_CACHE_INV		0x905
 #define L2_INV_IV			BIT(0)
 
+ /* Action Point */
+#define AP_AC_AT_INST_ADDR		0x0
+#define AP_AC_AT_MEMORY_ADDR	0x2
+#define AP_AC_AT_AUXREG_ADDR	0x4
+
+#define AP_AC_TT_DISABLE		0x00
+#define AP_AC_TT_WRITE			0x10
+#define AP_AC_TT_READ			0x20
+#define AP_AC_TT_READWRITE		0x30
+
 struct arc_reg_bitfield {
 	struct reg_data_type_bitfield bitfield;
 	char name[REG_TYPE_MAX_NAME_LENGTH];
@@ -95,8 +148,6 @@ struct arc_reg_data_type {
 		struct reg_data_type_flags_field *reg_type_flags_field;
 	};
 };
-
-
 
 /* Standard GDB register types */
 static const struct reg_data_type standard_gdb_types[] = {
@@ -118,6 +169,18 @@ static const struct reg_data_type standard_gdb_types[] = {
 	{ .type = REG_TYPE_IEEE_DOUBLE, .id = "ieee_double" },
 };
 
+enum arc_actionpointype {
+	ARC_AP_BREAKPOINT,
+	ARC_AP_WATCHPOINT,
+};
+
+/* Actionpoint related fields  */
+struct arc_actionpoint {
+	int used;
+	uint32_t bp_value;
+	uint32_t reg_address;
+	enum arc_actionpointype type;
+};
 
 struct arc_common {
 	uint32_t common_magic;
@@ -143,7 +206,7 @@ struct arc_common {
 	bool dcache_invalidated;
 	bool l2cache_invalidated;
 
-	/* Indicate if cach was built (for deinit function) */
+	/* Indicate if cache was built (for deinit function) */
 	bool core_aux_cache_built;
 	bool bcr_cache_built;
 	/* Closely Coupled memory(CCM) regions for performance-critical
@@ -172,6 +235,11 @@ struct arc_common {
 	unsigned long pc_index_in_cache;
 	/* DEBUG register location in register cache. */
 	unsigned long debug_index_in_cache;
+
+	/* Actionpoints */
+	unsigned int actionpoints_num;
+	unsigned int actionpoints_num_avail;
+	struct arc_actionpoint *actionpoints_list;
 };
 
 /* Borrowed from nds32.h */
@@ -283,5 +351,10 @@ int arc_reg_get_field(struct target *target, const char *reg_name,
 
 int arc_cache_flush(struct target *target);
 int arc_cache_invalidate(struct target *target);
+
+int arc_add_auxreg_actionpoint(struct target *target,
+	uint32_t auxreg_addr, uint32_t transaction);
+int arc_remove_auxreg_actionpoint(struct target *target, uint32_t auxreg_addr);
+int arc_set_actionpoints_num(struct target *target, uint32_t ap_num);
 
 #endif /* OPENOCD_TARGET_ARC_H */

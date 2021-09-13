@@ -48,7 +48,7 @@ struct armv7a_l2x_cache {
 };
 
 struct armv7a_cachesize {
-	/*  cache dimensionning */
+	/*  cache dimensioning */
 	uint32_t linelen;
 	uint32_t associativity;
 	uint32_t nsets;
@@ -104,7 +104,7 @@ struct armv7a_common {
 
 	/* Core Debug Unit */
 	struct arm_dpm dpm;
-	uint32_t debug_base;
+	target_addr_t debug_base;
 	struct adiv5_ap *debug_ap;
 	/* mdir */
 	uint8_t multi_processor_system;

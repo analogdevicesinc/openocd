@@ -77,6 +77,7 @@
 #include <jtag/interface.h>
 #include <jtag/commands.h>
 #include <helper/time_support.h>
+#include <helper/replacements.h>
 #include "ublast_access.h"
 
 /* system includes */
@@ -174,7 +175,7 @@ static int ublast_buf_read(uint8_t *buf, unsigned size, uint32_t *bytes_read)
 	int ret = info.drv->read(info.drv, buf, size, bytes_read);
 	char *str = hexdump(buf, *bytes_read);
 
-	LOG_DEBUG_IO("(size=%d, buf=[%s]) -> %u", size, str,
+	LOG_DEBUG_IO("(size=%d, buf=[%s]) -> %" PRIu32, size, str,
 		      *bytes_read);
 	free(str);
 	return ret;
@@ -185,7 +186,7 @@ static int ublast_buf_write(uint8_t *buf, int size, uint32_t *bytes_written)
 	int ret = info.drv->write(info.drv, buf, size, bytes_written);
 	char *str = hexdump(buf, *bytes_written);
 
-	LOG_DEBUG_IO("(size=%d, buf=[%s]) -> %u", size, str,
+	LOG_DEBUG_IO("(size=%d, buf=[%s]) -> %" PRIu32, size, str,
 		      *bytes_written);
 	free(str);
 	return ret;
@@ -198,7 +199,7 @@ static int nb_buf_remaining(void)
 
 static void ublast_flush_buffer(void)
 {
-	unsigned int retlen;
+	uint32_t retlen;
 	int nb = info.bufidx, ret = ERROR_OK;
 
 	while (ret == ERROR_OK && nb > 0) {
@@ -253,7 +254,7 @@ static void ublast_flush_buffer(void)
 
 /**
  * ublast_queue_byte - queue one 'bitbang mode' byte for USB Blaster
- * @abyte: the byte to queue
+ * @param abyte the byte to queue
  *
  * Queues one byte in 'bitbang mode' to the USB Blaster. The byte is not
  * actually sent, but stored in a buffer. The write is performed once
@@ -271,11 +272,11 @@ static void ublast_queue_byte(uint8_t abyte)
 
 /**
  * ublast_compute_pin - compute if gpio should be asserted
- * @steer: control (ie. TRST driven, SRST driven, of fixed)
+ * @param steer control (ie. TRST driven, SRST driven, of fixed)
  *
  * Returns pin value (1 means driven high, 0 mean driven low)
  */
-bool ublast_compute_pin(enum gpio_steer steer)
+static bool ublast_compute_pin(enum gpio_steer steer)
 {
 	switch (steer) {
 	case FIXED_0:
@@ -293,7 +294,7 @@ bool ublast_compute_pin(enum gpio_steer steer)
 
 /**
  * ublast_build_out - build bitbang mode output byte
- * @type: says if reading back TDO is required
+ * @param type says if reading back TDO is required
  *
  * Returns the compute bitbang mode byte
  */
@@ -313,8 +314,8 @@ static uint8_t ublast_build_out(enum scan_type type)
 
 /**
  * ublast_reset - reset the JTAG device is possible
- * @trst: 1 if TRST is to be asserted
- * @srst: 1 if SRST is to be asserted
+ * @param trst 1 if TRST is to be asserted
+ * @param srst 1 if SRST is to be asserted
  */
 static void ublast_reset(int trst, int srst)
 {
@@ -329,7 +330,7 @@ static void ublast_reset(int trst, int srst)
 
 /**
  * ublast_clock_tms - clock a TMS transition
- * @tms: the TMS to be sent
+ * @param tms the TMS to be sent
  *
  * Triggers a TMS transition (ie. one JTAG TAP state move).
  */
@@ -360,16 +361,16 @@ static void ublast_idle_clock(void)
 
 /**
  * ublast_clock_tdi - Output a TDI with bitbang mode
- * @tdi: the TDI bit to be shifted out
- * @type: scan type (ie. does a readback of TDO is required)
+ * @param tdi the TDI bit to be shifted out
+ * @param type scan type (ie. does a readback of TDO is required)
  *
  * Output a TDI bit and assert clock to push it into the JTAG device :
- *  - writing out TCK=0, TMS=<old_state>=0, TDI=<tdi>
- * - writing out TCK=1, TMS=<new_state>, TDI=<tdi> which triggers the JTAG
- *    device aquiring the data.
+ *  - writing out TCK=0, TMS=\<old_state>=0, TDI=\<tdi>
+ *  - writing out TCK=1, TMS=\<new_state>, TDI=\<tdi> which triggers the JTAG
+ *    device acquiring the data.
  *
  * If a TDO is to be read back, the required read is requested (bitbang mode),
- * and the USB Blaster will send back a byte with bit0 reprensenting the TDO.
+ * and the USB Blaster will send back a byte with bit0 representing the TDO.
  */
 static void ublast_clock_tdi(int tdi, enum scan_type type)
 {
@@ -387,11 +388,11 @@ static void ublast_clock_tdi(int tdi, enum scan_type type)
 
 /**
  * ublast_clock_tdi_flip_tms - Output a TDI with bitbang mode, change JTAG state
- * @tdi: the TDI bit to be shifted out
- * @type: scan type (ie. does a readback of TDO is required)
+ * @param tdi the TDI bit to be shifted out
+ * @param type scan type (ie. does a readback of TDO is required)
  *
  * This function is the same as ublast_clock_tdi(), but it changes also the TMS
- * while outputing the TDI. This should be the last TDI output of a TDI
+ * while output the TDI. This should be the last TDI output of a TDI
  * sequence, which will change state from :
  *   - IRSHIFT -> IREXIT1
  *   - or DRSHIFT -> DREXIT1
@@ -416,8 +417,8 @@ static void ublast_clock_tdi_flip_tms(int tdi, enum scan_type type)
 
 /**
  * ublast_queue_bytes - queue bytes for the USB Blaster
- * @bytes: byte array
- * @nb_bytes: number of bytes
+ * @param bytes byte array
+ * @param nb_bytes number of bytes
  *
  * Queues bytes to be sent to the USB Blaster. The bytes are not
  * actually sent, but stored in a buffer. The write is performed once
@@ -443,13 +444,13 @@ static void ublast_queue_bytes(uint8_t *bytes, int nb_bytes)
 
 /**
  * ublast_tms_seq - write a TMS sequence transition to JTAG
- * @bits: TMS bits to be written (bit0, bit1 .. bitN)
- * @nb_bits: number of TMS bits (between 1 and 8)
- * @skip: number of TMS bits to skip at the beginning of the series
+ * @param bits TMS bits to be written (bit0, bit1 .. bitN)
+ * @param nb_bits number of TMS bits (between 1 and 8)
+ * @param skip number of TMS bits to skip at the beginning of the series
  *
- * Write a serie of TMS transitions, where each transition consists in :
- *  - writing out TCK=0, TMS=<new_state>, TDI=<???>
- *  - writing out TCK=1, TMS=<new_state>, TDI=<???> which triggers the transition
+ * Write a series of TMS transitions, where each transition consists in :
+ *  - writing out TCK=0, TMS=\<new_state>, TDI=\<???>
+ *  - writing out TCK=1, TMS=\<new_state>, TDI=\<???> which triggers the transition
  * The function ensures that at the end of the sequence, the clock (TCK) is put
  * low.
  */
@@ -465,7 +466,7 @@ static void ublast_tms_seq(const uint8_t *bits, int nb_bits, int skip)
 
 /**
  * ublast_tms - write a tms command
- * @cmd: tms command
+ * @param cmd tms command
  */
 static void ublast_tms(struct tms_command *cmd)
 {
@@ -475,11 +476,11 @@ static void ublast_tms(struct tms_command *cmd)
 
 /**
  * ublast_path_move - write a TMS sequence transition to JTAG
- * @cmd: path transition
+ * @param cmd path transition
  *
- * Write a serie of TMS transitions, where each transition consists in :
- *  - writing out TCK=0, TMS=<new_state>, TDI=<???>
- *  - writing out TCK=1, TMS=<new_state>, TDI=<???> which triggers the transition
+ * Write a series of TMS transitions, where each transition consists in :
+ *  - writing out TCK=0, TMS=\<new_state>, TDI=\<???>
+ *  - writing out TCK=1, TMS=\<new_state>, TDI=\<???> which triggers the transition
  * The function ensures that at the end of the sequence, the clock (TCK) is put
  * low.
  */
@@ -501,8 +502,8 @@ static void ublast_path_move(struct pathmove_command *cmd)
 
 /**
  * ublast_state_move - move JTAG state to the target state
- * @state: the target state
- * @skip: number of bits to skip at the beginning of the path
+ * @param state the target state
+ * @param skip number of bits to skip at the beginning of the path
  *
  * Input the correct TMS sequence to the JTAG TAP so that we end up in the
  * target state. This assumes the current state (tap_get_state()) is correct.
@@ -524,8 +525,8 @@ static void ublast_state_move(tap_state_t state, int skip)
 
 /**
  * ublast_read_byteshifted_tdos - read TDO of byteshift writes
- * @buf: the buffer to store the bits
- * @nb_bits: the number of bits
+ * @param buf the buffer to store the bits
+ * @param nb_bytes the number of bytes
  *
  * Reads back from USB Blaster TDO bits, triggered by a 'byteshift write', ie. eight
  * bits per received byte from USB interface, and store them in buffer.
@@ -534,11 +535,11 @@ static void ublast_state_move(tap_state_t state, int skip)
  * bit0), second bit in (byte0, bit1), ...), which is what we want to return,
  * simply read bytes from USB interface and store them.
  *
- * Returns ERROR_OK if OK, ERROR_xxx if a read error occured
+ * Returns ERROR_OK if OK, ERROR_xxx if a read error occurred
  */
 static int ublast_read_byteshifted_tdos(uint8_t *buf, int nb_bytes)
 {
-	unsigned int retlen;
+	uint32_t retlen;
 	int ret = ERROR_OK;
 
 	LOG_DEBUG_IO("%s(buf=%p, num_bits=%d)", __func__, buf, nb_bytes * 8);
@@ -552,25 +553,25 @@ static int ublast_read_byteshifted_tdos(uint8_t *buf, int nb_bytes)
 
 /**
  * ublast_read_bitbang_tdos - read TDO of bitbang writes
- * @buf: the buffer to store the bits
- * @nb_bits: the number of bits
+ * @param buf the buffer to store the bits
+ * @param nb_bits the number of bits
  *
  * Reads back from USB Blaster TDO bits, triggered by a 'bitbang write', ie. one
  * bit per received byte from USB interface, and store them in buffer, where :
  *  - first bit is stored in byte0, bit0 (LSB)
  *  - second bit is stored in byte0, bit 1
  *  ...
- *  - eight bit is sotred in byte0, bit 7
- *  - ninth bit is sotred in byte1, bit 0
+ *  - eight bit is stored in byte0, bit 7
+ *  - ninth bit is stored in byte1, bit 0
  *  - etc ...
  *
- * Returns ERROR_OK if OK, ERROR_xxx if a read error occured
+ * Returns ERROR_OK if OK, ERROR_xxx if a read error occurred
  */
 static int ublast_read_bitbang_tdos(uint8_t *buf, int nb_bits)
 {
 	int nb1 = nb_bits;
 	int i, ret = ERROR_OK;
-	unsigned int retlen;
+	uint32_t retlen;
 	uint8_t tmp[8];
 
 	LOG_DEBUG_IO("%s(buf=%p, num_bits=%d)", __func__, buf, nb_bits);
@@ -592,11 +593,11 @@ static int ublast_read_bitbang_tdos(uint8_t *buf, int nb_bits)
 
 /**
  * ublast_queue_tdi - short description
- * @bits: bits to be queued on TDI (or NULL if 0 are to be queued)
- * @nb_bits: number of bits
- * @scan: scan type (ie. if TDO read back is required or not)
+ * @param bits bits to be queued on TDI (or NULL if 0 are to be queued)
+ * @param nb_bits number of bits
+ * @param scan scan type (ie. if TDO read back is required or not)
  *
- * Outputs a serie of TDI bits on TDI.
+ * Outputs a series of TDI bits on TDI.
  * As a side effect, the last TDI bit is sent along a TMS=1, and triggers a JTAG
  * TAP state shift if input bits were non NULL.
  *
@@ -703,11 +704,11 @@ static void ublast_stableclocks(int cycles)
 
 /**
  * ublast_scan - launches a DR-scan or IR-scan
- * @cmd: the command to launch
+ * @param cmd the command to launch
  *
  * Launch a JTAG IR-scan or DR-scan
  *
- * Returns ERROR_OK if OK, ERROR_xxx if a read/write error occured.
+ * Returns ERROR_OK if OK, ERROR_xxx if a read/write error occurred.
  */
 static int ublast_scan(struct scan_command *cmd)
 {
@@ -736,8 +737,7 @@ static int ublast_scan(struct scan_command *cmd)
 	ublast_queue_tdi(buf, scan_bits, type);
 
 	ret = jtag_read_buffer(buf, cmd);
-	if (buf)
-		free(buf);
+	free(buf);
 	/*
 	 * ublast_queue_tdi sends the last bit with TMS=1. We are therefore
 	 * already in Exit1-DR/IR and have to skip the first step on our way
@@ -788,7 +788,7 @@ static int ublast_execute_queue(void)
 		ublast_initial_wipeout();
 	}
 
-	for (cmd = jtag_command_queue; ret == ERROR_OK && cmd != NULL;
+	for (cmd = jtag_command_queue; ret == ERROR_OK && cmd;
 	     cmd = cmd->next) {
 		switch (cmd->type) {
 		case JTAG_RESET:
@@ -902,7 +902,7 @@ static int ublast_init(void)
 static int ublast_quit(void)
 {
 	uint8_t byte0 = 0;
-	unsigned int retlen;
+	uint32_t retlen;
 
 	ublast_buf_write(&byte0, 1, &retlen);
 	return info.drv->close(info.drv);
@@ -1030,16 +1030,16 @@ COMMAND_HANDLER(ublast_firmware_command)
 }
 
 
-static const struct command_registration ublast_command_handlers[] = {
+static const struct command_registration ublast_subcommand_handlers[] = {
 	{
-		.name = "usb_blaster_device_desc",
+		.name = "device_desc",
 		.handler = ublast_handle_device_desc_command,
 		.mode = COMMAND_CONFIG,
 		.help = "set the USB device description of the USB-Blaster",
 		.usage = "description-string",
 	},
 	{
-		.name = "usb_blaster_vid_pid",
+		.name = "vid_pid",
 		.handler = ublast_handle_vid_pid_command,
 		.mode = COMMAND_CONFIG,
 		.help = "the vendor ID and product ID of the USB-Blaster and "
@@ -1048,25 +1048,36 @@ static const struct command_registration ublast_command_handlers[] = {
 		.usage = "vid pid vid_uninit pid_uninit",
 	},
 	{
-		.name = "usb_blaster_lowlevel_driver",
+		.name = "lowlevel_driver",
 		.handler = ublast_handle_lowlevel_drv_command,
 		.mode = COMMAND_CONFIG,
 		.help = "set the lowlevel access for the USB Blaster (ftdi, ublast2)",
 		.usage = "(ftdi|ublast2)",
 	},
 	{
-		.name = "usb_blaster_pin",
+		.name = "pin",
 		.handler = ublast_handle_pin_command,
 		.mode = COMMAND_ANY,
 		.help = "show or set pin state for the unused GPIO pins",
 		.usage = "(pin6|pin8) (0|1|s|t)",
 	},
 		{
-		.name = "usb_blaster_firmware",
+		.name = "firmware",
 		.handler = &ublast_firmware_command,
 		.mode = COMMAND_CONFIG,
 		.help = "configure the USB-Blaster II firmware location",
 		.usage = "path/to/blaster_xxxx.hex",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration ublast_command_handlers[] = {
+	{
+		.name = "usb_blaster",
+		.mode = COMMAND_ANY,
+		.help = "perform usb_blaster management",
+		.chain = ublast_subcommand_handlers,
+		.usage = "",
 	},
 	COMMAND_REGISTRATION_DONE
 };

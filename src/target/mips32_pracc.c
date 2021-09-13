@@ -68,6 +68,7 @@
 #include "config.h"
 #endif
 
+#include <helper/align.h>
 #include <helper/time_support.h>
 
 #include "mips32.h"
@@ -120,7 +121,7 @@ static void mips32_pracc_finish(struct mips_ejtag *ejtag_info)
 	mips_ejtag_drscan_32_out(ejtag_info, ctrl);
 }
 
-int mips32_pracc_clean_text_jump(struct mips_ejtag *ejtag_info)
+static int mips32_pracc_clean_text_jump(struct mips_ejtag *ejtag_info)
 {
 	uint32_t jt_code = MIPS32_J(ejtag_info->isa, MIPS32_PRACC_TEXT);
 	pracc_swap16_array(ejtag_info, &jt_code, 1);
@@ -277,7 +278,7 @@ int mips32_pracc_exec(struct mips_ejtag *ejtag_info, struct pracc_queue_info *ct
 						return ERROR_JTAG_DEVICE_ERROR;
 					}
 				} else
-					if (code_count > 10) {		/* enough, abandone */
+					if (code_count > 10) {		/* enough, abandon */
 						LOG_DEBUG("execution abandoned, store pending: %d", store_pending);
 						return ERROR_JTAG_DEVICE_ERROR;
 					}
@@ -317,7 +318,7 @@ void pracc_add(struct pracc_queue_info *ctx, uint32_t addr, uint32_t instr)
 	if (ctx->retval != ERROR_OK)	/* On previous out of memory, return */
 		return;
 	if (ctx->code_count == ctx->max_code) {
-		void *p = realloc(ctx->pracc_list, sizeof(pa_list) * (ctx->max_code + PRACC_BLOCK));
+		void *p = realloc(ctx->pracc_list, sizeof(struct pa_list) * (ctx->max_code + PRACC_BLOCK));
 		if (p) {
 			ctx->max_code += PRACC_BLOCK;
 			ctx->pracc_list = p;
@@ -346,8 +347,7 @@ void pracc_add_li32(struct pracc_queue_info *ctx, uint32_t reg_num, uint32_t dat
 
 inline void pracc_queue_free(struct pracc_queue_info *ctx)
 {
-	if (ctx->pracc_list != NULL)
-		free(ctx->pracc_list);
+	free(ctx->pracc_list);
 }
 
 int mips32_pracc_queue_exec(struct mips_ejtag *ejtag_info, struct pracc_queue_info *ctx,
@@ -374,7 +374,7 @@ int mips32_pracc_queue_exec(struct mips_ejtag *ejtag_info, struct pracc_queue_in
 		} scan_32;
 
 	} *scan_in = malloc(sizeof(union scan_in) * (ctx->code_count + ctx->store_count));
-	if (scan_in == NULL) {
+	if (!scan_in) {
 		LOG_ERROR("Out of memory");
 		return ERROR_FAIL;
 	}
@@ -427,7 +427,7 @@ int mips32_pracc_queue_exec(struct mips_ejtag *ejtag_info, struct pracc_queue_in
 		fetch_addr += 4;
 		scan_count++;
 
-		/* check if previous intrucction is a store instruction at dmesg */
+		/* check if previous instruction is a store instruction at dmesg */
 		if (i > 0 && ctx->pracc_list[i - 1].addr) {
 			uint32_t store_addr = ctx->pracc_list[i - 1].addr;
 			ejtag_ctrl = buf_get_u32(scan_in[scan_count].scan_32.ctrl, 0, 32);
@@ -454,7 +454,7 @@ exit:
 	return retval;
 }
 
-int mips32_pracc_read_u32(struct mips_ejtag *ejtag_info, uint32_t addr, uint32_t *buf)
+static int mips32_pracc_read_u32(struct mips_ejtag *ejtag_info, uint32_t addr, uint32_t *buf)
 {
 	struct pracc_queue_info ctx = {.ejtag_info = ejtag_info};
 	pracc_queue_init(&ctx);
@@ -484,7 +484,7 @@ int mips32_pracc_read_mem(struct mips_ejtag *ejtag_info, uint32_t addr, int size
 	uint32_t *data = NULL;
 	if (size != 4) {
 		data = malloc(256 * sizeof(uint32_t));
-		if (data == NULL) {
+		if (!data) {
 			LOG_ERROR("Out of memory");
 			goto exit;
 		}
@@ -550,8 +550,7 @@ int mips32_pracc_read_mem(struct mips_ejtag *ejtag_info, uint32_t addr, int size
 	}
 exit:
 	pracc_queue_free(&ctx);
-	if (data != NULL)
-		free(data);
+	free(data);
 	return ctx.retval;
 }
 
@@ -660,7 +659,7 @@ static int mips32_pracc_synchronize_cache(struct mips_ejtag *ejtag_info,
 		goto exit;  /* Nothing to do */
 
 	/* make sure clsiz is power of 2 */
-	if (clsiz & (clsiz - 1)) {
+	if (!IS_PWR_OF_2(clsiz)) {
 		LOG_DEBUG("clsiz must be power of 2");
 		ctx.retval = ERROR_FAIL;
 		goto exit;
@@ -789,7 +788,7 @@ int mips32_pracc_write_mem(struct mips_ejtag *ejtag_info, uint32_t addr, int siz
 	 * If we are in the cacheable region and cache is activated,
 	 * we must clean D$ (if Cache Coherency Attribute is set to 3) + invalidate I$ after we did the write,
 	 * so that changes do not continue to live only in D$ (if CCA = 3), but to be
-	 * replicated in I$ also (maybe we wrote the istructions)
+	 * replicated in I$ also (maybe we wrote the instructions)
 	 */
 	uint32_t conf = 0;
 	int cached = 0;
@@ -816,7 +815,7 @@ int mips32_pracc_write_mem(struct mips_ejtag *ejtag_info, uint32_t addr, int siz
 	}
 
 	/**
-	 * Check cachablitiy bits coherency algorithm
+	 * Check cacheability bits coherency algorithm
 	 * is the region cacheable or uncached.
 	 * If cacheable we have to synchronize the cache
 	 */

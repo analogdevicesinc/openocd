@@ -65,7 +65,7 @@
 static const char target_not_halted_err_msg[] =
 	"target must be halted to use mxc NAND flash controller";
 static const char data_block_size_err_msg[] =
-	"minimal granularity is one half-word, %" PRId32 " is incorrect";
+	"minimal granularity is one half-word, %" PRIu32 " is incorrect";
 static const char sram_buffer_bounds_err_msg[] =
 	"trying to access out of SRAM buffer bound (addr=0x%" PRIx32 ")";
 static const char get_status_register_err_msg[] = "can't get NAND status";
@@ -89,7 +89,7 @@ NAND_DEVICE_COMMAND_HANDLER(mxc_nand_device_command)
 	int hwecc_needed;
 
 	mxc_nf_info = malloc(sizeof(struct mxc_nf_controller));
-	if (mxc_nf_info == NULL) {
+	if (!mxc_nf_info) {
 		LOG_ERROR("no memory for nand controller");
 		return ERROR_FAIL;
 	}
@@ -136,7 +136,7 @@ NAND_DEVICE_COMMAND_HANDLER(mxc_nand_device_command)
 		(nand->target->endianness == TARGET_LITTLE_ENDIAN);
 
 	/*
-	 * should factory bad block indicator be swaped
+	 * should factory bad block indicator be swapped
 	 * as a workaround for how the nfc handles pages.
 	 */
 	if (CMD_ARGC > 4 && strcmp(CMD_ARGV[4], "biswap") == 0) {
@@ -181,7 +181,7 @@ static const struct command_registration mxc_sub_command_handlers[] = {
 		.name = "biswap",
 		.mode = COMMAND_EXEC,
 		.handler = handle_mxc_biswap_command,
-		.help = "Turns on/off bad block information swaping from main area, "
+		.help = "Turns on/off bad block information swapping from main area, "
 			"without parameter query status.",
 		.usage = "bank_id ['enable'|'disable']",
 	},
@@ -207,9 +207,9 @@ static int mxc_init(struct nand_device *nand)
 	int validate_target_result;
 	uint16_t buffsize_register_content;
 	uint32_t sreg_content;
-	uint32_t SREG = MX2_FMCR;
-	uint32_t SEL_16BIT = MX2_FMCR_NF_16BIT_SEL;
-	uint32_t SEL_FMS = MX2_FMCR_NF_FMS;
+	uint32_t sreg = MX2_FMCR;
+	uint32_t sel_16bit = MX2_FMCR_NF_16BIT_SEL;
+	uint32_t sel_fms = MX2_FMCR_NF_FMS;
 	int retval;
 	uint16_t nand_status_content;
 	/*
@@ -226,27 +226,27 @@ static int mxc_init(struct nand_device *nand)
 		mxc_nf_info->flags.one_kb_sram = 0;
 
 	if (mxc_nf_info->mxc_version == MXC_VERSION_MX31) {
-		SREG = MX3_PCSR;
-		SEL_16BIT = MX3_PCSR_NF_16BIT_SEL;
-		SEL_FMS = MX3_PCSR_NF_FMS;
+		sreg = MX3_PCSR;
+		sel_16bit = MX3_PCSR_NF_16BIT_SEL;
+		sel_fms = MX3_PCSR_NF_FMS;
 	} else if (mxc_nf_info->mxc_version == MXC_VERSION_MX25) {
-		SREG = MX25_RCSR;
-		SEL_16BIT = MX25_RCSR_NF_16BIT_SEL;
-		SEL_FMS = MX25_RCSR_NF_FMS;
+		sreg = MX25_RCSR;
+		sel_16bit = MX25_RCSR_NF_16BIT_SEL;
+		sel_fms = MX25_RCSR_NF_FMS;
 	} else if (mxc_nf_info->mxc_version == MXC_VERSION_MX35) {
-		SREG = MX35_RCSR;
-		SEL_16BIT = MX35_RCSR_NF_16BIT_SEL;
-		SEL_FMS = MX35_RCSR_NF_FMS;
+		sreg = MX35_RCSR;
+		sel_16bit = MX35_RCSR_NF_16BIT_SEL;
+		sel_fms = MX35_RCSR_NF_FMS;
 	}
 
-	target_read_u32(target, SREG, &sreg_content);
+	target_read_u32(target, sreg, &sreg_content);
 	if (!nand->bus_width) {
 		/* bus_width not yet defined. Read it from MXC_FMCR */
-		nand->bus_width = (sreg_content & SEL_16BIT) ? 16 : 8;
+		nand->bus_width = (sreg_content & sel_16bit) ? 16 : 8;
 	} else {
 		/* bus_width forced in soft. Sync it to MXC_FMCR */
-		sreg_content |= ((nand->bus_width == 16) ? SEL_16BIT : 0x00000000);
-		target_write_u32(target, SREG, sreg_content);
+		sreg_content |= ((nand->bus_width == 16) ? sel_16bit : 0x00000000);
+		target_write_u32(target, sreg, sreg_content);
 	}
 	if (nand->bus_width == 16)
 		LOG_DEBUG("MXC_NF : bus is 16-bit width");
@@ -254,10 +254,10 @@ static int mxc_init(struct nand_device *nand)
 		LOG_DEBUG("MXC_NF : bus is 8-bit width");
 
 	if (!nand->page_size)
-		nand->page_size = (sreg_content & SEL_FMS) ? 2048 : 512;
+		nand->page_size = (sreg_content & sel_fms) ? 2048 : 512;
 	else {
-		sreg_content |= ((nand->page_size == 2048) ? SEL_FMS : 0x00000000);
-		target_write_u32(target, SREG, sreg_content);
+		sreg_content |= ((nand->page_size == 2048) ? sel_fms : 0x00000000);
+		target_write_u32(target, sreg, sreg_content);
 	}
 	if (mxc_nf_info->flags.one_kb_sram && (nand->page_size == 2048)) {
 		LOG_ERROR("NAND controller have only 1 kb SRAM, so "
@@ -400,7 +400,7 @@ static int mxc_command(struct nand_device *nand, uint8_t command)
 			mxc_nf_info->optype = MXC_NF_DATAOUT_PAGE;
 			break;
 		default:
-			/* Ohter command use the default 'One page data out' FDO */
+			/* Other command use the default 'One page data out' FDO */
 			mxc_nf_info->optype = MXC_NF_DATAOUT_PAGE;
 			break;
 	}
@@ -502,10 +502,10 @@ static int mxc_write_page(struct nand_device *nand, uint32_t page,
 	if (oob) {
 		if (mxc_nf_info->flags.hw_ecc_enabled) {
 			/*
-			 * part of spare block will be overrided by hardware
+			 * part of spare block will be overridden by hardware
 			 * ECC generator
 			 */
-			LOG_DEBUG("part of spare block will be overrided "
+			LOG_DEBUG("part of spare block will be overridden "
 				"by hardware ECC generator");
 		}
 		if (nfc_is_v1())
@@ -649,18 +649,18 @@ static int mxc_read_page(struct nand_device *nand, uint32_t page,
 	}
 
 	if (nand->page_size > 512 && mxc_nf_info->flags.biswap_enabled) {
-		uint32_t SPARE_BUFFER3;
+		uint32_t spare_buffer3;
 		/* BI-swap -  work-around of mxc NFC for NAND device with page == 2k */
 		target_read_u16(target, MXC_NF_MAIN_BUFFER3 + 464, &swap1);
 		if (nfc_is_v1())
-			SPARE_BUFFER3 = MXC_NF_V1_SPARE_BUFFER3 + 4;
+			spare_buffer3 = MXC_NF_V1_SPARE_BUFFER3 + 4;
 		else
-			SPARE_BUFFER3 = MXC_NF_V2_SPARE_BUFFER3;
-		target_read_u16(target, SPARE_BUFFER3, &swap2);
+			spare_buffer3 = MXC_NF_V2_SPARE_BUFFER3;
+		target_read_u16(target, spare_buffer3, &swap2);
 		new_swap1 = (swap1 & 0xFF00) | (swap2 >> 8);
 		swap2 = (swap1 << 8) | (swap2 & 0xFF);
 		target_write_u16(target, MXC_NF_MAIN_BUFFER3 + 464, new_swap1);
-		target_write_u16(target, SPARE_BUFFER3, swap2);
+		target_write_u16(target, spare_buffer3, swap2);
 	}
 
 	if (data)
@@ -710,7 +710,7 @@ static int initialize_nf_controller(struct nand_device *nand)
 	uint16_t work_mode = 0;
 	uint16_t temp;
 	/*
-	 * resets NAND flash controller in zero time ? I dont know.
+	 * resets NAND flash controller in zero time ? I don't know.
 	 */
 	target_write_u16(target, MXC_NF_CFG1, MXC_NF_BIT_RESET_EN);
 	if (mxc_nf_info->mxc_version == MXC_VERSION_MX27)
@@ -860,7 +860,7 @@ static int validate_target_state(struct nand_device *nand)
 	return ERROR_OK;
 }
 
-int ecc_status_v1(struct nand_device *nand)
+static int ecc_status_v1(struct nand_device *nand)
 {
 	struct mxc_nf_controller *mxc_nf_info = nand->controller_priv;
 	struct target *target = nand->target;
@@ -886,7 +886,7 @@ int ecc_status_v1(struct nand_device *nand)
 	return ERROR_OK;
 }
 
-int ecc_status_v2(struct nand_device *nand)
+static int ecc_status_v2(struct nand_device *nand)
 {
 	struct mxc_nf_controller *mxc_nf_info = nand->controller_priv;
 	struct target *target = nand->target;

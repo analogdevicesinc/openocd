@@ -27,7 +27,7 @@
 
 #include <jtag/jtag.h>
 #include <jtag/swim.h>
-#include <target/armv7m_trace.h>
+#include <target/arm_tpiu_swo.h>
 
 /* @file
  * The "Cable Helper API" is what the cable drivers can use to help
@@ -273,7 +273,7 @@ struct adapter_driver {
 	int (*speed)(int speed);
 
 	/**
-	 * Returns JTAG maxium speed for KHz. 0 = RTCK. The function returns
+	 * Returns JTAG maximum speed for KHz. 0 = RTCK. The function returns
 	 *  a failure if it can't support the KHz/RTCK.
 	 *
 	 *  WARNING!!!! if RTCK is *slow* then think carefully about

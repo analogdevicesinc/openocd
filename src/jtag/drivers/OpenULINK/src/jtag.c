@@ -48,6 +48,7 @@ uint8_t delay_tms;
  * Maximum achievable TCK frequency is 182 kHz for ULINK clocked at 24 MHz.
  *
  * @param out_offset offset in OUT2BUF where payload data starts
+ * @param in_offset
  */
 void jtag_scan_in(uint8_t out_offset, uint8_t in_offset)
 {
@@ -125,6 +126,7 @@ void jtag_scan_in(uint8_t out_offset, uint8_t in_offset)
  * Maximum achievable TCK frequency is 113 kHz for ULINK clocked at 24 MHz.
  *
  * @param out_offset offset in OUT2BUF where payload data starts
+ * @param in_offset
  */
 void jtag_slow_scan_in(uint8_t out_offset, uint8_t in_offset)
 {
@@ -208,7 +210,7 @@ void jtag_slow_scan_in(uint8_t out_offset, uint8_t in_offset)
  *
  * Data stored in EP2 OUT buffer is shifted into the JTAG chain via TDI, TDO
  * data is not sampled.
- * The TAP-FSM state is alyways left in the PAUSE-DR/PAUSE-IR state.
+ * The TAP-FSM state is always left in the PAUSE-DR/PAUSE-IR state.
  *
  * Maximum achievable TCK frequency is 142 kHz for ULINK clocked at 24 MHz.
  *
@@ -283,7 +285,7 @@ void jtag_scan_out(uint8_t out_offset)
  *
  * Data stored in EP2 OUT buffer is shifted into the JTAG chain via TDI, TDO
  * data is not sampled.
- * The TAP-FSM state is alyways left in the PAUSE-DR/PAUSE-IR state.
+ * The TAP-FSM state is always left in the PAUSE-DR/PAUSE-IR state.
  *
  * Maximum achievable TCK frequency is 97 kHz for ULINK clocked at 24 MHz.
  *
@@ -368,11 +370,12 @@ void jtag_slow_scan_out(uint8_t out_offset)
  *
  * Data stored in EP2 OUT buffer is shifted into the JTAG chain via TDI, TDO
  * data is sampled and stored in the EP2 IN buffer.
- * The TAP-FSM state is alyways left in the PAUSE-DR/PAUSE-IR state.
+ * The TAP-FSM state is always left in the PAUSE-DR/PAUSE-IR state.
  *
  * Maximum achievable TCK frequency is 100 kHz for ULINK clocked at 24 MHz.
  *
  * @param out_offset offset in OUT2BUF where payload data starts
+ * @param in_offset
  */
 void jtag_scan_io(uint8_t out_offset, uint8_t in_offset)
 {
@@ -460,11 +463,12 @@ void jtag_scan_io(uint8_t out_offset, uint8_t in_offset)
  *
  * Data stored in EP2 OUT buffer is shifted into the JTAG chain via TDI, TDO
  * data is sampled and stored in the EP2 IN buffer.
- * The TAP-FSM state is alyways left in the PAUSE-DR/PAUSE-IR state.
+ * The TAP-FSM state is always left in the PAUSE-DR/PAUSE-IR state.
  *
  * Maximum achievable TCK frequency is 78 kHz for ULINK clocked at 24 MHz.
  *
  * @param out_offset offset in OUT2BUF where payload data starts
+ * @param in_offset
  */
 void jtag_slow_scan_io(uint8_t out_offset, uint8_t in_offset)
 {
@@ -562,7 +566,7 @@ void jtag_slow_scan_io(uint8_t out_offset, uint8_t in_offset)
  *
  * Maximum achievable TCK frequency is 375 kHz for ULINK clocked at 24 MHz.
  *
- * @param count number of TCK clock cyclces to generate.
+ * @param count number of TCK clock cycles to generate.
  */
 void jtag_clock_tck(uint16_t count)
 {
@@ -578,9 +582,9 @@ void jtag_clock_tck(uint16_t count)
 /**
  * Generate TCK clock cycles at variable frequency.
  *
- * Maximum achieveable TCK frequency is 166.6 kHz for ULINK clocked at 24 MHz.
+ * Maximum achievable TCK frequency is 166.6 kHz for ULINK clocked at 24 MHz.
  *
- * @param count number of TCK clock cyclces to generate.
+ * @param count number of TCK clock cycles to generate.
  */
 void jtag_slow_clock_tck(uint16_t count)
 {
