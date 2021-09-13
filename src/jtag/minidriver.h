@@ -32,7 +32,7 @@
  * interface functions, instead of the built-in asynchronous driver
  * module that is used by the standard JTAG interface drivers.
  *
- * In addtion to the functions defined in the @c minidriver.h file, the
+ * In addition to the functions defined in the @c minidriver.h file, the
  * @c jtag_minidriver.h file must declare the following functions (or
  * define static inline versions of them):
  * - jtag_add_callback
@@ -45,7 +45,7 @@
 
 /* this header will be provided by the minidriver implementation, */
 /* and it may provide additional declarations that must be defined. */
-#include <jtag/minidriver_imp.h>
+#include <jtag/drivers/minidriver_imp.h>
 
 int interface_jtag_add_ir_scan(struct jtag_tap *active,
 		const struct scan_field *fields,
@@ -74,7 +74,7 @@ int interface_add_tms_seq(unsigned num_bits,
  * trst.
  *
  * the higher level jtag_add_reset will invoke jtag_add_tlr() if
- * approperiate
+ * appropriate
  */
 int interface_jtag_add_reset(int trst, int srst);
 int interface_jtag_add_sleep(uint32_t us);

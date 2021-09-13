@@ -382,8 +382,6 @@ static int em357_erase(struct flash_bank *bank, unsigned int first,
 		retval = em357_wait_status_busy(bank, 100);
 		if (retval != ERROR_OK)
 			return retval;
-
-		bank->sectors[i].is_erased = 1;
 	}
 
 	retval = target_write_u32(target, EM357_FLASH_CR, FLASH_LOCK);
@@ -466,7 +464,7 @@ static int em357_write_block(struct flash_bank *bank, const uint8_t *buffer,
 	struct armv7m_algorithm armv7m_info;
 	int retval = ERROR_OK;
 
-	/* see contib/loaders/flash/stm32x.s for src, the same is used here except for
+	/* see contrib/loaders/flash/stm32x.s for src, the same is used here except for
 	 * a modified *_FLASH_BASE */
 
 	static const uint8_t em357_flash_write_code[] = {
@@ -724,10 +722,7 @@ static int em357_probe(struct flash_bank *bank)
 
 	LOG_INFO("flash size = %dkbytes", num_pages*page_size/1024);
 
-	if (bank->sectors) {
-		free(bank->sectors);
-		bank->sectors = NULL;
-	}
+	free(bank->sectors);
 
 	bank->base = base_address;
 	bank->size = (num_pages * page_size);
@@ -764,7 +759,7 @@ COMMAND_HANDLER(em357_handle_lock_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	em357_info = bank->driver_priv;
@@ -803,7 +798,7 @@ COMMAND_HANDLER(em357_handle_unlock_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	target = bank->target;
@@ -876,17 +871,13 @@ COMMAND_HANDLER(em357_handle_mass_erase_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	retval = em357_mass_erase(bank);
-	if (retval == ERROR_OK) {
-		/* set all sectors as erased */
-		for (unsigned int i = 0; i < bank->num_sectors; i++)
-			bank->sectors[i].is_erased = 1;
-
+	if (retval == ERROR_OK)
 		command_print(CMD, "em357 mass erase complete");
-	} else
+	else
 		command_print(CMD, "em357 mass erase failed");
 
 	return retval;

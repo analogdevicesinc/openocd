@@ -11,6 +11,7 @@
 #endif
 
 #include "imp.h"
+#include <helper/align.h>
 #include <helper/binarybuffer.h>
 #include <target/algorithm.h>
 #include <target/armv7m.h>
@@ -140,9 +141,6 @@ static int xmc1xxx_erase(struct flash_bank *bank, unsigned int first,
 		goto err_run;
 	}
 
-	for (unsigned int sector = first; sector <= last; sector++)
-		bank->sectors[sector].is_erased = 1;
-
 err_run:
 	for (i = 0; i < ARRAY_SIZE(reg_params); i++)
 		destroy_reg_param(&reg_params[i]);
@@ -253,16 +251,16 @@ static int xmc1xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 #include "../../../contrib/loaders/flash/xmc1xxx/write.inc"
 	};
 
-	LOG_DEBUG("Infineon XMC1000 write at 0x%08" PRIx32 " (%" PRId32 " bytes)",
+	LOG_DEBUG("Infineon XMC1000 write at 0x%08" PRIx32 " (%" PRIu32 " bytes)",
 		offset, byte_count);
 
-	if (offset & (NVM_BLOCK_SIZE - 1)) {
+	if (!IS_ALIGNED(offset, NVM_BLOCK_SIZE)) {
 		LOG_ERROR("offset 0x%" PRIx32 " breaks required block alignment",
 			offset);
 		return ERROR_FLASH_DST_BREAKS_ALIGNMENT;
 	}
-	if (byte_count & (NVM_BLOCK_SIZE - 1)) {
-		LOG_WARNING("length %" PRId32 " is not block aligned, rounding up",
+	if (!IS_ALIGNED(byte_count, NVM_BLOCK_SIZE)) {
+		LOG_WARNING("length %" PRIu32 " is not block aligned, rounding up",
 			byte_count);
 	}
 
@@ -306,7 +304,7 @@ static int xmc1xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		uint32_t blocks = MIN(block_count, data_workarea->size / NVM_BLOCK_SIZE);
 		uint32_t addr = bank->base + offset;
 
-		LOG_DEBUG("copying %" PRId32 " bytes to SRAM " TARGET_ADDR_FMT,
+		LOG_DEBUG("copying %" PRIu32 " bytes to SRAM " TARGET_ADDR_FMT,
 			MIN(blocks * NVM_BLOCK_SIZE, byte_count),
 			data_workarea->address);
 
@@ -329,7 +327,7 @@ static int xmc1xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 			}
 		}
 
-		LOG_DEBUG("writing 0x%08" PRIx32 "-0x%08" PRIx32 " (%" PRId32 "x)",
+		LOG_DEBUG("writing 0x%08" PRIx32 "-0x%08" PRIx32 " (%" PRIu32 "x)",
 			addr, addr + blocks * NVM_BLOCK_SIZE - 1, blocks);
 
 		retval = xmc1xxx_nvm_check_idle(target);
@@ -403,7 +401,7 @@ static int xmc1xxx_protect_check(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-static int xmc1xxx_get_info_command(struct flash_bank *bank, char *buf, int buf_size)
+static int xmc1xxx_get_info_command(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	uint32_t chipid[8];
 	int i, retval;
@@ -429,7 +427,8 @@ static int xmc1xxx_get_info_command(struct flash_bank *bank, char *buf, int buf_
 	}
 	LOG_DEBUG("ID[7] = %08" PRIX32, chipid[7]);
 
-	snprintf(buf, buf_size, "XMC%" PRIx32 "00 %X flash %uKB ROM %uKB SRAM %uKB",
+	command_print_sameline(cmd,
+			"XMC%" PRIx32 "00 %" PRIX32 " flash %" PRIu32 "KB ROM %" PRIu32 "KB SRAM %" PRIu32 "KB",
 			(chipid[0] >> 12) & 0xff,
 			0xAA + (chipid[7] >> 28) - 1,
 			(((chipid[6] >> 12) & 0x3f) - 1) * 4,

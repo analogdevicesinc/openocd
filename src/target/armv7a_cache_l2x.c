@@ -185,7 +185,7 @@ static int arm7a_handle_l2x_cache_info_command(struct command_invocation *cmd,
 	}
 
 	command_print(cmd,
-		      "L2 unified cache Base Address 0x%" PRIx32 ", %" PRId32 " ways",
+		      "L2 unified cache Base Address 0x%" PRIx32 ", %" PRIu32 " ways",
 		      l2x_cache->base, l2x_cache->way);
 
 	return ERROR_OK;
@@ -325,14 +325,14 @@ static const struct command_registration arm7a_l2x_cache_commands[] = {
 		.name = "conf",
 		.handler = armv7a_l2x_cache_conf_cmd,
 		.mode = COMMAND_ANY,
-		.help = "configure l2x cache ",
+		.help = "configure l2x cache",
 		.usage = "<base_addr> <number_of_way>",
 	},
 	{
 		.name = "info",
 		.handler = arm7a_l2x_cache_info_command,
 		.mode = COMMAND_ANY,
-		.help = "print cache realted information",
+		.help = "print cache related information",
 		.usage = "",
 	},
 	{

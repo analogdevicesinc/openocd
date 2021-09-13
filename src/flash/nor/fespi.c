@@ -151,7 +151,7 @@ FLASH_BANK_COMMAND_HANDLER(fespi_flash_bank_command)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	fespi_info = malloc(sizeof(struct fespi_flash_bank));
-	if (fespi_info == NULL) {
+	if (!fespi_info) {
 		LOG_ERROR("not enough memory");
 		return ERROR_FAIL;
 	}
@@ -189,7 +189,7 @@ static int fespi_write_reg(struct flash_bank *bank, target_addr_t address, uint3
 
 	int result = target_write_u32(target, fespi_info->ctrl_base + address, value);
 	if (result != ERROR_OK) {
-		LOG_ERROR("fespi_write_reg() error writing 0x%x to " TARGET_ADDR_FMT,
+		LOG_ERROR("fespi_write_reg() error writing 0x%" PRIx32 " to " TARGET_ADDR_FMT,
 				value, fespi_info->ctrl_base + address);
 		return result;
 	}
@@ -274,7 +274,7 @@ static int fespi_rx(struct flash_bank *bank, uint8_t *out)
 			break;
 		int64_t now = timeval_ms();
 		if (now - start > 1000) {
-			LOG_ERROR("rxfifo didn't go positive (value=0x%x).", value);
+			LOG_ERROR("rxfifo didn't go positive (value=0x%" PRIx32 ").", value);
 			return ERROR_TARGET_TIMEOUT;
 		}
 	}
@@ -438,7 +438,7 @@ static int slow_fespi_write_buffer(struct flash_bank *bank,
 	uint32_t ii;
 
 	if (offset & 0xFF000000) {
-		LOG_ERROR("FESPI interface does not support greater than 3B addressing, can't write to offset 0x%x",
+		LOG_ERROR("FESPI interface does not support greater than 3B addressing, can't write to offset 0x%" PRIx32,
 				offset);
 		return ERROR_FAIL;
 	}
@@ -538,7 +538,7 @@ static unsigned as_compile(struct algorithm_steps *as, uint8_t *target,
 					break;
 				}
 			case STEP_WRITE_REG:
-				if (4 > bytes_left) {
+				if (bytes_left < 4) {
 					finish_early = true;
 					break;
 				}
@@ -546,7 +546,7 @@ static unsigned as_compile(struct algorithm_steps *as, uint8_t *target,
 				offset += 3;
 				break;
 			case STEP_SET_DIR:
-				if (3 > bytes_left) {
+				if (bytes_left < 3) {
 					finish_early = true;
 					break;
 				}
@@ -555,7 +555,7 @@ static unsigned as_compile(struct algorithm_steps *as, uint8_t *target,
 				break;
 			case STEP_TXWM_WAIT:
 			case STEP_WIP_WAIT:
-				if (2 > bytes_left) {
+				if (bytes_left < 2) {
 					finish_early = true;
 					break;
 				}
@@ -651,7 +651,7 @@ static int steps_add_buffer_write(struct algorithm_steps *as,
 		const uint8_t *buffer, uint32_t chip_offset, uint32_t len)
 {
 	if (chip_offset & 0xFF000000) {
-		LOG_ERROR("FESPI interface does not support greater than 3B addressing, can't write to offset 0x%x",
+		LOG_ERROR("FESPI interface does not support greater than 3B addressing, can't write to offset 0x%" PRIx32,
 				chip_offset);
 		return ERROR_FAIL;
 	}
@@ -986,7 +986,7 @@ static int fespi_probe(struct flash_bank *bank)
 	/* create and fill sectors array */
 	bank->num_sectors = fespi_info->dev->size_in_bytes / sectorsize;
 	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
-	if (sectors == NULL) {
+	if (!sectors) {
 		LOG_ERROR("not enough memory");
 		return ERROR_FAIL;
 	}
@@ -1017,17 +1017,16 @@ static int fespi_protect_check(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-static int get_fespi_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_fespi_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct fespi_flash_bank *fespi_info = bank->driver_priv;
 
 	if (!(fespi_info->probed)) {
-		snprintf(buf, buf_size,
-				"\nFESPI flash bank not probed yet\n");
+		command_print_sameline(cmd, "\nFESPI flash bank not probed yet\n");
 		return ERROR_OK;
 	}
 
-	snprintf(buf, buf_size, "\nFESPI flash information:\n"
+	command_print_sameline(cmd, "\nFESPI flash information:\n"
 			"  Device \'%s\' (ID 0x%08" PRIx32 ")\n",
 			fespi_info->dev->name, fespi_info->dev->device_id);
 

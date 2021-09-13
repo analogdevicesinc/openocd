@@ -142,7 +142,7 @@ COMMAND_HANDLER(swm050_handle_mass_erase_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	retval = swm050_mass_erase(bank);
@@ -156,10 +156,7 @@ COMMAND_HANDLER(swm050_handle_mass_erase_command)
 
 FLASH_BANK_COMMAND_HANDLER(swm050_flash_bank_command)
 {
-	if (bank->sectors) {
-		free(bank->sectors);
-		bank->sectors = NULL;
-	}
+	free(bank->sectors);
 	bank->write_start_alignment = 4;
 	bank->write_end_alignment = 4;
 	bank->size = SWM050_FLASH_PAGE_SIZE * SWM050_FLASH_PAGES;

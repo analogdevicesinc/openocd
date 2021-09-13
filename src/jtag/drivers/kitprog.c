@@ -158,7 +158,7 @@ static int kitprog_init(void)
 	int retval;
 
 	kitprog_handle = malloc(sizeof(struct kitprog));
-	if (kitprog_handle == NULL) {
+	if (!kitprog_handle) {
 		LOG_ERROR("Failed to allocate memory");
 		return ERROR_FAIL;
 	}
@@ -208,14 +208,14 @@ static int kitprog_init(void)
 	/* Allocate packet buffers and queues */
 	kitprog_handle->packet_size = SWD_MAX_BUFFER_LENGTH;
 	kitprog_handle->packet_buffer = malloc(SWD_MAX_BUFFER_LENGTH);
-	if (kitprog_handle->packet_buffer == NULL) {
+	if (!kitprog_handle->packet_buffer) {
 		LOG_ERROR("Failed to allocate memory for the packet buffer");
 		return ERROR_FAIL;
 	}
 
 	pending_queue_len = SWD_MAX_BUFFER_LENGTH / 5;
 	pending_transfers = malloc(pending_queue_len * sizeof(*pending_transfers));
-	if (pending_transfers == NULL) {
+	if (!pending_transfers) {
 		LOG_ERROR("Failed to allocate memory for the SWD transfer queue");
 		return ERROR_FAIL;
 	}
@@ -227,18 +227,11 @@ static int kitprog_quit(void)
 {
 	kitprog_usb_close();
 
-	if (kitprog_handle->packet_buffer != NULL)
-		free(kitprog_handle->packet_buffer);
-	if (kitprog_handle->serial != NULL)
-		free(kitprog_handle->serial);
-	if (kitprog_handle != NULL)
-		free(kitprog_handle);
-
-	if (kitprog_serial != NULL)
-		free(kitprog_serial);
-
-	if (pending_transfers != NULL)
-		free(pending_transfers);
+	free(kitprog_handle->packet_buffer);
+	free(kitprog_handle->serial);
+	free(kitprog_handle);
+	free(kitprog_serial);
+	free(pending_transfers);
 
 	return ERROR_OK;
 }
@@ -263,7 +256,7 @@ static int kitprog_get_usb_serial(void)
 
 	/* Allocate memory for the serial number */
 	kitprog_handle->serial = calloc(retval + 1, sizeof(char));
-	if (kitprog_handle->serial == NULL) {
+	if (!kitprog_handle->serial) {
 		LOG_ERROR("Failed to allocate memory for the serial number");
 		return ERROR_FAIL;
 	}
@@ -292,7 +285,7 @@ static int kitprog_usb_open(void)
 	/* Convert the ASCII serial number into a (wchar_t *) */
 	size_t len = strlen(kitprog_handle->serial);
 	wchar_t *hid_serial = calloc(len + 1, sizeof(wchar_t));
-	if (hid_serial == NULL) {
+	if (!hid_serial) {
 		LOG_ERROR("Failed to allocate memory for the serial number");
 		return ERROR_FAIL;
 	}
@@ -305,7 +298,7 @@ static int kitprog_usb_open(void)
 	/* Use HID for the KitBridge interface */
 	kitprog_handle->hid_handle = hid_open(VID, PID, hid_serial);
 	free(hid_serial);
-	if (kitprog_handle->hid_handle == NULL) {
+	if (!kitprog_handle->hid_handle) {
 		LOG_ERROR("Failed to open KitBridge (HID) interface");
 		return ERROR_FAIL;
 	}
@@ -321,7 +314,7 @@ static int kitprog_usb_open(void)
 
 static void kitprog_usb_close(void)
 {
-	if (kitprog_handle->hid_handle != NULL) {
+	if (kitprog_handle->hid_handle) {
 		hid_close(kitprog_handle->hid_handle);
 		hid_exit();
 	}
@@ -606,7 +599,7 @@ static int kitprog_generic_acquire(void)
 		for (uint8_t j = 0; j < sizeof(devices) && acquire_count == i; j++) {
 			retval = kitprog_acquire_psoc(devices[j], ACQUIRE_MODE_RESET, 3);
 			if (retval != ERROR_OK) {
-				LOG_DEBUG("Aquisition function failed for device 0x%02x.", devices[j]);
+				LOG_DEBUG("Acquisition function failed for device 0x%02x.", devices[j]);
 				return retval;
 			}
 
@@ -632,13 +625,13 @@ static int kitprog_swd_init(void)
 
 static void kitprog_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_delay_clk)
 {
-	assert(!(cmd & SWD_CMD_RnW));
+	assert(!(cmd & SWD_CMD_RNW));
 	kitprog_swd_queue_cmd(cmd, NULL, value);
 }
 
 static void kitprog_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay_clk)
 {
-	assert(cmd & SWD_CMD_RnW);
+	assert(cmd & SWD_CMD_RNW);
 	kitprog_swd_queue_cmd(cmd, value, 0);
 }
 
@@ -706,8 +699,8 @@ static int kitprog_swd_run_queue(void)
 			 * cmsis_dap_cmd_DAP_SWD_Configure() in
 			 * cmsis_dap_init().
 			 */
-			if (!(cmd & SWD_CMD_RnW) &&
-				!(cmd & SWD_CMD_APnDP) &&
+			if (!(cmd & SWD_CMD_RNW) &&
+				!(cmd & SWD_CMD_APNDP) &&
 				(cmd & SWD_CMD_A32) >> 1 == DP_CTRL_STAT &&
 				(data & CORUNDETECT)) {
 				LOG_DEBUG("refusing to enable sticky overrun detection");
@@ -715,13 +708,13 @@ static int kitprog_swd_run_queue(void)
 			}
 
 			LOG_DEBUG_IO("%s %s reg %x %"PRIx32,
-					cmd & SWD_CMD_APnDP ? "AP" : "DP",
-					cmd & SWD_CMD_RnW ? "read" : "write",
+					cmd & SWD_CMD_APNDP ? "AP" : "DP",
+					cmd & SWD_CMD_RNW ? "read" : "write",
 				  (cmd & SWD_CMD_A32) >> 1, data);
 
 			buffer[write_count++] = (cmd | SWD_CMD_START | SWD_CMD_PARK) & ~SWD_CMD_STOP;
 			read_count++;
-			if (!(cmd & SWD_CMD_RnW)) {
+			if (!(cmd & SWD_CMD_RNW)) {
 				buffer[write_count++] = (data) & 0xff;
 				buffer[write_count++] = (data >> 8) & 0xff;
 				buffer[write_count++] = (data >> 16) & 0xff;
@@ -746,7 +739,7 @@ static int kitprog_swd_run_queue(void)
 		 * size (64 bytes) as required by the USB specification.
 		 * Therefore libusb would wait for continuation of transmission.
 		 * Workaround: Limit bulk read size to expected number of bytes
-		 * for problematic tranfer sizes. Otherwise use the maximum buffer
+		 * for problematic transfer sizes. Otherwise use the maximum buffer
 		 * size here because the KitProg sometimes doesn't like bulk reads
 		 * of fewer than 62 bytes. (?!?!)
 		 */
@@ -768,7 +761,7 @@ static int kitprog_swd_run_queue(void)
 		}
 
 		for (int i = 0; i < pending_transfer_count; i++) {
-			if (pending_transfers[i].cmd & SWD_CMD_RnW) {
+			if (pending_transfers[i].cmd & SWD_CMD_RNW) {
 				uint32_t data = le_to_h_u32(&buffer[read_index]);
 
 				LOG_DEBUG_IO("Read result: %"PRIx32, data);
@@ -809,7 +802,7 @@ static void kitprog_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data)
 
 	pending_transfers[pending_transfer_count].data = data;
 	pending_transfers[pending_transfer_count].cmd = cmd;
-	if (cmd & SWD_CMD_RnW) {
+	if (cmd & SWD_CMD_RNW) {
 		/* Queue a read transaction */
 		pending_transfers[pending_transfer_count].buffer = dst;
 	}
@@ -862,7 +855,7 @@ COMMAND_HANDLER(kitprog_handle_serial_command)
 {
 	if (CMD_ARGC == 1) {
 		kitprog_serial = strdup(CMD_ARGV[0]);
-		if (kitprog_serial == NULL) {
+		if (!kitprog_serial) {
 			LOG_ERROR("Failed to allocate memory for the serial number");
 			return ERROR_FAIL;
 		}

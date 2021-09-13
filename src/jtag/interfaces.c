@@ -12,6 +12,8 @@
  *   Copyright (C) 2009 Zachary T Welch                                    *
  *   zw@superlucidity.net                                                  *
  *                                                                         *
+ *   Copyright (C) 2020, Ampere Computing LLC                              *
+ *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *
@@ -40,11 +42,6 @@
  * that contain an adapter_driver structure that can added to this list.
  */
 
-#if BUILD_ZY1000 == 1
-extern struct adapter_driver zy1000_adapter_driver;
-#elif defined(BUILD_MINIDRIVER_DUMMY)
-extern struct adapter_driver minidummy_adapter_driver;
-#else /* standard drivers */
 #if BUILD_PARPORT == 1
 extern struct adapter_driver parport_adapter_driver;
 #endif
@@ -59,6 +56,9 @@ extern struct adapter_driver usb_blaster_adapter_driver;
 #endif
 #if BUILD_JTAG_VPI == 1
 extern struct adapter_driver jtag_vpi_adapter_driver;
+#endif
+#if BUILD_JTAG_DPI == 1
+extern struct adapter_driver jtag_dpi_adapter_driver;
 #endif
 #if BUILD_FT232R == 1
 extern struct adapter_driver ft232r_adapter_driver;
@@ -129,7 +129,7 @@ extern struct adapter_driver aice_adapter_driver;
 #if BUILD_BCM2835GPIO == 1
 extern struct adapter_driver bcm2835gpio_adapter_driver;
 #endif
-#if BUILD_CMSIS_DAP == 1
+#if BUILD_CMSIS_DAP_USB == 1 || BUILD_CMSIS_DAP_HID == 1
 extern struct adapter_driver cmsis_dap_adapter_driver;
 #endif
 #if BUILD_KITPROG == 1
@@ -147,21 +147,12 @@ extern struct adapter_driver stlink_dap_adapter_driver;
 #if BUILD_RSHIM == 1
 extern struct adapter_driver rshim_dap_adapter_driver;
 #endif
-#endif /* standard drivers */
 
 /**
  * The list of built-in JTAG interfaces, containing entries for those
  * drivers that were enabled by the @c configure script.
- *
- * The list should be defined to contain either one minidriver interface
- * or some number of standard driver interfaces, never both.
  */
 struct adapter_driver *adapter_drivers[] = {
-#if BUILD_ZY1000 == 1
-		&zy1000_adapter_driver,
-#elif defined(BUILD_MINIDRIVER_DUMMY)
-		&minidummy_adapter_driver,
-#else /* standard drivers */
 #if BUILD_PARPORT == 1
 		&parport_adapter_driver,
 #endif
@@ -176,6 +167,9 @@ struct adapter_driver *adapter_drivers[] = {
 #endif
 #if BUILD_JTAG_VPI == 1
 		&jtag_vpi_adapter_driver,
+#endif
+#if BUILD_JTAG_DPI == 1
+		&jtag_dpi_adapter_driver,
 #endif
 #if BUILD_FT232R == 1
 		&ft232r_adapter_driver,
@@ -246,7 +240,7 @@ struct adapter_driver *adapter_drivers[] = {
 #if BUILD_BCM2835GPIO == 1
 		&bcm2835gpio_adapter_driver,
 #endif
-#if BUILD_CMSIS_DAP == 1
+#if BUILD_CMSIS_DAP_USB == 1 || BUILD_CMSIS_DAP_HID == 1
 		&cmsis_dap_adapter_driver,
 #endif
 #if BUILD_KITPROG == 1
@@ -264,6 +258,5 @@ struct adapter_driver *adapter_drivers[] = {
 #if BUILD_RSHIM == 1
 		&rshim_dap_adapter_driver,
 #endif
-#endif /* standard drivers */
 		NULL,
 	};

@@ -27,6 +27,7 @@ static int trst_gpio = -1;
 static int srst_gpio = -1;
 static int swclk_gpio = -1;
 static int swdio_gpio = -1;
+static int led_gpio = -1;
 static int gpiochip = -1;
 
 static struct gpiod_chip *gpiod_chip;
@@ -38,6 +39,7 @@ static struct gpiod_line *gpiod_trst;
 static struct gpiod_line *gpiod_swclk;
 static struct gpiod_line *gpiod_swdio;
 static struct gpiod_line *gpiod_srst;
+static struct gpiod_line *gpiod_led;
 
 static int last_swclk;
 static int last_swdio;
@@ -171,13 +173,26 @@ static int linuxgpiod_swd_write(int swclk, int swdio)
 	return ERROR_OK;
 }
 
+static int linuxgpiod_blink(int on)
+{
+	int retval;
+
+	if (!gpiod_led)
+		return ERROR_OK;
+
+	retval = gpiod_line_set_value(gpiod_led, on);
+	if (retval < 0)
+		LOG_WARNING("Fail set led");
+	return retval;
+}
+
 static struct bitbang_interface linuxgpiod_bitbang = {
 	.read = linuxgpiod_read,
 	.write = linuxgpiod_write,
 	.swdio_read = linuxgpiod_swdio_read,
 	.swdio_drive = linuxgpiod_swdio_drive,
 	.swd_write = linuxgpiod_swd_write,
-	.blink = NULL,
+	.blink = linuxgpiod_blink,
 };
 
 /*
@@ -192,14 +207,14 @@ static int linuxgpiod_reset(int trst, int srst)
 	LOG_DEBUG("linuxgpiod_reset");
 
 	/* assume active low */
-	if (gpiod_srst != NULL) {
+	if (gpiod_srst) {
 		retval1 = gpiod_line_set_value(gpiod_srst, srst ? 0 : 1);
 		if (retval1 < 0)
 			LOG_WARNING("set srst value failed");
 	}
 
 	/* assume active low */
-	if (gpiod_trst != NULL) {
+	if (gpiod_trst) {
 		retval2 = gpiod_line_set_value(gpiod_trst, trst ? 0 : 1);
 		if (retval2 < 0)
 			LOG_WARNING("set trst value failed");
@@ -248,6 +263,7 @@ static inline void helper_release(struct gpiod_line *line)
 
 static int linuxgpiod_quit(void)
 {
+	helper_release(gpiod_led);
 	helper_release(gpiod_srst);
 	helper_release(gpiod_swdio);
 	helper_release(gpiod_swclk);
@@ -268,7 +284,7 @@ static struct gpiod_line *helper_get_input_line(const char *label, unsigned int 
 	int retval;
 
 	line = gpiod_chip_get_line(gpiod_chip, offset);
-	if (line == NULL) {
+	if (!line) {
 		LOG_ERROR("Error get line %s", label);
 		return NULL;
 	}
@@ -288,7 +304,7 @@ static struct gpiod_line *helper_get_output_line(const char *label, unsigned int
 	int retval;
 
 	line = gpiod_chip_get_line(gpiod_chip, offset);
-	if (line == NULL) {
+	if (!line) {
 		LOG_ERROR("Error get line %s", label);
 		return NULL;
 	}
@@ -309,7 +325,7 @@ static int linuxgpiod_init(void)
 	bitbang_interface = &linuxgpiod_bitbang;
 
 	gpiod_chip = gpiod_chip_open_by_number(gpiochip);
-	if (gpiod_chip == NULL) {
+	if (!gpiod_chip) {
 		LOG_ERROR("Cannot open LinuxGPIOD gpiochip %d", gpiochip);
 		return ERROR_JTAG_INIT_FAILED;
 	}
@@ -327,24 +343,24 @@ static int linuxgpiod_init(void)
 		}
 
 		gpiod_tdo = helper_get_input_line("tdo", tdo_gpio);
-		if (gpiod_tdo == NULL)
+		if (!gpiod_tdo)
 			goto out_error;
 
 		gpiod_tdi = helper_get_output_line("tdi", tdi_gpio, 0);
-		if (gpiod_tdi == NULL)
+		if (!gpiod_tdi)
 			goto out_error;
 
 		gpiod_tck = helper_get_output_line("tck", tck_gpio, 0);
-		if (gpiod_tck == NULL)
+		if (!gpiod_tck)
 			goto out_error;
 
 		gpiod_tms = helper_get_output_line("tms", tms_gpio, 1);
-		if (gpiod_tms == NULL)
+		if (!gpiod_tms)
 			goto out_error;
 
 		if (is_gpio_valid(trst_gpio)) {
 			gpiod_trst = helper_get_output_line("trst", trst_gpio, 1);
-			if (gpiod_trst == NULL)
+			if (!gpiod_trst)
 				goto out_error;
 		}
 	}
@@ -356,17 +372,23 @@ static int linuxgpiod_init(void)
 		}
 
 		gpiod_swclk = helper_get_output_line("swclk", swclk_gpio, 1);
-		if (gpiod_swclk == NULL)
+		if (!gpiod_swclk)
 			goto out_error;
 
 		gpiod_swdio = helper_get_output_line("swdio", swdio_gpio, 1);
-		if (gpiod_swdio == NULL)
+		if (!gpiod_swdio)
 			goto out_error;
 	}
 
 	if (is_gpio_valid(srst_gpio)) {
 		gpiod_srst = helper_get_output_line("srst", srst_gpio, 1);
-		if (gpiod_srst == NULL)
+		if (!gpiod_srst)
+			goto out_error;
+	}
+
+	if (is_gpio_valid(led_gpio)) {
+		gpiod_led = helper_get_output_line("led", led_gpio, 0);
+		if (!gpiod_led)
 			goto out_error;
 	}
 
@@ -484,6 +506,15 @@ COMMAND_HANDLER(linuxgpiod_handle_swd_gpionum_swdio)
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(linuxgpiod_handle_gpionum_led)
+{
+	if (CMD_ARGC == 1)
+		COMMAND_PARSE_NUMBER(int, CMD_ARGV[0], led_gpio);
+
+	command_print(CMD, "LinuxGPIOD num: led = %d", led_gpio);
+	return ERROR_OK;
+}
+
 COMMAND_HANDLER(linuxgpiod_handle_gpiochip)
 {
 	if (CMD_ARGC == 1)
@@ -493,83 +524,101 @@ COMMAND_HANDLER(linuxgpiod_handle_gpiochip)
 	return ERROR_OK;
 }
 
-static const struct command_registration linuxgpiod_command_handlers[] = {
+static const struct command_registration linuxgpiod_subcommand_handlers[] = {
 	{
-		.name = "linuxgpiod_jtag_nums",
+		.name = "jtag_nums",
 		.handler = linuxgpiod_handle_jtag_gpionums,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio numbers for tck, tms, tdi, tdo. (in that order)",
 		.usage = "tck tms tdi tdo",
 	},
 	{
-		.name = "linuxgpiod_tck_num",
+		.name = "tck_num",
 		.handler = linuxgpiod_handle_jtag_gpionum_tck,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio number for tck.",
 		.usage = "tck",
 	},
 	{
-		.name = "linuxgpiod_tms_num",
+		.name = "tms_num",
 		.handler = linuxgpiod_handle_jtag_gpionum_tms,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio number for tms.",
 		.usage = "tms",
 	},
 	{
-		.name = "linuxgpiod_tdo_num",
+		.name = "tdo_num",
 		.handler = linuxgpiod_handle_jtag_gpionum_tdo,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio number for tdo.",
 		.usage = "tdo",
 	},
 	{
-		.name = "linuxgpiod_tdi_num",
+		.name = "tdi_num",
 		.handler = linuxgpiod_handle_jtag_gpionum_tdi,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio number for tdi.",
 		.usage = "tdi",
 	},
 	{
-		.name = "linuxgpiod_srst_num",
+		.name = "srst_num",
 		.handler = linuxgpiod_handle_jtag_gpionum_srst,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio number for srst.",
 		.usage = "srst",
 	},
 	{
-		.name = "linuxgpiod_trst_num",
+		.name = "trst_num",
 		.handler = linuxgpiod_handle_jtag_gpionum_trst,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio number for trst.",
 		.usage = "trst",
 	},
 	{
-		.name = "linuxgpiod_swd_nums",
+		.name = "swd_nums",
 		.handler = linuxgpiod_handle_swd_gpionums,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio numbers for swclk, swdio. (in that order)",
 		.usage = "swclk swdio",
 	},
 	{
-		.name = "linuxgpiod_swclk_num",
+		.name = "swclk_num",
 		.handler = linuxgpiod_handle_swd_gpionum_swclk,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio number for swclk.",
 		.usage = "swclk",
 	},
 	{
-		.name = "linuxgpiod_swdio_num",
+		.name = "swdio_num",
 		.handler = linuxgpiod_handle_swd_gpionum_swdio,
 		.mode = COMMAND_CONFIG,
 		.help = "gpio number for swdio.",
 		.usage = "swdio",
 	},
 	{
-		.name = "linuxgpiod_gpiochip",
+		.name = "led_num",
+		.handler = linuxgpiod_handle_gpionum_led,
+		.mode = COMMAND_CONFIG,
+		.help = "gpio number for LED.",
+		.usage = "led",
+	},
+	{
+		.name = "gpiochip",
 		.handler = linuxgpiod_handle_gpiochip,
 		.mode = COMMAND_CONFIG,
 		.help = "number of the gpiochip.",
 		.usage = "gpiochip",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration linuxgpiod_command_handlers[] = {
+	{
+		.name = "linuxgpiod",
+		.mode = COMMAND_ANY,
+		.help = "perform linuxgpiod management",
+		.chain = linuxgpiod_subcommand_handlers,
+		.usage = "",
 	},
 	COMMAND_REGISTRATION_DONE
 };

@@ -27,12 +27,6 @@ DRIVERFILES += %D%/libusb_helper.c
 %C%_libocdjtagdrivers_la_LIBADD += $(LIBUSB1_LIBS)
 endif
 
-if USE_LIBUSB0
-DRIVERFILES += %D%/usb_common.c
-%C%_libocdjtagdrivers_la_CPPFLAGS += $(LIBUSB0_CFLAGS)
-%C%_libocdjtagdrivers_la_LIBADD += $(LIBUSB0_LIBS)
-endif
-
 if USE_LIBFTDI
 %C%_libocdjtagdrivers_la_CPPFLAGS += $(LIBFTDI_CFLAGS)
 %C%_libocdjtagdrivers_la_LIBADD += $(LIBFTDI_LIBS)
@@ -81,6 +75,9 @@ DRIVERFILES += %D%/linuxgpiod.c
 endif
 if JTAG_VPI
 DRIVERFILES += %D%/jtag_vpi.c
+endif
+if JTAG_DPI
+DRIVERFILES += %D%/jtag_dpi.c
 endif
 if USB_BLASTER_DRIVER
 %C%_libocdjtagdrivers_la_LIBADD += %D%/usb_blaster/libocdusbblaster.la
@@ -143,6 +140,9 @@ endif
 if HLADAPTER_ICDI
 DRIVERFILES += %D%/ti_icdi_usb.c
 endif
+if HLADAPTER_NULINK
+DRIVERFILES += %D%/nulink_usb.c
+endif
 if RSHIM
 DRIVERFILES += %D%/rshim.c
 endif
@@ -164,8 +164,15 @@ endif
 if OPENJTAG
 DRIVERFILES += %D%/openjtag.c
 endif
-if CMSIS_DAP
-DRIVERFILES += %D%/cmsis_dap_usb.c
+if CMSIS_DAP_HID
+DRIVERFILES += %D%/cmsis_dap_usb_hid.c
+DRIVERFILES += %D%/cmsis_dap.c
+endif
+if CMSIS_DAP_USB
+DRIVERFILES += %D%/cmsis_dap_usb_bulk.c
+if !CMSIS_DAP_HID
+DRIVERFILES += %D%/cmsis_dap.c
+endif
 endif
 if IMX_GPIO
 DRIVERFILES += %D%/imx_gpio.c
@@ -181,14 +188,15 @@ DRIVERHEADERS = \
 	%D%/bitbang.h \
 	%D%/bitq.h \
 	%D%/jtag_usb_common.h \
+	%D%/libftdi_helper.h \
 	%D%/libusb_helper.h \
+	%D%/cmsis_dap.h \
 	%D%/minidriver_imp.h \
 	%D%/mpsse.h \
 	%D%/rlink.h \
 	%D%/rlink_dtc_cmd.h \
 	%D%/rlink_ep1_cmd.h \
 	%D%/rlink_st7.h \
-	%D%/usb_common.h \
 	%D%/versaloon/usbtoxxx/usbtoxxx.h \
 	%D%/versaloon/usbtoxxx/usbtoxxx_internal.h \
 	%D%/versaloon/versaloon.h \

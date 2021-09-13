@@ -50,7 +50,7 @@ static void armv7a_show_fault_registers(struct target *target)
 	if (retval != ERROR_OK)
 		return;
 
-	/* ARMV4_5_MRC(cpnum, op1, r0, CRn, CRm, op2) */
+	/* ARMV4_5_MRC(cpnum, op1, r0, crn, crm, op2) */
 
 	/* c5/c0 - {data, instruction} fault status registers */
 	retval = dpm->instr_read_data_r0(dpm,
@@ -160,7 +160,7 @@ int armv7a_read_ttbcr(struct target *target)
 	}
 
 	/*
-	 * ARM Architecture Reference Manual (ARMv7-A and ARMv7-Redition),
+	 * ARM Architecture Reference Manual (ARMv7-A and ARMv7-R edition),
 	 * document # ARM DDI 0406C
 	 */
 	armv7a->armv7a_mmu.ttbr_range[0]  = 0xffffffff >> ttbcr_n;
@@ -257,10 +257,10 @@ int armv7a_handle_cache_info_command(struct command_invocation *cmd,
 
 		if (arch->ctype & 1) {
 			command_print(cmd,
-				"L%d I-Cache: linelen %" PRIi32
-				", associativity %" PRIi32
-				", nsets %" PRIi32
-				", cachesize %" PRId32 " KBytes",
+				"L%d I-Cache: linelen %" PRIu32
+				", associativity %" PRIu32
+				", nsets %" PRIu32
+				", cachesize %" PRIu32 " KBytes",
 				cl+1,
 				arch->i_size.linelen,
 				arch->i_size.associativity,
@@ -270,10 +270,10 @@ int armv7a_handle_cache_info_command(struct command_invocation *cmd,
 
 		if (arch->ctype >= 2) {
 			command_print(cmd,
-				"L%d D-Cache: linelen %" PRIi32
-				", associativity %" PRIi32
-				", nsets %" PRIi32
-				", cachesize %" PRId32 " KBytes",
+				"L%d D-Cache: linelen %" PRIu32
+				", associativity %" PRIu32
+				", nsets %" PRIu32
+				", cachesize %" PRIu32 " KBytes",
 				cl+1,
 				arch->d_u_size.linelen,
 				arch->d_u_size.associativity,
@@ -282,8 +282,8 @@ int armv7a_handle_cache_info_command(struct command_invocation *cmd,
 		}
 	}
 
-	if (l2x_cache != NULL)
-		command_print(cmd, "Outer unified cache Base Address 0x%" PRIx32 ", %" PRId32 " ways",
+	if (l2x_cache)
+		command_print(cmd, "Outer unified cache Base Address 0x%" PRIx32 ", %" PRIu32 " ways",
 			l2x_cache->base, l2x_cache->way);
 
 	return ERROR_OK;
@@ -399,7 +399,7 @@ int armv7a_identify_cache(struct target *target)
 
 	cache->iminline = 4UL << (ctr & 0xf);
 	cache->dminline = 4UL << ((ctr & 0xf0000) >> 16);
-	LOG_DEBUG("ctr %" PRIx32 " ctr.iminline %" PRId32 " ctr.dminline %" PRId32,
+	LOG_DEBUG("ctr %" PRIx32 " ctr.iminline %" PRIu32 " ctr.dminline %" PRIu32,
 		 ctr, cache->iminline, cache->dminline);
 
 	/*  retrieve CLIDR
@@ -439,13 +439,13 @@ int armv7a_identify_cache(struct target *target)
 				goto done;
 			cache->arch[cl].d_u_size = decode_cache_reg(cache_reg);
 
-			LOG_DEBUG("data/unified cache index %d << %d, way %d << %d",
+			LOG_DEBUG("data/unified cache index %" PRIu32 " << %" PRIu32 ", way %" PRIu32 " << %" PRIu32,
 					cache->arch[cl].d_u_size.index,
 					cache->arch[cl].d_u_size.index_shift,
 					cache->arch[cl].d_u_size.way,
 					cache->arch[cl].d_u_size.way_shift);
 
-			LOG_DEBUG("cacheline %d bytes %d KBytes asso %d ways",
+			LOG_DEBUG("cacheline %" PRIu32 " bytes %" PRIu32 " KBytes asso %" PRIu32 " ways",
 					cache->arch[cl].d_u_size.linelen,
 					cache->arch[cl].d_u_size.cachesize,
 					cache->arch[cl].d_u_size.associativity);
@@ -459,13 +459,13 @@ int armv7a_identify_cache(struct target *target)
 				goto done;
 			cache->arch[cl].i_size = decode_cache_reg(cache_reg);
 
-			LOG_DEBUG("instruction cache index %d << %d, way %d << %d",
+			LOG_DEBUG("instruction cache index %" PRIu32 " << %" PRIu32 ", way %" PRIu32 " << %" PRIu32,
 					cache->arch[cl].i_size.index,
 					cache->arch[cl].i_size.index_shift,
 					cache->arch[cl].i_size.way,
 					cache->arch[cl].i_size.way_shift);
 
-			LOG_DEBUG("cacheline %d bytes %d KBytes asso %d ways",
+			LOG_DEBUG("cacheline %" PRIu32 " bytes %" PRIu32 " KBytes asso %" PRIu32 " ways",
 					cache->arch[cl].i_size.linelen,
 					cache->arch[cl].i_size.cachesize,
 					cache->arch[cl].i_size.associativity);
@@ -483,7 +483,7 @@ int armv7a_identify_cache(struct target *target)
 		goto done;
 
 	/*  if no l2 cache initialize l1 data cache flush function function */
-	if (armv7a->armv7a_mmu.armv7a_cache.flush_all_data_cache == NULL) {
+	if (!armv7a->armv7a_mmu.armv7a_cache.flush_all_data_cache) {
 		armv7a->armv7a_mmu.armv7a_cache.flush_all_data_cache =
 			armv7a_cache_auto_flush_all_data;
 	}
@@ -570,9 +570,6 @@ int armv7a_arch_state(struct target *target)
 
 	if (arm->core_mode == ARM_MODE_ABT)
 		armv7a_show_fault_registers(target);
-	if (target->debug_reason == DBG_REASON_WATCHPOINT)
-		LOG_USER("Watchpoint triggered at PC %#08x",
-			(unsigned) armv7a->dpm.wp_pc);
 
 	return ERROR_OK;
 }
@@ -589,7 +586,7 @@ static const struct command_registration l2_cache_commands[] = {
 
 };
 
-const struct command_registration l2x_cache_command_handlers[] = {
+static const struct command_registration l2x_cache_command_handlers[] = {
 	{
 		.name = "cache_config",
 		.mode = COMMAND_EXEC,

@@ -39,8 +39,9 @@
 
 #include <errno.h>
 #include <libgen.h>
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -325,7 +326,7 @@ static void show_timestamp(FILE *f, int c)
 		delayed = true;
 		break;
 	case 0xf:
-		label = ", packet and timetamp delayed";
+		label = ", packet and timestamp delayed";
 		delayed = true;
 		break;
 	}

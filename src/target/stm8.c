@@ -159,7 +159,6 @@ struct stm8_algorithm {
 struct stm8_core_reg {
 	uint32_t num;
 	struct target *target;
-	struct stm8_common *stm8_common;
 };
 
 enum hw_break_type {
@@ -967,7 +966,7 @@ static int stm8_reset_deassert(struct target *target)
 	if (target->reset_halt)
 		return ERROR_OK;
 
-	/* Instead of going thrugh saving context, polling and
+	/* Instead of going through saving context, polling and
 	   then resuming target again just clear stall and proceed. */
 	target->state = TARGET_RUNNING;
 	return stm8_exit_debug(target);
@@ -1221,7 +1220,6 @@ static struct reg_cache *stm8_build_reg_cache(struct target *target)
 	for (i = 0; i < num_regs; i++) {
 		arch_info[i].num = stm8_regs[i].id;
 		arch_info[i].target = target;
-		arch_info[i].stm8_common = stm8;
 
 		reg_list[i].name = stm8_regs[i].name;
 		reg_list[i].size = stm8_regs[i].bits;
@@ -1308,7 +1306,7 @@ static int stm8_arch_state(struct target *target)
 static int stm8_step(struct target *target, int current,
 		target_addr_t address, int handle_breakpoints)
 {
-	LOG_DEBUG("%" PRIx32 " " TARGET_ADDR_FMT " %" PRIx32,
+	LOG_DEBUG("%x " TARGET_ADDR_FMT " %x",
 		current, address, handle_breakpoints);
 
 	/* get pointers to arch-specific information */
@@ -1876,7 +1874,7 @@ static int stm8_run_algorithm(struct target *target, int num_mem_params,
 			continue;
 
 		struct reg *reg = register_get_by_name(stm8->core_cache,
-				reg_params[i].reg_name, 0);
+				reg_params[i].reg_name, false);
 
 		if (!reg) {
 			LOG_ERROR("BUG: register '%s' not found", reg_params[i].reg_name);
@@ -1910,7 +1908,7 @@ static int stm8_run_algorithm(struct target *target, int num_mem_params,
 	for (int i = 0; i < num_reg_params; i++) {
 		if (reg_params[i].direction != PARAM_OUT) {
 			struct reg *reg = register_get_by_name(stm8->core_cache,
-					reg_params[i].reg_name, 0);
+					reg_params[i].reg_name, false);
 			if (!reg) {
 				LOG_ERROR("BUG: register '%s' not found",
 						reg_params[i].reg_name);
@@ -1945,7 +1943,7 @@ static int stm8_run_algorithm(struct target *target, int num_mem_params,
 	return ERROR_OK;
 }
 
-int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
+static int stm8_jim_configure(struct target *target, struct jim_getopt_info *goi)
 {
 	struct stm8_common *stm8 = target_to_stm8(target);
 	jim_wide w;
@@ -1954,7 +1952,7 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 
 	arg = Jim_GetString(goi->argv[0], NULL);
 	if (!strcmp(arg, "-blocksize")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -1964,16 +1962,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->blocksize = w;
-		LOG_DEBUG("blocksize=%8.8x", stm8->blocksize);
+		LOG_DEBUG("blocksize=%8.8" PRIx32, stm8->blocksize);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-flashstart")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -1983,16 +1981,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->flashstart = w;
-		LOG_DEBUG("flashstart=%8.8x", stm8->flashstart);
+		LOG_DEBUG("flashstart=%8.8" PRIx32, stm8->flashstart);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-flashend")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2002,16 +2000,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->flashend = w;
-		LOG_DEBUG("flashend=%8.8x", stm8->flashend);
+		LOG_DEBUG("flashend=%8.8" PRIx32, stm8->flashend);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-eepromstart")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2021,16 +2019,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->eepromstart = w;
-		LOG_DEBUG("eepromstart=%8.8x", stm8->eepromstart);
+		LOG_DEBUG("eepromstart=%8.8" PRIx32, stm8->eepromstart);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-eepromend")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2040,16 +2038,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->eepromend = w;
-		LOG_DEBUG("eepromend=%8.8x", stm8->eepromend);
+		LOG_DEBUG("eepromend=%8.8" PRIx32, stm8->eepromend);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-optionstart")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2059,16 +2057,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->optionstart = w;
-		LOG_DEBUG("optionstart=%8.8x", stm8->optionstart);
+		LOG_DEBUG("optionstart=%8.8" PRIx32, stm8->optionstart);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-optionend")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2078,16 +2076,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->optionend = w;
-		LOG_DEBUG("optionend=%8.8x", stm8->optionend);
+		LOG_DEBUG("optionend=%8.8" PRIx32, stm8->optionend);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-enable_step_irq")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2096,7 +2094,7 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-enable_stm8l")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2159,7 +2157,7 @@ static const struct command_registration stm8_exec_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-const struct command_registration stm8_command_handlers[] = {
+static const struct command_registration stm8_command_handlers[] = {
 	{
 		.name = "stm8",
 		.mode = COMMAND_ANY,
