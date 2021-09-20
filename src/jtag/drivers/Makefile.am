@@ -164,7 +164,9 @@ endif
 if OPENJTAG
 DRIVERFILES += %D%/openjtag.c
 endif
-
+if ADI_DBGAGENT
+DRIVERFILES += %D%/adi_dbg_agent.c
+endif
 if ICE_1000
 DRIVERFILES += %D%/ice1000.c
 if USE_LIBUSBMUX
