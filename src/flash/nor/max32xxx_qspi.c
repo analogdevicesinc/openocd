@@ -444,12 +444,13 @@ static int max32xxx_qspi_erase(struct flash_bank *bank, unsigned int first, unsi
 
 	max32xxx_qspi_pre_op(bank);
 
-	/* Set the write enable */
-	retval = max32xxx_qspi_set_we(target);
-	if (retval != ERROR_OK)
-		goto exit;
-
 	while (first <= last) {
+
+		/* Set the write enable */
+		retval = max32xxx_qspi_set_we(target);
+		if (retval != ERROR_OK)
+			goto exit;
+
 		/* Send the erase command */
 		cmdData[0] = max32xxx_qspi_info->dev.erase_cmd;
 		/* Address is MSB first */
@@ -501,11 +502,6 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 
 	max32xxx_qspi_pre_op(bank);
 
-	/* Set the write enable */
-	retval = max32xxx_qspi_set_we(target);
-	if (retval != ERROR_OK)
-		goto exit;
-
 	/* Send the page program command */
 	cmdData[0] = max32xxx_qspi_info->dev.pprog_cmd;
 
@@ -513,6 +509,11 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 
 	/* Get on the write boundary */
 	if (offset % SPI_WRITE_BOUNDARY) {
+
+		/* Set the write enable */
+		retval = max32xxx_qspi_set_we(target);
+		if (retval != ERROR_OK)
+			goto exit;
 
 		writeLen = offset % SPI_WRITE_BOUNDARY;
 
@@ -541,8 +542,12 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 
 	while (count - bufferIndex) {
 
-		/* Write along the boundary */
+		/* Set the write enable */
+		retval = max32xxx_qspi_set_we(target);
+		if (retval != ERROR_OK)
+			goto exit;
 
+		/* Write along the boundary */
 		writeLen = SPI_WRITE_BOUNDARY;
 
 		if (writeLen > (count - bufferIndex))
