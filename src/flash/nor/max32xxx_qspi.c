@@ -472,93 +472,6 @@ exit:
 	return retval;
 }
 
-/* Check whether flash is blank */
-static int max32xxx_qspi_blank_check(struct flash_bank *bank)
-{
-	struct target *target = bank->target;
-	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
-	uint32_t temp32, addr;
-	volatile int len;
-
-	/* TODO: Use SRAM code to blank check */
-
-	if (target->state != TARGET_HALTED) {
-		LOG_ERROR("Target not halted");
-		return ERROR_TARGET_NOT_HALTED;
-	}
-
-	if (!(max32xxx_qspi_info->probed)) {
-		LOG_ERROR("Flash bank not probed");
-		return ERROR_FLASH_BANK_NOT_PROBED;
-	}
-
-	/* Initialize the length and address */
-	len = bank->size;
-	addr = bank->base;
-
-	/* Use the memory map to blank check */
-	while (len > 0) {
-		target_read_u32(target, addr, &temp32);
-		if (temp32 != 0xFFFFFFFF)
-			return ERROR_FLASH_SECTOR_NOT_ERASED;
-		len -= 4;
-		addr += 4;
-
-		/* Prevent GDB warnings */
-		keep_alive();
-	}
-
-	return ERROR_OK;
-}
-
-static int max32xxx_qspi_read(struct flash_bank *bank, uint8_t *buffer,
-	uint32_t offset, uint32_t count)
-{
-	struct target *target = bank->target;
-	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
-	int retval;
-	uint8_t cmdData[4];
-
-	LOG_DEBUG("%s: offset=0x%08" PRIx32 " count=0x%08" PRIx32,
-		__func__, offset, count);
-
-	if (target->state != TARGET_HALTED) {
-		LOG_ERROR("Target not halted");
-		return ERROR_TARGET_NOT_HALTED;
-	}
-
-	if (!(max32xxx_qspi_info->probed)) {
-		LOG_ERROR("Flash bank not probed");
-		return ERROR_FLASH_BANK_NOT_PROBED;
-	}
-
-	if (offset + count > bank->size) {
-		LOG_WARNING("Read beyond end of flash. Extra data to be ignored.");
-		count = bank->size - offset;
-	}
-
-	max32xxx_qspi_pre_op(bank);
-
-	/* Send the read command */
-	cmdData[0] = max32xxx_qspi_info->dev.read_cmd;
-
-	/* Address is MSB first */
-	cmdData[3] = (offset & 0x0000FF) >> 0;
-	cmdData[2] = (offset & 0x00FF00) >> 8;
-	cmdData[1] = (offset & 0xFF0000) >> 16;
-
-	retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
-	if (retval != ERROR_OK)
-		goto exit;
-
-	retval = max32xxx_qspi_read_bytes(target, buffer, count, true);
-
-exit:
-	max32xxx_qspi_post_op(bank);
-
-	return retval;
-}
-
 static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 	uint32_t offset, uint32_t count)
 {
@@ -661,48 +574,6 @@ exit:
 	return retval;
 }
 
-static int max32xxx_qspi_verify(struct flash_bank *bank, const uint8_t *buffer,
-	uint32_t offset, uint32_t count)
-{
-	struct target *target = bank->target;
-	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
-	uint32_t addr, index;
-	uint8_t temp8;
-	volatile int len;
-
-	/* TODO: Use SRAM code to verify */
-
-	if (target->state != TARGET_HALTED) {
-		LOG_ERROR("Target not halted");
-		return ERROR_TARGET_NOT_HALTED;
-	}
-
-	if (!(max32xxx_qspi_info->probed)) {
-		LOG_ERROR("Flash bank not probed");
-		return ERROR_FLASH_BANK_NOT_PROBED;
-	}
-
-	/* Initialize the length and address */
-	len = count;
-	addr = bank->base + offset;
-	index = 0;
-
-	/* Use the memory map to blank check */
-	while (len > 0) {
-		target_read_u8(target, addr, &temp8);
-		if (temp8 != buffer[index])
-			return ERROR_FLASH_SECTOR_INVALID;
-		len -= 1;
-		addr += 1;
-		index += 1;
-
-		/* Prevent GDB warnings */
-		keep_alive();
-	}
-
-	return ERROR_OK;
-}
-
 static int read_sfdp_block(struct flash_bank *bank, uint32_t addr,
 	uint32_t words, uint32_t *buffer)
 {
@@ -733,6 +604,7 @@ static int max32xxx_qspi_probe(struct flash_bank *bank)
 	struct target *target = bank->target;
 	struct flash_device temp_flash_device;
 	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
+	struct flash_sector *sectors = NULL;
 	int retval;
 	uint32_t temp32;
 	uint8_t cmd;
@@ -790,6 +662,24 @@ static int max32xxx_qspi_probe(struct flash_bank *bank)
 
 	/* Setup memory mapped mode */
 	max32xxx_qspi_post_op(bank);
+
+	/* Create and fill sectors array */
+	bank->num_sectors = max32xxx_qspi_info->dev.size_in_bytes / max32xxx_qspi_info->dev.sectorsize;
+	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
+	if (!sectors) {
+		LOG_ERROR("not enough memory");
+		retval = ERROR_FAIL;
+		goto exit;
+	}
+
+	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {
+		sectors[sector].offset = sector * max32xxx_qspi_info->dev.sectorsize;
+		sectors[sector].size = max32xxx_qspi_info->dev.sectorsize;
+		sectors[sector].is_erased = -1;
+		sectors[sector].is_protected = 0;
+	}
+
+	bank->sectors = sectors;
 
 	target_read_u32(target, SPIXF_CFG, &temp32);
 	LOG_DEBUG("SPIXF_CFG			= 0x%08X", temp32);
@@ -949,11 +839,11 @@ struct flash_driver max32xxx_qspi_flash = {
 	.erase = max32xxx_qspi_erase,
 	.protect = max32xxx_qspi_protect,
 	.write = max32xxx_qspi_write,
-	.read = max32xxx_qspi_read,
-	.verify = max32xxx_qspi_verify,
+	.read = default_flash_read,
+	.verify = default_flash_verify,
 	.probe = max32xxx_qspi_probe,
 	.auto_probe = max32xxx_qspi_auto_probe,
-	.erase_check = max32xxx_qspi_blank_check,
+	.erase_check = default_flash_blank_check,
 	.protect_check = max32xxx_qspi_protect_check,
 	.info = get_max32xxx_qspi_info,
 	.free_driver_priv = default_flash_free_driver_priv,
