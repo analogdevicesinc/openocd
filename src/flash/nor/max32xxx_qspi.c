@@ -515,7 +515,7 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 		if (retval != ERROR_OK)
 			goto exit;
 
-		writeLen = offset % SPI_WRITE_BOUNDARY;
+		writeLen = SPI_WRITE_BOUNDARY - (offset % SPI_WRITE_BOUNDARY);
 
 		if (writeLen > count)
 			writeLen = count;
