@@ -1416,4 +1416,11 @@ proc adspsc598_init_ddr3 { dmc } {
 
    mww phys $dmc_dllctl [expr {$rd_cnt | $datacyc}]
    mww phys $dmc_ctl [expr {$ulDDR_CTL & 0xfffffffb & 0xfbffffff} ]
+
+   # DDR workaround.
+   # Restricts the outstanding transactions to 1 for both read/write
+   # to force in-order access/response from A55 to/from DDR.
+   set scb6_a55_m0_ib_fn_mod 0x30643108
+   mww phys $scb6_a55_m0_ib_fn_mod 0x00000003
+
 }
