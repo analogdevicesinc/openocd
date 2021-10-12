@@ -291,6 +291,69 @@ COMMAND_HANDLER(handle_log_output_command)
 	return ERROR_COMMAND_SYNTAX_ERROR;
 }
 
+COMMAND_HANDLER(handle_log_info_command)
+{
+	if (CMD_ARGC < 2) {
+		LOG_ERROR("Insufficient number of arguments");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
+
+	char* debug_env = getenv("OPENOCD_DEBUG_LEVEL");
+	if (NULL != debug_env) {
+		int value;
+		int retval = parse_int(debug_env, &value);
+	}
+
+	if (CMD_ARGV[1] == retval) {
+		LOG_DEBUG("%s", CMD_ARGV[0]);
+		return ERROR_OK;
+	}
+
+	return ERROR_COMMAND_SYNTAX_ERROR;
+}
+
+COMMAND_HANDLER(handle_log_debug_command)
+{
+	if (CMD_ARGC < 2) {
+		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
+
+	char* debug_env = getenv("OPENOCD_DEBUG_LEVEL");
+	if (NULL != debug_env) {
+		int value;
+		int retval = parse_int(debug_env, &value);
+	}
+
+	if (CMD_ARGV[1] == retval) {
+		LOG_DEBUG("%s", CMD_ARGV[0]);
+		return ERROR_OK;
+	}
+
+	return ERROR_COMMAND_SYNTAX_ERROR;
+}
+
+COMMAND_HANDLER(handle_log_error_command)
+{
+	if (CMD_ARGC < 2) {
+		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
+
+	char* debug_env = getenv("OPENOCD_DEBUG_LEVEL");
+	if (NULL != debug_env) {
+		int value;
+		int retval = parse_int(debug_env, &value);
+	}
+
+	if (CMD_ARGV[1] == retval) {
+		LOG_DEBUG("%s", CMD_ARGV[0]);
+		return ERROR_OK;
+	}
+
+	return ERROR_COMMAND_SYNTAX_ERROR;
+}
+
 static const struct command_registration log_command_handlers[] = {
 	{
 		.name = "log_output",
@@ -308,6 +371,27 @@ static const struct command_registration log_command_handlers[] = {
 			"2 (default) adds other info; 3 adds debugging; "
 			"4 adds extra verbose debugging.",
 		.usage = "number",
+	},
+	{
+		.name = "log_info",
+		.handler = handle_log_info_command,
+		.mode = COMMAND_ANY,
+		.help = "accepts a string and calls the log print fuctions corresponding to info level. ",
+		.usage = "string, debug level",
+	},
+	{
+		.name = "log_debug",
+		.handler = handle_log_debug_command,
+		.mode = COMMAND_ANY,
+		.help = "accepts a string and calls the log print fuctions corresponding to debug level. ",
+		.usage = "string, debug level",
+	},
+	{
+		.name = "log_error",
+		.handler = handle_log_error_command,
+		.mode = COMMAND_ANY,
+		.help = "accepts a string and calls the log print fuctions corresponding to error level. ",
+		.usage = "string, debug level",
 	},
 	COMMAND_REGISTRATION_DONE
 };
