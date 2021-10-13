@@ -293,63 +293,39 @@ COMMAND_HANDLER(handle_log_output_command)
 
 COMMAND_HANDLER(handle_log_info_command)
 {
-	if (CMD_ARGC < 2) {
-		LOG_ERROR("Insufficient number of arguments");
+	if (CMD_ARGC == 0) {
+		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	char* debug_env = getenv("OPENOCD_DEBUG_LEVEL");
-	if (NULL != debug_env) {
-		int value;
-		int retval = parse_int(debug_env, &value);
-	}
-
-	if (CMD_ARGV[1] == retval) {
-		LOG_DEBUG("%s", CMD_ARGV[0]);
-		return ERROR_OK;
-	}
+	LOG_DEBUG("%s", CMD_ARGV[0]);
+	return ERROR_OK;
 
 	return ERROR_COMMAND_SYNTAX_ERROR;
 }
 
 COMMAND_HANDLER(handle_log_debug_command)
 {
-	if (CMD_ARGC < 2) {
+	if (CMD_ARGC == 0) {
 		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	char* debug_env = getenv("OPENOCD_DEBUG_LEVEL");
-	if (NULL != debug_env) {
-		int value;
-		int retval = parse_int(debug_env, &value);
-	}
-
-	if (CMD_ARGV[1] == retval) {
-		LOG_DEBUG("%s", CMD_ARGV[0]);
-		return ERROR_OK;
-	}
+	LOG_DEBUG("%s", CMD_ARGV[0]);
+	return ERROR_OK;
 
 	return ERROR_COMMAND_SYNTAX_ERROR;
 }
 
 COMMAND_HANDLER(handle_log_error_command)
 {
-	if (CMD_ARGC < 2) {
+	if (CMD_ARGC == 0) {
 		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	char* debug_env = getenv("OPENOCD_DEBUG_LEVEL");
-	if (NULL != debug_env) {
-		int value;
-		int retval = parse_int(debug_env, &value);
-	}
-
-	if (CMD_ARGV[1] == retval) {
-		LOG_DEBUG("%s", CMD_ARGV[0]);
-		return ERROR_OK;
-	}
+	LOG_DEBUG("%s", CMD_ARGV[0]);
+	return ERROR_OK;
 
 	return ERROR_COMMAND_SYNTAX_ERROR;
 }
