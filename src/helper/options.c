@@ -49,6 +49,7 @@ static int help_flag, version_flag;
 static const struct option long_options[] = {
 	{"help",		no_argument,			&help_flag,		1},
 	{"version",		no_argument,			&version_flag,	1},
+	{"info",		no_argument,			0,				'i'},
 	{"debug",		optional_argument,		0,				'd'},
 	{"file",		required_argument,		0,				'f'},
 	{"search",		required_argument,		0,				's'},
@@ -245,7 +246,7 @@ int parse_cmdline_args(struct command_context *cmd_ctx, int argc, char *argv[])
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "hvd::l:f:s:c:p", long_options, &option_index);
+		c = getopt_long(argc, argv, "hvid::l:f:s:c:p", long_options, &option_index);
 
 		/* Detect the end of the options. */
 		if (c == -1)
@@ -273,6 +274,13 @@ int parse_cmdline_args(struct command_context *cmd_ctx, int argc, char *argv[])
 			case 'd':		/* --debug | -d */
 			{
 				int retval = command_run_linef(cmd_ctx, "debug_level %s", optarg ? optarg : "3");
+				if (retval != ERROR_OK)
+					return retval;
+				break;
+			}
+			case 'i':		/* --info | -i */
+			{
+				int retval = command_run_linef(cmd_ctx, "info level");
 				if (retval != ERROR_OK)
 					return retval;
 				break;
