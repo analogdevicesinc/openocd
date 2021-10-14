@@ -307,6 +307,14 @@ COMMAND_HANDLER(handle_log_error_command)
 	return ERROR_COMMAND_SYNTAX_ERROR;
 }
 
+COMMAND_HANDLER(handle_log_debug_command)
+{
+	LOG_DEBUG("%s", CMD_ARGV[0]);
+	return ERROR_OK;
+
+	return ERROR_COMMAND_SYNTAX_ERROR;
+}
+
 static const struct command_registration log_command_handlers[] = {
 	{
 		.name = "log_output",
@@ -337,6 +345,13 @@ static const struct command_registration log_command_handlers[] = {
 		.handler = handle_log_error_command,
 		.mode = COMMAND_ANY,
 		.help = "accepts a string and calls the log print fuctions corresponding to error level. ",
+		.usage = "string",
+	},
+	{
+		.name = "log_debug",
+		.handler = handle_log_debug_command,
+		.mode = COMMAND_ANY,
+		.help = "accepts a string and calls the log print fuctions corresponding to debug level. ",
 		.usage = "string",
 	},
 	COMMAND_REGISTRATION_DONE
