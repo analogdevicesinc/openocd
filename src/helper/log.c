@@ -126,11 +126,11 @@ static void log_puts(enum log_levels level,
 #endif
 			fprintf(output, "%s%d %" PRId64 " %s:%d %s()"
 #ifdef _DEBUG_FREE_SPACE_
-				" %d"
+					" %d"
 #endif
-				": %s", log_strings[level + 1], count, t, file, line, function,
+			": %s", log_strings[level + 1], count, t, file, line, function,
 #ifdef _DEBUG_FREE_SPACE_
-				info.fordblks,
+					info.fordblks,
 #endif
 				string);
 		} else {
@@ -293,25 +293,7 @@ COMMAND_HANDLER(handle_log_output_command)
 
 COMMAND_HANDLER(handle_log_info_command)
 {
-	if (CMD_ARGC == 0) {
-		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
-		return ERROR_COMMAND_SYNTAX_ERROR;
-	}
-
 	LOG_INFO("%s", CMD_ARGV[0]);
-	return ERROR_OK;
-
-	return ERROR_COMMAND_SYNTAX_ERROR;
-}
-
-COMMAND_HANDLER(handle_log_debug_command)
-{
-	if (CMD_ARGC == 0) {
-		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
-		return ERROR_COMMAND_SYNTAX_ERROR;
-	}
-
-	LOG_DEBUG("%s", CMD_ARGV[0]);
 	return ERROR_OK;
 
 	return ERROR_COMMAND_SYNTAX_ERROR;
@@ -319,11 +301,6 @@ COMMAND_HANDLER(handle_log_debug_command)
 
 COMMAND_HANDLER(handle_log_error_command)
 {
-	if (CMD_ARGC == 0) {
-		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
-		return ERROR_COMMAND_SYNTAX_ERROR;
-	}
-
 	LOG_ERROR("%s", CMD_ARGV[0]);
 	return ERROR_OK;
 
@@ -353,13 +330,6 @@ static const struct command_registration log_command_handlers[] = {
 		.handler = handle_log_info_command,
 		.mode = COMMAND_ANY,
 		.help = "accepts a string and calls the log print fuctions corresponding to info level. ",
-		.usage = "string",
-	},
-	{
-		.name = "log_debug",
-		.handler = handle_log_debug_command,
-		.mode = COMMAND_ANY,
-		.help = "accepts a string and calls the log print fuctions corresponding to debug level. ",
 		.usage = "string",
 	},
 	{
