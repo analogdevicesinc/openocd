@@ -532,10 +532,10 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			/* XOR data with the address */
 			for (i = 0; i < 4; i++) {
 				if (*options & OPTIONS_RELATIVE_XOR)
-					enc_buffer[i] ^= ((addr_save & 0x00FFFFFF) + i * 4);
+					enc_buffer[i] ^= ((addr_save & 0x00FFFFF0) + i * 4);
 
 				else
-					enc_buffer[i] ^= (addr_save + i * 4);
+					enc_buffer[i] ^= (((addr_save & 0xFFFFFFF0)| 0x08000000)  + i * 4);
 			}
 
 			/* Encrypt the plain text */
@@ -572,6 +572,8 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			enc_buffer[2] = MXC_TPU->dout[2];
 			enc_buffer[3] = MXC_TPU->dout[3];
 		}
+
+		/* TODO: Insert the authentication data if enabled */
 
 		if (max32xxx_qspi_write((const uint8_t*)enc_buffer, addr_save, 16, *spi_write_cmd) != ERROR_OK) {
 			#ifndef ALGO_TEST
