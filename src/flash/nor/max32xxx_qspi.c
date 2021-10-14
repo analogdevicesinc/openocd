@@ -75,6 +75,9 @@
 #define SPIXF_MEMSECCN							(SPIXF_BASE | 0x20)
 #define SPIXF_BUS_IDLE							(SPIXF_BASE | 0x24)
 
+#define SPIXF_MEMSECCN_ENC_ENABLE 				(0x1)
+#define SPIXF_MEMSECCN_AUTH_DISABLE				(0x2)
+
 #define SPI_ICC_BASE							0x4002F000
 #define SPI_ICC_CTRL							(SPI_ICC_BASE | 0x100)
 
@@ -136,6 +139,7 @@ FLASH_BANK_COMMAND_HANDLER(max32xxx_qspi_flash_bank_command)
 
 	info->probed = false;
 	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], info->options);
+	bank->driver_priv = info;
 
 	return ERROR_OK;
 }
@@ -191,6 +195,16 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 		/* Set mode control */
 		temp32 = 0x0;
 		target_write_u32(target, SPIXF_MODE_CTRL, temp32);
+	}
+
+	/* Setup the encryption options */
+	if(max32xxx_qspi_info->options & OPTIONS_ENC) {
+		temp32 = SPIXF_MEMSECCN_ENC_ENABLE;
+
+		if(!(max32xxx_qspi_info->options & OPTIONS_AUTH)) {
+			temp32 |= SPIXF_MEMSECCN_AUTH_DISABLE;
+		}
+		target_write_u32(target, SPIXF_MEMSECCN, temp32);
 	}
 
 	/* Enable feedback mode */
@@ -877,6 +891,18 @@ static int max32xxx_qspi_protect(struct flash_bank *bank, int set,
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(max32xxx_qspi_handle_reset_deassert_command)
+{
+	int retval;
+
+	struct flash_bank *bank;
+	retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
+	if (retval != ERROR_OK)
+		return retval;
+
+	max32xxx_qspi_post_op(bank);
+	return retval;
+}
 
 COMMAND_HANDLER(max32xxx_qspi_handle_mass_erase_command)
 {
@@ -965,6 +991,13 @@ static int get_max32xxx_qspi_info(struct flash_bank *bank, struct command_invoca
 }
 
 static const struct command_registration max32xxx_qspi_exec_command_handlers[] = {
+	{
+		.name = "reset_deassert",
+		.handler = max32xxx_qspi_handle_reset_deassert_command,
+		.mode = COMMAND_EXEC,
+		.usage = "",
+		.help = "Setup the QSPI after a reset event.",
+	},
 	{
 		.name = "mass_erase",
 		.handler = max32xxx_qspi_handle_mass_erase_command,
