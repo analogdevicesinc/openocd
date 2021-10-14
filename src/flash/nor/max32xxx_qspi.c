@@ -19,7 +19,6 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -88,12 +87,33 @@
 /* Address boundary for writes */
 #define SPI_WRITE_BOUNDARY						256
 
+/* Set this to 1 to enable dual (1-2-2) reads if available from SFDP */
+#ifndef SPI_DUAL_MODE
+#define SPI_DUAL_MODE 							1
+#endif
+
+#define OPTIONS_128								0x01 /* Perform 128 bit flash writes */
+#define OPTIONS_ENC								0x02 /* Encrypt the flash contents */
+#define OPTIONS_AUTH							0x04 /* Authenticate the flash contents */
+#define OPTIONS_COUNT							0x08 /* Add counter values to authentication */
+#define OPTIONS_INTER							0x10 /* Interleave the authentication and count values*/
+#define OPTIONS_RELATIVE_XOR					0x20 /* Only XOR the offset of the address when encrypting */
+#define OPTIONS_KEYSIZE							0x40 /* Use a 256 bit KEY */
+#define OPTIONS_QSPI							0x80 /* Use quad SPI */
+
+#define SPIX_ALGO_STACK_SIZE					256
+#define SPIX_ALGO_ENTRY_OFFSET 					0x274
+
+static const uint8_t write_code[] = {
+#include "../../contrib/loaders/flash/max32xxx_qspi/max32xxx_qspi.inc"
+};
+
 struct max32xxx_qspi_flash_bank {
 	bool probed;
 	char devname[32];
 	struct flash_device dev;
+	unsigned int options;
 };
-
 
 FLASH_BANK_COMMAND_HANDLER(max32xxx_qspi_flash_bank_command)
 {
@@ -101,8 +121,8 @@ FLASH_BANK_COMMAND_HANDLER(max32xxx_qspi_flash_bank_command)
 
 	LOG_DEBUG("%s", __func__);
 
-	if ((CMD_ARGC < 6) || (CMD_ARGC > 6)) {
-		LOG_ERROR("incorrect flash bank max32xxx_qspi configuration: <flash_addr_base> <flash_addr_size> 0 0 <target> <gpio_base> <gpio_mask>");
+	if ((CMD_ARGC < 7) || (CMD_ARGC > 7)) {
+		LOG_ERROR("incorrect flash bank max32xxx_qspi configuration: <flash_addr_base> <flash_addr_size> 0 0 <target> <opitons>");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
@@ -115,6 +135,7 @@ FLASH_BANK_COMMAND_HANDLER(max32xxx_qspi_flash_bank_command)
 	bank->driver_priv = info;
 
 	info->probed = false;
+	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], info->options);
 
 	return ERROR_OK;
 }
@@ -150,13 +171,27 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 
 	target_write_u32(target, SPIXF_CFG, temp32);
 
-	/* Set the read command */
-	temp32 = max32xxx_qspi_info->dev.read_cmd;
-	target_write_u32(target, SPIXF_FETCH_CTRL, temp32);
 
-	/* Set mode control */
-	temp32 = 0x0;
-	target_write_u32(target, SPIXF_MODE_CTRL, temp32);
+	/* Enter 1-2-2 mode */
+	if(SPI_DUAL_MODE && (max32xxx_qspi_info->dev.dread_cmd != 0x0)) {
+		LOG_DEBUG("Entering 1-2-2 read mode");
+
+		/* Set the read command */
+		temp32 = (0x1 << 10) | (0x1 << 12) | max32xxx_qspi_info->dev.dread_cmd;
+		target_write_u32(target, SPIXF_FETCH_CTRL, temp32);
+
+		/* Set mode control */
+		temp32 = max32xxx_qspi_info->dev.dread_mode + max32xxx_qspi_info->dev.dread_dclk;
+		target_write_u32(target, SPIXF_MODE_CTRL, temp32);
+	} else {
+		/* Set the read command */
+		temp32 = max32xxx_qspi_info->dev.read_cmd;
+		target_write_u32(target, SPIXF_FETCH_CTRL, temp32);
+
+		/* Set mode control */
+		temp32 = 0x0;
+		target_write_u32(target, SPIXF_MODE_CTRL, temp32);
+	}
 
 	/* Enable feedback mode */
 	temp32 = 0x1;
@@ -473,6 +508,96 @@ exit:
 	return retval;
 }
 
+static int max32xxx_qspi_write_block(struct flash_bank *bank, const uint8_t *buffer,
+                                uint32_t offset, uint32_t len)
+{
+	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
+	struct target *target = bank->target;
+	uint32_t buffer_size = 16384;
+	struct working_area *source;
+	struct working_area *write_algorithm;
+	struct reg_param reg_params[5];
+	struct mem_param mem_param[2];
+	struct armv7m_algorithm armv7m_info;
+	int retval = ERROR_OK;
+	/* power of two, and multiple of word size */
+	static const unsigned buf_min = 512;
+
+	LOG_DEBUG("max32xxx_write_block bank=%p buffer=%p offset=%08" PRIx32 " len=%08" PRIx32 "",
+	          bank, buffer, offset, len);
+
+	/* flash write code */
+	if (target_alloc_working_area(target, sizeof(write_code), &write_algorithm) != ERROR_OK) {
+		LOG_DEBUG("no working area for block memory writes");
+		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
+	}
+
+	/* memory buffer */
+	while (target_alloc_working_area_try(target, buffer_size, &source) != ERROR_OK) {
+		buffer_size /= 2;
+
+		if (buffer_size <= buf_min) {
+			target_free_working_area(target, write_algorithm);
+			return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
+		}
+
+		LOG_DEBUG("retry target_alloc_working_area(%s, size=%u)",
+		          target_name(target), (unsigned) buffer_size);
+	}
+
+	target_write_buffer(target, write_algorithm->address, sizeof(write_code),
+	                    write_code);
+
+	armv7m_info.common_magic = ARMV7M_COMMON_MAGIC;
+	armv7m_info.core_mode = ARM_MODE_THREAD;
+
+	init_reg_param(&reg_params[0], "r0", 32, PARAM_OUT);
+	init_reg_param(&reg_params[1], "r1", 32, PARAM_OUT);
+	init_reg_param(&reg_params[2], "r2", 32, PARAM_OUT);
+	init_reg_param(&reg_params[3], "r3", 32, PARAM_OUT);
+	init_reg_param(&reg_params[4], "sp", 32, PARAM_OUT);
+
+	buf_set_u32(reg_params[0].value, 0, 32, source->address);
+	buf_set_u32(reg_params[1].value, 0, 32, source->address + source->size);
+	buf_set_u32(reg_params[2].value, 0, 32, len);
+	buf_set_u32(reg_params[3].value, 0, 32, offset);
+	buf_set_u32(reg_params[4].value, 0, 32, source->address + source->size);
+
+	/* mem_params for options */
+	/* leave room for stack, 32-bit options, 32-bit SPI write command, and 32-byte encryption buffer */
+	init_mem_param(&mem_param[0], source->address + (source->size - 4 - 32 - 
+		SPIX_ALGO_STACK_SIZE), 4, PARAM_OUT);
+	init_mem_param(&mem_param[1], source->address + (source->size - 8 - 32 - 
+		SPIX_ALGO_STACK_SIZE), 4, PARAM_OUT);
+	buf_set_u32(mem_param[0].value, 0, 32, max32xxx_qspi_info->options);
+	buf_set_u32(mem_param[1].value, 0, 32, max32xxx_qspi_info->dev.pprog_cmd);
+
+	LOG_DEBUG("max32xxx_write_block source->address=%08" PRIx32 " source->size=%08" PRIx32 "", (unsigned int)source->address, (unsigned int)source->size);
+
+	/* leave room for stack, 32-bit options, 32-bit SPI write command, and 32-byte encryption buffer */
+	/* Algorithm entry point is inside the code block, not at the beginning */
+	retval = target_run_flash_async_algorithm(target, 
+			buffer, len, 1, 
+			2, mem_param,
+	        5, reg_params, 
+	        source->address, (source->size - 4 - 4 - 32 - SPIX_ALGO_STACK_SIZE), 
+	        (write_algorithm->address + SPIX_ALGO_ENTRY_OFFSET), 0, 
+	        &armv7m_info);
+
+	if (retval == ERROR_FLASH_OPERATION_FAILED)
+		LOG_ERROR("error %d executing max32xxx qspi write algorithm", retval);
+
+	target_free_working_area(target, write_algorithm);
+	target_free_working_area(target, source);
+	destroy_reg_param(&reg_params[0]);
+	destroy_reg_param(&reg_params[1]);
+	destroy_reg_param(&reg_params[2]);
+	destroy_reg_param(&reg_params[3]);
+	destroy_reg_param(&reg_params[4]);
+
+	return retval;
+}
+
 static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 	uint32_t offset, uint32_t count)
 {
@@ -501,6 +626,27 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 
 	max32xxx_qspi_pre_op(bank);
+
+	/* Determine if we want to use the on-chip algorithm */
+	if((max32xxx_qspi_info->options & OPTIONS_ENC) || (count > 16)) {
+		retval = max32xxx_qspi_write_block(bank, buffer, offset, count);
+
+		if (retval != ERROR_OK) {
+			if (retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE) {
+				if(max32xxx_qspi_info->options & OPTIONS_ENC) {
+					LOG_ERROR("Must use algorithm in working area for encryption");
+					goto exit;
+
+				}
+				LOG_DEBUG("working area algorithm not available");
+			} else {
+				LOG_ERROR("Error with flash algorithm");
+				goto exit;
+			}
+		} else {
+			goto exit;
+		}
+	}
 
 	/* Send the page program command */
 	cmdData[0] = max32xxx_qspi_info->dev.pprog_cmd;
@@ -663,11 +809,6 @@ static int max32xxx_qspi_probe(struct flash_bank *bank)
 
 	/* TODO: Get more than 1 erase command */
 
-	max32xxx_qspi_info->probed = true;
-
-	/* Setup memory mapped mode */
-	max32xxx_qspi_post_op(bank);
-
 	/* Create and fill sectors array */
 	bank->num_sectors = max32xxx_qspi_info->dev.size_in_bytes / max32xxx_qspi_info->dev.sectorsize;
 	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
@@ -685,6 +826,11 @@ static int max32xxx_qspi_probe(struct flash_bank *bank)
 	}
 
 	bank->sectors = sectors;
+
+	max32xxx_qspi_info->probed = true;
+	
+	/* Setup memory mapped mode */
+	max32xxx_qspi_post_op(bank);
 
 	target_read_u32(target, SPIXF_CFG, &temp32);
 	LOG_DEBUG("SPIXF_CFG			= 0x%08X", temp32);
@@ -807,6 +953,9 @@ static int get_max32xxx_qspi_info(struct flash_bank *bank, struct command_invoca
 	command_print_sameline(cmd, "  page size     : 0x%08" PRIx32 " B\n", max32xxx_qspi_info->dev.pagesize);
 	command_print_sameline(cmd, "  sector size   : 0x%08" PRIx32 " B\n", max32xxx_qspi_info->dev.sectorsize);
 	command_print_sameline(cmd, "  read cmd      : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.read_cmd);
+	command_print_sameline(cmd, "  dread cmd     : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.dread_cmd);
+	command_print_sameline(cmd, "  dread mode    : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.dread_mode);
+	command_print_sameline(cmd, "  dread dclk    : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.dread_dclk);
 	command_print_sameline(cmd, "  qread cmd     : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.qread_cmd);
 	command_print_sameline(cmd, "  pprog cmd     : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.pprog_cmd);
 	command_print_sameline(cmd, "  erase cmd     : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.erase_cmd);

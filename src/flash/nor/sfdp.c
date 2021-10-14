@@ -150,6 +150,13 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 			dev->pprog_cmd = SPIFLASH_PAGE_PROGRAM;
 			dev->chip_erase_cmd = SPIFLASH_MASS_ERASE;
 
+			/* Get the dual read command and parameters */
+			if(table->fast_addr & (0x1 << 20)) {
+				dev->dread_cmd = (table->fast_1x2 >> 24) & 0xFF;
+				dev->dread_mode = (table->fast_1x2 >> 21) & 0x07;
+				dev->dread_dclk = (table->fast_1x2 >> 16) & 0x1F;
+			}
+
 			/* get device size */
 			if (table->density & (1UL << 31))
 				dev->size_in_bytes = 1UL << ((table->density & ~(1UL << 31)) - 3);
