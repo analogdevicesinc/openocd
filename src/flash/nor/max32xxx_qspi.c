@@ -205,6 +205,9 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 			temp32 |= SPIXF_MEMSECCN_AUTH_DISABLE;
 		}
 		target_write_u32(target, SPIXF_MEMSECCN, temp32);
+	} else {
+		temp32 = 0;
+		target_write_u32(target, SPIXF_MEMSECCN, temp32);
 	}
 
 	/* Enable feedback mode */
