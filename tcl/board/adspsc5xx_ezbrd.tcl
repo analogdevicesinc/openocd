@@ -637,156 +637,265 @@ proc adspsc594_init_ddr3 { dmc } {
    # 1ms should be enough
    after 1
 
-   # Workaround for DDR calibration is required for SC59x 0.0 silicon
+   # Workaround for DDR calibration is required for SC59x 0.0 silicon (see
+   # anomaly 20000117).
    set ddr_workaround 1
 
    if { $ddr_workaround } {
-      # /* DMC Phy Initialization function with workaround 2 */
-      # /* Reset trigger */
-      # *pREG_DMC0_DDR_CA_CTL = 0x0;
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x0;
-      # DmcDelay(5000);
+      # DMC Phy Initialization function with workaround 2
+      # Reset trigger
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0;
       mww phys $dmc_ddr_ca_ctl 0
       mww phys $dmc_ddr_root_ctl 0
-      after 1
-
-      # *pREG_DMC0_DDR_SCRATCH_3 = 0x0;
-      # *pREG_DMC0_DDR_SCRATCH_2 = 0x0;
-      # DmcDelay(5000);
       mww phys $dmc_ddr_scratch3 0
       mww phys $dmc_ddr_scratch2 0
+
+      # Writing internal registers IN calib pad to zero. Calib mode set to 1 [26], trig M1 S1 write [16],
+      # this enables usage of scratch registers instead of ZQCTL registers
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      #  DmcDelay(2500);
+      mww phys $dmc_ddr_root_ctl 0x04010000
       after 1
 
-      # /* Writing internal registers IN calib pad to zero. Calib mode set to 1 [26], trig M1 S1 write [16],
-      # * this enables usage of scratch registers instead of ZQCTL registers */
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
-      # DmcDelay(5000);
-      mww phys $dmc_ddr_root_ctl 0x4010000
+      # TRIGGER FOR M2-S2 WRITE -> slave id 31:26  trig m2,s2 write bit 1->1
+      # Slave1 address is 4
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
+      #  DmcDelay(2500);
+      mww phys $dmc_ddr_ca_ctl 0x10000002 
       after 1
 
-      # /* TRIGGER FOR M2-S2 WRITE     -> slave id 31:26  trig m2,s2 write bit 1->1
-      # slave1 address is 4 */
-      # *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
-      # DmcDelay(5000);
-      mww phys $dmc_ddr_ca_ctl 0x10000002
-      after 1
-
-      # /* reset Trigger */
-      # *pREG_DMC0_DDR_CA_CTL = 0x0;
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x0
+      # Reset Trigger
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0
       mww $dmc_ddr_ca_ctl 0
       mww $dmc_ddr_root_ctl 0
 
-      # /* write to slave 1, make the power down bit high */
-      # *pREG_DMC0_DDR_SCRATCH_3 = 0x1<<12;
-      # *pREG_DMC0_DDR_SCRATCH_2 = 0x0;
-      # DmcDelay(5000);
+      # Write to slave 1, make the power down bit high
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x1<<12;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0;
+      #  DmcDelay(2500);
       mww $dmc_ddr_scratch3 0x1000
       mww $dmc_ddr_scratch2 0
       after 1
 
-      # /* Calib mode set to 1 [26], trig M1 S1 write [16] */
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
-      # DmcDelay(5000);
+      # Calib mode set to 1 [26], trig M1 S1 write [16]
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      #  DmcDelay(2500);
       mww $dmc_ddr_root_ctl 0x04010000
       after 1
 
-      # *pREG_DMC0_DDR_CA_CTL = 0x10000002;
-      # DmcDelay(5000);
-      mww $dmc_ddr_ca_ctl 0x10000002
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_ca_ctl 0x10000002 
       after 1
 
-      # *pREG_DMC0_DDR_CA_CTL = 0x0;
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x0;
-      # DmcDelay(5000);
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0;
       mww $dmc_ddr_ca_ctl 0
       mww $dmc_ddr_root_ctl 0
-      after 1
 
-      # /* for slave 0 */
-      # *pREG_DMC0_DDR_SCRATCH_2 = pConfig->ulDDR_ZQCTL0;
-      # DmcDelay(5000);
-      mww $dmc_ddr_scratch2 0x786464
-      after 1
+      # For slave 0
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = pConfig->ulDDR_ZQCTL0;
+      mww $dmc_ddr_scratch3 0
+      mww $dmc_ddr_scratch2 0x785a64
 
-      # /* Calib mode set to 1 [26], trig M1 S1 write [16] */
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
-      # DmcDelay(5000);
+      # Calib mode set to 1 [26], trig M1 S1 write [16]
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      #  DmcDelay(2500);
       mww $dmc_ddr_root_ctl 0x04010000
       after 1
 
-      # *pREG_DMC0_DDR_CA_CTL = 0x0C000002 ;
-      # DmcDelay(5000);
-      mww $dmc_ddr_ca_ctl 0x0c000002
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0C000002 ;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_ca_ctl 0x0C000002
       after 1
 
-      # *pREG_DMC0_DDR_CA_CTL = 0x0;
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x0;
-      # DmcDelay(5000);
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0;
       mww $dmc_ddr_ca_ctl 0
       mww $dmc_ddr_root_ctl 0
-      after 1
 
-      # /* writing to slave 1
-      # calstrt is 0, but other programming is done */
-      # *pREG_DMC0_DDR_SCRATCH_3 = 0x0; /* make power down LOW again, to kickstart BIAS circuit */
-      # *pREG_DMC0_DDR_SCRATCH_2 = 0x70000000;
-      #    DmcDelay(5000);
+      # Writing to slave 1
+      # calstrt is 0, but other programming is done
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0; /* make power down LOW again, to kickstart BIAS circuit */
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x30000000;
       mww $dmc_ddr_scratch3 0x0
-      mww $dmc_ddr_scratch2 0x70000000
-      after 1
+      mww $dmc_ddr_scratch2 0x30000000
 
-      # /* write to ca_ctl lane, calib mode set to 1 [26], trig M1 S1 write [16]*/
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
-      # DmcDelay(5000);
+      # Write to ca_ctl lane, calib mode set to 1 [26], trig M1 S1 write [16]
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      #  DmcDelay(2500);
       mww $dmc_ddr_root_ctl 0x04010000
       after 1
 
-      # /*  copies data to lane controller slave
-      # TRIGGER FOR M2-S2 WRITE     -> slave id 31:26  trig m2,s2 write bit 1->1
-      # slave1 address is 4 */
-      # *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
-      # DmcDelay(5000);
+      # Copies data to lane controller slave
+      # TRIGGER FOR M2-S2 WRITE -> slave id 31:26  trig m2,s2 write bit 1->1
+      # slave1 address is 4
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
+      #  DmcDelay(2500);
       mww $dmc_ddr_ca_ctl 0x10000002
       after 1
 
-      # /* reset Trigger */
-      # *pREG_DMC0_DDR_CA_CTL = 0x0;
-      # *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      # Reset Trigger
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0ul;
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x0
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x0
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000ul;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002ul;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x10000002
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0ul;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0ul;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x50000000ul;
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x0
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x50000000
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000ul;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002ul;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x10000002
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0u;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0C000004u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x0C000004
+      after 1
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = BITM_DMC_DDR_ROOT_CTL_TRIG_RD_XFER_ALL;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x00200000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0u;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      # Calculate ODT PU and PD values
+      #  stat_value = ((*pREG_DMC0_DDR_SCRATCH_7 & 0x0000FFFFu)<<16);
+      #  stat_value |= (*pREG_DMC0_DDR_SCRATCH_6 & 0xFFFF0000u)>>16;
+      #  ClkDqsDrvImpedance = ((pConfig->ulDDR_ZQCTL0) & BITM_DMC_DDR_ZQ_CTL0_IMPWRDQ) >> BITP_DMC_DDR_ZQ_CTL0_IMPWRDQ;
+      #  ROdt = ((pConfig->ulDDR_ZQCTL0) & BITM_DMC_DDR_ZQ_CTL0_IMPRTT) >> BITP_DMC_DDR_ZQ_CTL0_IMPRTT;
+      #  drv_pu = stat_value & 0x0000003Fu;
+      #  drv_pd = (stat_value>>12) & 0x0000003Fu;
+      #  odt_pu = (drv_pu * ClkDqsDrvImpedance)/ ROdt;
+      #  odt_pd = (drv_pd * ClkDqsDrvImpedance)/ ROdt;
+      #  *pREG_DMC0_DDR_SCRATCH_2 |= ((1uL<<24)                     |
+      #                              ((drv_pd & 0x0000003Fu))       |
+      #                              ((odt_pd & 0x0000003Fu)<<6)    |
+      #                              ((drv_pu & 0x0000003Fu)<<12)   |
+      #                              ((odt_pu & 0x0000003Fu)<<18));
+      set scratch7 [pmemread32 $dmc_ddr_scratch7]
+      set scratch6 [pmemread32 $dmc_ddr_scratch6]
+      set stat_value [expr {(($scratch7 & 0x0000ffff) << 16) | (($scratch6 & 0xffff0000) >> 16)}]
+      set ClkDqsDrvImpedance 0x0000005A
+      set ROdt 0x00000078
+      set drv_pu [expr {$stat_value & 0x3f}]
+      set drv_pd [expr {($stat_value >> 12) & 0x3f}]
+      set odt_pu [expr {($drv_pu * $ClkDqsDrvImpedance) / $ROdt}]
+      set odt_pd [expr {($drv_pd * $ClkDqsDrvImpedance) / $ROdt}]
+      set scratch2 [expr {0x01000000 | $drv_pd | ($odt_pd << 6) | ($drv_pu << 12) | ($odt_pu << 18)}]
+      pmmw $dmc_ddr_scratch2 $scratch2 0x0
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0C010000u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x0C010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x08000002u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x08000002
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0u;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x80000002u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x08000002
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0u;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
       mww $dmc_ddr_ca_ctl 0
       mww $dmc_ddr_root_ctl 0
 
    } else {
-   # Begin DMC phy ZQ calibration routine
-   # Program the ODT and drive strength values
-   # *pREG_DMC0_DDR_ZQ_CTL0 = 0x00786464;
-   # *pREG_DMC0_DDR_ZQ_CTL1 = 0;
-   # *pREG_DMC0_DDR_ZQ_CTL2 = 0x70000000;
-   mww phys $dmc_ddr_zq_ctl0 0x786464
-   mww phys $dmc_ddr_zq_ctl1 0
-   mww phys $dmc_ddr_zq_ctl2 0x70000000
+      # Begin DMC phy ZQ calibration routine
+      # Program the ODT and drive strength values
+      #  *pREG_DMC0_DDR_ZQ_CTL0 = 0x00785A64;
+      #  *pREG_DMC0_DDR_ZQ_CTL1 = 0;
+      #  *pREG_DMC0_DDR_ZQ_CTL2 = 0x70000000;
+      mww phys $dmc_ddr_zq_ctl0 0x785a64
+      mww phys $dmc_ddr_zq_ctl1 0
+      mww phys $dmc_ddr_zq_ctl2 0x70000000
 
-   # Generate the trigger
-   # *pREG_DMC0_DDR_CA_CTL = 0x00000000ul ;
-   # *pREG_DMC0_DDR_ROOT_CTL = 0x00000000ul;
-   # *pREG_DMC0_DDR_ROOT_CTL = 0x00010000ul;
-   # dmcdelay(8000);
-   #
-   # The [31:26] bits may change if pad ring changes */
-   # *pREG_DMC0_DDR_CA_CTL = 0x0C000001ul|TrigCalib;
-   # dmcdelay(8000);
-   # *pREG_DMC0_DDR_CA_CTL = 0x00000000ul ;
-   # *pREG_DMC0_DDR_ROOT_CTL = 0x00000000ul ;
+      # Generate the trigger
+      #  *pREG_DMC0_DDR_CA_CTL = 0x00000000ul ;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x00000000ul;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x00010000ul;
+      #  dmcdelay(8000);
+      #
+      # The [31:26] bits may change if pad ring changes
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0C000001ul|TrigCalib;
+      #  dmcdelay(8000);
+      #  *pREG_DMC0_DDR_CA_CTL = 0x00000000ul ;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x00000000ul ;
 
-   mww phys $dmc_ddr_ca_ctl 0
-   mww phys $dmc_ddr_root_ctl 0
-   mww phys $dmc_ddr_root_ctl 0x10000
-   after 1
+      mww phys $dmc_ddr_ca_ctl 0
+      mww phys $dmc_ddr_root_ctl 0
+      mww phys $dmc_ddr_root_ctl 0x10000
+      after 1
 
-   mww phys $dmc_ddr_ca_ctl 0x0c000001
-   after 1
-   mww phys $dmc_ddr_ca_ctl 0
-   mww phys $dmc_ddr_root_ctl 0
+      mww phys $dmc_ddr_ca_ctl 0x0c000001
+      after 1
+      mww phys $dmc_ddr_ca_ctl 0
+      mww phys $dmc_ddr_root_ctl 0
 
    }
 
