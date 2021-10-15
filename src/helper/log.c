@@ -293,14 +293,22 @@ COMMAND_HANDLER(handle_log_output_command)
 
 COMMAND_HANDLER(handle_log_info_command)
 {
+	if (CMD_ARGC == 0) {
+		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
 	LOG_INFO("%s", CMD_ARGV[0]);
 	return ERROR_OK;
-
+	
 	return ERROR_COMMAND_SYNTAX_ERROR;
 }
 
 COMMAND_HANDLER(handle_log_error_command)
 {
+	if (CMD_ARGC == 0) {
+		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
 	LOG_ERROR("%s", CMD_ARGV[0]);
 	return ERROR_OK;
 
@@ -309,6 +317,10 @@ COMMAND_HANDLER(handle_log_error_command)
 
 COMMAND_HANDLER(handle_log_debug_command)
 {
+	if (CMD_ARGC == 0) {
+		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
 	LOG_DEBUG("%s", CMD_ARGV[0]);
 	return ERROR_OK;
 
