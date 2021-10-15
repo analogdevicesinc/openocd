@@ -431,12 +431,18 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 	uint32_t *spi_write_cmd = (uint32_t *)(work_end - 32 - STACK_SIZE - 8);
 	uint32_t *options = (uint32_t *)(work_end - 32 - STACK_SIZE - 4);
 	uint32_t *enc_buffer = (uint32_t *)(work_end - 32 - STACK_SIZE);
+	uint8_t *auth_buffer = (uint8_t *)(work_end - 16 - STACK_SIZE);
 	uint8_t temp8;
-	uint32_t addr_save;
+	uint32_t addr_logic, addr_physic;
 	int i;
 
 	/* Adjust the work_end pointer to the end of the working area buffer */
 	work_end = (uint8_t *)(work_end - 32 - STACK_SIZE - 8);
+
+	/* Initialize the auth buffer */
+	for(i = 0; i < 16; i++) {
+		auth_buffer[i] = 0xFF;		
+	}
 
 	printf(" > w:%08x r:%08x o:%08x enc:%08x s:%08x e:%08x spi:%08x\n",
 	       (uint32_t)write_ptr, (uint32_t)read_ptr, (uint32_t)*options, (uint32_t)enc_buffer,
@@ -489,10 +495,11 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 		MXC_TPU->ctrl |= MXC_F_TPU_CTRL_BSI;
 	}
 
-	while (len) {
+	/* Initialize the logical and physical addresses */
+	addr_logic = addr;
+	addr_physic = addr;
 
-		/* Save the current address before we read from the working area */
-		addr_save = addr;
+	while (len) {
 
 		/* Fill the buffer with the plain text data from the working area */
 		for (i = 0; i < 4; i++) {
@@ -532,10 +539,10 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			/* XOR data with the address */
 			for (i = 0; i < 4; i++) {
 				if (*options & OPTIONS_RELATIVE_XOR)
-					enc_buffer[i] ^= ((addr_save & 0x00FFFFF0) + i * 4);
+					enc_buffer[i] ^= ((addr_logic & 0x00FFFFF0) + i * 4);
 
 				else
-					enc_buffer[i] ^= (((addr_save & 0xFFFFFFF0)| 0x08000000)  + i * 4);
+					enc_buffer[i] ^= (((addr_logic & 0xFFFFFFF0)| 0x08000000)  + i * 4);
 			}
 
 			/* Encrypt the plain text */
@@ -571,11 +578,16 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			enc_buffer[1] = MXC_TPU->dout[1];
 			enc_buffer[2] = MXC_TPU->dout[2];
 			enc_buffer[3] = MXC_TPU->dout[3];
+
+			/* Save the authentication data if enabled */
+			if (*options & OPTIONS_AUTH) {
+				auth_buffer[2*(((addr_logic & 0xF0) >> 8)%0x8)+0] = enc_buffer[0] & 0xFF;
+				auth_buffer[2*(((addr_logic & 0xF0) >> 8)%0x8)+1] = (enc_buffer[0] & 0xFF00 >> 8);
+			}
 		}
 
-		/* TODO: Insert the authentication data if enabled */
-
-		if (max32xxx_qspi_write((const uint8_t*)enc_buffer, addr_save, 16, *spi_write_cmd) != ERROR_OK) {
+		/* Write the data to the flash */
+		if (max32xxx_qspi_write((const uint8_t*)enc_buffer, addr_physic, 16, *spi_write_cmd) != ERROR_OK) {
 			#ifndef ALGO_TEST
 			__asm("bkpt\n");
 			#else
@@ -583,8 +595,31 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			return;
 			#endif
 		}
+		/* Increment the physical address */
+		addr_physic += 16;
 
-		/* Restart the command if this contains the last byte on the boundary */
+		if ((*options & OPTIONS_AUTH) && (*options & OPTIONS_ENC) && ((addr_logic % 0x80) == 0x70)) {
+			/* Write the authentication information to the flash */
+			if (max32xxx_qspi_write((const uint8_t*)auth_buffer, addr_physic, 16, *spi_write_cmd) != ERROR_OK) {
+				#ifndef ALGO_TEST
+				__asm("bkpt\n");
+				#else
+				printf(" > algo_write error\n");
+				return;
+				#endif
+			}
+			/* Only increment the physical addresses since this was authentication data */
+			addr_physic += 16;
+
+			/* Initialize the auth buffer */
+			for(i = 0; i < 16; i++) {
+				auth_buffer[i] = 0xFF;		
+			}
+		}
+
+		/* Increment the logical address */
+		addr_logic += 16;
+
 	}
 
 	#ifndef ALGO_TEST
