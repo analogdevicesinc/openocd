@@ -311,8 +311,6 @@ COMMAND_HANDLER(handle_log_error_command)
 	}
 	LOG_ERROR("%s", CMD_ARGV[0]);
 	return ERROR_OK;
-
-	return ERROR_COMMAND_SYNTAX_ERROR;
 }
 
 COMMAND_HANDLER(handle_log_debug_command)
@@ -323,8 +321,6 @@ COMMAND_HANDLER(handle_log_debug_command)
 	}
 	LOG_DEBUG("%s", CMD_ARGV[0]);
 	return ERROR_OK;
-
-	return ERROR_COMMAND_SYNTAX_ERROR;
 }
 
 static const struct command_registration log_command_handlers[] = {
