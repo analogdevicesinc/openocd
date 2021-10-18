@@ -2611,7 +2611,7 @@ int armv8_aarch64_state(struct target *target)
 	}
 
 	LOG_USER("%s halted in %s state due to %s, current mode: %s\n"
-		"cpsr: 0x%8.8" PRIx32 " pc: 0x%" PRIx64 "%s",
+		" pc: 0x%" PRIx64 "%s",
 		target_name(target),
 		armv8_state_strings[arm->core_state],
 		debug_reason_name(target),
