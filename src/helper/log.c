@@ -299,8 +299,6 @@ COMMAND_HANDLER(handle_log_info_command)
 	}
 	LOG_INFO("%s", CMD_ARGV[0]);
 	return ERROR_OK;
-	
-	return ERROR_COMMAND_SYNTAX_ERROR;
 }
 
 COMMAND_HANDLER(handle_log_error_command)
