@@ -2611,12 +2611,11 @@ int armv8_aarch64_state(struct target *target)
 	}
 
 	LOG_USER("%s halted in %s state due to %s, current mode: %s\n"
-		" pc: 0x%" PRIx64 "%s",
+		"pc: 0x%" PRIx64 "%s",
 		target_name(target),
 		armv8_state_strings[arm->core_state],
 		debug_reason_name(target),
 		armv8_mode_name(arm->core_mode),
-		buf_get_u32(arm->cpsr->value, 0, 32),
 		buf_get_u64(arm->pc->value, 0, 64),
 		(target->semihosting && target->semihosting->is_active) ? ", semihosting" : "");
 
