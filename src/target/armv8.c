@@ -2624,10 +2624,6 @@ int armv8_aarch64_state(struct target *target)
 
 int armv8_arch_state(struct target *target)
 {
-	//static const char * const state[] = {
-	//	"disabled", "enabled"
-	//};
-
 	struct armv8_common *armv8 = target_to_armv8(target);
 	struct arm *arm = &armv8->arm;
 
@@ -2640,11 +2636,6 @@ int armv8_arch_state(struct target *target)
 		armv8_aarch64_state(target);
 	else
 		arm_arch_state(target);
-
-	//LOG_USER("MMU: %s, D-Cache: %s, I-Cache: %s",
-	//	state[armv8->armv8_mmu.mmu_enabled],
-	//	state[armv8->armv8_mmu.armv8_cache.d_u_cache_enabled],
-	//	state[armv8->armv8_mmu.armv8_cache.i_cache_enabled]);
 
 	if (arm->core_mode == ARM_MODE_ABT)
 		armv8_show_fault_registers(target);
