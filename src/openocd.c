@@ -191,6 +191,16 @@ COMMAND_HANDLER(handle_add_script_search_dir_command)
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(handle_firmware_command)
+{
+	if (CMD_ARGC != 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	
+	set_firmware_filename(CMD_ARGV[0]);
+
+	return ERROR_OK;
+}
+
 static const struct command_registration openocd_command_handlers[] = {
 	{
 		.name = "version",
@@ -221,6 +231,13 @@ static const struct command_registration openocd_command_handlers[] = {
 		.mode = COMMAND_ANY,
 		.help = "dir to search for config files and scripts",
 		.usage = "<directory>"
+	},
+	{
+		.name = "firmware",
+		.handler = &handle_firmware_command,
+		.mode = COMMAND_CONFIG,
+		.help = "Set the firmware to be load.",
+		.usage = "filename"
 	},
 	COMMAND_REGISTRATION_DONE
 };
