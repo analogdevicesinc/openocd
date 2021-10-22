@@ -31,7 +31,7 @@ static char **config_file_names;
 static size_t num_script_dirs;
 static char **script_search_dirs;
 
-static char* firmware_file_name;
+static char *firmware_file_name;
 
 void add_script_search_dir(const char *dir)
 {

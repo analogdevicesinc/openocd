@@ -473,8 +473,7 @@ static int ice2000_set_freq(uint32_t freq)
 	return ERROR_OK;
 }
 
-static int
-ice1000_firmware_crc(uint16_t *p)
+static int ice1000_firmware_crc(uint16_t *p)
 {
 	usb_command_block usb_cmd_blk;
 
@@ -489,8 +488,7 @@ ice1000_firmware_crc(uint16_t *p)
 	return ERROR_OK;
 }
 
-static uint16_t
-crc16_ccitt(const uint8_t *data, int length, uint16_t crc)
+static uint16_t crc16_ccitt(const uint8_t *data, int length, uint16_t crc)
 {
 	int i;
 
@@ -512,8 +510,7 @@ crc16_ccitt(const uint8_t *data, int length, uint16_t crc)
 	return crc;
 }
 
-static int
-ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
+static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 {
 /* Flash programming is much slower than jtag operation. So we have
    to use a much smaller buffer size to avoid USB transfer timeout.  */
