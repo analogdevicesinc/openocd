@@ -237,7 +237,7 @@ static const struct command_registration openocd_command_handlers[] = {
 		.handler = &handle_firmware_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Set the firmware to be loaded.",
-		.usage = "-c \"firmware <filepath>\""
+		.usage = "\"firmware <filepath>\""
 	},
 	COMMAND_REGISTRATION_DONE
 };
