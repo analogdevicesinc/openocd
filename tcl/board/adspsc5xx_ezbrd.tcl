@@ -19,7 +19,7 @@ proc smpu_config { smpu } {
    } elseif { $smpu == 10 } {
       set smpu_baseaddr 0x310a1000
    } else {
-      puts stderr "Error: unknown SMPU number"
+      log_error "unknown SMPU number"
       shutdown error
    }
 

@@ -2611,12 +2611,11 @@ int armv8_aarch64_state(struct target *target)
 	}
 
 	LOG_USER("%s halted in %s state due to %s, current mode: %s\n"
-		"cpsr: 0x%8.8" PRIx32 " pc: 0x%" PRIx64 "%s",
+		"pc: 0x%" PRIx64 "%s",
 		target_name(target),
 		armv8_state_strings[arm->core_state],
 		debug_reason_name(target),
 		armv8_mode_name(arm->core_mode),
-		buf_get_u32(arm->cpsr->value, 0, 32),
 		buf_get_u64(arm->pc->value, 0, 64),
 		(target->semihosting && target->semihosting->is_active) ? ", semihosting" : "");
 
@@ -2628,7 +2627,7 @@ int armv8_arch_state(struct target *target)
 	static const char * const state[] = {
 		"disabled", "enabled"
 	};
-
+	
 	struct armv8_common *armv8 = target_to_armv8(target);
 	struct arm *arm = &armv8->arm;
 
@@ -2641,7 +2640,7 @@ int armv8_arch_state(struct target *target)
 		armv8_aarch64_state(target);
 	else
 		arm_arch_state(target);
-
+	
 	LOG_USER("MMU: %s, D-Cache: %s, I-Cache: %s",
 		state[armv8->armv8_mmu.mmu_enabled],
 		state[armv8->armv8_mmu.armv8_cache.d_u_cache_enabled],
