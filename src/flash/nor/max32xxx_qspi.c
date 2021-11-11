@@ -84,6 +84,9 @@
 #define SPI_ICC_CTRL_EN_POS						0
 #define SPI_ICC_CTRL_EN							(0x1UL << SPI_ICC_CTRL_EN_POS)
 
+#define GCR_BASE 								0x40000000
+#define GCR_SCON 								(GCR_BASE | 0x00)
+
 /* Set the number of system clocks per low/high period of the SPI clock */
 #define SPI_CLOCK_PERIOD						2
 
@@ -105,7 +108,7 @@
 #define OPTIONS_QSPI							0x80 /* Use quad SPI */
 
 #define SPIX_ALGO_STACK_SIZE					256
-#define SPIX_ALGO_ENTRY_OFFSET 					0x274
+#define SPIX_ALGO_ENTRY_OFFSET 					0x3cc
 
 static const uint8_t write_code[] = {
 #include "../../contrib/loaders/flash/max32xxx_qspi/max32xxx_qspi.inc"
@@ -223,6 +226,11 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	target_write_u32(target, SPI_ICC_CTRL, temp32);
 	temp32 = SPI_ICC_CTRL_EN;
 	target_write_u32(target, SPI_ICC_CTRL, temp32);
+
+    /* Clear the code cache */
+	target_read_u32(target, GCR_SCON, &temp32);
+	temp32 |= (0x1 << 6);
+	target_write_u32(target, GCR_SCON, temp32);
 
 	return ERROR_OK;
 }
@@ -581,23 +589,23 @@ static int max32xxx_qspi_write_block(struct flash_bank *bank, const uint8_t *buf
 	buf_set_u32(reg_params[4].value, 0, 32, source->address + source->size);
 
 	/* mem_params for options */
-	/* leave room for stack, 32-bit options, 32-bit SPI write command, and 32-byte encryption buffer */
-	init_mem_param(&mem_param[0], source->address + (source->size - 4 - 32 - 
+	/* leave room for stack, 32-bit options, 32-bit SPI write command */
+	init_mem_param(&mem_param[0], source->address + (source->size - 4  - 
 		SPIX_ALGO_STACK_SIZE), 4, PARAM_OUT);
-	init_mem_param(&mem_param[1], source->address + (source->size - 8 - 32 - 
+	init_mem_param(&mem_param[1], source->address + (source->size - 8  - 
 		SPIX_ALGO_STACK_SIZE), 4, PARAM_OUT);
 	buf_set_u32(mem_param[0].value, 0, 32, max32xxx_qspi_info->options);
 	buf_set_u32(mem_param[1].value, 0, 32, max32xxx_qspi_info->dev.pprog_cmd);
 
 	LOG_DEBUG("max32xxx_write_block source->address=%08" PRIx32 " source->size=%08" PRIx32 "", (unsigned int)source->address, (unsigned int)source->size);
 
-	/* leave room for stack, 32-bit options, 32-bit SPI write command, and 32-byte encryption buffer */
+	/* leave room for stack, 32-bit options, 32-bit SPI write command */
 	/* Algorithm entry point is inside the code block, not at the beginning */
 	retval = target_run_flash_async_algorithm(target, 
 			buffer, len, 1, 
 			2, mem_param,
 	        5, reg_params, 
-	        source->address, (source->size - 4 - 4 - 32 - SPIX_ALGO_STACK_SIZE), 
+	        source->address, (source->size - 4 - 4 - SPIX_ALGO_STACK_SIZE), 
 	        (write_algorithm->address + SPIX_ALGO_ENTRY_OFFSET), 0, 
 	        &armv7m_info);
 
@@ -646,6 +654,19 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 
 	/* Determine if we want to use the on-chip algorithm */
 	if((max32xxx_qspi_info->options & OPTIONS_ENC) || (count > 16)) {
+
+		if(max32xxx_qspi_info->options & OPTIONS_AUTH) {
+			/* Need to erase extra length if we're writing authentication data */
+			uint32_t max_sector_plain = (offset + count) / max32xxx_qspi_info->dev.sectorsize;
+			uint32_t max_sector_auth = (offset + (count * 10 / 8)) / max32xxx_qspi_info->dev.sectorsize;
+			if(max_sector_auth > max_sector_plain) {
+				LOG_WARNING("Erasing extra flash for authentication data");
+				retval = max32xxx_qspi_erase(bank, max_sector_plain, max_sector_auth);
+				if(retval != ERROR_OK) {
+					return retval;
+				}
+			}
+		}
 		retval = max32xxx_qspi_write_block(bank, buffer, offset, count);
 
 		if (retval != ERROR_OK) {

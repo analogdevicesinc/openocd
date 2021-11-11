@@ -33,11 +33,14 @@
  */
 
 /***** Includes *****/
+
+#include <string.h>
+
 #ifdef ALGO_TEST
 #include "mxc_device.h"
 #endif
 
-#include "tpu_regs.h"
+#include "ctb_regs.h"
 #include "gcr_regs.h"
 #include "flc_regs.h"
 #include "algo_options.h"
@@ -49,8 +52,8 @@
 #endif
 
 /***** Definitions *****/
-#define MXC_BASE_TPU                            ((uint32_t)0x40001000UL)
-#define MXC_TPU                                 ((mxc_tpu_regs_t*)MXC_BASE_TPU)
+#define MXC_BASE_CTB                            ((uint32_t)0x40001000UL)
+#define MXC_CTB                                 ((mxc_ctb_regs_t*)MXC_BASE_CTB)
 #define MXC_BASE_GCR                            ((uint32_t)0x40000000UL)
 #define MXC_GCR                                 ((mxc_gcr_regs_t*)MXC_BASE_GCR)
 
@@ -115,6 +118,16 @@
     addr++;
 
 /******************************************************************************/
+
+static void memcpy32(uint32_t * dst, const uint32_t * src, unsigned int len)
+{
+	while (len) {
+		*dst = *src;
+		dst++;
+		src++;
+		len -= 4;
+	}
+}
 
 void target_read_u32(uint32_t addr, uint32_t* data)
 {
@@ -417,6 +430,108 @@ exit:
 	return retval;
 }
 
+void aes_gcm(uint32_t* plain, uint32_t* cipher, uint32_t addr, uint8_t* auth_buffer)
+{
+	uint16_t counterValue;
+
+	/* Reset the CTB */
+	MXC_CTB->crypto_ctrl = MXC_F_CTB_CRYPTO_CTRL_RST;
+
+	/* Set the legacy bit */
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_FLAG_MODE;
+
+	/* Byte swap the input and output */
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_BSO;
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_BSI;
+
+	/* Clear interrupt flags */
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_CPH_DONE;
+
+	/* Setup the key source */
+	MXC_CTB->cipher_ctrl = MXC_S_CTB_CIPHER_CTRL_SRC_QSPIKEY_REGFILE;
+
+	/* IV[95:0] = {IV_FIXED_VALUE[47:0], address[31:0], counter[15:0]}*/
+	uint8_t iv[] = {
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	};
+
+	counterValue = (addr & 0xFFFF0) >> 4;
+
+	/* Byte swapping within the 32-bit word, in reverse order */
+	iv[8] = counterValue & 0xFF;
+	iv[9] = (counterValue & 0xFF00) >> 8;
+	iv[10] = (addr & 0x000000FF) >> 0;
+	iv[11] = (addr & 0x0000FF00) >> 8;
+	iv[4] = (addr & 0x00FF0000) >> 16;
+	iv[5] = (addr & 0xFF000000) >> 24;
+
+	/* Copy in the IV */
+	memcpy32((uint32_t*)MXC_CTB->cipher_init, (uint32_t*)iv, sizeof(iv));
+
+	/* Computer H */
+	MXC_CTB->cipher_ctrl |= MXC_F_CTB_CIPHER_CTRL_HVC;
+
+	/* Wait for and clear the done flag */
+	while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE));
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_CPH_DONE;
+
+	/* Setup the CT calculation */
+	MXC_CTB->cipher_ctrl |= MXC_S_CTB_CIPHER_CTRL_MODE_GCM |
+	                        MXC_S_CTB_CIPHER_CTRL_CIPHER_AES128 | MXC_F_CTB_CIPHER_CTRL_DTYPE;
+
+	/* Clear the aad and setup the payload length */
+	MXC_CTB->aad_length_0 = 0;
+	MXC_CTB->aad_length_1 = 0;
+	MXC_CTB->pld_length_0 = 16;
+	MXC_CTB->pld_length_1 = 0;
+
+	/* Copy in the data */
+	memcpy32((uint32_t*)MXC_CTB->crypto_din, (uint32_t*)plain, 16);
+
+	/* Wait for and clear the done flag */
+	while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE));
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_CPH_DONE;
+
+	/* Copy out the CT */
+	memcpy32(cipher, (uint32_t*)MXC_CTB->crypto_dout, 16);
+
+	/* Copy out the auth data */
+	auth_buffer[2 * ((addr % 0x80) >> 4) + 0] = (MXC_CTB->tagmic[3] & 0x00FF) >> 0;
+	auth_buffer[2 * ((addr % 0x80) >> 4) + 1] = (MXC_CTB->tagmic[3] & 0xFF00) >> 8;
+}
+
+void aes_ecb(uint32_t* plain, uint32_t* cipher)
+{
+	/* Reset the CTB */
+	MXC_CTB->crypto_ctrl = MXC_F_CTB_CRYPTO_CTRL_RST;
+
+	/* Set the legacy bit */
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_FLAG_MODE;
+
+	/* Byte swap the input and output */
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_BSO;
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_BSI;
+
+	/* Clear interrupt flags */
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_CPH_DONE;
+
+	/* Setup the key source */
+	MXC_CTB->cipher_ctrl = MXC_S_CTB_CIPHER_CTRL_SRC_QSPIKEY_REGFILE;
+
+	/* Setup the CT calculation */
+	MXC_CTB->cipher_ctrl |= MXC_S_CTB_CIPHER_CTRL_CIPHER_AES128;
+
+	/* Copy data to start the operation */
+	memcpy32((uint32_t*)MXC_CTB->crypto_din, (uint32_t*)plain, 16);
+
+	/* Wait for and clear the done flag */
+	while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE));
+	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_CPH_DONE;
+
+	/* Copy the data out */
+	memcpy32(cipher, (uint32_t*)MXC_CTB->crypto_dout, 16);
+}
+
 #ifndef ALGO_TEST
 __attribute__ ((naked))
 #endif
@@ -428,50 +543,21 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 	/* Setup the pointers */
 	uint8_t * volatile *write_ptr = (uint8_t **)work_start;
 	uint8_t * volatile *read_ptr = (uint8_t **)(work_start + 4);
-	uint32_t *spi_write_cmd = (uint32_t *)(work_end - 32 - STACK_SIZE - 8);
-	uint32_t *options = (uint32_t *)(work_end - 32 - STACK_SIZE - 4);
-	uint32_t *enc_buffer = (uint32_t *)(work_end - 32 - STACK_SIZE);
-	uint8_t *auth_buffer = (uint8_t *)(work_end - 16 - STACK_SIZE);
+	uint32_t *spi_write_cmd = (uint32_t *)(work_end - STACK_SIZE - 8);
+	uint32_t *options = (uint32_t *)(work_end - STACK_SIZE - 4);
+	uint32_t pt_buffer[4];
+	uint32_t ct_buffer[4];
+	uint8_t auth_buffer[16];
 	uint8_t temp8;
-	uint32_t addr_logic, addr_physic;
+	uint32_t addr_logic, addr_physic, addr_low, addr_high, addr_byte;
 	int i;
 
 	/* Adjust the work_end pointer to the end of the working area buffer */
-	work_end = (uint8_t *)(work_end - 32 - STACK_SIZE - 8);
-
-	/* Initialize the auth buffer */
-	for(i = 0; i < 16; i++) {
-		auth_buffer[i] = 0xFF;		
-	}
+	work_end = (uint8_t *)(work_end - STACK_SIZE - 8);
 
 	printf(" > w:%08x r:%08x o:%08x enc:%08x s:%08x e:%08x spi:%08x\n",
-	       (uint32_t)write_ptr, (uint32_t)read_ptr, (uint32_t)*options, (uint32_t)enc_buffer,
+	       (uint32_t)write_ptr, (uint32_t)read_ptr, (uint32_t)*options, (uint32_t)pt_buffer,
 	       (uint32_t)work_start, (uint32_t)work_end, (uint32_t)*spi_write_cmd);
-
-	/* Make sure the address is on a 128 bit boundary */
-	if (addr & 0xF) {
-		#ifndef ALGO_TEST
-		__asm("bkpt\n");
-		#else
-		printf(" > algo_write returning, not on a 128 bit boundary\n");
-		return;
-		#endif
-	}
-
-	if (*options & OPTIONS_ENC) {
-		/* Enable Memory Protection */
-		MXC_GCR->scon |= MXC_F_GCR_SCON_MEMPROT_EN;
-
-		/* Set the keysize */
-		if (*options & OPTIONS_KEYSIZE)
-			MXC_GCR->scon |= MXC_F_GCR_SCON_MEMPROT_KEYSZ;
-
-		else
-			MXC_GCR->scon &= ~(MXC_F_GCR_SCON_MEMPROT_KEYSZ);
-	} else {
-		/* Disable memory protection */
-		MXC_GCR->scon &= ~MXC_F_GCR_SCON_MEMPROT_EN;
-	}
 
 	if (*options & OPTIONS_ENC) {
 		/* Setup the AES */
@@ -483,111 +569,131 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 		/* Disable CRYPTO clock gate */
 		if (MXC_GCR->perckcn0 & MXC_F_GCR_PERCKCN0_CRYPTOD)
 			MXC_GCR->perckcn0 &= ~(MXC_F_GCR_PERCKCN0_CRYPTOD);
-
-		/* Reset Crypto block and clear state */
-		MXC_TPU->ctrl = MXC_F_TPU_CTRL_RST;
-
-		/* Set the legacy bit */
-		MXC_TPU->ctrl |= MXC_F_TPU_CTRL_FLAG_MODE;
-
-		/* Byte swap the input and output */
-		MXC_TPU->ctrl |= MXC_F_TPU_CTRL_BSO;
-		MXC_TPU->ctrl |= MXC_F_TPU_CTRL_BSI;
 	}
 
-	/* Initialize the logical and physical addresses */
-	addr_logic = addr;
-	addr_physic = addr;
+	/* Save the low and high addresses with actual data */
+	addr_low = addr;
+	addr_high = addr + len;
 
-	while (len) {
+	/* Make sure we're on a 128-bit boundary */
+	if(addr & 0xF) {
+		len += addr & 0xF;
+		addr_logic = addr - (addr & 0xF);
+	} else {
+		addr_logic = addr;
+	}
+
+	/* Initialize the physical address pointer */
+	addr_physic = addr_logic;
+
+	if (*options & OPTIONS_AUTH) {
+
+		/* Get the starting address on the next lowest 0x80 boundary */
+		len += addr_logic % 0x80;
+		addr_logic = addr_logic - (addr_logic % 0x80);
+
+		/* Increase the length to get us to the next 0x80 boundary */
+		if (len % 0x80)
+			len += (0x80 - (len % 0x80));
+
+		/* Scale the physical address to match the starting logical address
+		 * Account for the 0x20 bytes of authentication data for each 0x80 byte block
+		 */
+		addr_physic = addr_logic + ((addr_logic / 0x80) * 0x20);
+	}
+
+	/* Save the byte address to use when filling the plain text buffer */
+	addr_byte = addr_logic;
+
+	printf(" > addr        = 0x%x\n", addr);
+	printf(" > addr_low    = 0x%x\n", addr_low);
+	printf(" > addr_high   = 0x%x\n", addr_high);
+	printf(" > addr_byte   = 0x%x\n", addr_byte);
+	printf(" > addr_logic  = 0x%x\n", addr_logic);
+	printf(" > addr_physic = 0x%x\n", addr_physic);
+	printf(" > len         = 0x%x\n", len);
+
+	while (len > 0) {
 
 		/* Fill the buffer with the plain text data from the working area */
 		for (i = 0; i < 4; i++) {
 			/* Get data from the working area, pad with 0xFF */
-			enc_buffer[i] = 0;
-			if (len){
+			pt_buffer[i] = 0;
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
 				getbyte(temp8);
-            } else {
+			} else {
 				temp8 = 0xFF;
-            }
-			enc_buffer[i] |= (temp8 << (0));
+				if(len) {
+					len--;
+				}
+			}
+			pt_buffer[i] |= (temp8 << (0));
+			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len){
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
 				getbyte(temp8);
-            } else{
+			} else {
 				temp8 = 0xFF;
-            }
-			enc_buffer[i] |= (temp8 << (8));
+				if(len) {
+					len--;
+				}
+			}
+			pt_buffer[i] |= (temp8 << (8));
+			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len) {
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
 				getbyte(temp8);
-            } else {
+			} else {
 				temp8 = 0xFF;
-            }
-			enc_buffer[i] |= (temp8 << (16));
+				if(len) {
+					len--;
+				}
+			}
+			pt_buffer[i] |= (temp8 << (16));
+			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len) {
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
 				getbyte(temp8);
-            } else{
+			} else {
 				temp8 = 0xFF;
-            }
-			enc_buffer[i] |= (temp8 << (24));
+				if(len) {
+					len--;
+				}
+			}
+			pt_buffer[i] |= (temp8 << (24));
+			addr_byte++;
 		}
 
 		if (*options & OPTIONS_ENC) {
 
-			/* XOR data with the address */
-			for (i = 0; i < 4; i++) {
-				if (*options & OPTIONS_RELATIVE_XOR)
-					enc_buffer[i] ^= ((addr_logic & 0x00FFFFF0) + i * 4);
-
-				else
-					enc_buffer[i] ^= (((addr_logic & 0xFFFFFFF0)| 0x08000000)  + i * 4);
-			}
-
-			/* Encrypt the plain text */
-			/* Clear interrupt flags */
-			MXC_TPU->ctrl |= MXC_F_TPU_CTRL_CPH_DONE;
-
-			MXC_TPU->cipher_ctrl = ((0x0 << MXC_F_TPU_CIPHER_CTRL_MODE_POS) |
-			                        (0x0 << MXC_F_TPU_CIPHER_CTRL_ENC_POS));
-
-			if (*options & OPTIONS_KEYSIZE) {
-				/* ECB, AES-256, encrypt */
-				MXC_TPU->cipher_ctrl |= (0x3 << MXC_F_TPU_CIPHER_CTRL_CIPHER_POS);
-			} else {
-				/* ECB, AES-128, encrypt */
-				MXC_TPU->cipher_ctrl |= (0x1 << MXC_F_TPU_CIPHER_CTRL_CIPHER_POS);
-			}
-
-			/* Set the key source */
-			MXC_TPU->cipher_ctrl = ((MXC_TPU->cipher_ctrl & ~MXC_F_TPU_CIPHER_CTRL_SRC) |
-			                        (0x3 << MXC_F_TPU_CIPHER_CTRL_SRC_POS));
-
-			/* Copy data to start the operation */
-			MXC_TPU->din[0] = enc_buffer[0];
-			MXC_TPU->din[1] = enc_buffer[1];
-			MXC_TPU->din[2] = enc_buffer[2];
-			MXC_TPU->din[3] = enc_buffer[3];
-
-			/* Wait until operation is complete */
-			while (!(MXC_TPU->ctrl & MXC_F_TPU_CTRL_CPH_DONE)) {}
-
-			/* Copy the data out */
-			enc_buffer[0] = MXC_TPU->dout[0];
-			enc_buffer[1] = MXC_TPU->dout[1];
-			enc_buffer[2] = MXC_TPU->dout[2];
-			enc_buffer[3] = MXC_TPU->dout[3];
-
-			/* Save the authentication data if enabled */
 			if (*options & OPTIONS_AUTH) {
-				auth_buffer[2*(((addr_logic & 0xF0) >> 8)%0x8)+0] = enc_buffer[0] & 0xFF;
-				auth_buffer[2*(((addr_logic & 0xF0) >> 8)%0x8)+1] = (enc_buffer[0] & 0xFF00 >> 8);
+				uint32_t addr_logic_tmp;
+
+				if (*options & OPTIONS_RELATIVE_XOR)
+					addr_logic_tmp = (addr_logic & 0x00FFFFF0);
+				else
+					addr_logic_tmp = (addr_logic & 0xFFFFFFF0);
+
+				aes_gcm(pt_buffer, ct_buffer, addr_logic_tmp, auth_buffer);
+			} else {
+
+				/* XOR data with the address */
+				for (i = 0; i < 4; i++) {
+					if (*options & OPTIONS_RELATIVE_XOR)
+						pt_buffer[i] ^= ((addr_logic & 0x00FFFFF0) + i * 4);
+
+					else
+						pt_buffer[i] ^= (((addr_logic & 0xFFFFFFF0) | 0x08000000)  + i * 4);
+				}
+
+				aes_ecb(pt_buffer, ct_buffer);
 			}
+		} else {
+			memcpy(ct_buffer, pt_buffer, 16);
 		}
 
 		/* Write the data to the flash */
-		if (max32xxx_qspi_write((const uint8_t*)enc_buffer, addr_physic, 16, *spi_write_cmd) != ERROR_OK) {
+		if (max32xxx_qspi_write((const uint8_t*)ct_buffer, addr_physic, 16, *spi_write_cmd) != ERROR_OK) {
 			#ifndef ALGO_TEST
 			__asm("bkpt\n");
 			#else
@@ -611,10 +717,26 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			/* Only increment the physical addresses since this was authentication data */
 			addr_physic += 16;
 
-			/* Initialize the auth buffer */
-			for(i = 0; i < 16; i++) {
-				auth_buffer[i] = 0xFF;		
+			/* Write the counter values to the flash */
+			uint16_t counters[8];
+			uint16_t counterBase;
+			if (*options & OPTIONS_RELATIVE_XOR)
+				counterBase = ((addr_logic & 0x00FFFFF0) >> 4) - 0x7;
+
+			else
+				counterBase = ((addr_logic & 0xFFFFFF0) >> 4) - 0x7;
+			for (i = 0; i < 8; i++)
+				counters[i] = counterBase + i;
+			if (max32xxx_qspi_write((const uint8_t*)counters, addr_physic, 16, *spi_write_cmd) != ERROR_OK) {
+				#ifndef ALGO_TEST
+				__asm("bkpt\n");
+				#else
+				printf(" > algo_write error\n");
+				return;
+				#endif
 			}
+			/* Only increment the physical addresses since this was authentication data */
+			addr_physic += 16;
 		}
 
 		/* Increment the logical address */
