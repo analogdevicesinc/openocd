@@ -23,8 +23,8 @@ proc smpu_config { smpu } {
       shutdown error
    }
 
-   set smpu_ctl			[expr {$smpu_baseaddr + 0x0}]
-   set smpu_securectl	[expr {$smpu_baseaddr + 0x800}]
+   set smpu_ctl	        [expr {$smpu_baseaddr + 0x0}]
+   set smpu_securectl   [expr {$smpu_baseaddr + 0x800}]
 
    # SMC - SMPU instance 0
    # *pREG_SMPU0_CTL |= ENUM_SMPU_CTL_RSDIS;
@@ -642,6 +642,7 @@ proc adspsc594_init_ddr3 { dmc } {
    set ddr_workaround 1
 
    if { $ddr_workaround } {
+
       # DMC Phy Initialization function with workaround 2
       # Reset trigger
       #  *pREG_DMC0_DDR_CA_CTL = 0x0;
@@ -866,6 +867,7 @@ proc adspsc594_init_ddr3 { dmc } {
       mww $dmc_ddr_root_ctl 0
 
    } else {
+
       # Begin DMC phy ZQ calibration routine
       # Program the ODT and drive strength values
       #  *pREG_DMC0_DDR_ZQ_CTL0 = 0x00785A64;
@@ -899,15 +901,7 @@ proc adspsc594_init_ddr3 { dmc } {
 
    }
 
-
    # The following are not required for EV-SC594-SOM DDR3 initialization
-   # /* Tdqs fine tune setting */
-   # if (pDMCInfo->DelayTrim)
-   # {
-   #    pDMCInfo->pPreg->Lane0Control1|= (((pDMCInfo->Bypasscode)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
-   #    pDMCInfo->pPreg->Lane1Control1|=(((pDMCInfo->Bypasscode)<<BITP_DMC_DDR_LANE1_CTL1_BYPCODE) & BITM_DMC_DDR_LANE1_CTL1_BYPCODE)|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN;
-   # }
-
    # /* DQS duty trim */
    # if(pDMCInfo->DqsTrim)
    # {
@@ -1532,4 +1526,85 @@ proc adspsc598_init_ddr3 { dmc } {
    set scb6_a55_m0_ib_fn_mod 0x30643108
    mww phys $scb6_a55_m0_ib_fn_mod 0x00000003
 
+   # SC594 uses delay trim
+   set delay_trim 1
+
+   if { $delay_trim } {
+      # /* DQS delay trim*/
+
+      # /* For LDQS */
+      # *pREG_DMC0_DDR_LANE0_CTL1 = (*pREG_DMC0_DDR_LANE0_CTL1) | (0x000000D0);
+      # dmcdelay(2500u);
+      pmmw phys $dmc_ddr_lane0_ctl1 0x000000d0 0
+      after 1
+
+      # *pREG_DMC0_DDR_ROOT_CTL=0x00400000;
+      # dmcdelay(2500u);
+      mww phys $dmc_ddr_root_ctl 0x00400000
+      after 1
+
+      # *pREG_DMC0_DDR_ROOT_CTL =0x0;
+      # stat_value = (*pREG_DMC0_DDR_SCRATCH_STAT0 & (0xFFFF0000))>>16;
+      # WL_code_LDQS = (stat_value) & (0x0000001F);
+      mww phys $dmc_ddr_root_ctl 0x0
+      set data [pmemread32 $dmc_ddr_scratch_stat0]
+      set wl_code_ldqs [expr {($data & 0x001f0000) >> 16}]
+
+      # *pREG_DMC0_DDR_LANE0_CTL1 &= ~(BITM_DMC_DDR_LANE0_CTL1_BYPCODE|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN);
+      pmmw phys $dmc_ddr_lane0_ctl1 0 0x0000fc00
+
+      # /* If write leveling is enabled */
+      # if((pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL == true)
+      # {
+      #    *pREG_DMC0_DDR_LANE0_CTL1 |= (((WL_code_LDQS + Lane0_DQS_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
+      # }
+      # else
+      # {
+      #    *pREG_DMC0_DDR_LANE0_CTL1 |= (((DQS_Default_Delay + Lane0_DQS_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
+      # }
+      # dmcdelay(2500u);
+      set lane0_dqs_delay 1
+      set ctl_val [expr {((($wl_code_ldqs + $lane0_dqs_delay) << 10) & 0x00007c00) | 0x00008000}]
+      pmmw phys $dmc_ddr_lane0_ctl1 $ctl_val 0
+      after 1
+
+      # /* For UDQS */
+      # *pREG_DMC0_DDR_LANE1_CTL1 = (*pREG_DMC0_DDR_LANE1_CTL1) | (0x000000D0);
+      # dmcdelay(2500u);
+      pmmw phys $dmc_ddr_lane1_ctl1 0x000000d0 0
+      after 1
+
+      # *pREG_DMC0_DDR_ROOT_CTL=0x00800000;
+      # dmcdelay(2500u);
+      mww phys $dmc_ddr_root_ctl 0x00800000
+      after 1
+
+      # *pREG_DMC0_DDR_ROOT_CTL =0x0;
+      # stat_value = (*pREG_DMC0_DDR_SCRATCH_STAT1 & (0xFFFF0000))>>16;
+      # WL_code_UDQS = (stat_value) & (0x0000001F);
+      mww phys $dmc_ddr_root_ctl 0x0
+      set data [pmemread32 $dmc_ddr_scratch_stat1]
+      set wl_code_udqs [expr {($data & 0x001f0000) >> 16}]
+
+      # *pREG_DMC0_DDR_LANE1_CTL1 &= ~(BITM_DMC_DDR_LANE0_CTL1_BYPCODE|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN);
+      # /* If write leveling is enabled */
+      # if((pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL == true)
+      # {
+      #    *pREG_DMC0_DDR_LANE1_CTL1 |= (((WL_code_UDQS + Lane1_DQS_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
+      # }
+      # else
+      # {
+      #    *pREG_DMC0_DDR_LANE1_CTL1 |= (((DQS_Default_Delay + Lane1_DQS_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
+      # }
+      # dmcdelay(2500u);
+      set lane1_dqs_delay 1
+      set ctl_val [expr {((($wl_code_udqs + $lane1_dqs_delay) << 10) & 0x00007c00) | 0x00008000}]
+      pmmw phys $dmc_ddr_lane1_ctl1 $ctl_val 0
+      after 1
+
+   }
+
+   # Initialize CANFD
+   canfd_config $canfd0_base
+   canfd_config $canfd1_base
 }
