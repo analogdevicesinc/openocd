@@ -407,8 +407,11 @@ proc adspsc594_init_ddr3 { dmc } {
    set dmc_ddr_ca_ctl     [expr {$dmc_baseaddr + 0x1068}]
    set dmc_ddr_scratch2   [expr {$dmc_baseaddr + 0x1074}]
    set dmc_ddr_scratch3   [expr {$dmc_baseaddr + 0x1078}]
+   set dmc_ddr_scratch4   [expr {$dmc_baseaddr + 0x107c}]
+   set dmc_ddr_scratch5   [expr {$dmc_baseaddr + 0x1080}]
    set dmc_ddr_scratch6   [expr {$dmc_baseaddr + 0x1084}]
    set dmc_ddr_scratch7   [expr {$dmc_baseaddr + 0x1088}]
+
 
    set cgu0_ctl           0x3108d000
    set cgu0_pllctl        [expr {$cgu0_ctl + 0x4}]
@@ -1535,7 +1538,7 @@ proc adspsc598_init_ddr3 { dmc } {
       # /* For LDQS */
       # *pREG_DMC0_DDR_LANE0_CTL1 = (*pREG_DMC0_DDR_LANE0_CTL1) | (0x000000D0);
       # dmcdelay(2500u);
-      pmmw phys $dmc_ddr_lane0_ctl1 0x000000d0 0
+      pmmw $dmc_ddr_lane0_ctl1 0x000000d0 0
       after 1
 
       # *pREG_DMC0_DDR_ROOT_CTL=0x00400000;
@@ -1544,14 +1547,14 @@ proc adspsc598_init_ddr3 { dmc } {
       after 1
 
       # *pREG_DMC0_DDR_ROOT_CTL =0x0;
-      # stat_value = (*pREG_DMC0_DDR_SCRATCH_STAT0 & (0xFFFF0000))>>16;
+      # stat_value = (*pREG_DMC0_DDR_SCRATCH_4 & (0xFFFF0000))>>16;
       # WL_code_LDQS = (stat_value) & (0x0000001F);
       mww phys $dmc_ddr_root_ctl 0x0
-      set data [pmemread32 $dmc_ddr_scratch_stat0]
+      set data [pmemread32 $dmc_ddr_scratch4]
       set wl_code_ldqs [expr {($data & 0x001f0000) >> 16}]
 
       # *pREG_DMC0_DDR_LANE0_CTL1 &= ~(BITM_DMC_DDR_LANE0_CTL1_BYPCODE|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN);
-      pmmw phys $dmc_ddr_lane0_ctl1 0 0x0000fc00
+      pmmw $dmc_ddr_lane0_ctl1 0 0x0000fc00
 
       # /* If write leveling is enabled */
       # if((pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL == true)
@@ -1565,13 +1568,13 @@ proc adspsc598_init_ddr3 { dmc } {
       # dmcdelay(2500u);
       set lane0_dqs_delay 1
       set ctl_val [expr {((($wl_code_ldqs + $lane0_dqs_delay) << 10) & 0x00007c00) | 0x00008000}]
-      pmmw phys $dmc_ddr_lane0_ctl1 $ctl_val 0
+      pmmw $dmc_ddr_lane0_ctl1 $ctl_val 0
       after 1
 
       # /* For UDQS */
       # *pREG_DMC0_DDR_LANE1_CTL1 = (*pREG_DMC0_DDR_LANE1_CTL1) | (0x000000D0);
       # dmcdelay(2500u);
-      pmmw phys $dmc_ddr_lane1_ctl1 0x000000d0 0
+      pmmw $dmc_ddr_lane1_ctl1 0x000000d0 0
       after 1
 
       # *pREG_DMC0_DDR_ROOT_CTL=0x00800000;
@@ -1580,14 +1583,14 @@ proc adspsc598_init_ddr3 { dmc } {
       after 1
 
       # *pREG_DMC0_DDR_ROOT_CTL =0x0;
-      # stat_value = (*pREG_DMC0_DDR_SCRATCH_STAT1 & (0xFFFF0000))>>16;
+      # stat_value = (*pREG_DMC0_DDR_SCRATCH_5 & (0xFFFF0000))>>16;
       # WL_code_UDQS = (stat_value) & (0x0000001F);
       mww phys $dmc_ddr_root_ctl 0x0
-      set data [pmemread32 $dmc_ddr_scratch_stat1]
+      set data [pmemread32 $dmc_ddr_scratch5]
       set wl_code_udqs [expr {($data & 0x001f0000) >> 16}]
 
       # *pREG_DMC0_DDR_LANE1_CTL1 &= ~(BITM_DMC_DDR_LANE1_CTL1_BYPCODE|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN);
-      pmmw phys $dmc_ddr_lane1_ctl1 0 0x0000fc00
+      pmmw $dmc_ddr_lane1_ctl1 0 0x0000fc00
 
       # /* If write leveling is enabled */
       # if((pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL == true)
@@ -1601,7 +1604,7 @@ proc adspsc598_init_ddr3 { dmc } {
       # dmcdelay(2500u);
       set lane1_dqs_delay 1
       set ctl_val [expr {((($wl_code_udqs + $lane1_dqs_delay) << 10) & 0x00007c00) | 0x00008000}]
-      pmmw phys $dmc_ddr_lane1_ctl1 $ctl_val 0
+      pmmw $dmc_ddr_lane1_ctl1 $ctl_val 0
       after 1
 
    }
