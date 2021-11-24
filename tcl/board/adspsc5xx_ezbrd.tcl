@@ -19,7 +19,7 @@ proc smpu_config { smpu } {
    } elseif { $smpu == 10 } {
       set smpu_baseaddr 0x310a1000
    } else {
-      puts stderr "Error: unknown SMPU number"
+      log_error "unknown SMPU number"
       shutdown error
    }
 
@@ -409,7 +409,7 @@ proc adspsc594_init_ddr3 { dmc } {
    set dmc_ddr_scratch3   [expr {$dmc_baseaddr + 0x1078}]
    set dmc_ddr_scratch6   [expr {$dmc_baseaddr + 0x1084}]
    set dmc_ddr_scratch7   [expr {$dmc_baseaddr + 0x1088}]
-   
+
    set cgu0_ctl           0x3108d000
    set cgu0_pllctl        [expr {$cgu0_ctl + 0x4}]
    set cgu0_stat          [expr {$cgu0_ctl + 0x8}]
@@ -446,7 +446,7 @@ proc adspsc594_init_ddr3 { dmc } {
    # *pREG_DMC0_DDR_LANE1_CTL0 |= BITM_DMC_DDR_LANE1_CTL0_CB_RSTDLL;
    pmmw $dmc_ddr_lane0_ctl0 0x100 0x0
    pmmw $dmc_ddr_lane1_ctl0 0x100 0x0
-   
+
    # Wait for DLL lock - 9000 DCLK cycles
    # 1ms should be enough
    after 1
@@ -504,7 +504,7 @@ proc adspsc594_init_ddr3 { dmc } {
    while { ![expr {$data & 0x2}] } {
       set data [memread32_phys $cgu0_stat]
    }
-   
+
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
    mww phys $cgu0_ctl 0x25000
@@ -531,7 +531,7 @@ proc adspsc594_init_ddr3 { dmc } {
    while { [expr {$data & 0x8}] } {
       set data [memread32_phys $cgu0_stat]
    }
-   
+
    # CGU1 Configuration
 
    # Configure CDU_CLKINSEL, which requires us to bypass CGU0 PLL
@@ -568,7 +568,7 @@ proc adspsc594_init_ddr3 { dmc } {
    while { [expr {$data & 0x8}] } {
       set data [memread32_phys $cgu0_stat]
    }
-   
+
    # Enable PLL for CGU1
    # If PLL is disabled, then enable it
    # if(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN))
@@ -585,7 +585,7 @@ proc adspsc594_init_ddr3 { dmc } {
    while { [expr {$data & 0x8}] } {
       set data [memread32_phys $cgu1_stat]
    }
-   
+
    # Set CGU1_DIV
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_CSEL        = 2;
    # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S0SEL       = 4;
@@ -605,7 +605,7 @@ proc adspsc594_init_ddr3 { dmc } {
    while { ![expr {$data & 0x2}] } {
       set data [memread32_phys $cgu1_stat]
    }
-   
+
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
    mww phys $cgu1_ctl 0x24000
@@ -668,7 +668,7 @@ proc adspsc594_init_ddr3 { dmc } {
       # slave1 address is 4 */
       # *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
       # DmcDelay(5000);
-      mww phys $dmc_ddr_ca_ctl 0x10000002 
+      mww phys $dmc_ddr_ca_ctl 0x10000002
       after 1
 
       # /* reset Trigger */
@@ -693,7 +693,7 @@ proc adspsc594_init_ddr3 { dmc } {
 
       # *pREG_DMC0_DDR_CA_CTL = 0x10000002;
       # DmcDelay(5000);
-      mww $dmc_ddr_ca_ctl 0x10000002 
+      mww $dmc_ddr_ca_ctl 0x10000002
       after 1
 
       # *pREG_DMC0_DDR_CA_CTL = 0x0;
@@ -833,7 +833,7 @@ proc adspsc594_init_ddr3 { dmc } {
    mww phys $dmc_mr1 0xc0
    mww phys $dmc_mr2 0x18
    mww phys $dmc_emr3 0x4
-   
+
    # program Dll timing register
    # *pREG_DMC0_DLLCTL = ((pConfig->ulDDR_DLLCTLCFG) >> 16ul) & 0xFFFFul;
    # dmcdelay(2000);
@@ -924,7 +924,7 @@ proc adspsc598_init_ddr3 { dmc } {
    set dmc_ddr_scratch2   [expr {$dmc_baseaddr + 0x1074}]
    set dmc_ddr_scratch6   [expr {$dmc_baseaddr + 0x1084}]
    set dmc_ddr_scratch7   [expr {$dmc_baseaddr + 0x1088}]
-   
+
    set cgu0_ctl           0x3108d000
    set cgu0_pllctl        [expr {$cgu0_ctl + 0x4}]
    set cgu0_stat          [expr {$cgu0_ctl + 0x8}]
@@ -963,7 +963,7 @@ proc adspsc598_init_ddr3 { dmc } {
    # *pREG_DMC0_DDR_LANE1_CTL0 |= BITM_DMC_DDR_LANE1_CTL0_CB_RSTDLL;
    pmmw $dmc_ddr_lane0_ctl0 0x100 0x0
    pmmw $dmc_ddr_lane1_ctl0 0x100 0x0
-   
+
    # Wait for DLL lock - 9000 DCLK cycles
    # 1ms should be enough
    after 1
@@ -1004,7 +1004,7 @@ proc adspsc598_init_ddr3 { dmc } {
    if { [expr {$data & 0x2}] } {
       mww phys $cgu0_pllctl 0x2
    }
-   
+
    # Wait for alignment to be done
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN){}
    set data [memread32_phys $cgu0_stat]
@@ -1052,7 +1052,7 @@ proc adspsc598_init_ddr3 { dmc } {
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
    mww phys $cgu0_ctl 0x25000
-   
+
    # Take PLL out of Bypass Mode
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
     pmmw $cgu0_pllctl 0x8 0
@@ -1290,14 +1290,14 @@ proc adspsc598_init_ddr3 { dmc } {
 
 
    # adi_dmc_ctrl_init()
-   
+
    # 667 MHz
-   set ulDDR_DLLCTLCFG 0xaf70722
+   set ulDDR_DLLCTLCFG 0xaf70622
    set ulDDR_EMR2EMR3  0x100004
    set ulDDR_CTL       0xa05
    set ulDDR_MREMR1    0xb5000c0
    set ulDDR_TR0       0x42118959
-   set ulDDR_TR1       0x50ea1450
+   set ulDDR_TR1       0x50ae1450
    set ulDDR_TR2       0x44a51e
    set ulDDR_ZQCTL0    0x786464
    set ulDDR_ZQCTL1    0x0
@@ -1342,7 +1342,7 @@ proc adspsc598_init_ddr3 { dmc } {
    # Start DMC initialization
    # *pREG_DMC0_CTL = pConfig->ulDDR_CTL;
    mww phys $dmc_ctl $ulDDR_CTL
- 
+
    # dmcdelay(722000u);
    after 1
 
@@ -1416,4 +1416,11 @@ proc adspsc598_init_ddr3 { dmc } {
 
    mww phys $dmc_dllctl [expr {$rd_cnt | $datacyc}]
    mww phys $dmc_ctl [expr {$ulDDR_CTL & 0xfffffffb & 0xfbffffff} ]
+
+   # DDR workaround.
+   # Restricts the outstanding transactions to 1 for both read/write
+   # to force in-order access/response from A55 to/from DDR.
+   set scb6_a55_m0_ib_fn_mod 0x30643108
+   mww phys $scb6_a55_m0_ib_fn_mod 0x00000003
+
 }
