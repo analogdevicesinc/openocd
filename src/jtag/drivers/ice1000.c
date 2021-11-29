@@ -536,6 +536,176 @@ static int ice2000_set_freq(uint32_t freq)
 	return ERROR_OK;
 }
 
+static int ice1000_firmware_crc(uint16_t *p)
+{
+	usb_command_block usb_cmd_blk;
+
+	usb_cmd_blk.command = HOST_REQUEST_RX_DATA;
+	usb_cmd_blk.count = 2;
+	usb_cmd_blk.buffer = 0;
+
+	adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_cmd_blk));
+
+	adi_usb_read_or_ret(p, sizeof (*p));
+
+	return ERROR_OK;
+}
+
+static uint16_t crc16_ccitt(const uint8_t *data, int length, uint16_t crc)
+{
+	int i;
+
+	for (i = 0; i < length; i++)
+	{
+		uint8_t b = data[i];
+		int j;
+
+		for (j = 0; j < 8; j++)
+		{
+			bool add = ((crc >> 15) != (b >> 7));
+			crc <<= 1;
+			b <<= 1;
+			if (add)
+				crc ^= 0x1021;
+		}
+	}
+
+	return crc;
+}
+
+static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
+{
+/* Flash programming is much slower than jtag operation. So we have
+   to use a much smaller buffer size to avoid USB transfer timeout.  */
+#define ICE_1000_FLASH_DATA_BUFFER_SIZE 0x400
+
+	uint8_t buffer[ICE_1000_FLASH_DATA_BUFFER_SIZE];
+	uint8_t first = 1, last = 0;
+	int i;
+	uint16_t crc = 0xffff;
+	size_t total_size = 0, total_written = 0;
+
+	for (i = 0; i < firmware->num_sections; i++)
+		total_size += firmware->sections[i].size;
+
+	LOG_OUTPUT("updating ... 0%%");
+
+	for (i = 0; i < firmware->num_sections; i++)
+	{
+		size_t section_size;
+		uint8_t *section_buffer;
+		int remaining;
+		uint32_t address;
+		size_t size_read;
+		int ret;
+
+		section_size = firmware->sections[i].size;
+		section_buffer = malloc(section_size);
+		if (section_buffer == NULL)
+		{
+			LOG_ERROR("error allocating buffer for section (%d bytes)",
+					  firmware->sections[i].size);
+			return ERROR_FAIL;
+		}
+
+		ret = image_read_section(firmware, i, 0, section_size, section_buffer, &size_read);
+		if (ret != ERROR_OK || size_read != section_size)
+		{
+			free(section_buffer);
+			return ret;
+		}
+
+		crc = crc16_ccitt(section_buffer, section_size, crc);
+
+		remaining = section_size;
+		address = firmware->sections[i].base_address;
+
+		while (remaining)
+		{
+			usb_command_block usb_cmd_blk;
+			uint32_t count;
+			int percentage;
+
+
+			if (remaining < ICE_1000_FLASH_DATA_BUFFER_SIZE - 16)
+				count = remaining;
+			else
+				count = ICE_1000_FLASH_DATA_BUFFER_SIZE - 16;
+			remaining -= count;
+			if (remaining == 0)
+				last = 1;
+
+			buffer[0] = first;
+			buffer[1] = last;
+			buffer[2] = HOST_PROGRAM_FLASH;
+			buffer[3] = 0;
+			memcpy(buffer + 4, &address, 4);
+			memcpy(buffer + 8, &count, 4);
+			memcpy(buffer + 12, &crc, 2);
+			memcpy(buffer + 16, section_buffer + section_size - remaining - count, count);
+
+			usb_cmd_blk.command = HOST_REQUEST_TX_DATA;
+			usb_cmd_blk.count = count + 16;
+			usb_cmd_blk.buffer = 0;
+			adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_cmd_blk));
+
+			adi_usb_write_or_ret(buffer, usb_cmd_blk.count);
+
+			first = 0;
+
+			address += count;
+
+			total_written += count;
+
+			if (total_written == total_size)
+				percentage = 100;
+			else
+				percentage = (int) (total_written * 100.0 / total_size);
+			LOG_OUTPUT("\rupdating ... %d%%", percentage);
+		}
+
+		free(section_buffer);
+	}
+
+	*crcp = crc;
+
+	LOG_OUTPUT("\r\n");
+
+	return ERROR_OK;
+}
+
+static int ice1000_update_firmware(const char *filename)
+{
+	struct image ice1000_firmware_image;
+	unsigned short crc1, crc2;
+	int ret;
+
+	LOG_INFO("Updating to firmware %s", filename);
+
+	ice1000_firmware_image.base_address = 0;
+	ice1000_firmware_image.base_address_set = 0;
+
+	ret = image_open(&ice1000_firmware_image, filename, "ihex");
+	if (ret != ERROR_OK)
+		return ret;
+
+	ret = ice1000_send_flash_data(&ice1000_firmware_image, &crc1);
+	if (ret != ERROR_OK)
+		return ret;
+
+	if ((ret = ice1000_firmware_crc(&crc2)) != ERROR_OK)
+		return ret;
+
+	image_close(&ice1000_firmware_image);
+
+	if (crc1 == crc2)
+		return ERROR_OK;
+	else
+	{
+		LOG_ERROR("CRCs do NOT match");
+		return ERROR_FAIL;
+	}
+}
 
 /*
  * This function sets us up the cable and data
@@ -547,6 +717,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	libusb_device *udev;
 	struct libusb_config_descriptor *config;
 	uint8_t configuration;
+	char *firmware_filename	= get_firmware_filename();
 	int i, ret;
 
 	dev = NULL;
@@ -648,6 +819,17 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	if (cable_params.version <= 0x0101)
 		LOG_WARNING("This firmware version is obsolete. Please update to the latest version.");
 
+	if (firmware_filename)
+	{
+		ret = ice1000_update_firmware(firmware_filename);
+		if (ret == ERROR_OK)
+			LOG_INFO("The firmware has been updated successfully. "
+					 "Please unplug the %s cable and reconnect it to finish the update process.", cable_name);
+		else
+			LOG_ERROR("The firmware failed to update.");
+		return ERROR_JTAG_INIT_FAILED;
+	}
+	
 	/* Set frequency to lowest value */
 	if (strcmp (cable_name, "ICE-2000") == 0)
 	{

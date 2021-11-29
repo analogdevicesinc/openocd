@@ -26,7 +26,7 @@ proc adjc_enable_dap {adjc} {
 
 # Show RCU_MSG bitfields
 proc show_rcu_msg { name val } {
-   puts "$name  [format  0x%08x $val]"
+   log_debug "$name  [format  0x%08x $val]"
    show_mmr_bitfield  7  0 $val BOOTERROR   { _NUMBER_ }
    show_mmr_bitfield  8  8 $val C0IDLE      { "" "Core 0 is IDLE" }
    show_mmr_bitfield  9  9 $val C1IDLE      { "" "Core 1 is IDLE" }
@@ -50,7 +50,7 @@ proc show_rcu_msg { name val } {
 
 # Show RCU_STAT bitfields
 proc show_rcu_stat { name val } {
-   puts "$name  [format  0x%08x $val]"
+   log_debug "$name  [format  0x%08x $val]"
    show_mmr_bitfield  0  0 $val HWRST       { "" HWRST }
    show_mmr_bitfield  2  2 $val SSRST       { "" SSRST }
    show_mmr_bitfield  3  3 $val SWRST       { "" SWRST }
@@ -67,7 +67,7 @@ proc show_rcu_stat { name val } {
 
 # Show RCU_CRCTL bitfields
 proc show_rcu_crctl { name val } {
-   puts "$name  [format  0x%08x $val]"
+   log_debug "$name  [format  0x%08x $val]"
    show_mmr_bitfield  0  0 $val CR0         { "" CR0 }
    show_mmr_bitfield  1  1 $val CR1         { "" CR1 }
    show_mmr_bitfield  2  2 $val CR2         { "" CR2 }
@@ -76,12 +76,12 @@ proc show_rcu_crctl { name val } {
 
 # Show RCU_CRCTL bitfields
 proc show_rcu_ctl { name val } {
-   puts "$name  [format  0x%08x $val]"
+   log_debug "$name  [format  0x%08x $val]"
 }
 
 # Show RCU_CRSTAT bitfields
 proc show_rcu_crstat { name val } {
-   puts "$name  [format  0x%08x $val]"
+   log_debug "$name  [format  0x%08x $val]"
    show_mmr_bitfield  0  0 $val CR0         { "" CR0 }
    show_mmr_bitfield  1  1 $val CR1         { "" CR1 }
    show_mmr_bitfield  2  2 $val CR2         { "" CR2 }
