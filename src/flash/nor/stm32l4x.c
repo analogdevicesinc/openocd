@@ -26,9 +26,10 @@
 #include "imp.h"
 #include <helper/align.h>
 #include <helper/binarybuffer.h>
+#include <helper/bits.h>
 #include <target/algorithm.h>
+#include <target/arm_adi_v5.h>
 #include <target/cortex_m.h>
-#include "bits.h"
 #include "stm32l4x.h"
 
 /* STM32L4xxx series for reference.
@@ -252,7 +253,6 @@ struct stm32l4_flash_bank {
 	uint32_t flash_regs_base;
 	const uint32_t *flash_regs;
 	bool otp_enabled;
-	bool use_flashloader;
 	enum stm32l4_rdp rdp;
 	bool tzen;
 	uint32_t optr;
@@ -619,7 +619,6 @@ FLASH_BANK_COMMAND_HANDLER(stm32l4_flash_bank_command)
 	stm32l4_info->probed = false;
 	stm32l4_info->otp_enabled = false;
 	stm32l4_info->user_bank_size = bank->size;
-	stm32l4_info->use_flashloader = true;
 
 	return ERROR_OK;
 }
@@ -1595,20 +1594,21 @@ static int stm32l4_write(struct flash_bank *bank, const uint8_t *buffer,
 	if (retval != ERROR_OK)
 		goto err_lock;
 
-	if (stm32l4_info->use_flashloader) {
-		/* For TrustZone enabled devices, when TZEN is set and RDP level is 0.5,
-		 * the debug is possible only in non-secure state.
-		 * Thus means the flashloader will run in non-secure mode,
-		 * and the workarea need to be in non-secure RAM */
-		if (stm32l4_info->tzen && (stm32l4_info->rdp == RDP_LEVEL_0_5))
-			LOG_INFO("RDP level is 0.5, the work-area should reside in non-secure RAM");
 
-		retval = stm32l4_write_block(bank, buffer, offset,
-				count / stm32l4_info->data_width);
-	}
+	/* For TrustZone enabled devices, when TZEN is set and RDP level is 0.5,
+	 * the debug is possible only in non-secure state.
+	 * Thus means the flashloader will run in non-secure mode,
+	 * and the workarea need to be in non-secure RAM */
+	if (stm32l4_info->tzen && (stm32l4_info->rdp == RDP_LEVEL_0_5))
+		LOG_WARNING("RDP = 0x55, the work-area should be in non-secure RAM (check SAU partitioning)");
 
-	if (!stm32l4_info->use_flashloader || retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE) {
-		LOG_INFO("falling back to single memory accesses");
+	/* first try to write using the loader, for better performance */
+	retval = stm32l4_write_block(bank, buffer, offset,
+			count / stm32l4_info->data_width);
+
+	/* if resources are not available write without a loader */
+	if (retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE) {
+		LOG_WARNING("falling back to programming without a flash loader (slower)");
 		retval = stm32l4_write_block_without_loader(bank, buffer, offset,
 				count / stm32l4_info->data_width);
 	}
@@ -1923,15 +1923,17 @@ static int stm32l4_probe(struct flash_bank *bank)
 		/* STM32L55/L56xx can be single/dual bank:
 		 *   if size = 512K check DBANK bit
 		 *   if size = 256K check DB256K bit
+		 *
+		 * default page size is 4kb, if DBANK = 1, the page size is 2kb.
 		 */
-		page_size_kb = 4;
+
+		page_size_kb = (stm32l4_info->optr & FLASH_L5_DBANK) ? 2 : 4;
 		num_pages = flash_size_kb / page_size_kb;
 		stm32l4_info->bank1_sectors = num_pages;
+
 		if ((is_max_flash_size && (stm32l4_info->optr & FLASH_L5_DBANK)) ||
 			(!is_max_flash_size && (stm32l4_info->optr & FLASH_L5_DB256))) {
 			stm32l4_info->dual_bank_mode = true;
-			page_size_kb = 2;
-			num_pages = flash_size_kb / page_size_kb;
 			stm32l4_info->bank1_sectors = num_pages / 2;
 		}
 		break;
@@ -2264,26 +2266,6 @@ COMMAND_HANDLER(stm32l4_handle_trustzone_command)
 	return stm32l4_perform_obl_launch(bank);
 }
 
-COMMAND_HANDLER(stm32l4_handle_flashloader_command)
-{
-	if (CMD_ARGC < 1 || CMD_ARGC > 2)
-		return ERROR_COMMAND_SYNTAX_ERROR;
-
-	struct flash_bank *bank;
-	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (retval != ERROR_OK)
-		return retval;
-
-	struct stm32l4_flash_bank *stm32l4_info = bank->driver_priv;
-
-	if (CMD_ARGC == 2)
-		COMMAND_PARSE_ENABLE(CMD_ARGV[1], stm32l4_info->use_flashloader);
-
-	command_print(CMD, "FlashLoader usage is %s", stm32l4_info->use_flashloader ? "enabled" : "disabled");
-
-	return ERROR_OK;
-}
-
 COMMAND_HANDLER(stm32l4_handle_option_load_command)
 {
 	if (CMD_ARGC != 1)
@@ -2488,13 +2470,6 @@ static const struct command_registration stm32l4_exec_command_handlers[] = {
 		.mode = COMMAND_EXEC,
 		.usage = "bank_id",
 		.help = "Unlock entire protected flash device.",
-	},
-	{
-		.name = "flashloader",
-		.handler = stm32l4_handle_flashloader_command,
-		.mode = COMMAND_EXEC,
-		.usage = "<bank_id> [enable|disable]",
-		.help = "Configure the flashloader usage",
 	},
 	{
 		.name = "mass_erase",
