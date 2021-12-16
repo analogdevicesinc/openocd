@@ -1608,8 +1608,4 @@ proc adspsc598_init_ddr3 { dmc } {
       after 1
 
    }
-
-   # Initialize CANFD
-   canfd_config $canfd0_base
-   canfd_config $canfd1_base
 }
