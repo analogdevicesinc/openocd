@@ -827,8 +827,8 @@ proc adspsc594_init_ddr3 { dmc } {
       #                              ((odt_pd & 0x0000003Fu)<<6)    |
       #                              ((drv_pu & 0x0000003Fu)<<12)   |
       #                              ((odt_pu & 0x0000003Fu)<<18));
-      set scratch7 [pmemread32 $dmc_ddr_scratch7]
-      set scratch6 [pmemread32 $dmc_ddr_scratch6]
+      set scratch7 [memread32_phys $dmc_ddr_scratch7]
+      set scratch6 [memread32_phys $dmc_ddr_scratch6]
       set stat_value [expr {(($scratch7 & 0x0000ffff) << 16) | (($scratch6 & 0xffff0000) >> 16)}]
       set ClkDqsDrvImpedance 0x0000005A
       set ROdt 0x00000078
@@ -1023,7 +1023,7 @@ proc adspsc594_init_ddr3 { dmc } {
       # stat_value = (*pREG_DMC0_DDR_SCRATCH_4 & (0xFFFF0000))>>16;
       # WL_code_LDQS = (stat_value) & (0x0000001F);
       mww phys $dmc_ddr_root_ctl 0x0
-      set data [pmemread32 $dmc_ddr_scratch4]
+      set data [memread32_phys $dmc_ddr_scratch4]
       set wl_code_ldqs [expr {($data & 0x001f0000) >> 16}]
 
       # *pREG_DMC0_DDR_LANE0_CTL1 &= ~(BITM_DMC_DDR_LANE0_CTL1_BYPCODE|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN);
@@ -1059,7 +1059,7 @@ proc adspsc594_init_ddr3 { dmc } {
       # stat_value = (*pREG_DMC0_DDR_SCRATCH_5 & (0xFFFF0000))>>16;
       # WL_code_UDQS = (stat_value) & (0x0000001F);
       mww phys $dmc_ddr_root_ctl 0x0
-      set data [pmemread32 $dmc_ddr_scratch5]
+      set data [memread32_phys $dmc_ddr_scratch5]
       set wl_code_udqs [expr {($data & 0x001f0000) >> 16}]
 
       # *pREG_DMC0_DDR_LANE1_CTL1 &= ~(BITM_DMC_DDR_LANE1_CTL1_BYPCODE|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN);
