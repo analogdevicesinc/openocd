@@ -614,6 +614,61 @@ produced, PDF schematics are easily found and it is easy to make.
 
 @end itemize
 
+@subsection ADSP-SC582/583/584/587/589
+@cindex ADSP-SC582
+@cindex ADSP-SC583
+@cindex ADSP-SC584
+@cindex ADSP-SC587
+@cindex ADSP-SC589
+
+These parts are supported through @file{target/adspsc58x.cfg}.
+The usage is the same as @file{target/adspsc57x.cfg} except that
+@file{target/adspsc58x.cfg} does not support system reset.
+
+@subsection ADSP-SC591/591W/592/592W/593W/594/594W
+@cindex ADSP-SC591
+@cindex ADSP-SC591W
+@cindex ADSP-SC592
+@cindex ADSP-SC592W
+@cindex ADSP-SC593W
+@cindex ADSP-SC594
+@cindex ADSP-SC594W
+
+These parts are supported through @file{target/adspsc59x.cfg}.
+Their usage is the same as @file{target/adspsc57x.cfg}.
+@node Supported Boards
+@chapter Supported Boards
+
+OpenOCD supports many boards. Below are some of them.
+
+@section Analog Devices
+
+OpenOCD supports the following boards from Analog Devices.
+
+@subsection ADSP-SC573 EZ-KIT
+@cindex ADSP-SC573 EZ-KIT
+
+This board is supported through @file{board/adspsc573_ezkit.cfg}.
+This board config file disables MMU and then initializes SDRAM when GDB connects to OpenOCD.
+
+@subsection ADSP-SC584 EZ-BRD
+@cindex ADSP-SC584 EZ-BRD
+
+This board is supported through @file{board/adspsc584_ezbrd.cfg}.
+This board config file disables MMU and then initializes SDRAM when GDB connects to OpenOCD.
+
+@subsection ADSP-SC589 EZ-BRD
+@cindex ADSP-SC589 EZ-BRD
+
+This board is supported through @file{board/adspsc589_ezbrd.cfg}.
+This board config file disables MMU and then initializes SDRAM when GDB connects to OpenOCD.
+
+@subsection EV-SC594-SOM
+@cindex EV-SC594-SOM 
+
+This board is supported through @file{board/ev-sc594-som.cfg}.
+This board config file disables MMU and then initializes SDRAM when GDB connects to OpenOCD.
+
 @node About Jim-Tcl
 @chapter About Jim-Tcl
 @cindex Jim-Tcl
