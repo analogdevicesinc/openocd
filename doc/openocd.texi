@@ -62,6 +62,8 @@ Free Documentation License''.
 * About::                            About OpenOCD
 * Developers::                       OpenOCD Developer Resources
 * Debug Adapter Hardware::           Debug Adapter Hardware
+* Supported Targets::                Supported Targets
+* Supported Boards::                 Supported Boards
 * About Jim-Tcl::                    About Jim-Tcl
 * Running::                          Running OpenOCD
 * OpenOCD Project Setup::            OpenOCD Project Setup
@@ -611,6 +613,72 @@ produced, PDF schematics are easily found and it is easy to make.
 
 @item @b{xlnx_pcie_xvc}
 @* A JTAG driver exposing Xilinx Virtual Cable over PCI Express to OpenOCD as JTAG/SWD interface.
+
+@end itemize
+
+@node Supported Targets
+@chapter Supported Targets
+
+OpenOCD supports many targets. Below are some of them.
+
+@section Analog Devices
+
+OpenOCD supports the following targets from Analog Devices.
+
+@subsection ADuCM3027/9
+@cindex ADuCM3027
+@cindex ADuCM3029
+
+These parts are supported through @file{target/aducm3027.cfg} and
+@file{target/aducm3029.cfg}. These two parts only support SWD.
+
+@subsection ADuCM4050
+@cindex ADuCM4050
+
+This part is supported through @file{target/aducm4050.cfg}.
+This part only supports SWD.
+
+@subsection ADSP-SC570/571/572/573
+@cindex ADSP-SC570
+@cindex ADSP-SC571
+@cindex ADSP-SC572
+@cindex ADSP-SC573
+
+These parts are supported through @file{target/adspsc57x.cfg}.
+This config file uses JTAG as transport by default.
+You can use SWD as transport by commenting out @code{transport select jtag}
+and uncommenting @code{transport select swd} near the top of the config file.
+This config file does a system reset by default when GDB attaches to OpenOCD.
+If you don't want to reset the target, you can edit the @code{gdb-attach}
+event handler toward the end of the config file to change @code{reset} to @code{halt}.
+
+If the part is locked, you have two ways to unlock the part:
+
+@itemize @bullet
+
+@item @b{through OpenOCD command line}
+
+@* You can use @option{-c} to set up userkey before the config file
+
+@example
+openocd -f interface/ice1000.cfg \
+        -c "set USERKEY0 0x12345678; set USERKEY1 0x9abcdef0; \
+            set USERKEY2 0x00000000; set USERKEY3 0x5f5f5f5f; list" \
+        -f target/adspsc57x.cfg
+@end example
+
+@item @b{edit the config file}
+
+@* you can uncomment these four lines in the config file:
+
+@example
+#set USERKEY0 0x00000000
+#set USERKEY1 0x00000000
+#set USERKEY2 0x00000000
+#set USERKEY3 0x00000000
+@end example 
+
+and change @code{0x00000000} to the correct userkey.
 
 @end itemize
 
