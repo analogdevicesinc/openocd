@@ -436,6 +436,10 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CNTHP_CTL_EL2, 0), &value_64, 2);
 		break;
+	case ARMV8_CNTHP_CVAL_EL2:
+		retval = instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_CNTHP_CVAL_EL2, 0), &value_64, 2);
+		break;	
 	case ARMV8_CNTHV_TVAL_EL2:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CNTHV_TVAL_EL2, 0), &value_64, 2);
@@ -1230,6 +1234,11 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_CNTHP_CTL_EL2, 0), value);
+		break;
+	case ARMV8_CNTHP_CVAL_EL2:
+		value = value_64;
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_CNTHP_CVAL_EL2, 0), value);
 		break;
 	case ARMV8_CNTHV_TVAL_EL2:
 		value = value_64;
@@ -3026,6 +3035,7 @@ static const struct {
 	{ ARMV8_CNTHCTL_EL2, "CNTHCTL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 	{ ARMV8_CNTHP_TVAL_EL2, "CNTHP_TVAL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 	{ ARMV8_CNTHP_CTL_EL2, "CNTHP_CTL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
+	{ ARMV8_CNTHP_CVAL_EL2, "CNTHP_CVAL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 	{ ARMV8_CNTHV_TVAL_EL2, "CNTHV_TVAL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 	{ ARMV8_CNTHV_CTL_EL2, "CNTHV_CTL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 	{ ARMV8_CNTHV_CVAL_EL2, "CNTHV_CVAL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
