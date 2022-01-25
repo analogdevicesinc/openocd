@@ -25,9 +25,10 @@
 #ifndef OPENOCD_TARGET_ARMV7M_H
 #define OPENOCD_TARGET_ARMV7M_H
 
-#include "arm_adi_v5.h"
 #include "arm.h"
 #include "armv7m_trace.h"
+
+struct adiv5_ap;
 
 extern const int armv7m_psp_reg_map[];
 extern const int armv7m_msp_reg_map[];
@@ -307,6 +308,11 @@ int armv7m_wait_algorithm(struct target *target,
 int armv7m_invalidate_core_regs(struct target *target);
 
 int armv7m_restore_context(struct target *target);
+
+uint32_t armv7m_map_id_to_regsel(unsigned int arm_reg_id);
+
+bool armv7m_map_reg_packing(unsigned int arm_reg_id,
+		unsigned int *reg32_id, uint32_t *offset);
 
 int armv7m_checksum_memory(struct target *target,
 		target_addr_t address, uint32_t count, uint32_t *checksum);

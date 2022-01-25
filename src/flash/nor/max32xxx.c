@@ -21,10 +21,12 @@
 #endif
 
 #include "imp.h"
+#include <helper/binarybuffer.h>
 #include <target/algorithm.h>
 #include <target/armv7m.h>
 #include <target/target.h>
 #include <target/target_type.h>
+#include "helper/binarybuffer.h"
 
 /* Register addresses */
 #define FLC_ADDR				0x00000000
@@ -111,7 +113,7 @@ struct max32xxx_flash_bank {
 };
 
 static const uint8_t write_code_arm[] = {
-#include "../../contrib/loaders/flash/max32xxx/max32xxx_write_arm.inc"
+#include "contrib/loaders/flash/max32xxx/max32xxx_write_arm.inc"
 };
 
 FLASH_BANK_COMMAND_HANDLER(max32xxx_flash_bank_command)

@@ -227,6 +227,7 @@ static int gdb_get_char_inner(struct connection *connection, int *next_char)
 		if (gdb_con->buf_cnt > 0)
 			break;
 		if (gdb_con->buf_cnt == 0) {
+			LOG_DEBUG("GDB connection closed by the remote client");
 			gdb_con->closed = true;
 			return ERROR_SERVER_REMOTE_CLOSED;
 		}
@@ -348,11 +349,15 @@ static int gdb_putback_char(struct connection *connection, int last_char)
 static int gdb_write(struct connection *connection, void *data, int len)
 {
 	struct gdb_connection *gdb_con = connection->priv;
-	if (gdb_con->closed)
+	if (gdb_con->closed) {
+		LOG_DEBUG("GDB socket marked as closed, cannot write to it.");
 		return ERROR_SERVER_REMOTE_CLOSED;
+	}
 
 	if (connection_write(connection, data, len) == len)
 		return ERROR_OK;
+
+	LOG_WARNING("Error writing to GDB socket. Dropping the connection.");
 	gdb_con->closed = true;
 	return ERROR_SERVER_REMOTE_CLOSED;
 }
@@ -1351,7 +1356,7 @@ static int gdb_get_register_packet(struct connection *connection,
 		return gdb_error(connection, retval);
 
 	if (reg_list_size <= reg_num) {
-		LOG_ERROR("gdb requested a non-existing register");
+		LOG_ERROR("gdb requested a non-existing register (reg_num=%d)", reg_num);
 		return ERROR_SERVER_REMOTE_CLOSED;
 	}
 
@@ -1413,7 +1418,7 @@ static int gdb_set_register_packet(struct connection *connection,
 	}
 
 	if (reg_list_size <= reg_num) {
-		LOG_ERROR("gdb requested a non-existing register");
+		LOG_ERROR("gdb requested a non-existing register (reg_num=%d)", reg_num);
 		free(bin_buf);
 		free(reg_list);
 		return ERROR_SERVER_REMOTE_CLOSED;
@@ -3006,8 +3011,10 @@ static bool gdb_handle_vrun_packet(struct connection *connection, const char *pa
 	free(next_hex_encoded_field(&parse, ';'));
 
 	char *cmdline = next_hex_encoded_field(&parse, ';');
-	char *arg;
-	while (cmdline && (arg = next_hex_encoded_field(&parse, ';')) != NULL) {
+	while (cmdline) {
+		char *arg = next_hex_encoded_field(&parse, ';');
+		if (!arg)
+			break;
 		char *new_cmdline = alloc_printf("%s %s", cmdline, arg);
 		free(cmdline);
 		free(arg);
@@ -3549,7 +3556,7 @@ static int gdb_target_start(struct target *target, const char *port)
 		struct target_list *head;
 		struct target *curr;
 		head = target->head;
-		while (head != (struct target_list *)NULL) {
+		while (head) {
 			curr = head->target;
 			if (curr != target)
 				curr->gdb_service = gdb_service;

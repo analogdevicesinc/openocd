@@ -719,6 +719,15 @@ static int no_mmu(struct target *target, int *enabled)
 	return ERROR_OK;
 }
 
+/**
+ * Reset the @c examined flag for the given target.
+ * Pure paranoia -- targets are zeroed on allocation.
+ */
+static inline void target_reset_examined(struct target *target)
+{
+	target->examined = false;
+}
+
 static int default_examine(struct target *target)
 {
 	target_set_examined(target);
@@ -739,10 +748,12 @@ int target_examine_one(struct target *target)
 
 	int retval = target->type->examine(target);
 	if (retval != ERROR_OK) {
+		target_reset_examined(target);
 		target_call_event_callbacks(target, TARGET_EVENT_EXAMINE_FAIL);
 		return retval;
 	}
 
+	target_set_examined(target);
 	target_call_event_callbacks(target, TARGET_EVENT_EXAMINE_END);
 
 	return ERROR_OK;
@@ -830,7 +841,7 @@ static int target_soft_reset_halt(struct target *target)
 int target_run_algorithm(struct target *target,
 		int num_mem_params, struct mem_param *mem_params,
 		int num_reg_params, struct reg_param *reg_param,
-		uint32_t entry_point, uint32_t exit_point,
+		target_addr_t entry_point, target_addr_t exit_point,
 		int timeout_ms, void *arch_info)
 {
 	int retval = ERROR_FAIL;
@@ -871,7 +882,7 @@ done:
 int target_start_algorithm(struct target *target,
 		int num_mem_params, struct mem_param *mem_params,
 		int num_reg_params, struct reg_param *reg_params,
-		uint32_t entry_point, uint32_t exit_point,
+		target_addr_t entry_point, target_addr_t exit_point,
 		void *arch_info)
 {
 	int retval = ERROR_FAIL;
@@ -915,7 +926,7 @@ done:
 int target_wait_algorithm(struct target *target,
 		int num_mem_params, struct mem_param *mem_params,
 		int num_reg_params, struct reg_param *reg_params,
-		uint32_t exit_point, int timeout_ms,
+		target_addr_t exit_point, int timeout_ms,
 		void *arch_info)
 {
 	int retval = ERROR_FAIL;
@@ -1522,15 +1533,6 @@ static int target_profiling(struct target *target, uint32_t *samples,
 {
 	return target->type->profiling(target, samples, max_num_samples,
 			num_samples, seconds);
-}
-
-/**
- * Reset the @c examined flag for the given target.
- * Pure paranoia -- targets are zeroed on allocation.
- */
-static void target_reset_examined(struct target *target)
-{
-	target->examined = false;
 }
 
 static int handle_target(void *priv);
@@ -2148,11 +2150,10 @@ static int target_restore_working_area(struct target *target, struct working_are
 /* Restore the area's backup memory, if any, and return the area to the allocation pool */
 static int target_free_working_area_restore(struct target *target, struct working_area *area, int restore)
 {
+	if (!area || area->free)
+		return ERROR_OK;
+
 	int retval = ERROR_OK;
-
-	if (area->free)
-		return retval;
-
 	if (restore) {
 		retval = target_restore_working_area(target, area);
 		/* REVISIT: Perhaps the area should be freed even if restoring fails. */
@@ -2529,6 +2530,10 @@ int target_checksum_memory(struct target *target, target_addr_t address, uint32_
 	uint32_t checksum = 0;
 	if (!target_was_examined(target)) {
 		LOG_ERROR("Target not examined yet");
+		return ERROR_FAIL;
+	}
+	if (!target->type->checksum_memory) {
+		LOG_ERROR("Target %s doesn't support checksum_memory", target_name(target));
 		return ERROR_FAIL;
 	}
 
@@ -3057,7 +3062,7 @@ static int handle_target(void *priv)
 				/* Target examination could have failed due to unstable connection,
 				 * but we set the examined flag anyway to repoll it later */
 				if (retval != ERROR_OK) {
-					target->examined = true;
+					target_set_examined(target);
 					LOG_USER("Examination failed, GDB will be halted. Polling again in %dms",
 						 target->backoff.times * polling_interval);
 					return retval;
@@ -4985,7 +4990,7 @@ no_params:
 				if (goi->isconfigure) {
 					/* START_DEPRECATED_TPIU */
 					if (n->value == TARGET_EVENT_TRACE_CONFIG)
-						LOG_INFO("DEPRECATED target event %s", n->name);
+						LOG_INFO("DEPRECATED target event %s; use TPIU events {pre,post}-{enable,disable}", n->name);
 					/* END_DEPRECATED_TPIU */
 
 					bool replace = true;
@@ -5310,8 +5315,13 @@ static int jim_target_examine(Jim_Interp *interp, int argc, Jim_Obj *const *argv
 	}
 
 	int e = target->type->examine(target);
-	if (e != ERROR_OK)
+	if (e != ERROR_OK) {
+		target_reset_examined(target);
 		return JIM_ERR;
+	}
+
+	target_set_examined(target);
+
 	return JIM_OK;
 }
 
@@ -5717,7 +5727,7 @@ static int target_create(struct jim_getopt_info *goi)
 	/* COMMAND */
 	jim_getopt_obj(goi, &new_cmd);
 	/* does this command exist? */
-	cmd = Jim_GetCommand(goi->interp, new_cmd, JIM_ERRMSG);
+	cmd = Jim_GetCommand(goi->interp, new_cmd, JIM_NONE);
 	if (cmd) {
 		cp = Jim_GetString(new_cmd, NULL);
 		Jim_SetResultFormatted(goi->interp, "Command/target: %s Exists", cp);
@@ -5980,10 +5990,10 @@ static int jim_target_smp(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 	int i;
 	const char *targetname;
 	int retval, len;
-	struct target *target = (struct target *) NULL;
+	struct target *target = NULL;
 	struct target_list *head, *curr, *new;
-	curr = (struct target_list *) NULL;
-	head = (struct target_list *) NULL;
+	curr = NULL;
+	head = NULL;
 
 	retval = 0;
 	LOG_DEBUG("%d", argc);
@@ -6000,8 +6010,8 @@ static int jim_target_smp(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 		if (target) {
 			new = malloc(sizeof(struct target_list));
 			new->target = target;
-			new->next = (struct target_list *)NULL;
-			if (head == (struct target_list *)NULL) {
+			new->next = NULL;
+			if (!head) {
 				head = new;
 				curr = head;
 			} else {
@@ -6013,7 +6023,7 @@ static int jim_target_smp(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 	/*  now parse the list of cpu and put the target in smp mode*/
 	curr = head;
 
-	while (curr != (struct target_list *)NULL) {
+	while (curr) {
 		target = curr->target;
 		target->smp = 1;
 		target->head = head;
@@ -6396,8 +6406,7 @@ next:
 out:
 	free(test_pattern);
 
-	if (wa)
-		target_free_working_area(target, wa);
+	target_free_working_area(target, wa);
 
 	/* Test writes */
 	num_bytes = test_size + 4 + 4 + 4;
@@ -6481,8 +6490,7 @@ nextw:
 
 	free(test_pattern);
 
-	if (wa)
-		target_free_working_area(target, wa);
+	target_free_working_area(target, wa);
 	return retval;
 }
 

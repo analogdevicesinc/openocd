@@ -37,6 +37,7 @@
 #include "target_type.h"
 #include "armv7m.h"
 #include "cortex_m.h"
+#include "arm_adi_v5.h"
 #include "arm_semihosting.h"
 #include "target_request.h"
 #include <rtt/rtt.h>
@@ -212,6 +213,8 @@ static int adapter_target_create(struct target *target,
 		LOG_ERROR("No memory creating target");
 		return ERROR_FAIL;
 	}
+
+	cortex_m->common_magic = CORTEX_M_COMMON_MAGIC;
 
 	adapter_init_arch_info(target, cortex_m, target->tap);
 
@@ -620,7 +623,7 @@ static int adapter_write_memory(struct target *target, target_addr_t address,
 	return adapter->layout->api->write_mem(adapter->handle, address, size, count, buffer);
 }
 
-static const struct command_registration adapter_command_handlers[] = {
+static const struct command_registration hla_command_handlers[] = {
 	{
 		.chain = arm_command_handlers,
 	},
@@ -646,7 +649,7 @@ struct target_type hla_target = {
 	.target_create = adapter_target_create,
 	.target_jim_configure = adiv5_jim_configure,
 	.examine = cortex_m_examine,
-	.commands = adapter_command_handlers,
+	.commands = hla_command_handlers,
 
 	.poll = adapter_poll,
 	.arch_state = armv7m_arch_state,
