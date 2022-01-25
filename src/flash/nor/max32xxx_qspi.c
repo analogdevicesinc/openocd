@@ -253,13 +253,15 @@ static int max32xxx_qspi_write_txfifo(struct target *target, const uint8_t* data
 			writeLen = (len - dataIndex);
 
 		/* Wait for there to be room in the TX FIFO */
+		unsigned retryCount = 10000;
 		do {
 			target_read_u32(target, SPIXFC_FIFO_CTRL, &temp32);
 			txFifoAvailable = SPIXFC_FIFO_DEPTH - ((temp32 & SPIXFC_FIFO_CTRL_TX_FIFO_CNT)
 				>> SPIXFC_FIFO_CTRL_TX_FIFO_CNT_POS);
 
-			/* TODO: Timeout */
-			/* ERROR_TARGET_RESOURCE_NOT_AVAILABLE */
+			if(--retryCount == 0) {
+				return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
+			}
 
 		} while (txFifoAvailable < writeLen);
 
@@ -292,13 +294,15 @@ static int max32xxx_qspi_read_rxfifo(struct target *target, uint8_t* data, unsig
 		unsigned readLen;
 
 		/* Wait for there to be data in the RX FIFO */
+		unsigned retryCount = 10000;
 		do {
 			target_read_u32(target, SPIXFC_FIFO_CTRL, &temp32);
 			rxFifoAvailable = (temp32 & SPIXFC_FIFO_CTRL_RX_FIFO_CNT)
 				>> SPIXFC_FIFO_CTRL_RX_FIFO_CNT_POS;
 
-			/* TODO: Timeout */
-			/* ERROR_TARGET_RESOURCE_NOT_AVAILABLE */
+			if(--retryCount == 0) {
+				return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
+			}
 
 		} while (!rxFifoAvailable);
 
