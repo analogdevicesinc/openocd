@@ -31,6 +31,7 @@
 #include <target/image.h>
 #include "spi.h"
 #include "sfdp.h"
+#include "helper/binarybuffer.h"
 
 #define SPIXFC_BASE								0x40027000
 #define SPIXFC_CFG								(SPIXFC_BASE | 0x00)
@@ -111,7 +112,7 @@
 #define SPIX_ALGO_ENTRY_OFFSET 					0x3cc
 
 static const uint8_t write_code[] = {
-#include "../../contrib/loaders/flash/max32xxx_qspi/max32xxx_qspi.inc"
+#include "contrib/loaders/flash/max32xxx_qspi/max32xxx_qspi.inc"
 };
 
 struct max32xxx_qspi_flash_bank {
