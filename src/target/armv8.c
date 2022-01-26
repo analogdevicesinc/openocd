@@ -290,7 +290,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		break;
 	case ARMV8_DCZID_EL0:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_DCZID_EL0, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_DCZID_EL0, 0), &value_64, 0);
 		break;
 	case ARMV8_ELR_EL1:
 		retval = instr_read_data_r0_64(dpm,
@@ -703,7 +703,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		break;
 	case ARMV8_ICC_BPR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_BPR0_EL1, 0), &value_64, 3);
+				ARMV8_MRS(SYSTEM_ICC_BPR0_EL1, 0), &value_64, 1);
 		break;
 	case ARMV8_ICC_BPR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
@@ -988,11 +988,11 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		break;
 	case ARMV8_MDCCINT_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_MDCCINT_EL1, 0), &value_64, 3);
+				ARMV8_MRS(SYSTEM_MDCCINT_EL1, 0), &value_64, 1);
 		break;
 	case ARMV8_MDCCSR_EL0:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_MDCCSR_EL0, 0), &value_64, 3);
+				ARMV8_MRS(SYSTEM_MDCCSR_EL0, 0), &value_64, 0);
 		break;
 	case ARMV8_MDSCR_EL1:
 		retval = instr_read_data_r0_64(dpm,
