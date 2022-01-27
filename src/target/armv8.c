@@ -564,10 +564,12 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CNTHV_CVAL_EL2, 0), &value_64, 2);
 		break;
+	
 	case ARMV8_CNTHVS_CTL_EL2:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CNTHVS_CTL_EL2, 0), &value_64, 2);
 		break;
+	
 	case ARMV8_CPACR_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CPACR_EL1, 0), &value_64, 1);
@@ -873,6 +875,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_ID_ISAR5_EL1, 0), &value_64, 1);
 		break;
+	
 	case ARMV8_LORC_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_LORC_EL1, 0), &value_64, 1);
@@ -893,6 +896,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_LORSA_EL1, 0), &value_64, 1);
 		break;
+	
 	case ARMV8_ID_MMFR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_ID_MMFR0_EL1, 0), &value_64, 1);
@@ -1661,11 +1665,13 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_CNTHV_CVAL_EL2, 0), value);
 		break;
+	
 	case ARMV8_CNTHVS_CTL_EL2:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_CNTHVS_CTL_EL2, 0), value);
 		break;	
+	
 	case ARMV8_CPACR_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -2087,6 +2093,7 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_ID_ISAR5_EL1, 0), value);
 		break;
+	
 	case ARMV8_LORC_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -2107,6 +2114,7 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_LORN_EL1, 0), value);
 		break;
+	
 	case ARMV8_ID_MMFR0_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -3549,7 +3557,6 @@ static const struct {
 	{ ARMV8_OSLSR_EL1, "OSLSR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_MDCCINT_EL1, "MDCCINT_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_MDCCSR_EL0, "MDCCSR_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
-	{ ARMV8_MDRAR_EL1, "MDRAR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_MDSCR_EL1, "MDSCR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 
 	{ ARMV8_TPIDR_EL0, "TPIDR_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
