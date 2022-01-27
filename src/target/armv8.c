@@ -522,15 +522,15 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		break;
 	case ARMV8_CNTPS_TVAL_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_CNTPS_TVAL_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_CNTPS_TVAL_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_CNTPS_CTL_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_CNTPS_CTL_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_CNTPS_CTL_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_CNTPS_CVAL_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_CNTPS_CVAL_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_CNTPS_CVAL_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_CNTVOFF_EL2:
 		retval = instr_read_data_r0_64(dpm,
@@ -703,7 +703,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		break;
 	case ARMV8_ICC_BPR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_BPR0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_BPR0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_BPR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
@@ -3765,8 +3765,8 @@ static const struct {
 	{ ARMV8_LORN_EL1, "LORN_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "LORegion", "net.sourceforge.openocd.lor", NULL},
 	{ ARMV8_LORSA_EL1, "LORSA_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "LORegion", "net.sourceforge.openocd.lor", NULL},
 
-	{ ARMV8_MDCR_EL2, "MDCR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "Virt. Extensions", "net.sourceforge.openocd.virtext", NULL},
-	{ ARMV8_MDCR_EL3, "MDCR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "Virt. Extensions", "net.sourceforge.openocd.virtext", NULL},
+	{ ARMV8_MDCR_EL2, "MDCR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "Virtualization Extensions", "net.sourceforge.openocd.virtext", NULL},
+	{ ARMV8_MDCR_EL3, "MDCR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "Virtualization Extensions", "net.sourceforge.openocd.virtext", NULL},
 
 	{ ARMV8_ERRIDR_EL1, "ERRID_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Error System Registers", "net.sourceforge.openocd.esr", NULL},
 	{ ARMV8_ERRSELR_EL1, "ERRSELR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Error System Registers", "net.sourceforge.openocd.esr", NULL},
