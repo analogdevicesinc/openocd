@@ -1084,7 +1084,8 @@ proc adspsc594_init_ddr3 { dmc } {
 }
 
 
-proc adspsc598_init_ddr3 { dmc } {
+proc adspsc59x_init_ddr3 { dmc } {
+   global _CHIPNAME
 
    set dmc_baseaddr       0x31070000
    set dmc_ctl            [expr {$dmc_baseaddr + 0x4}]
@@ -1108,6 +1109,9 @@ proc adspsc598_init_ddr3 { dmc } {
    set dmc_ddr_zq_ctl2    [expr {$dmc_baseaddr + 0x103C}]
    set dmc_ddr_ca_ctl     [expr {$dmc_baseaddr + 0x1068}]
    set dmc_ddr_scratch2   [expr {$dmc_baseaddr + 0x1074}]
+   set dmc_ddr_scratch3   [expr {$dmc_baseaddr + 0x1078}]
+   set dmc_ddr_scratch4   [expr {$dmc_baseaddr + 0x107c}]
+   set dmc_ddr_scratch5   [expr {$dmc_baseaddr + 0x1080}]
    set dmc_ddr_scratch6   [expr {$dmc_baseaddr + 0x1084}]
    set dmc_ddr_scratch7   [expr {$dmc_baseaddr + 0x1088}]
 
@@ -1161,8 +1165,14 @@ proc adspsc598_init_ddr3 { dmc } {
 
    mww phys $cdu_cfg0 $cdu_cfg_in0_en
    mww phys $cdu_cfg1 $cdu_cfg_in0_en
-   mww phys $cdu_cfg2 $cdu_cfg_in2_en
-   mww phys $cdu_cfg3 $cdu_cfg_in0_en
+
+   if { $_CHIPNAME == "adspsc598" } {
+      mww phys $cdu_cfg2 $cdu_cfg_in2_en
+      mww phys $cdu_cfg3 $cdu_cfg_in0_en
+   } else {
+      mww phys $cdu_cfg2 $cdu_cfg_in0_en
+      mww phys $cdu_cfg3 $cdu_cfg_in1_en
+   }
    mww phys $cdu_cfg4 $cdu_cfg_in1_en
    mww phys $cdu_cfg5 $cdu_cfg_in0_en
    mww phys $cdu_cfg6 $cdu_cfg_in0_en
@@ -1171,8 +1181,10 @@ proc adspsc598_init_ddr3 { dmc } {
    mww phys $cdu_cfg9 $cdu_cfg_in0_en
    mww phys $cdu_cfg10 $cdu_cfg_in0_en
    mww phys $cdu_cfg12 $cdu_cfg_in0_en
-   mww phys $cdu_cfg13 $cdu_cfg_in1_en
-   mww phys $cdu_cfg14 $cdu_cfg_in1_en
+   if { $_CHIPNAME == "adspsc598" } {
+      mww phys $cdu_cfg13 $cdu_cfg_in1_en
+      mww phys $cdu_cfg14 $cdu_cfg_in1_en
+   }
 
    # CGU0 Configuration
    # If PLL is disabled, then enable it
@@ -1203,9 +1215,13 @@ proc adspsc598_init_ddr3 { dmc } {
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_S0SEL       = 4;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_SYSSEL      = 4;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_S1SEL       = 2;
-   # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_DSEL        = 3;
+   # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_DSEL        = 3; // 2 for SC594
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_OSEL        = 8;
-   mww phys $cgu0_div 0x2034482
+   if { $_CHIPNAME == "adspsc598" } {
+      mww phys $cgu0_div 0x2034482
+   } else {
+      mww phys $cgu0_div 0x2024482
+   }
 
    # adi_pwr_WriteDIVCTLLocal()
    # Put PLL in to Bypass Mode - call adi_pwr_ConfigurePLLControlReg()
@@ -1268,11 +1284,20 @@ proc adspsc598_init_ddr3 { dmc } {
    }
 
    # adi_pwr_WriteDIVCTLLocal()
-   # Wait until the S0SELEXEN or S1SELEXEN enable bit is actually set
-   # while(!(pDevice->pCguRegs->CGU_CTL & (BITM_CGU_CTL_S1SELEXEN|BITM_CGU_CTL_S0SELEXEN))) {}
-   set data [memread32_phys $cgu0_ctl]
-   while { ![expr {$data & 0x30000}] } {
+   if { $_CHIPNAME == "adspsc598" } {
+      # Wait until the S0SELEXEN or S1SELEXEN enable bit is actually set
+      # while(!(pDevice->pCguRegs->CGU_CTL & (BITM_CGU_CTL_S1SELEXEN|BITM_CGU_CTL_S0SELEXEN))) {}
       set data [memread32_phys $cgu0_ctl]
+      while { ![expr {$data & 0x30000}] } {
+         set data [memread32_phys $cgu0_ctl]
+      }
+   } else {
+			# Wait until the S1SELEXEN enable bit is actually set
+			# while(!(pDevice->pCguRegs->CGU_CTL & BITM_CGU_CTL_S1SELEXEN)) {}
+      set data [memread32_phys $cgu0_ctl]
+      while { ![expr {$data & 0x20000}] } {
+         set data [memread32_phys $cgu0_ctl]
+      }
    }
 
    # Update the new Divider values for S1SELEX via DIVEX
@@ -1290,7 +1315,11 @@ proc adspsc598_init_ddr3 { dmc } {
 
    # Update the new Divider values with UPDT bit
    # pDevice->pCguRegs->CGU_DIV =  dNewCguDiv | BITM_CGU_DIV_UPDT;
-   mww phys $cgu0_div 0x42034482
+   if { $_CHIPNAME == "adspsc598" } {
+      mww phys $cgu0_div 0x42034482
+   } else {
+      mww phys $cgu0_div 0x42024482
+   }
 
    # Wait until Update bit is set
    # while(!(pDevice->pCguRegs->CGU_DIV & BITM_CGU_DIV_UPDT)) {}
@@ -1307,6 +1336,8 @@ proc adspsc598_init_ddr3 { dmc } {
    }
 
    # CGU1 Configuration
+
+   # adi_pwr_ClockInitLocal()
 
    # If PLL is disabled, then enable it
    # if(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN))
@@ -1352,7 +1383,11 @@ proc adspsc598_init_ddr3 { dmc } {
 
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
-   mww phys $cgu1_ctl 0x34800
+   if { $_CHIPNAME == "adspsc598" } {
+      mww phys $cgu1_ctl 0x34800
+   } else {
+      mww phys $cgu1_ctl 0x4000
+   }
 
    # Take PLL out of Bypass Mode
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
@@ -1382,18 +1417,20 @@ proc adspsc598_init_ddr3 { dmc } {
       set data [memread32_phys $cgu1_stat]
    }
 
-   # adi_pwr_WriteDIVCTLLocal()
-   # Wait until the S1SELEXEN enable or S0SELEXEN enable bit is actually set
-   # while(!(pDevice->pCguRegs->CGU_CTL & (BITM_CGU_CTL_S1SELEXEN|BITM_CGU_CTL_S0SELEXEN))) {}
-   set data [memread32_phys $cgu1_ctl]
-   while { ![expr {$data & 0x30000}] } {
+   if { $_CHIPNAME == "adspsc598" } {
+      # adi_pwr_WriteDIVCTLLocal()
+      # Wait until the S1SELEXEN enable or S0SELEXEN enable bit is actually set
+      # while(!(pDevice->pCguRegs->CGU_CTL & (BITM_CGU_CTL_S1SELEXEN|BITM_CGU_CTL_S0SELEXEN))) {}
       set data [memread32_phys $cgu1_ctl]
-   }
+      while { ![expr {$data & 0x30000}] } {
+         set data [memread32_phys $cgu1_ctl]
+      }
 
-   # Update the new Divider values for S1SELEX via DIVEX */
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 90;
-   # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv;
-   mww phys $cgu1_divex 0x5a0024
+      # Update the new Divider values for S1SELEX via DIVEX */
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 90;
+      # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv;
+      mww phys $cgu1_divex 0x5a0024
+   }
 
    # wait till clocks are aligned
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
@@ -1403,16 +1440,29 @@ proc adspsc598_init_ddr3 { dmc } {
    }
 
    # Set CGU1_DIV
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_CSEL        = 16;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_SYSSEL      = 8;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S0SEL       = 4;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S1SEL       = 2;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_DSEL        = 2;
-   # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_OSEL        = 18;
+   if { $_CHIPNAME == "adspsc598" } {
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_CSEL        = 16;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_SYSSEL      = 8;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S0SEL       = 4;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S1SEL       = 2;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_DSEL        = 2;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_OSEL        = 18;
+   } else {
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_CSEL        = 2;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S0SEL       = 4;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_SYSSEL      = 4;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_S1SEL       = 2;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_DSEL        = 2;
+      # pADI_CGU_Param_List.cgu1_settings.clocksettings.div_OSEL        = 16;
+   }
 
    # Update the new Divider values with UPDT bit
    # pDevice->pCguRegs->CGU_DIV =  dNewCguDiv | BITM_CGU_DIV_UPDT;
-   mww phys $cgu1_div 0x44824890
+   if { $_CHIPNAME == "adspsc598" } {
+      mww phys $cgu1_div 0x44824890
+   } else {
+      mww phys $cgu1_div 0x44024482
+   }
 
    # Wait until Update bit is set
    # while(!(pDevice->pCguRegs->CGU_DIV & BITM_CGU_DIV_UPDT)) {}
@@ -1439,56 +1489,303 @@ proc adspsc598_init_ddr3 { dmc } {
    # 1ms should be enough
    after 1
 
+   # Workaround for DDR calibration is required for SC59x 0.0 silicon (see
+   # anomaly 20000117).
+   set ddr_workaround 1
 
+   if { $ddr_workaround } {
 
-   # adi_dmc_phy_calibration()
-   # Begin DMC phy ZQ calibration routine
+      # DMC Phy Initialization function with workaround 2
+      # Reset trigger
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0;
+      mww phys $dmc_ddr_ca_ctl 0
+      mww phys $dmc_ddr_root_ctl 0
+      mww phys $dmc_ddr_scratch3 0
+      mww phys $dmc_ddr_scratch2 0
 
-   # Program the ODT and drive strength values
-   # *pREG_DMC0_DDR_ZQ_CTL0 = 0x00786464;
-   # *pREG_DMC0_DDR_ZQ_CTL1 = 0;
-   # *pREG_DMC0_DDR_ZQ_CTL2 = 0x70000000;
-   mww phys $dmc_ddr_zq_ctl0 0x786464
-   mww phys $dmc_ddr_zq_ctl1 0
-   mww phys $dmc_ddr_zq_ctl2 0x70000000
+      # Writing internal registers IN calib pad to zero. Calib mode set to 1 [26], trig M1 S1 write [16],
+      # this enables usage of scratch registers instead of ZQCTL registers
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      #  DmcDelay(2500);
+      mww phys $dmc_ddr_root_ctl 0x04010000
+      after 1
 
-   # Generate the trigger
-   # *pREG_DMC0_DDR_CA_CTL = 0x00000000ul ;
-   # *pREG_DMC0_DDR_ROOT_CTL = 0x00000000ul;
-   # *pREG_DMC0_DDR_ROOT_CTL = 0x00010000ul;
-   # dmcdelay(8000);
-   #
-   # The [31:26] bits may change if pad ring changes */
-   # *pREG_DMC0_DDR_CA_CTL = 0x0C000001ul|TrigCalib;
-   # dmcdelay(8000);
-   # *pREG_DMC0_DDR_CA_CTL = 0x00000000ul ;
-   # *pREG_DMC0_DDR_ROOT_CTL = 0x00000000ul ;
+      # TRIGGER FOR M2-S2 WRITE -> slave id 31:26  trig m2,s2 write bit 1->1
+      # Slave1 address is 4
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
+      #  DmcDelay(2500);
+      mww phys $dmc_ddr_ca_ctl 0x10000002
+      after 1
 
-   mww phys $dmc_ddr_ca_ctl 0
-   mww phys $dmc_ddr_root_ctl 0
-   mww phys $dmc_ddr_root_ctl 0x10000
-   after 1
+      # Reset Trigger
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
 
-   mww phys $dmc_ddr_ca_ctl 0x0c000001
-   after 1
-   mww phys $dmc_ddr_ca_ctl 0
-   mww phys $dmc_ddr_root_ctl 0
+      # Write to slave 1, make the power down bit high
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x1<<12;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_scratch3 0x1000
+      mww $dmc_ddr_scratch2 0
+      after 1
 
+      # Calib mode set to 1 [26], trig M1 S1 write [16]
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
 
-   # adi_dmc_ctrl_init()
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_ca_ctl 0x10000002
 
-   # 667 MHz
-   set ulDDR_DLLCTLCFG 0xaf70622
-   set ulDDR_EMR2EMR3  0x100004
-   set ulDDR_CTL       0xa05
-   set ulDDR_MREMR1    0xb5000c0
-   set ulDDR_TR0       0x42118959
-   set ulDDR_TR1       0x50ae1450
-   set ulDDR_TR2       0x44a51e
-   set ulDDR_ZQCTL0    0x786464
-   set ulDDR_ZQCTL1    0x0
-   set ulDDR_ZQCTL2    0x70000000
+      after 1
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
 
+      # For slave 0
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = pConfig->ulDDR_ZQCTL0;
+      mww $dmc_ddr_scratch3 0
+      mww $dmc_ddr_scratch2 0x785a64
+
+      # Calib mode set to 1 [26], trig M1 S1 write [16]
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0C000002 ;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_ca_ctl 0x0C000002
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      # Writing to slave 1
+      # calstrt is 0, but other programming is done
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0; /* make power down LOW again, to kickstart BIAS circuit */
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x30000000;
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x30000000
+
+      # Write to ca_ctl lane, calib mode set to 1 [26], trig M1 S1 write [16]
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      # Copies data to lane controller slave
+      # TRIGGER FOR M2-S2 WRITE -> slave id 31:26  trig m2,s2 write bit 1->1
+      # slave1 address is 4
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002 ;
+      #  DmcDelay(2500);
+      mww $dmc_ddr_ca_ctl 0x10000002
+      after 1
+
+      # Reset Trigger
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0ul;
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x0
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x0
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000ul;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002ul;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x10000002
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0ul;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0ul;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_3 = 0x0ul;
+      #  *pREG_DMC0_DDR_SCRATCH_2 = 0x50000000ul;
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x0
+      mww $dmc_ddr_scratch3 0x0
+      mww $dmc_ddr_scratch2 0x50000000
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000ul;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x10000002ul;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x10000002
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0u;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0C000004u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x0C000004
+      after 1
+      #  *pREG_DMC0_DDR_ROOT_CTL = BITM_DMC_DDR_ROOT_CTL_TRIG_RD_XFER_ALL;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x00200000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0u;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      # Calculate ODT PU and PD values
+      #  stat_value = ((*pREG_DMC0_DDR_SCRATCH_7 & 0x0000FFFFu)<<16);
+      #  stat_value |= (*pREG_DMC0_DDR_SCRATCH_6 & 0xFFFF0000u)>>16;
+      #  ClkDqsDrvImpedance = ((pConfig->ulDDR_ZQCTL0) & BITM_DMC_DDR_ZQ_CTL0_IMPWRDQ) >> BITP_DMC_DDR_ZQ_CTL0_IMPWRDQ;
+      #  ROdt = ((pConfig->ulDDR_ZQCTL0) & BITM_DMC_DDR_ZQ_CTL0_IMPRTT) >> BITP_DMC_DDR_ZQ_CTL0_IMPRTT;
+      #  drv_pu = stat_value & 0x0000003Fu;
+      #  drv_pd = (stat_value>>12) & 0x0000003Fu;
+      #  odt_pu = (drv_pu * ClkDqsDrvImpedance)/ ROdt;
+      #  odt_pd = (drv_pd * ClkDqsDrvImpedance)/ ROdt;
+      #  *pREG_DMC0_DDR_SCRATCH_2 |= ((1uL<<24)                     |
+      #                              ((drv_pd & 0x0000003Fu))       |
+      #                              ((odt_pd & 0x0000003Fu)<<6)    |
+      #                              ((drv_pu & 0x0000003Fu)<<12)   |
+      #                              ((odt_pu & 0x0000003Fu)<<18));
+      set scratch7 [memread32_phys $dmc_ddr_scratch7]
+      set scratch6 [memread32_phys $dmc_ddr_scratch6]
+      set stat_value [expr {(($scratch7 & 0x0000ffff) << 16) | (($scratch6 & 0xffff0000) >> 16)}]
+      set ClkDqsDrvImpedance 0x0000005A
+      set ROdt 0x00000078
+      set drv_pu [expr {$stat_value & 0x3f}]
+      set drv_pd [expr {($stat_value >> 12) & 0x3f}]
+      set odt_pu [expr {($drv_pu * $ClkDqsDrvImpedance) / $ROdt}]
+      set odt_pd [expr {($drv_pd * $ClkDqsDrvImpedance) / $ROdt}]
+      set scratch2 [expr {0x01000000 | $drv_pd | ($odt_pd << 6) | ($drv_pu << 12) | ($odt_pu << 18)}]
+      pmmw $dmc_ddr_scratch2 $scratch2 0x0
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x0C010000u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x0C010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x08000002u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x08000002
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0u;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x04010000u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_root_ctl 0x04010000
+      after 1
+
+      #  *pREG_DMC0_DDR_CA_CTL = 0x80000002u;
+      #  dmcdelay(2500u);
+      mww $dmc_ddr_ca_ctl 0x08000002
+
+      after 1
+      #  *pREG_DMC0_DDR_CA_CTL = 0u;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0u;
+      mww $dmc_ddr_ca_ctl 0
+      mww $dmc_ddr_root_ctl 0
+
+   } else {
+
+      # adi_dmc_phy_calibration()
+      # Begin DMC phy ZQ calibration routine
+      # Program the ODT and drive strength values
+      if { $_CHIPNAME == "adspsc598" } {
+         # *pREG_DMC0_DDR_ZQ_CTL0 = 0x00786464;
+         # *pREG_DMC0_DDR_ZQ_CTL1 = 0;
+         # *pREG_DMC0_DDR_ZQ_CTL2 = 0x70000000;
+         mww phys $dmc_ddr_zq_ctl0 0x786464
+         mww phys $dmc_ddr_zq_ctl1 0
+         mww phys $dmc_ddr_zq_ctl2 0x70000000
+      } else {
+         #  *pREG_DMC0_DDR_ZQ_CTL0 = 0x00785A64;
+         #  *pREG_DMC0_DDR_ZQ_CTL1 = 0;
+         #  *pREG_DMC0_DDR_ZQ_CTL2 = 0x70000000;
+         mww phys $dmc_ddr_zq_ctl0 0x785a64
+         mww phys $dmc_ddr_zq_ctl1 0
+         mww phys $dmc_ddr_zq_ctl2 0x70000000
+      }
+
+      # Generate the trigger
+      #  *pREG_DMC0_DDR_CA_CTL = 0x00000000ul ;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x00000000ul;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x00010000ul;
+      #  dmcdelay(8000);
+      #
+      # The [31:26] bits may change if pad ring changes
+      #  *pREG_DMC0_DDR_CA_CTL = 0x0C000001ul|TrigCalib;
+      #  dmcdelay(8000);
+      #  *pREG_DMC0_DDR_CA_CTL = 0x00000000ul ;
+      #  *pREG_DMC0_DDR_ROOT_CTL = 0x00000000ul ;
+
+      mww phys $dmc_ddr_ca_ctl 0
+      mww phys $dmc_ddr_root_ctl 0
+      mww phys $dmc_ddr_root_ctl 0x10000
+      after 1
+
+      mww phys $dmc_ddr_ca_ctl 0x0c000001
+      after 1
+      mww phys $dmc_ddr_ca_ctl 0
+      mww phys $dmc_ddr_root_ctl 0
+
+   }
+
+   if { $_CHIPNAME == "adspsc598" } {
+      # 667 MHz
+      set ulDDR_DLLCTLCFG 0xaf70622
+      set ulDDR_EMR2EMR3  0x100004
+      set ulDDR_CTL       0xa05
+      set ulDDR_MREMR1    0xb5000c0
+      set ulDDR_TR0       0x42118959
+      set ulDDR_TR1       0x50ae1450
+      set ulDDR_TR2       0x44a51e
+      set ulDDR_ZQCTL0    0x786464
+      set ulDDR_ZQCTL1    0x0
+      set ulDDR_ZQCTL2    0x70000000
+   } else {
+      set ulDDR_DLLCTLCFG 0x0cf70722	
+      set ulDDR_EMR2EMR3  0x00180004	
+      set ulDDR_CTL       0x08000a05	
+      set ulDDR_MREMR1    0x0d7000c0	
+      set ulDDR_TR0       0x4271cb6b	
+      set ulDDR_TR1       0x61181860	
+      set ulDDR_TR2       0x0045c620	
+      set ulDDR_ZQCTL0    0x00785a64	
+      set ulDDR_ZQCTL1    0x00000000	
+      set ulDDR_ZQCTL2    0x70000000	
+   }
    # program timing registers
    # *pREG_DMC0_CFG = (pConfig->ulDDR_DLLCTLCFG) & 0xFFFFul;
    # *pREG_DMC0_TR0 = pConfig->ulDDR_TR0;
@@ -1603,9 +1900,94 @@ proc adspsc598_init_ddr3 { dmc } {
    mww phys $dmc_dllctl [expr {$rd_cnt | $datacyc}]
    mww phys $dmc_ctl [expr {$ulDDR_CTL & 0xfffffffb & 0xfbffffff} ]
 
-   # DDR workaround.
-   # Restricts the outstanding transactions to 1 for both read/write
-   # to force in-order access/response from A55 to/from DDR.
-   set scb6_a55_m0_ib_fn_mod 0x30643108
-   mww phys $scb6_a55_m0_ib_fn_mod 0x00000003
+   if { $_CHIPNAME == "adspsc598" } {
+      # DDR workaround.
+      # Restricts the outstanding transactions to 1 for both read/write
+      # to force in-order access/response from A55 to/from DDR.
+      set scb6_a55_m0_ib_fn_mod 0x30643108
+      mww phys $scb6_a55_m0_ib_fn_mod 0x00000003
+   }
+
+
+   # SC594 uses delay trim
+   if { $_CHIPNAME == "adspsc598" } {
+      set delay_trim 0
+   } else {
+      set delay_trim 1
+   }
+
+   if { $delay_trim } {
+      # DQS delay trim
+
+      # For LDQS
+      # *pREG_DMC0_DDR_LANE0_CTL1 = (*pREG_DMC0_DDR_LANE0_CTL1) | (0x000000D0);
+      # dmcdelay(2500u);
+      pmmw $dmc_ddr_lane0_ctl1 0x000000d0 0
+      after 1
+
+      # *pREG_DMC0_DDR_ROOT_CTL=0x00400000;
+      # dmcdelay(2500u);
+      mww phys $dmc_ddr_root_ctl 0x00400000
+      after 1
+
+      # *pREG_DMC0_DDR_ROOT_CTL =0x0;
+      # stat_value = (*pREG_DMC0_DDR_SCRATCH_4 & (0xFFFF0000))>>16;
+      # WL_code_LDQS = (stat_value) & (0x0000001F);
+      mww phys $dmc_ddr_root_ctl 0x0
+      set data [memread32_phys $dmc_ddr_scratch4]
+      set wl_code_ldqs [expr {($data & 0x001f0000) >> 16}]
+
+      # *pREG_DMC0_DDR_LANE0_CTL1 &= ~(BITM_DMC_DDR_LANE0_CTL1_BYPCODE|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN);
+      pmmw $dmc_ddr_lane0_ctl1 0 0x0000fc00
+
+      # If write leveling is enabled
+      # if((pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL == true)
+      # {
+      #    *pREG_DMC0_DDR_LANE0_CTL1 |= (((WL_code_LDQS + Lane0_DQS_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
+      # }
+      # else
+      # {
+      #    *pREG_DMC0_DDR_LANE0_CTL1 |= (((DQS_Default_Delay + Lane0_DQS_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
+      # }
+      # dmcdelay(2500u);
+      set lane0_dqs_delay 1
+      set ctl_val [expr {((($wl_code_ldqs + $lane0_dqs_delay) << 10) & 0x00007c00) | 0x00008000}]
+      pmmw $dmc_ddr_lane0_ctl1 $ctl_val 0
+      after 1
+
+      # For UDQS
+      # *pREG_DMC0_DDR_LANE1_CTL1 = (*pREG_DMC0_DDR_LANE1_CTL1) | (0x000000D0);
+      # dmcdelay(2500u);
+      pmmw $dmc_ddr_lane1_ctl1 0x000000d0 0
+      after 1
+
+      # *pREG_DMC0_DDR_ROOT_CTL=0x00800000;
+      # dmcdelay(2500u);
+      mww phys $dmc_ddr_root_ctl 0x00800000
+      after 1
+
+      # *pREG_DMC0_DDR_ROOT_CTL =0x0;
+      # stat_value = (*pREG_DMC0_DDR_SCRATCH_5 & (0xFFFF0000))>>16;
+      # WL_code_UDQS = (stat_value) & (0x0000001F);
+      mww phys $dmc_ddr_root_ctl 0x0
+      set data [memread32_phys $dmc_ddr_scratch5]
+      set wl_code_udqs [expr {($data & 0x001f0000) >> 16}]
+
+      # *pREG_DMC0_DDR_LANE1_CTL1 &= ~(BITM_DMC_DDR_LANE1_CTL1_BYPCODE|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN);
+      pmmw $dmc_ddr_lane1_ctl1 0 0x0000fc00
+      # If write leveling is enabled
+      # if((pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL == true)
+      # {
+      #    *pREG_DMC0_DDR_LANE1_CTL1 |= (((WL_code_UDQS + Lane1_DQS_Delay)<<BITP_DMC_DDR_LANE1_CTL1_BYPCODE) & BITM_DMC_DDR_LANE1_CTL1_BYPCODE)|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN;
+      # }
+      # else
+      # {
+      #    *pREG_DMC0_DDR_LANE1_CTL1 |= (((DQS_Default_Delay + Lane1_DQS_Delay)<<BITP_DMC_DDR_LANE1_CTL1_BYPCODE) & BITM_DMC_DDR_LANE1_CTL1_BYPCODE)|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN;
+      # }
+      # dmcdelay(2500u);
+      set lane1_dqs_delay 1
+      set ctl_val [expr {((($wl_code_udqs + $lane1_dqs_delay) << 10) & 0x00007c00) | 0x00008000}]
+      pmmw $dmc_ddr_lane1_ctl1 $ctl_val 0
+      after 1
+   }
 }
