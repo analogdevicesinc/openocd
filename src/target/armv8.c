@@ -565,11 +565,6 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_CNTHV_CVAL_EL2, 0), &value_64, 2);
 		break;
 	
-	case ARMV8_CNTHVS_CTL_EL2:
-		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_CNTHVS_CTL_EL2, 0), &value_64, 2);
-		break;
-	
 	case ARMV8_CPACR_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CPACR_EL1, 0), &value_64, 1);
@@ -876,25 +871,9 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_ID_ISAR5_EL1, 0), &value_64, 1);
 		break;
 	
-	case ARMV8_LORC_EL1:
-		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_LORC_EL1, 0), &value_64, 1);
-		break;
-	case ARMV8_LOREA_EL1:
-		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_LOREA_EL1, 0), &value_64, 1);
-		break;
 	case ARMV8_LORID_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_LORID_EL1, 0), &value_64, 1);
-		break;
-	case ARMV8_LORN_EL1:
-		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_LORN_EL1, 0), &value_64, 1);
-		break;
-	case ARMV8_LORSA_EL1:
-		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_LORSA_EL1, 0), &value_64, 1);
 		break;
 	
 	case ARMV8_ID_MMFR0_EL1:
@@ -1026,10 +1005,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_OSECCR_EL1, 0), &value_64, 1);
 		break;
-	case ARMV8_OSLAR_EL1:
-		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_OSLAR_EL1, 0), &value_64, 1);
-		break;
+
 	case ARMV8_OSLSR_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_OSLSR_EL1, 0), &value_64, 1);
@@ -1666,12 +1642,6 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 				ARMV8_MSR_GP(SYSTEM_CNTHV_CVAL_EL2, 0), value);
 		break;
 	
-	case ARMV8_CNTHVS_CTL_EL2:
-		value = value_64;
-		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTHVS_CTL_EL2, 0), value);
-		break;	
-	
 	case ARMV8_CPACR_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -2094,25 +2064,10 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 				ARMV8_MSR_GP(SYSTEM_ID_ISAR5_EL1, 0), value);
 		break;
 	
-	case ARMV8_LORC_EL1:
-		value = value_64;
-		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_LORC_EL1, 0), value);
-		break;
-	case ARMV8_LOREA_EL1:
-		value = value_64;
-		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_LOREA_EL1, 0), value);
-		break;
 	case ARMV8_LORID_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_LORID_EL1, 0), value);
-		break;
-	case ARMV8_LORN_EL1:
-		value = value_64;
-		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_LORN_EL1, 0), value);
 		break;
 	
 	case ARMV8_ID_MMFR0_EL1:
@@ -2280,11 +2235,7 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_OSECCR_EL1, 0), value);
 		break;
-	case ARMV8_OSLAR_EL1:
-		value = value_64;
-		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_OSLAR_EL1, 0), value);
-		break;
+
 	case ARMV8_OSLSR_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -3553,7 +3504,6 @@ static const struct {
 	{ ARMV8_OSDTRRX_EL1, "OSDTRRX_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_OSDTRTX_EL1, "OSDTRTX_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_OSECCR_EL1, "OSECCR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
-	{ ARMV8_OSLAR_EL1, "OSLAR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_OSLSR_EL1, "OSLSR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_MDCCINT_EL1, "MDCCINT_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_MDCCSR_EL0, "MDCCSR_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
@@ -3698,7 +3648,6 @@ static const struct {
 	{ ARMV8_CNTHV_TVAL_EL2, "CNTHV_TVAL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 	{ ARMV8_CNTHV_CTL_EL2, "CNTHV_CTL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 	{ ARMV8_CNTHV_CVAL_EL2, "CNTHV_CVAL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
-	{ ARMV8_CNTHVS_CTL_EL2, "CNTHVS_CTL_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemTimer", "net.sourceforge.openocd.timer", NULL},
 
 	{ ARMV8_CTR_EL0, "CTR_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},
 	{ ARMV8_CCSIDR_EL1, "CCSIDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "CacheControlAndConfig", "net.sourceforge.openocd.cacheconfig", NULL},
@@ -3761,16 +3710,11 @@ static const struct {
 	{ ARMV8_ID_PFR0_EL1, "ID_PFR0_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "ID", "net.sourceforge.openocd.id", NULL},
 	{ ARMV8_ID_PFR1_EL1, "ID_PFR1_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "ID", "net.sourceforge.openocd.id", NULL},
 	{ ARMV8_DCZID_EL0, "DCZID_EL0", 64, ARMV8_64_EL0T, REG_TYPE_UINT64, "ID", "net.sourceforge.openocd.id", NULL},
-	{ ARMV8_MIDR_EL1, "MIDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "ID", "net.sourceforge.openocd.id", NULL},
 	{ ARMV8_REVIDR_EL1, "REVIDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "ID", "net.sourceforge.openocd.id", NULL},
 	{ ARMV8_VMPIDR_EL2, "VMPIDR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "ID", "net.sourceforge.openocd.id", NULL},
 	{ ARMV8_VPIDR_EL2, "VPIDR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "ID", "net.sourceforge.openocd.id", NULL},
 
-	{ ARMV8_LORC_EL1, "LORC_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "LORegion", "net.sourceforge.openocd.lor", NULL},
-	{ ARMV8_LOREA_EL1, "LOREA_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "LORegion", "net.sourceforge.openocd.lor", NULL},
 	{ ARMV8_LORID_EL1, "LORID_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "LORegion", "net.sourceforge.openocd.lor", NULL},
-	{ ARMV8_LORN_EL1, "LORN_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "LORegion", "net.sourceforge.openocd.lor", NULL},
-	{ ARMV8_LORSA_EL1, "LORSA_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "LORegion", "net.sourceforge.openocd.lor", NULL},
 
 	{ ARMV8_MDCR_EL2, "MDCR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "Virtualization Extensions", "net.sourceforge.openocd.virtext", NULL},
 	{ ARMV8_MDCR_EL3, "MDCR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "Virtualization Extensions", "net.sourceforge.openocd.virtext", NULL},
