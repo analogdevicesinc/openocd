@@ -704,43 +704,43 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		break;
 	case ARMV8_ICC_BPR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_BPR1_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_BPR1_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_CTLR_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_CTLR_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_CTLR_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_HPPIR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_HPPIR0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_HPPIR0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_HPPIR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_HPPIR1_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_HPPIR1_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_IAR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_IAR0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_IAR0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_IAR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_IAR1_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_IAR1_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_IGRPEN0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_IGRPEN0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_IGRPEN0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_IGRPEN1_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_IGRPEN1_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_IGRPEN1_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_PMR_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_PMR_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_PMR_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_RPR_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICC_RPR_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICC_RPR_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICC_SRE_EL1:
 		retval = instr_read_data_r0_64(dpm,
@@ -748,55 +748,55 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		break;
 	case ARMV8_ICV_AP0R0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_AP0R0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_AP0R0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_AP1R0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_AP1R0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_AP1R0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_BPR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_BPR0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_BPR0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_BPR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_BPR1_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_BPR1_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_CTLR_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_CTLR_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_CTLR_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_HPPIR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_HPPIR0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_HPPIR0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_HPPIR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_HPPIR1_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_HPPIR1_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_IAR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_IAR0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_IAR0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_IAR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_IAR1_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_IAR1_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_IGRPEN0_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_IGRPEN0_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_IGRPEN0_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_IGRPEN1_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_IGRPEN1_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_IGRPEN1_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_PMR_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_PMR_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_PMR_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ICV_RPR_EL1:
 		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ICV_RPR_EL1, 0), &value_64, 1);
+				ARMV8_MRS(SYSTEM_ICV_RPR_EL1, 0), &value_64, 3);
 		break;
 	case ARMV8_ID_AA64AFR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
