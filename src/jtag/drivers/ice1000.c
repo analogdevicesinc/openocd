@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2021 by Analog Devices, Inc.                     *
+*   Copyright (C) 2011 - 2022 by Analog Devices, Inc.                     *
 *   Based on ice100.c of UrJTAG                                           *
 *   Jie Zhang  <jie.zhang@analog.com>                                     *
 *                                                                         *
@@ -544,7 +544,7 @@ static int ice1000_firmware_crc(uint16_t *p)
 	usb_cmd_blk.count = 2;
 	usb_cmd_blk.buffer = 0;
 
-	adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
 
 	adi_usb_read_or_ret(p, sizeof (*p));
 

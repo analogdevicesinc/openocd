@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2021 by Analog Devices, Inc.                     *
+*   Copyright (C) 2011 - 2022 by Analog Devices, Inc.                     *
 *   Based on ice1000.c of UrJTAG                                          *
 *   Chad Wentworth  <chad.wentworth@analog.com>                           *
 *                                                                         *
@@ -28,6 +28,10 @@
 #include <helper/log.h>
 #include <helper/configuration.h>
 #include "libusb_helper.h"
+
+#ifdef _WIN32
+#include "usbmux.h"
+#endif
 
 /*
  * Internal Structures
@@ -82,6 +86,10 @@ typedef struct
 	int32_t r_timeout;				/* USB Read Timeout */
 	int32_t r_buf_sz;				/* USB Read Buffer Size */
 	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
+	bool use_usbmux;				/* If true, use USB MUX for USB communication */
+#ifdef _WIN32
+	HANDLE mux_handle;				/* USB MUX handle */
+#endif
 } params_t;
 
 /* Emulators's USB Data structure */
@@ -153,6 +161,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define WRITE_ENDPOINT			0x02
 #define READ_ENDPOINT			0x01
 #define USB_WRITE_TIMEOUT		10000
+#define USB_CONNECTION_TIMEOUT	10000
 #define USB_READ_TIMEOUT		30000
 #define WRITE_BUFFER_SIZE		0x4800
 #define READ_BUFFER_SIZE		0x4000
@@ -167,39 +176,93 @@ static uint16_t dbgagent_pid[MAX_USB_IDS + 1] = { 0 };
  * Internal Macros
  */
 
-#define adi_usb_read_or_ret(buf, len)									\
-	do {																\
-		int __ret, __actual, __size = (len);							\
-		__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
-								 cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
-								 (unsigned char *)(buf), __size,		\
-								 &__actual, cable_params.r_timeout);	\
-		if (__ret || __actual != __size)								\
-		{																\
-			LOG_ERROR("unable to read from usb to " #buf ": "			\
-					  "wanted %i bytes but only received %i bytes",		\
-					  __size, __actual);								\
-			LOG_ERROR("return %d",__ret);							\
-			return ERROR_FAIL;											\
-		}																\
+#ifdef _WIN32
+#define adi_usb_read_or_ret(buf, len)										\
+	do {																	\
+		if (cable_params.use_usbmux)										\
+		{																	\
+			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, 	\
+				buf, len, cable_params.r_ep | LIBUSB_ENDPOINT_IN, cable_params.r_timeout);	\
+			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;					\
+		}																	\
+		else																\
+		{																	\
+			int __ret, __actual, __size = (len);							\
+			__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
+									cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
+									(unsigned char *)(buf), __size,			\
+									&__actual, cable_params.r_timeout);		\
+			if (__ret || __actual != __size)								\
+			{																\
+				LOG_ERROR("unable to read from usb to " #buf ": "			\
+						"wanted %i bytes but only received %i bytes",		\
+						__size, __actual);									\
+				LOG_ERROR("return %d",__ret);								\
+				return ERROR_FAIL;											\
+			}																\
+		}																	\
 	} while (0)
 
-#define adi_usb_write_or_ret(buf, len)									\
-	do {																\
-		int __ret, __actual, __size = (len);							\
-		__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
-								  cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
-								  (unsigned char *)(buf), __size,		\
-								  &__actual, cable_params.wr_timeout);	\
-		if (__ret || __actual != __size)								\
-		{																\
-			LOG_ERROR("unable to write from " #buf " to usb: "			\
-					  "wanted %i bytes but only wrote %i bytes",		\
-					  __size, __actual);								\
-			LOG_ERROR("return %d",__ret);							\
-			return ERROR_FAIL;											\
-		}																\
+#define adi_usb_write_or_ret(buf, len)										\
+	do {																	\
+	if (cable_params.use_usbmux)											\
+		{																	\
+			USB_MUX_ERROR mux_ret = usbmux_write(cable_params.mux_handle,	\
+				buf, len, cable_params.wr_ep | LIBUSB_ENDPOINT_OUT,			\
+				cable_params.wr_timeout);									\
+			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;					\
+		}																	\
+		else																\
+		{																	\
+			int __ret, __actual, __size = (len);							\
+			__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
+									cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
+									(unsigned char *)(buf), __size,			\
+									&__actual, cable_params.wr_timeout);	\
+			if (__ret || __actual != __size)								\
+			{																\
+				LOG_ERROR("unable to write from " #buf " to usb: "			\
+						"wanted %i bytes but only wrote %i bytes",			\
+						__size, __actual);									\
+				LOG_ERROR("return %d",__ret);								\
+				return ERROR_FAIL;											\
+			}																\
+		}																	\
 	} while (0)
+
+#else
+#define adi_usb_read_or_ret(buf, len)								\
+	do {															\
+		int __ret, __actual, __size = (len);						\
+		__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
+								cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
+								(unsigned char *)(buf), __size,		\
+								&__actual, cable_params.r_timeout);	\
+		if (__ret || __actual != __size)							\
+		{															\
+			LOG_ERROR("unable to read from usb to " #buf ": "		\
+					"wanted %i bytes but only received %i bytes",	\
+					__size, __actual);								\
+			return ERROR_FAIL;										\
+		}															\
+	} while (0)
+
+#define adi_usb_write_or_ret(buf, len)								\
+	do {															\
+		int __ret, __actual, __size = (len);						\
+		__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
+								cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
+								(unsigned char *)(buf), __size,		\
+								&__actual, cable_params.wr_timeout);\
+		if (__ret || __actual != __size)							\
+		{															\
+			LOG_ERROR("unable to write from " #buf " to usb: "		\
+					"wanted %i bytes but only wrote %i bytes",		\
+					__size, __actual);								\
+			return ERROR_FAIL;										\
+		}															\
+	} while (0)
+#endif
 
 
 static params_t cable_params;
@@ -236,33 +299,68 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	uint8_t configuration;
 	int i, ret;
 
-	ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
-	if (ret != ERROR_OK)
-		return ret;
+	dev = NULL;
+#ifdef _WIN32
+	cable_params.mux_handle = NULL;
+#endif
 
-	udev = libusb_get_device(dev);
-	libusb_get_active_config_descriptor(udev, &config);
-	configuration = config->bConfigurationValue;
-	libusb_free_config_descriptor (config);
-	libusb_set_configuration(dev, configuration);
-	ret = libusb_claim_interface(dev, 0);
-	if (ret)
+if (cable_params.use_usbmux)
 	{
-		LOG_ERROR("libusb_claim_interface failed: %d", ret);
-		libusb_close(dev);
+#ifdef _WIN32
+		ret = usbmux_open(&cable_params.mux_handle, USB_CONNECTION_TIMEOUT);
+		if (ret)
+		{
+			LOG_DEBUG("failed to open USB MUX.");
+			return ERROR_FAIL;
+		}
+#else
+		LOG_DEBUG("USB MUX not supported on this host.");
 		return ERROR_FAIL;
+#endif
 	}
+	else
+	{
+		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
+		if (ret != ERROR_OK)
+			return ret;
 
-	LOG_DEBUG("usb interface claimed!");
+		udev = libusb_get_device(dev);
+		libusb_get_active_config_descriptor(udev, &config);
+		configuration = config->bConfigurationValue;
+		libusb_free_config_descriptor (config);
+		libusb_set_configuration(dev, configuration);
+		ret = libusb_claim_interface(dev, 0);
+		if (ret)
+		{
+			LOG_ERROR("libusb_claim_interface failed: %d", ret);
+			libusb_close(dev);
+			return ERROR_FAIL;
+		}
+
+		LOG_DEBUG("usb interface claimed!");
+	}
 
 	cable_params.tap_info.dat = malloc(sizeof(dat_dat) * DAT_SZ);
 	if (!cable_params.tap_info.dat)
 	{
 		LOG_ERROR("_malloc(%d) fails", (int)(sizeof(dat_dat) * DAT_SZ));
-		libusb_release_interface(dev, 0);
-		libusb_close(dev);
+		if (dev)
+		{
+			libusb_release_interface(dev, 0);
+			libusb_close(dev);
+			dev = NULL;
+		}
+
+#ifdef _WIN32
+		if (cable_params.mux_handle)
+		{
+			usbmux_close(cable_params.mux_handle);
+			cable_params.mux_handle = NULL;
+		}
+#endif
 		return ERROR_FAIL;
 	}
+
 
 	/* Initialize receive data array to unused */
 	for (i = 0; i < DAT_SZ; ++i)
@@ -416,6 +514,13 @@ static int dbgagent_quit(void)
 		libusb_release_interface(cable_params.usb_handle, 0);
 		libusb_close(cable_params.usb_handle);
 	}
+
+#ifdef _WIN32
+	if (cable_params.mux_handle)
+	{
+		usbmux_close(cable_params.mux_handle);
+	}
+#endif
 
 	free(cable_params.tap_info.dat);
 
@@ -996,6 +1101,44 @@ static int dbgagent_execute_queue(void)
 	struct jtag_command *cmd = jtag_command_queue;
 	int retval = ERROR_OK;
 
+#ifdef _WIN32
+#define USB_MUX_MAX_LOCK_ATTEMPTS 50
+if (cable_params.mux_handle)
+	{
+		int attempt = 0;
+		do {
+			// attempt to acquire the USB lock
+			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
+			if (mux_ret == USB_MUX_OK)
+			{
+				break;
+			}
+			else if (mux_ret == USB_MUX_BUSY)
+			{
+				if (attempt < USB_MUX_MAX_LOCK_ATTEMPTS)
+				{
+					LOG_DEBUG("MUX is busy, retrying");
+				}
+				else
+				{
+					// Failed to acquire lock (TIMEOUT)
+					LOG_DEBUG("Timeout acquiring USB lock.");
+					return ERROR_TIMEOUT;
+				}
+			}
+			else
+			{
+				LOG_DEBUG("USB error: Failed to acquire USB lock (error %d).", mux_ret);
+				return ERROR_FAIL;
+			}
+			usleep(100000);
+			keep_alive();
+			LOG_DEBUG("keep_alive sent");
+			attempt++;
+		} while (1);
+	}
+#endif
+
 	/* TODO add blink */
 	while (cmd != NULL)
 	{
@@ -1005,9 +1148,28 @@ static int dbgagent_execute_queue(void)
 	}
 
 	if (retval != ERROR_OK)
+	{
+#ifdef _WIN32
+		if (cable_params.mux_handle)
+		{
+			// release USB lock
+			usbmux_unlock(cable_params.mux_handle);
+		}
+#endif
 		return retval;
+	}
 
-	return dbgagent_tap_execute();
+	retval = dbgagent_tap_execute();
+
+#ifdef _WIN32
+	if (cable_params.mux_handle)
+	{
+		// release USB lock
+		usbmux_unlock(cable_params.mux_handle);
+	}
+#endif
+
+	return retval;
 }
 
 /*
@@ -1031,7 +1193,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 	usb_cmd_blk.count = size;
 	usb_cmd_blk.buffer = 0;
 
-	adi_usb_write_or_ret(&usb_cmd_blk, sizeof(usb_command_block));
+	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof(usb_cmd_blk));
 
 	/* send command */
 	cmd_buffer.b[0] = 0;
@@ -1053,9 +1215,9 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 		usb_cmd_blk.count = 2;
 		usb_cmd_blk.buffer = 0;
 
-		adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_command_block));
+		adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
 
-		adi_usb_read_or_ret(&results, sizeof (results));
+		adi_usb_read_or_ret((uint8_t*)&results, sizeof (results));
 	}
 
 	return results;
@@ -1292,6 +1454,24 @@ COMMAND_HANDLER(dbgagent_handle_vid_pid_command)
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(dbgagent_use_usbmux)
+{
+	bool use_usbmux;
+
+	if (CMD_ARGC != 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	COMMAND_PARSE_BOOL(CMD_ARGV[0], use_usbmux, "true", "false");
+
+	/* This command can only be used before adi_connect */
+	if (cable_params.usb_handle)
+		return ERROR_FAIL;
+
+	cable_params.use_usbmux = use_usbmux;
+
+	return ERROR_OK;
+}
+
 static const struct command_registration dbgagent_command_handlers[] = {
 	{
 		.name = "dbgagent_vid_pid",
@@ -1300,6 +1480,14 @@ static const struct command_registration dbgagent_command_handlers[] = {
 		.help = "the vendor ID and product ID of the debug agent",
 		.usage = "(vid pid)* ",
 	},
+
+	{
+		.name = "use_usbmux",
+		.handler = &dbgagent_use_usbmux,
+		.mode = COMMAND_CONFIG,
+		.usage = "use_usbmux ['true'|'false']",
+	},
+
 	COMMAND_REGISTRATION_DONE
 };
 
