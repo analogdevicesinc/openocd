@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2021 by Analog Devices, Inc.                     *
+*   Copyright (C) 2011 - 2022 by Analog Devices, Inc.                     *
 *   Based on ice1000.c of UrJTAG                                          *
 *   Chad Wentworth  <chad.wentworth@analog.com>                           *
 *                                                                         *
