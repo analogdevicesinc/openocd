@@ -32059,10 +32059,6 @@ proc show_A55_DEBUG_CORE0 {} {
 	set data [memread32_phys $A55_DEBUG_CORE0_EDSCR]
 	puts [format "A55_DEBUG_CORE0_EDSCR:		%08X" $data]
 
-	set A55_DEBUG_CORE0_DBGDTRTX_EL0 0x3111408C
-	set data [memread32_phys $A55_DEBUG_CORE0_DBGDTRTX_EL0]
-	puts [format "A55_DEBUG_CORE0_DBGDTRTX_EL0:		%08X" $data]
-
 	set A55_DEBUG_CORE0_EDRCR 0x31114090
 	set data [memread32_phys $A55_DEBUG_CORE0_EDRCR]
 	puts [format "A55_DEBUG_CORE0_EDRCR:		%08X" $data]
