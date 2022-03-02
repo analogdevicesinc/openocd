@@ -8,134 +8,6 @@
 
 
 proc show_SCB0 {} {
-	set SCB0_periph_id_4 0x30001FD0
-	set data [memread32_phys $SCB0_periph_id_4]
-	puts [format "SCB0_periph_id_4:		%08X" $data]
-
-	set SCB0_periph_id_5 0x30001FD4
-	set data [memread32_phys $SCB0_periph_id_5]
-	puts [format "SCB0_periph_id_5:		%08X" $data]
-
-	set SCB0_periph_id_6 0x30001FD8
-	set data [memread32_phys $SCB0_periph_id_6]
-	puts [format "SCB0_periph_id_6:		%08X" $data]
-
-	set SCB0_periph_id_7 0x30001FDC
-	set data [memread32_phys $SCB0_periph_id_7]
-	puts [format "SCB0_periph_id_7:		%08X" $data]
-
-	set SCB0_periph_id_0 0x30001FE0
-	set data [memread32_phys $SCB0_periph_id_0]
-	puts [format "SCB0_periph_id_0:		%08X" $data]
-
-	set SCB0_periph_id_1 0x30001FE4
-	set data [memread32_phys $SCB0_periph_id_1]
-	puts [format "SCB0_periph_id_1:		%08X" $data]
-
-	set SCB0_periph_id_2 0x30001FE8
-	set data [memread32_phys $SCB0_periph_id_2]
-	puts [format "SCB0_periph_id_2:		%08X" $data]
-
-	set SCB0_periph_id_3 0x30001FEC
-	set data [memread32_phys $SCB0_periph_id_3]
-	puts [format "SCB0_periph_id_3:		%08X" $data]
-
-	set SCB0_comp_id_0 0x30001FF0
-	set data [memread32_phys $SCB0_comp_id_0]
-	puts [format "SCB0_comp_id_0:		%08X" $data]
-
-	set SCB0_comp_id_1 0x30001FF4
-	set data [memread32_phys $SCB0_comp_id_1]
-	puts [format "SCB0_comp_id_1:		%08X" $data]
-
-	set SCB0_comp_id_2 0x30001FF8
-	set data [memread32_phys $SCB0_comp_id_2]
-	puts [format "SCB0_comp_id_2:		%08X" $data]
-
-	set SCB0_comp_id_3 0x30001FFC
-	set data [memread32_phys $SCB0_comp_id_3]
-	puts [format "SCB0_comp_id_3:		%08X" $data]
-
-	set SCB0_spif_fn_mod_iss_bm 0x30002008
-	set data [memread32_phys $SCB0_spif_fn_mod_iss_bm]
-	puts [format "SCB0_spif_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_dl2_0_fn_mod_iss_bm 0x30003008
-	set data [memread32_phys $SCB0_dl2_0_fn_mod_iss_bm]
-	puts [format "SCB0_dl2_0_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_otp_ib_fn_mod_iss_bm 0x30004008
-	set data [memread32_phys $SCB0_otp_ib_fn_mod_iss_bm]
-	puts [format "SCB0_otp_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_otp_ib_fn_mod 0x30004108
-	set data [memread32_phys $SCB0_otp_ib_fn_mod]
-	puts [format "SCB0_otp_ib_fn_mod:		%08X" $data]
-
-	set SCB0_smmr_fn_mod_iss_bm 0x30005008
-	set data [memread32_phys $SCB0_smmr_fn_mod_iss_bm]
-	puts [format "SCB0_smmr_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_sh1_s1port_fn_mod_iss_bm 0x30006008
-	set data [memread32_phys $SCB0_sh1_s1port_fn_mod_iss_bm]
-	puts [format "SCB0_sh1_s1port_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_cl2_0_fn_mod_iss_bm 0x30007008
-	set data [memread32_phys $SCB0_cl2_0_fn_mod_iss_bm]
-	puts [format "SCB0_cl2_0_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_sh0_s1port_fn_mod_iss_bm 0x30008008
-	set data [memread32_phys $SCB0_sh0_s1port_fn_mod_iss_bm]
-	puts [format "SCB0_sh0_s1port_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_sh0_s2port_ib_fn_mod_iss_bm 0x30009008
-	set data [memread32_phys $SCB0_sh0_s2port_ib_fn_mod_iss_bm]
-	puts [format "SCB0_sh0_s2port_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_sh0_s2port_ib_fn_mod2 0x30009024
-	set data [memread32_phys $SCB0_sh0_s2port_ib_fn_mod2]
-	puts [format "SCB0_sh0_s2port_ib_fn_mod2:		%08X" $data]
-
-	set SCB0_sh0_s2port_ib_fn_mod 0x30009108
-	set data [memread32_phys $SCB0_sh0_s2port_ib_fn_mod]
-	puts [format "SCB0_sh0_s2port_ib_fn_mod:		%08X" $data]
-
-	set SCB0_sh1_s2port_ib_fn_mod_iss_bm 0x3000A008
-	set data [memread32_phys $SCB0_sh1_s2port_ib_fn_mod_iss_bm]
-	puts [format "SCB0_sh1_s2port_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_sh1_s2port_ib_fn_mod2 0x3000A024
-	set data [memread32_phys $SCB0_sh1_s2port_ib_fn_mod2]
-	puts [format "SCB0_sh1_s2port_ib_fn_mod2:		%08X" $data]
-
-	set SCB0_sh1_s2port_ib_fn_mod 0x3000A108
-	set data [memread32_phys $SCB0_sh1_s2port_ib_fn_mod]
-	puts [format "SCB0_sh1_s2port_ib_fn_mod:		%08X" $data]
-
-	set SCB0_cl2_1_fn_mod_iss_bm 0x3000C008
-	set data [memread32_phys $SCB0_cl2_1_fn_mod_iss_bm]
-	puts [format "SCB0_cl2_1_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_smc_ib_fn_mod_iss_bm 0x3000D008
-	set data [memread32_phys $SCB0_smc_ib_fn_mod_iss_bm]
-	puts [format "SCB0_smc_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_smc_ib_fn_mod 0x3000D108
-	set data [memread32_phys $SCB0_smc_ib_fn_mod]
-	puts [format "SCB0_smc_ib_fn_mod:		%08X" $data]
-
-	set SCB0_cl2_2_fn_mod_iss_bm 0x3000E008
-	set data [memread32_phys $SCB0_cl2_2_fn_mod_iss_bm]
-	puts [format "SCB0_cl2_2_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_dl2_1_fn_mod_iss_bm 0x3000F008
-	set data [memread32_phys $SCB0_dl2_1_fn_mod_iss_bm]
-	puts [format "SCB0_dl2_1_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB0_dmc0_fn_mod_iss_bm 0x30010008
-	set data [memread32_phys $SCB0_dmc0_fn_mod_iss_bm]
-	puts [format "SCB0_dmc0_fn_mod_iss_bm:		%08X" $data]
-
 	set SCB0_sp0a_read_qos 0x30042100
 	set data [memread32_phys $SCB0_sp0a_read_qos]
 	puts [format "SCB0_sp0a_read_qos:		%08X" $data]
@@ -143,10 +15,6 @@ proc show_SCB0 {} {
 	set SCB0_sp0a_write_qos 0x30042104
 	set data [memread32_phys $SCB0_sp0a_write_qos]
 	puts [format "SCB0_sp0a_write_qos:		%08X" $data]
-
-	set SCB0_sp0a_fn_mod 0x30042108
-	set data [memread32_phys $SCB0_sp0a_fn_mod]
-	puts [format "SCB0_sp0a_fn_mod:		%08X" $data]
 
 	set SCB0_sp0b_read_qos 0x30043100
 	set data [memread32_phys $SCB0_sp0b_read_qos]
@@ -156,10 +24,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sp0b_write_qos]
 	puts [format "SCB0_sp0b_write_qos:		%08X" $data]
 
-	set SCB0_sp0b_fn_mod 0x30043108
-	set data [memread32_phys $SCB0_sp0b_fn_mod]
-	puts [format "SCB0_sp0b_fn_mod:		%08X" $data]
-
 	set SCB0_sp1a_read_qos 0x30044100
 	set data [memread32_phys $SCB0_sp1a_read_qos]
 	puts [format "SCB0_sp1a_read_qos:		%08X" $data]
@@ -167,10 +31,6 @@ proc show_SCB0 {} {
 	set SCB0_sp1a_write_qos 0x30044104
 	set data [memread32_phys $SCB0_sp1a_write_qos]
 	puts [format "SCB0_sp1a_write_qos:		%08X" $data]
-
-	set SCB0_sp1a_fn_mod 0x30044108
-	set data [memread32_phys $SCB0_sp1a_fn_mod]
-	puts [format "SCB0_sp1a_fn_mod:		%08X" $data]
 
 	set SCB0_sp1b_read_qos 0x30045100
 	set data [memread32_phys $SCB0_sp1b_read_qos]
@@ -180,10 +40,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sp1b_write_qos]
 	puts [format "SCB0_sp1b_write_qos:		%08X" $data]
 
-	set SCB0_sp1b_fn_mod 0x30045108
-	set data [memread32_phys $SCB0_sp1b_fn_mod]
-	puts [format "SCB0_sp1b_fn_mod:		%08X" $data]
-
 	set SCB0_sp2a_read_qos 0x30046100
 	set data [memread32_phys $SCB0_sp2a_read_qos]
 	puts [format "SCB0_sp2a_read_qos:		%08X" $data]
@@ -191,10 +47,6 @@ proc show_SCB0 {} {
 	set SCB0_sp2a_write_qos 0x30046104
 	set data [memread32_phys $SCB0_sp2a_write_qos]
 	puts [format "SCB0_sp2a_write_qos:		%08X" $data]
-
-	set SCB0_sp2a_fn_mod 0x30046108
-	set data [memread32_phys $SCB0_sp2a_fn_mod]
-	puts [format "SCB0_sp2a_fn_mod:		%08X" $data]
 
 	set SCB0_sp2b_read_qos 0x30047100
 	set data [memread32_phys $SCB0_sp2b_read_qos]
@@ -204,10 +56,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sp2b_write_qos]
 	puts [format "SCB0_sp2b_write_qos:		%08X" $data]
 
-	set SCB0_sp2b_fn_mod 0x30047108
-	set data [memread32_phys $SCB0_sp2b_fn_mod]
-	puts [format "SCB0_sp2b_fn_mod:		%08X" $data]
-
 	set SCB0_sp3a_read_qos 0x30048100
 	set data [memread32_phys $SCB0_sp3a_read_qos]
 	puts [format "SCB0_sp3a_read_qos:		%08X" $data]
@@ -215,10 +63,6 @@ proc show_SCB0 {} {
 	set SCB0_sp3a_write_qos 0x30048104
 	set data [memread32_phys $SCB0_sp3a_write_qos]
 	puts [format "SCB0_sp3a_write_qos:		%08X" $data]
-
-	set SCB0_sp3a_fn_mod 0x30048108
-	set data [memread32_phys $SCB0_sp3a_fn_mod]
-	puts [format "SCB0_sp3a_fn_mod:		%08X" $data]
 
 	set SCB0_sp3b_read_qos 0x30049100
 	set data [memread32_phys $SCB0_sp3b_read_qos]
@@ -228,14 +72,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sp3b_write_qos]
 	puts [format "SCB0_sp3b_write_qos:		%08X" $data]
 
-	set SCB0_sp3b_fn_mod 0x30049108
-	set data [memread32_phys $SCB0_sp3b_fn_mod]
-	puts [format "SCB0_sp3b_fn_mod:		%08X" $data]
-
-	set SCB0_crc0_ch0_ib_fn_mod2 0x3004A024
-	set data [memread32_phys $SCB0_crc0_ch0_ib_fn_mod2]
-	puts [format "SCB0_crc0_ch0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_crc0_ch0_ib_read_qos 0x3004A100
 	set data [memread32_phys $SCB0_crc0_ch0_ib_read_qos]
 	puts [format "SCB0_crc0_ch0_ib_read_qos:		%08X" $data]
@@ -243,14 +79,6 @@ proc show_SCB0 {} {
 	set SCB0_crc0_ch0_ib_write_qos 0x3004A104
 	set data [memread32_phys $SCB0_crc0_ch0_ib_write_qos]
 	puts [format "SCB0_crc0_ch0_ib_write_qos:		%08X" $data]
-
-	set SCB0_crc0_ch0_ib_fn_mod 0x3004A108
-	set data [memread32_phys $SCB0_crc0_ch0_ib_fn_mod]
-	puts [format "SCB0_crc0_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_crc0_ch1_ib_fn_mod2 0x3004B024
-	set data [memread32_phys $SCB0_crc0_ch1_ib_fn_mod2]
-	puts [format "SCB0_crc0_ch1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_crc0_ch1_ib_read_qos 0x3004B100
 	set data [memread32_phys $SCB0_crc0_ch1_ib_read_qos]
@@ -260,14 +88,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_crc0_ch1_ib_write_qos]
 	puts [format "SCB0_crc0_ch1_ib_write_qos:		%08X" $data]
 
-	set SCB0_crc0_ch1_ib_fn_mod 0x3004B108
-	set data [memread32_phys $SCB0_crc0_ch1_ib_fn_mod]
-	puts [format "SCB0_crc0_ch1_ib_fn_mod:		%08X" $data]
-
-	set SCB0_crc1_ch0_ib_fn_mod2 0x3004C024
-	set data [memread32_phys $SCB0_crc1_ch0_ib_fn_mod2]
-	puts [format "SCB0_crc1_ch0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_crc1_ch0_ib_read_qos 0x3004C100
 	set data [memread32_phys $SCB0_crc1_ch0_ib_read_qos]
 	puts [format "SCB0_crc1_ch0_ib_read_qos:		%08X" $data]
@@ -275,14 +95,6 @@ proc show_SCB0 {} {
 	set SCB0_crc1_ch0_ib_write_qos 0x3004C104
 	set data [memread32_phys $SCB0_crc1_ch0_ib_write_qos]
 	puts [format "SCB0_crc1_ch0_ib_write_qos:		%08X" $data]
-
-	set SCB0_crc1_ch0_ib_fn_mod 0x3004C108
-	set data [memread32_phys $SCB0_crc1_ch0_ib_fn_mod]
-	puts [format "SCB0_crc1_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_crc1_ch1_ib_fn_mod2 0x3004D024
-	set data [memread32_phys $SCB0_crc1_ch1_ib_fn_mod2]
-	puts [format "SCB0_crc1_ch1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_crc1_ch1_ib_read_qos 0x3004D100
 	set data [memread32_phys $SCB0_crc1_ch1_ib_read_qos]
@@ -292,10 +104,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_crc1_ch1_ib_write_qos]
 	puts [format "SCB0_crc1_ch1_ib_write_qos:		%08X" $data]
 
-	set SCB0_crc1_ch1_ib_fn_mod 0x3004D108
-	set data [memread32_phys $SCB0_crc1_ch1_ib_fn_mod]
-	puts [format "SCB0_crc1_ch1_ib_fn_mod:		%08X" $data]
-
 	set SCB0_uart2_rx_read_qos 0x3004E100
 	set data [memread32_phys $SCB0_uart2_rx_read_qos]
 	puts [format "SCB0_uart2_rx_read_qos:		%08X" $data]
@@ -303,10 +111,6 @@ proc show_SCB0 {} {
 	set SCB0_uart2_rx_write_qos 0x3004E104
 	set data [memread32_phys $SCB0_uart2_rx_write_qos]
 	puts [format "SCB0_uart2_rx_write_qos:		%08X" $data]
-
-	set SCB0_uart2_rx_fn_mod 0x3004E108
-	set data [memread32_phys $SCB0_uart2_rx_fn_mod]
-	puts [format "SCB0_uart2_rx_fn_mod:		%08X" $data]
 
 	set SCB0_sh0_dport_read_qos 0x3004F100
 	set data [memread32_phys $SCB0_sh0_dport_read_qos]
@@ -316,10 +120,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sh0_dport_write_qos]
 	puts [format "SCB0_sh0_dport_write_qos:		%08X" $data]
 
-	set SCB0_sh0_dport_fn_mod 0x3004F108
-	set data [memread32_phys $SCB0_sh0_dport_fn_mod]
-	puts [format "SCB0_sh0_dport_fn_mod:		%08X" $data]
-
 	set SCB0_sh0_iport_read_qos 0x30050100
 	set data [memread32_phys $SCB0_sh0_iport_read_qos]
 	puts [format "SCB0_sh0_iport_read_qos:		%08X" $data]
@@ -327,10 +127,6 @@ proc show_SCB0 {} {
 	set SCB0_sh0_iport_write_qos 0x30050104
 	set data [memread32_phys $SCB0_sh0_iport_write_qos]
 	puts [format "SCB0_sh0_iport_write_qos:		%08X" $data]
-
-	set SCB0_sh0_iport_fn_mod 0x30050108
-	set data [memread32_phys $SCB0_sh0_iport_fn_mod]
-	puts [format "SCB0_sh0_iport_fn_mod:		%08X" $data]
 
 	set SCB0_sp4a_read_qos 0x30051100
 	set data [memread32_phys $SCB0_sp4a_read_qos]
@@ -340,10 +136,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sp4a_write_qos]
 	puts [format "SCB0_sp4a_write_qos:		%08X" $data]
 
-	set SCB0_sp4a_fn_mod 0x30051108
-	set data [memread32_phys $SCB0_sp4a_fn_mod]
-	puts [format "SCB0_sp4a_fn_mod:		%08X" $data]
-
 	set SCB0_sp4b_read_qos 0x30052100
 	set data [memread32_phys $SCB0_sp4b_read_qos]
 	puts [format "SCB0_sp4b_read_qos:		%08X" $data]
@@ -351,10 +143,6 @@ proc show_SCB0 {} {
 	set SCB0_sp4b_write_qos 0x30052104
 	set data [memread32_phys $SCB0_sp4b_write_qos]
 	puts [format "SCB0_sp4b_write_qos:		%08X" $data]
-
-	set SCB0_sp4b_fn_mod 0x30052108
-	set data [memread32_phys $SCB0_sp4b_fn_mod]
-	puts [format "SCB0_sp4b_fn_mod:		%08X" $data]
 
 	set SCB0_uart3_tx_read_qos 0x30053100
 	set data [memread32_phys $SCB0_uart3_tx_read_qos]
@@ -364,10 +152,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_uart3_tx_write_qos]
 	puts [format "SCB0_uart3_tx_write_qos:		%08X" $data]
 
-	set SCB0_uart3_tx_fn_mod 0x30053108
-	set data [memread32_phys $SCB0_uart3_tx_fn_mod]
-	puts [format "SCB0_uart3_tx_fn_mod:		%08X" $data]
-
 	set SCB0_uart3_rx_read_qos 0x30054100
 	set data [memread32_phys $SCB0_uart3_rx_read_qos]
 	puts [format "SCB0_uart3_rx_read_qos:		%08X" $data]
@@ -375,14 +159,6 @@ proc show_SCB0 {} {
 	set SCB0_uart3_rx_write_qos 0x30054104
 	set data [memread32_phys $SCB0_uart3_rx_write_qos]
 	puts [format "SCB0_uart3_rx_write_qos:		%08X" $data]
-
-	set SCB0_uart3_rx_fn_mod 0x30054108
-	set data [memread32_phys $SCB0_uart3_rx_fn_mod]
-	puts [format "SCB0_uart3_rx_fn_mod:		%08X" $data]
-
-	set SCB0_hsmdma_ch0_ib_fn_mod2 0x30055024
-	set data [memread32_phys $SCB0_hsmdma_ch0_ib_fn_mod2]
-	puts [format "SCB0_hsmdma_ch0_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_hsmdma_ch0_ib_read_qos 0x30055100
 	set data [memread32_phys $SCB0_hsmdma_ch0_ib_read_qos]
@@ -392,10 +168,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_hsmdma_ch0_ib_write_qos]
 	puts [format "SCB0_hsmdma_ch0_ib_write_qos:		%08X" $data]
 
-	set SCB0_hsmdma_ch0_ib_fn_mod 0x30055108
-	set data [memread32_phys $SCB0_hsmdma_ch0_ib_fn_mod]
-	puts [format "SCB0_hsmdma_ch0_ib_fn_mod:		%08X" $data]
-
 	set SCB0_sp5a_read_qos 0x30056100
 	set data [memread32_phys $SCB0_sp5a_read_qos]
 	puts [format "SCB0_sp5a_read_qos:		%08X" $data]
@@ -403,10 +175,6 @@ proc show_SCB0 {} {
 	set SCB0_sp5a_write_qos 0x30056104
 	set data [memread32_phys $SCB0_sp5a_write_qos]
 	puts [format "SCB0_sp5a_write_qos:		%08X" $data]
-
-	set SCB0_sp5a_fn_mod 0x30056108
-	set data [memread32_phys $SCB0_sp5a_fn_mod]
-	puts [format "SCB0_sp5a_fn_mod:		%08X" $data]
 
 	set SCB0_mlb_read_qos 0x30057100
 	set data [memread32_phys $SCB0_mlb_read_qos]
@@ -416,10 +184,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_mlb_write_qos]
 	puts [format "SCB0_mlb_write_qos:		%08X" $data]
 
-	set SCB0_mlb_fn_mod 0x30057108
-	set data [memread32_phys $SCB0_mlb_fn_mod]
-	puts [format "SCB0_mlb_fn_mod:		%08X" $data]
-
 	set SCB0_uart0_tx_read_qos 0x30058100
 	set data [memread32_phys $SCB0_uart0_tx_read_qos]
 	puts [format "SCB0_uart0_tx_read_qos:		%08X" $data]
@@ -427,10 +191,6 @@ proc show_SCB0 {} {
 	set SCB0_uart0_tx_write_qos 0x30058104
 	set data [memread32_phys $SCB0_uart0_tx_write_qos]
 	puts [format "SCB0_uart0_tx_write_qos:		%08X" $data]
-
-	set SCB0_uart0_tx_fn_mod 0x30058108
-	set data [memread32_phys $SCB0_uart0_tx_fn_mod]
-	puts [format "SCB0_uart0_tx_fn_mod:		%08X" $data]
 
 	set SCB0_uart0_rx_read_qos 0x30059100
 	set data [memread32_phys $SCB0_uart0_rx_read_qos]
@@ -440,10 +200,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_uart0_rx_write_qos]
 	puts [format "SCB0_uart0_rx_write_qos:		%08X" $data]
 
-	set SCB0_uart0_rx_fn_mod 0x30059108
-	set data [memread32_phys $SCB0_uart0_rx_fn_mod]
-	puts [format "SCB0_uart0_rx_fn_mod:		%08X" $data]
-
 	set SCB0_sp5b_read_qos 0x3005A100
 	set data [memread32_phys $SCB0_sp5b_read_qos]
 	puts [format "SCB0_sp5b_read_qos:		%08X" $data]
@@ -451,14 +207,6 @@ proc show_SCB0 {} {
 	set SCB0_sp5b_write_qos 0x3005A104
 	set data [memread32_phys $SCB0_sp5b_write_qos]
 	puts [format "SCB0_sp5b_write_qos:		%08X" $data]
-
-	set SCB0_sp5b_fn_mod 0x3005A108
-	set data [memread32_phys $SCB0_sp5b_fn_mod]
-	puts [format "SCB0_sp5b_fn_mod:		%08X" $data]
-
-	set SCB0_hsmdma_ch1_ib_fn_mod2 0x3005B024
-	set data [memread32_phys $SCB0_hsmdma_ch1_ib_fn_mod2]
-	puts [format "SCB0_hsmdma_ch1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_hsmdma_ch1_ib_read_qos 0x3005B100
 	set data [memread32_phys $SCB0_hsmdma_ch1_ib_read_qos]
@@ -468,10 +216,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_hsmdma_ch1_ib_write_qos]
 	puts [format "SCB0_hsmdma_ch1_ib_write_qos:		%08X" $data]
 
-	set SCB0_hsmdma_ch1_ib_fn_mod 0x3005B108
-	set data [memread32_phys $SCB0_hsmdma_ch1_ib_fn_mod]
-	puts [format "SCB0_hsmdma_ch1_ib_fn_mod:		%08X" $data]
-
 	set SCB0_uart2_tx_read_qos 0x3005C100
 	set data [memread32_phys $SCB0_uart2_tx_read_qos]
 	puts [format "SCB0_uart2_tx_read_qos:		%08X" $data]
@@ -479,10 +223,6 @@ proc show_SCB0 {} {
 	set SCB0_uart2_tx_write_qos 0x3005C104
 	set data [memread32_phys $SCB0_uart2_tx_write_qos]
 	puts [format "SCB0_uart2_tx_write_qos:		%08X" $data]
-
-	set SCB0_uart2_tx_fn_mod 0x3005C108
-	set data [memread32_phys $SCB0_uart2_tx_fn_mod]
-	puts [format "SCB0_uart2_tx_fn_mod:		%08X" $data]
 
 	set SCB0_spi0tx_read_qos 0x3005D100
 	set data [memread32_phys $SCB0_spi0tx_read_qos]
@@ -492,10 +232,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_spi0tx_write_qos]
 	puts [format "SCB0_spi0tx_write_qos:		%08X" $data]
 
-	set SCB0_spi0tx_fn_mod 0x3005D108
-	set data [memread32_phys $SCB0_spi0tx_fn_mod]
-	puts [format "SCB0_spi0tx_fn_mod:		%08X" $data]
-
 	set SCB0_spi0rx_read_qos 0x3005E100
 	set data [memread32_phys $SCB0_spi0rx_read_qos]
 	puts [format "SCB0_spi0rx_read_qos:		%08X" $data]
@@ -503,10 +239,6 @@ proc show_SCB0 {} {
 	set SCB0_spi0rx_write_qos 0x3005E104
 	set data [memread32_phys $SCB0_spi0rx_write_qos]
 	puts [format "SCB0_spi0rx_write_qos:		%08X" $data]
-
-	set SCB0_spi0rx_fn_mod 0x3005E108
-	set data [memread32_phys $SCB0_spi0rx_fn_mod]
-	puts [format "SCB0_spi0rx_fn_mod:		%08X" $data]
 
 	set SCB0_spi1tx_read_qos 0x3005F100
 	set data [memread32_phys $SCB0_spi1tx_read_qos]
@@ -516,10 +248,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_spi1tx_write_qos]
 	puts [format "SCB0_spi1tx_write_qos:		%08X" $data]
 
-	set SCB0_spi1tx_fn_mod 0x3005F108
-	set data [memread32_phys $SCB0_spi1tx_fn_mod]
-	puts [format "SCB0_spi1tx_fn_mod:		%08X" $data]
-
 	set SCB0_spi1rx_read_qos 0x30060100
 	set data [memread32_phys $SCB0_spi1rx_read_qos]
 	puts [format "SCB0_spi1rx_read_qos:		%08X" $data]
@@ -527,10 +255,6 @@ proc show_SCB0 {} {
 	set SCB0_spi1rx_write_qos 0x30060104
 	set data [memread32_phys $SCB0_spi1rx_write_qos]
 	puts [format "SCB0_spi1rx_write_qos:		%08X" $data]
-
-	set SCB0_spi1rx_fn_mod 0x30060108
-	set data [memread32_phys $SCB0_spi1rx_fn_mod]
-	puts [format "SCB0_spi1rx_fn_mod:		%08X" $data]
 
 	set SCB0_spi2tx_read_qos 0x30061100
 	set data [memread32_phys $SCB0_spi2tx_read_qos]
@@ -540,10 +264,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_spi2tx_write_qos]
 	puts [format "SCB0_spi2tx_write_qos:		%08X" $data]
 
-	set SCB0_spi2tx_fn_mod 0x30061108
-	set data [memread32_phys $SCB0_spi2tx_fn_mod]
-	puts [format "SCB0_spi2tx_fn_mod:		%08X" $data]
-
 	set SCB0_spi2rx_read_qos 0x30062100
 	set data [memread32_phys $SCB0_spi2rx_read_qos]
 	puts [format "SCB0_spi2rx_read_qos:		%08X" $data]
@@ -551,10 +271,6 @@ proc show_SCB0 {} {
 	set SCB0_spi2rx_write_qos 0x30062104
 	set data [memread32_phys $SCB0_spi2rx_write_qos]
 	puts [format "SCB0_spi2rx_write_qos:		%08X" $data]
-
-	set SCB0_spi2rx_fn_mod 0x30062108
-	set data [memread32_phys $SCB0_spi2rx_fn_mod]
-	puts [format "SCB0_spi2rx_fn_mod:		%08X" $data]
 
 	set SCB0_sp6a_read_qos 0x30063100
 	set data [memread32_phys $SCB0_sp6a_read_qos]
@@ -564,10 +280,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sp6a_write_qos]
 	puts [format "SCB0_sp6a_write_qos:		%08X" $data]
 
-	set SCB0_sp6a_fn_mod 0x30063108
-	set data [memread32_phys $SCB0_sp6a_fn_mod]
-	puts [format "SCB0_sp6a_fn_mod:		%08X" $data]
-
 	set SCB0_sp6b_read_qos 0x30064100
 	set data [memread32_phys $SCB0_sp6b_read_qos]
 	puts [format "SCB0_sp6b_read_qos:		%08X" $data]
@@ -575,10 +287,6 @@ proc show_SCB0 {} {
 	set SCB0_sp6b_write_qos 0x30064104
 	set data [memread32_phys $SCB0_sp6b_write_qos]
 	puts [format "SCB0_sp6b_write_qos:		%08X" $data]
-
-	set SCB0_sp6b_fn_mod 0x30064108
-	set data [memread32_phys $SCB0_sp6b_fn_mod]
-	puts [format "SCB0_sp6b_fn_mod:		%08X" $data]
 
 	set SCB0_lp0_read_qos 0x30065100
 	set data [memread32_phys $SCB0_lp0_read_qos]
@@ -588,10 +296,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_lp0_write_qos]
 	puts [format "SCB0_lp0_write_qos:		%08X" $data]
 
-	set SCB0_lp0_fn_mod 0x30065108
-	set data [memread32_phys $SCB0_lp0_fn_mod]
-	puts [format "SCB0_lp0_fn_mod:		%08X" $data]
-
 	set SCB0_sp7a_read_qos 0x30066100
 	set data [memread32_phys $SCB0_sp7a_read_qos]
 	puts [format "SCB0_sp7a_read_qos:		%08X" $data]
@@ -599,10 +303,6 @@ proc show_SCB0 {} {
 	set SCB0_sp7a_write_qos 0x30066104
 	set data [memread32_phys $SCB0_sp7a_write_qos]
 	puts [format "SCB0_sp7a_write_qos:		%08X" $data]
-
-	set SCB0_sp7a_fn_mod 0x30066108
-	set data [memread32_phys $SCB0_sp7a_fn_mod]
-	puts [format "SCB0_sp7a_fn_mod:		%08X" $data]
 
 	set SCB0_sp7b_read_qos 0x30067100
 	set data [memread32_phys $SCB0_sp7b_read_qos]
@@ -612,14 +312,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sp7b_write_qos]
 	puts [format "SCB0_sp7b_write_qos:		%08X" $data]
 
-	set SCB0_sp7b_fn_mod 0x30067108
-	set data [memread32_phys $SCB0_sp7b_fn_mod]
-	puts [format "SCB0_sp7b_fn_mod:		%08X" $data]
-
-	set SCB0_sh0_mmr_ib_fn_mod2 0x30068024
-	set data [memread32_phys $SCB0_sh0_mmr_ib_fn_mod2]
-	puts [format "SCB0_sh0_mmr_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_sh0_mmr_ib_read_qos 0x30068100
 	set data [memread32_phys $SCB0_sh0_mmr_ib_read_qos]
 	puts [format "SCB0_sh0_mmr_ib_read_qos:		%08X" $data]
@@ -627,10 +319,6 @@ proc show_SCB0 {} {
 	set SCB0_sh0_mmr_ib_write_qos 0x30068104
 	set data [memread32_phys $SCB0_sh0_mmr_ib_write_qos]
 	puts [format "SCB0_sh0_mmr_ib_write_qos:		%08X" $data]
-
-	set SCB0_sh0_mmr_ib_fn_mod 0x30068108
-	set data [memread32_phys $SCB0_sh0_mmr_ib_fn_mod]
-	puts [format "SCB0_sh0_mmr_ib_fn_mod:		%08X" $data]
 
 	set SCB0_spi3rx_read_qos 0x30069100
 	set data [memread32_phys $SCB0_spi3rx_read_qos]
@@ -640,10 +328,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_spi3rx_write_qos]
 	puts [format "SCB0_spi3rx_write_qos:		%08X" $data]
 
-	set SCB0_spi3rx_fn_mod 0x30069108
-	set data [memread32_phys $SCB0_spi3rx_fn_mod]
-	puts [format "SCB0_spi3rx_fn_mod:		%08X" $data]
-
 	set SCB0_uart1_tx_read_qos 0x3006A100
 	set data [memread32_phys $SCB0_uart1_tx_read_qos]
 	puts [format "SCB0_uart1_tx_read_qos:		%08X" $data]
@@ -651,10 +335,6 @@ proc show_SCB0 {} {
 	set SCB0_uart1_tx_write_qos 0x3006A104
 	set data [memread32_phys $SCB0_uart1_tx_write_qos]
 	puts [format "SCB0_uart1_tx_write_qos:		%08X" $data]
-
-	set SCB0_uart1_tx_fn_mod 0x3006A108
-	set data [memread32_phys $SCB0_uart1_tx_fn_mod]
-	puts [format "SCB0_uart1_tx_fn_mod:		%08X" $data]
 
 	set SCB0_uart1_rx_read_qos 0x3006B100
 	set data [memread32_phys $SCB0_uart1_rx_read_qos]
@@ -664,10 +344,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_uart1_rx_write_qos]
 	puts [format "SCB0_uart1_rx_write_qos:		%08X" $data]
 
-	set SCB0_uart1_rx_fn_mod 0x3006B108
-	set data [memread32_phys $SCB0_uart1_rx_fn_mod]
-	puts [format "SCB0_uart1_rx_fn_mod:		%08X" $data]
-
 	set SCB0_spi3tx_read_qos 0x3006C100
 	set data [memread32_phys $SCB0_spi3tx_read_qos]
 	puts [format "SCB0_spi3tx_read_qos:		%08X" $data]
@@ -675,10 +351,6 @@ proc show_SCB0 {} {
 	set SCB0_spi3tx_write_qos 0x3006C104
 	set data [memread32_phys $SCB0_spi3tx_write_qos]
 	puts [format "SCB0_spi3tx_write_qos:		%08X" $data]
-
-	set SCB0_spi3tx_fn_mod 0x3006C108
-	set data [memread32_phys $SCB0_spi3tx_fn_mod]
-	puts [format "SCB0_spi3tx_fn_mod:		%08X" $data]
 
 	set SCB0_lp1_read_qos 0x3006D100
 	set data [memread32_phys $SCB0_lp1_read_qos]
@@ -688,14 +360,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_lp1_write_qos]
 	puts [format "SCB0_lp1_write_qos:		%08X" $data]
 
-	set SCB0_lp1_fn_mod 0x3006D108
-	set data [memread32_phys $SCB0_lp1_fn_mod]
-	puts [format "SCB0_lp1_fn_mod:		%08X" $data]
-
-	set SCB0_crc2_ch1_ib_fn_mod2 0x3006E024
-	set data [memread32_phys $SCB0_crc2_ch1_ib_fn_mod2]
-	puts [format "SCB0_crc2_ch1_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_crc2_ch1_ib_read_qos 0x3006E100
 	set data [memread32_phys $SCB0_crc2_ch1_ib_read_qos]
 	puts [format "SCB0_crc2_ch1_ib_read_qos:		%08X" $data]
@@ -703,14 +367,6 @@ proc show_SCB0 {} {
 	set SCB0_crc2_ch1_ib_write_qos 0x3006E104
 	set data [memread32_phys $SCB0_crc2_ch1_ib_write_qos]
 	puts [format "SCB0_crc2_ch1_ib_write_qos:		%08X" $data]
-
-	set SCB0_crc2_ch1_ib_fn_mod 0x3006E108
-	set data [memread32_phys $SCB0_crc2_ch1_ib_fn_mod]
-	puts [format "SCB0_crc2_ch1_ib_fn_mod:		%08X" $data]
-
-	set SCB0_crc2_ch0_ib_fn_mod2 0x3006F024
-	set data [memread32_phys $SCB0_crc2_ch0_ib_fn_mod2]
-	puts [format "SCB0_crc2_ch0_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_crc2_ch0_ib_read_qos 0x3006F100
 	set data [memread32_phys $SCB0_crc2_ch0_ib_read_qos]
@@ -720,14 +376,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_crc2_ch0_ib_write_qos]
 	puts [format "SCB0_crc2_ch0_ib_write_qos:		%08X" $data]
 
-	set SCB0_crc2_ch0_ib_fn_mod 0x3006F108
-	set data [memread32_phys $SCB0_crc2_ch0_ib_fn_mod]
-	puts [format "SCB0_crc2_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_crc3_ch1_ib_fn_mod2 0x30070024
-	set data [memread32_phys $SCB0_crc3_ch1_ib_fn_mod2]
-	puts [format "SCB0_crc3_ch1_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_crc3_ch1_ib_read_qos 0x30070100
 	set data [memread32_phys $SCB0_crc3_ch1_ib_read_qos]
 	puts [format "SCB0_crc3_ch1_ib_read_qos:		%08X" $data]
@@ -735,14 +383,6 @@ proc show_SCB0 {} {
 	set SCB0_crc3_ch1_ib_write_qos 0x30070104
 	set data [memread32_phys $SCB0_crc3_ch1_ib_write_qos]
 	puts [format "SCB0_crc3_ch1_ib_write_qos:		%08X" $data]
-
-	set SCB0_crc3_ch1_ib_fn_mod 0x30070108
-	set data [memread32_phys $SCB0_crc3_ch1_ib_fn_mod]
-	puts [format "SCB0_crc3_ch1_ib_fn_mod:		%08X" $data]
-
-	set SCB0_crypto_ib_fn_mod2 0x30071024
-	set data [memread32_phys $SCB0_crypto_ib_fn_mod2]
-	puts [format "SCB0_crypto_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_crypto_ib_read_qos 0x30071100
 	set data [memread32_phys $SCB0_crypto_ib_read_qos]
@@ -752,14 +392,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_crypto_ib_write_qos]
 	puts [format "SCB0_crypto_ib_write_qos:		%08X" $data]
 
-	set SCB0_crypto_ib_fn_mod 0x30071108
-	set data [memread32_phys $SCB0_crypto_ib_fn_mod]
-	puts [format "SCB0_crypto_ib_fn_mod:		%08X" $data]
-
-	set SCB0_crc3_ch0_ib_fn_mod2 0x30072024
-	set data [memread32_phys $SCB0_crc3_ch0_ib_fn_mod2]
-	puts [format "SCB0_crc3_ch0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_crc3_ch0_ib_read_qos 0x30072100
 	set data [memread32_phys $SCB0_crc3_ch0_ib_read_qos]
 	puts [format "SCB0_crc3_ch0_ib_read_qos:		%08X" $data]
@@ -767,14 +399,6 @@ proc show_SCB0 {} {
 	set SCB0_crc3_ch0_ib_write_qos 0x30072104
 	set data [memread32_phys $SCB0_crc3_ch0_ib_write_qos]
 	puts [format "SCB0_crc3_ch0_ib_write_qos:		%08X" $data]
-
-	set SCB0_crc3_ch0_ib_fn_mod 0x30072108
-	set data [memread32_phys $SCB0_crc3_ch0_ib_fn_mod]
-	puts [format "SCB0_crc3_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_msmdma1_ch1_ib_fn_mod2 0x30073024
-	set data [memread32_phys $SCB0_msmdma1_ch1_ib_fn_mod2]
-	puts [format "SCB0_msmdma1_ch1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_msmdma1_ch1_ib_read_qos 0x30073100
 	set data [memread32_phys $SCB0_msmdma1_ch1_ib_read_qos]
@@ -784,10 +408,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_msmdma1_ch1_ib_write_qos]
 	puts [format "SCB0_msmdma1_ch1_ib_write_qos:		%08X" $data]
 
-	set SCB0_msmdma1_ch1_ib_fn_mod 0x30073108
-	set data [memread32_phys $SCB0_msmdma1_ch1_ib_fn_mod]
-	puts [format "SCB0_msmdma1_ch1_ib_fn_mod:		%08X" $data]
-
 	set SCB0_sh0_fir_ch0_read_qos 0x30074100
 	set data [memread32_phys $SCB0_sh0_fir_ch0_read_qos]
 	puts [format "SCB0_sh0_fir_ch0_read_qos:		%08X" $data]
@@ -795,10 +415,6 @@ proc show_SCB0 {} {
 	set SCB0_sh0_fir_ch0_write_qos 0x30074104
 	set data [memread32_phys $SCB0_sh0_fir_ch0_write_qos]
 	puts [format "SCB0_sh0_fir_ch0_write_qos:		%08X" $data]
-
-	set SCB0_sh0_fir_ch0_fn_mod 0x30074108
-	set data [memread32_phys $SCB0_sh0_fir_ch0_fn_mod]
-	puts [format "SCB0_sh0_fir_ch0_fn_mod:		%08X" $data]
 
 	set SCB0_sh0_fir_ch1_read_qos 0x30075100
 	set data [memread32_phys $SCB0_sh0_fir_ch1_read_qos]
@@ -808,14 +424,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sh0_fir_ch1_write_qos]
 	puts [format "SCB0_sh0_fir_ch1_write_qos:		%08X" $data]
 
-	set SCB0_sh0_fir_ch1_fn_mod 0x30075108
-	set data [memread32_phys $SCB0_sh0_fir_ch1_fn_mod]
-	puts [format "SCB0_sh0_fir_ch1_fn_mod:		%08X" $data]
-
-	set SCB0_msmdma1_ch0_ib_fn_mod2 0x30076024
-	set data [memread32_phys $SCB0_msmdma1_ch0_ib_fn_mod2]
-	puts [format "SCB0_msmdma1_ch0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_msmdma1_ch0_ib_read_qos 0x30076100
 	set data [memread32_phys $SCB0_msmdma1_ch0_ib_read_qos]
 	puts [format "SCB0_msmdma1_ch0_ib_read_qos:		%08X" $data]
@@ -823,14 +431,6 @@ proc show_SCB0 {} {
 	set SCB0_msmdma1_ch0_ib_write_qos 0x30076104
 	set data [memread32_phys $SCB0_msmdma1_ch0_ib_write_qos]
 	puts [format "SCB0_msmdma1_ch0_ib_write_qos:		%08X" $data]
-
-	set SCB0_msmdma1_ch0_ib_fn_mod 0x30076108
-	set data [memread32_phys $SCB0_msmdma1_ch0_ib_fn_mod]
-	puts [format "SCB0_msmdma1_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_hsmdma1_ch1_ib_fn_mod2 0x30077024
-	set data [memread32_phys $SCB0_hsmdma1_ch1_ib_fn_mod2]
-	puts [format "SCB0_hsmdma1_ch1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_hsmdma1_ch1_ib_read_qos 0x30077100
 	set data [memread32_phys $SCB0_hsmdma1_ch1_ib_read_qos]
@@ -840,14 +440,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_hsmdma1_ch1_ib_write_qos]
 	puts [format "SCB0_hsmdma1_ch1_ib_write_qos:		%08X" $data]
 
-	set SCB0_hsmdma1_ch1_ib_fn_mod 0x30077108
-	set data [memread32_phys $SCB0_hsmdma1_ch1_ib_fn_mod]
-	puts [format "SCB0_hsmdma1_ch1_ib_fn_mod:		%08X" $data]
-
-	set SCB0_dldma0_ch0_ib_fn_mod2 0x30078024
-	set data [memread32_phys $SCB0_dldma0_ch0_ib_fn_mod2]
-	puts [format "SCB0_dldma0_ch0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_dldma0_ch0_ib_read_qos 0x30078100
 	set data [memread32_phys $SCB0_dldma0_ch0_ib_read_qos]
 	puts [format "SCB0_dldma0_ch0_ib_read_qos:		%08X" $data]
@@ -855,14 +447,6 @@ proc show_SCB0 {} {
 	set SCB0_dldma0_ch0_ib_write_qos 0x30078104
 	set data [memread32_phys $SCB0_dldma0_ch0_ib_write_qos]
 	puts [format "SCB0_dldma0_ch0_ib_write_qos:		%08X" $data]
-
-	set SCB0_dldma0_ch0_ib_fn_mod 0x30078108
-	set data [memread32_phys $SCB0_dldma0_ch0_ib_fn_mod]
-	puts [format "SCB0_dldma0_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_dldma0_ch1_ib_fn_mod2 0x30079024
-	set data [memread32_phys $SCB0_dldma0_ch1_ib_fn_mod2]
-	puts [format "SCB0_dldma0_ch1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_dldma0_ch1_ib_read_qos 0x30079100
 	set data [memread32_phys $SCB0_dldma0_ch1_ib_read_qos]
@@ -872,14 +456,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_dldma0_ch1_ib_write_qos]
 	puts [format "SCB0_dldma0_ch1_ib_write_qos:		%08X" $data]
 
-	set SCB0_dldma0_ch1_ib_fn_mod 0x30079108
-	set data [memread32_phys $SCB0_dldma0_ch1_ib_fn_mod]
-	puts [format "SCB0_dldma0_ch1_ib_fn_mod:		%08X" $data]
-
-	set SCB0_dldma1_ch0_ib_fn_mod2 0x3007A024
-	set data [memread32_phys $SCB0_dldma1_ch0_ib_fn_mod2]
-	puts [format "SCB0_dldma1_ch0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_dldma1_ch0_ib_read_qos 0x3007A100
 	set data [memread32_phys $SCB0_dldma1_ch0_ib_read_qos]
 	puts [format "SCB0_dldma1_ch0_ib_read_qos:		%08X" $data]
@@ -887,14 +463,6 @@ proc show_SCB0 {} {
 	set SCB0_dldma1_ch0_ib_write_qos 0x3007A104
 	set data [memread32_phys $SCB0_dldma1_ch0_ib_write_qos]
 	puts [format "SCB0_dldma1_ch0_ib_write_qos:		%08X" $data]
-
-	set SCB0_dldma1_ch0_ib_fn_mod 0x3007A108
-	set data [memread32_phys $SCB0_dldma1_ch0_ib_fn_mod]
-	puts [format "SCB0_dldma1_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_dldma1_ch1_ib_fn_mod2 0x3007B024
-	set data [memread32_phys $SCB0_dldma1_ch1_ib_fn_mod2]
-	puts [format "SCB0_dldma1_ch1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_dldma1_ch1_ib_read_qos 0x3007B100
 	set data [memread32_phys $SCB0_dldma1_ch1_ib_read_qos]
@@ -904,14 +472,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_dldma1_ch1_ib_write_qos]
 	puts [format "SCB0_dldma1_ch1_ib_write_qos:		%08X" $data]
 
-	set SCB0_dldma1_ch1_ib_fn_mod 0x3007B108
-	set data [memread32_phys $SCB0_dldma1_ch1_ib_fn_mod]
-	puts [format "SCB0_dldma1_ch1_ib_fn_mod:		%08X" $data]
-
-	set SCB0_msmdma_ch0_ib_fn_mod2 0x3007C024
-	set data [memread32_phys $SCB0_msmdma_ch0_ib_fn_mod2]
-	puts [format "SCB0_msmdma_ch0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_msmdma_ch0_ib_read_qos 0x3007C100
 	set data [memread32_phys $SCB0_msmdma_ch0_ib_read_qos]
 	puts [format "SCB0_msmdma_ch0_ib_read_qos:		%08X" $data]
@@ -919,14 +479,6 @@ proc show_SCB0 {} {
 	set SCB0_msmdma_ch0_ib_write_qos 0x3007C104
 	set data [memread32_phys $SCB0_msmdma_ch0_ib_write_qos]
 	puts [format "SCB0_msmdma_ch0_ib_write_qos:		%08X" $data]
-
-	set SCB0_msmdma_ch0_ib_fn_mod 0x3007C108
-	set data [memread32_phys $SCB0_msmdma_ch0_ib_fn_mod]
-	puts [format "SCB0_msmdma_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_msmdma_ch1_ib_fn_mod2 0x3007D024
-	set data [memread32_phys $SCB0_msmdma_ch1_ib_fn_mod2]
-	puts [format "SCB0_msmdma_ch1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_msmdma_ch1_ib_read_qos 0x3007D100
 	set data [memread32_phys $SCB0_msmdma_ch1_ib_read_qos]
@@ -936,14 +488,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_msmdma_ch1_ib_write_qos]
 	puts [format "SCB0_msmdma_ch1_ib_write_qos:		%08X" $data]
 
-	set SCB0_msmdma_ch1_ib_fn_mod 0x3007D108
-	set data [memread32_phys $SCB0_msmdma_ch1_ib_fn_mod]
-	puts [format "SCB0_msmdma_ch1_ib_fn_mod:		%08X" $data]
-
-	set SCB0_hsmdma1_ch0_ib_fn_mod2 0x3007E024
-	set data [memread32_phys $SCB0_hsmdma1_ch0_ib_fn_mod2]
-	puts [format "SCB0_hsmdma1_ch0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_hsmdma1_ch0_ib_read_qos 0x3007E100
 	set data [memread32_phys $SCB0_hsmdma1_ch0_ib_read_qos]
 	puts [format "SCB0_hsmdma1_ch0_ib_read_qos:		%08X" $data]
@@ -952,21 +496,13 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_hsmdma1_ch0_ib_write_qos]
 	puts [format "SCB0_hsmdma1_ch0_ib_write_qos:		%08X" $data]
 
-	set SCB0_hsmdma1_ch0_ib_fn_mod 0x3007E108
-	set data [memread32_phys $SCB0_hsmdma1_ch0_ib_fn_mod]
-	puts [format "SCB0_hsmdma1_ch0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_ppi_f0_read_qos 0x3007F100
-	set data [memread32_phys $SCB0_ppi_f0_read_qos]
-	puts [format "SCB0_ppi_f0_read_qos:		%08X" $data]
+	set SCB0_PPI_f0_read_qos 0x3007F100
+	set data [memread32_phys $SCB0_PPI_f0_read_qos]
+	puts [format "SCB0_PPI_f0_read_qos:		%08X" $data]
 
 	set SCB0_ppi_f0_write_qos 0x3007F104
 	set data [memread32_phys $SCB0_ppi_f0_write_qos]
 	puts [format "SCB0_ppi_f0_write_qos:		%08X" $data]
-
-	set SCB0_ppi_f0_fn_mod 0x3007F108
-	set data [memread32_phys $SCB0_ppi_f0_fn_mod]
-	puts [format "SCB0_ppi_f0_fn_mod:		%08X" $data]
 
 	set SCB0_ppi_f1_read_qos 0x30080100
 	set data [memread32_phys $SCB0_ppi_f1_read_qos]
@@ -976,14 +512,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_ppi_f1_write_qos]
 	puts [format "SCB0_ppi_f1_write_qos:		%08X" $data]
 
-	set SCB0_ppi_f1_fn_mod 0x30080108
-	set data [memread32_phys $SCB0_ppi_f1_fn_mod]
-	puts [format "SCB0_ppi_f1_fn_mod:		%08X" $data]
-
-	set SCB0_usb0_ib_fn_mod2 0x30081024
-	set data [memread32_phys $SCB0_usb0_ib_fn_mod2]
-	puts [format "SCB0_usb0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_usb0_ib_read_qos 0x30081100
 	set data [memread32_phys $SCB0_usb0_ib_read_qos]
 	puts [format "SCB0_usb0_ib_read_qos:		%08X" $data]
@@ -991,10 +519,6 @@ proc show_SCB0 {} {
 	set SCB0_usb0_ib_write_qos 0x30081104
 	set data [memread32_phys $SCB0_usb0_ib_write_qos]
 	puts [format "SCB0_usb0_ib_write_qos:		%08X" $data]
-
-	set SCB0_usb0_ib_fn_mod 0x30081108
-	set data [memread32_phys $SCB0_usb0_ib_fn_mod]
-	puts [format "SCB0_usb0_ib_fn_mod:		%08X" $data]
 
 	set SCB0_sh1_iport_read_qos 0x30082100
 	set data [memread32_phys $SCB0_sh1_iport_read_qos]
@@ -1004,10 +528,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sh1_iport_write_qos]
 	puts [format "SCB0_sh1_iport_write_qos:		%08X" $data]
 
-	set SCB0_sh1_iport_fn_mod 0x30082108
-	set data [memread32_phys $SCB0_sh1_iport_fn_mod]
-	puts [format "SCB0_sh1_iport_fn_mod:		%08X" $data]
-
 	set SCB0_sh1_dport_read_qos 0x30083100
 	set data [memread32_phys $SCB0_sh1_dport_read_qos]
 	puts [format "SCB0_sh1_dport_read_qos:		%08X" $data]
@@ -1015,14 +535,6 @@ proc show_SCB0 {} {
 	set SCB0_sh1_dport_write_qos 0x30083104
 	set data [memread32_phys $SCB0_sh1_dport_write_qos]
 	puts [format "SCB0_sh1_dport_write_qos:		%08X" $data]
-
-	set SCB0_sh1_dport_fn_mod 0x30083108
-	set data [memread32_phys $SCB0_sh1_dport_fn_mod]
-	puts [format "SCB0_sh1_dport_fn_mod:		%08X" $data]
-
-	set SCB0_sh1_mmr_ib_fn_mod2 0x30084024
-	set data [memread32_phys $SCB0_sh1_mmr_ib_fn_mod2]
-	puts [format "SCB0_sh1_mmr_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_sh1_mmr_ib_read_qos 0x30084100
 	set data [memread32_phys $SCB0_sh1_mmr_ib_read_qos]
@@ -1032,14 +544,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sh1_mmr_ib_write_qos]
 	puts [format "SCB0_sh1_mmr_ib_write_qos:		%08X" $data]
 
-	set SCB0_sh1_mmr_ib_fn_mod 0x30084108
-	set data [memread32_phys $SCB0_sh1_mmr_ib_fn_mod]
-	puts [format "SCB0_sh1_mmr_ib_fn_mod:		%08X" $data]
-
-	set SCB0_pl310_m0_ib_fn_mod2 0x30085024
-	set data [memread32_phys $SCB0_pl310_m0_ib_fn_mod2]
-	puts [format "SCB0_pl310_m0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_pl310_m0_ib_read_qos 0x30085100
 	set data [memread32_phys $SCB0_pl310_m0_ib_read_qos]
 	puts [format "SCB0_pl310_m0_ib_read_qos:		%08X" $data]
@@ -1047,14 +551,6 @@ proc show_SCB0 {} {
 	set SCB0_pl310_m0_ib_write_qos 0x30085104
 	set data [memread32_phys $SCB0_pl310_m0_ib_write_qos]
 	puts [format "SCB0_pl310_m0_ib_write_qos:		%08X" $data]
-
-	set SCB0_pl310_m0_ib_fn_mod 0x30085108
-	set data [memread32_phys $SCB0_pl310_m0_ib_fn_mod]
-	puts [format "SCB0_pl310_m0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_pl310_mmr_ib_fn_mod2 0x30086024
-	set data [memread32_phys $SCB0_pl310_mmr_ib_fn_mod2]
-	puts [format "SCB0_pl310_mmr_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_pl310_mmr_ib_read_qos 0x30086100
 	set data [memread32_phys $SCB0_pl310_mmr_ib_read_qos]
@@ -1064,14 +560,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_pl310_mmr_ib_write_qos]
 	puts [format "SCB0_pl310_mmr_ib_write_qos:		%08X" $data]
 
-	set SCB0_pl310_mmr_ib_fn_mod 0x30086108
-	set data [memread32_phys $SCB0_pl310_mmr_ib_fn_mod]
-	puts [format "SCB0_pl310_mmr_ib_fn_mod:		%08X" $data]
-
-	set SCB0_gige_ib_fn_mod2 0x30087024
-	set data [memread32_phys $SCB0_gige_ib_fn_mod2]
-	puts [format "SCB0_gige_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_gige_ib_read_qos 0x30087100
 	set data [memread32_phys $SCB0_gige_ib_read_qos]
 	puts [format "SCB0_gige_ib_read_qos:		%08X" $data]
@@ -1079,14 +567,6 @@ proc show_SCB0 {} {
 	set SCB0_gige_ib_write_qos 0x30087104
 	set data [memread32_phys $SCB0_gige_ib_write_qos]
 	puts [format "SCB0_gige_ib_write_qos:		%08X" $data]
-
-	set SCB0_gige_ib_fn_mod 0x30087108
-	set data [memread32_phys $SCB0_gige_ib_fn_mod]
-	puts [format "SCB0_gige_ib_fn_mod:		%08X" $data]
-
-	set SCB0_dbg_ib_fn_mod2 0x30088024
-	set data [memread32_phys $SCB0_dbg_ib_fn_mod2]
-	puts [format "SCB0_dbg_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_dbg_ib_read_qos 0x30088100
 	set data [memread32_phys $SCB0_dbg_ib_read_qos]
@@ -1096,14 +576,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_dbg_ib_write_qos]
 	puts [format "SCB0_dbg_ib_write_qos:		%08X" $data]
 
-	set SCB0_dbg_ib_fn_mod 0x30088108
-	set data [memread32_phys $SCB0_dbg_ib_fn_mod]
-	puts [format "SCB0_dbg_ib_fn_mod:		%08X" $data]
-
-	set SCB0_etr_ib_fn_mod2 0x30089024
-	set data [memread32_phys $SCB0_etr_ib_fn_mod2]
-	puts [format "SCB0_etr_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_etr_ib_read_qos 0x30089100
 	set data [memread32_phys $SCB0_etr_ib_read_qos]
 	puts [format "SCB0_etr_ib_read_qos:		%08X" $data]
@@ -1111,14 +583,6 @@ proc show_SCB0 {} {
 	set SCB0_etr_ib_write_qos 0x30089104
 	set data [memread32_phys $SCB0_etr_ib_write_qos]
 	puts [format "SCB0_etr_ib_write_qos:		%08X" $data]
-
-	set SCB0_etr_ib_fn_mod 0x30089108
-	set data [memread32_phys $SCB0_etr_ib_fn_mod]
-	puts [format "SCB0_etr_ib_fn_mod:		%08X" $data]
-
-	set SCB0_emac_ib_fn_mod2 0x3008A024
-	set data [memread32_phys $SCB0_emac_ib_fn_mod2]
-	puts [format "SCB0_emac_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_emac_ib_read_qos 0x3008A100
 	set data [memread32_phys $SCB0_emac_ib_read_qos]
@@ -1128,10 +592,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_emac_ib_write_qos]
 	puts [format "SCB0_emac_ib_write_qos:		%08X" $data]
 
-	set SCB0_emac_ib_fn_mod 0x3008A108
-	set data [memread32_phys $SCB0_emac_ib_fn_mod]
-	puts [format "SCB0_emac_ib_fn_mod:		%08X" $data]
-
 	set SCB0_sh1_fir_ch1_read_qos 0x3008B100
 	set data [memread32_phys $SCB0_sh1_fir_ch1_read_qos]
 	puts [format "SCB0_sh1_fir_ch1_read_qos:		%08X" $data]
@@ -1139,10 +599,6 @@ proc show_SCB0 {} {
 	set SCB0_sh1_fir_ch1_write_qos 0x3008B104
 	set data [memread32_phys $SCB0_sh1_fir_ch1_write_qos]
 	puts [format "SCB0_sh1_fir_ch1_write_qos:		%08X" $data]
-
-	set SCB0_sh1_fir_ch1_fn_mod 0x3008B108
-	set data [memread32_phys $SCB0_sh1_fir_ch1_fn_mod]
-	puts [format "SCB0_sh1_fir_ch1_fn_mod:		%08X" $data]
 
 	set SCB0_sh1_fir_ch0_read_qos 0x3008C100
 	set data [memread32_phys $SCB0_sh1_fir_ch0_read_qos]
@@ -1152,10 +608,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sh1_fir_ch0_write_qos]
 	puts [format "SCB0_sh1_fir_ch0_write_qos:		%08X" $data]
 
-	set SCB0_sh1_fir_ch0_fn_mod 0x3008C108
-	set data [memread32_phys $SCB0_sh1_fir_ch0_fn_mod]
-	puts [format "SCB0_sh1_fir_ch0_fn_mod:		%08X" $data]
-
 	set SCB0_sh0_iir_ch0_read_qos 0x3008D100
 	set data [memread32_phys $SCB0_sh0_iir_ch0_read_qos]
 	puts [format "SCB0_sh0_iir_ch0_read_qos:		%08X" $data]
@@ -1163,10 +615,6 @@ proc show_SCB0 {} {
 	set SCB0_sh0_iir_ch0_write_qos 0x3008D104
 	set data [memread32_phys $SCB0_sh0_iir_ch0_write_qos]
 	puts [format "SCB0_sh0_iir_ch0_write_qos:		%08X" $data]
-
-	set SCB0_sh0_iir_ch0_fn_mod 0x3008D108
-	set data [memread32_phys $SCB0_sh0_iir_ch0_fn_mod]
-	puts [format "SCB0_sh0_iir_ch0_fn_mod:		%08X" $data]
 
 	set SCB0_sh0_iir_ch1_read_qos 0x3008E100
 	set data [memread32_phys $SCB0_sh0_iir_ch1_read_qos]
@@ -1176,10 +624,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sh0_iir_ch1_write_qos]
 	puts [format "SCB0_sh0_iir_ch1_write_qos:		%08X" $data]
 
-	set SCB0_sh0_iir_ch1_fn_mod 0x3008E108
-	set data [memread32_phys $SCB0_sh0_iir_ch1_fn_mod]
-	puts [format "SCB0_sh0_iir_ch1_fn_mod:		%08X" $data]
-
 	set SCB0_sh1_iir_ch0_read_qos 0x3008F100
 	set data [memread32_phys $SCB0_sh1_iir_ch0_read_qos]
 	puts [format "SCB0_sh1_iir_ch0_read_qos:		%08X" $data]
@@ -1187,10 +631,6 @@ proc show_SCB0 {} {
 	set SCB0_sh1_iir_ch0_write_qos 0x3008F104
 	set data [memread32_phys $SCB0_sh1_iir_ch0_write_qos]
 	puts [format "SCB0_sh1_iir_ch0_write_qos:		%08X" $data]
-
-	set SCB0_sh1_iir_ch0_fn_mod 0x3008F108
-	set data [memread32_phys $SCB0_sh1_iir_ch0_fn_mod]
-	puts [format "SCB0_sh1_iir_ch0_fn_mod:		%08X" $data]
 
 	set SCB0_sh1_iir_ch1_read_qos 0x30090100
 	set data [memread32_phys $SCB0_sh1_iir_ch1_read_qos]
@@ -1200,14 +640,6 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_sh1_iir_ch1_write_qos]
 	puts [format "SCB0_sh1_iir_ch1_write_qos:		%08X" $data]
 
-	set SCB0_sh1_iir_ch1_fn_mod 0x30090108
-	set data [memread32_phys $SCB0_sh1_iir_ch1_fn_mod]
-	puts [format "SCB0_sh1_iir_ch1_fn_mod:		%08X" $data]
-
-	set SCB0_sdio0_ib_fn_mod2 0x30091024
-	set data [memread32_phys $SCB0_sdio0_ib_fn_mod2]
-	puts [format "SCB0_sdio0_ib_fn_mod2:		%08X" $data]
-
 	set SCB0_sdio0_ib_read_qos 0x30091100
 	set data [memread32_phys $SCB0_sdio0_ib_read_qos]
 	puts [format "SCB0_sdio0_ib_read_qos:		%08X" $data]
@@ -1215,14 +647,6 @@ proc show_SCB0 {} {
 	set SCB0_sdio0_ib_write_qos 0x30091104
 	set data [memread32_phys $SCB0_sdio0_ib_write_qos]
 	puts [format "SCB0_sdio0_ib_write_qos:		%08X" $data]
-
-	set SCB0_sdio0_ib_fn_mod 0x30091108
-	set data [memread32_phys $SCB0_sdio0_ib_fn_mod]
-	puts [format "SCB0_sdio0_ib_fn_mod:		%08X" $data]
-
-	set SCB0_pl310_m1_ib_fn_mod2 0x30092024
-	set data [memread32_phys $SCB0_pl310_m1_ib_fn_mod2]
-	puts [format "SCB0_pl310_m1_ib_fn_mod2:		%08X" $data]
 
 	set SCB0_pl310_m1_ib_read_qos 0x30092100
 	set data [memread32_phys $SCB0_pl310_m1_ib_read_qos]
@@ -1232,208 +656,24 @@ proc show_SCB0 {} {
 	set data [memread32_phys $SCB0_pl310_m1_ib_write_qos]
 	puts [format "SCB0_pl310_m1_ib_write_qos:		%08X" $data]
 
-	set SCB0_pl310_m1_ib_fn_mod 0x30092108
-	set data [memread32_phys $SCB0_pl310_m1_ib_fn_mod]
-	puts [format "SCB0_pl310_m1_ib_fn_mod:		%08X" $data]
-
-	set SCB0_scb6_ib_fn_mod_iss_bm 0x300C2008
-	set data [memread32_phys $SCB0_scb6_ib_fn_mod_iss_bm]
-	puts [format "SCB0_scb6_ib_fn_mod_iss_bm:		%08X" $data]
-
 	set SCB0_scb6_ib_sync_mode 0x300C2020
 	set data [memread32_phys $SCB0_scb6_ib_sync_mode]
 	puts [format "SCB0_scb6_ib_sync_mode:		%08X" $data]
 
-	set SCB0_scb6_ib_fn_mod2 0x300C2024
-	set data [memread32_phys $SCB0_scb6_ib_fn_mod2]
-	puts [format "SCB0_scb6_ib_fn_mod2:		%08X" $data]
-
-	set SCB0_scb6_ib_fn_mod 0x300C2108
-	set data [memread32_phys $SCB0_scb6_ib_fn_mod]
-	puts [format "SCB0_scb6_ib_fn_mod:		%08X" $data]
-
 }
 
 proc show_SCB3 {} {
-	set SCB3_periph_id_4 0x30101FD0
-	set data [memread32_phys $SCB3_periph_id_4]
-	puts [format "SCB3_periph_id_4:		%08X" $data]
-
-	set SCB3_periph_id_5 0x30101FD4
-	set data [memread32_phys $SCB3_periph_id_5]
-	puts [format "SCB3_periph_id_5:		%08X" $data]
-
-	set SCB3_periph_id_6 0x30101FD8
-	set data [memread32_phys $SCB3_periph_id_6]
-	puts [format "SCB3_periph_id_6:		%08X" $data]
-
-	set SCB3_periph_id_7 0x30101FDC
-	set data [memread32_phys $SCB3_periph_id_7]
-	puts [format "SCB3_periph_id_7:		%08X" $data]
-
-	set SCB3_periph_id_0 0x30101FE0
-	set data [memread32_phys $SCB3_periph_id_0]
-	puts [format "SCB3_periph_id_0:		%08X" $data]
-
-	set SCB3_periph_id_1 0x30101FE4
-	set data [memread32_phys $SCB3_periph_id_1]
-	puts [format "SCB3_periph_id_1:		%08X" $data]
-
-	set SCB3_periph_id_2 0x30101FE8
-	set data [memread32_phys $SCB3_periph_id_2]
-	puts [format "SCB3_periph_id_2:		%08X" $data]
-
-	set SCB3_periph_id_3 0x30101FEC
-	set data [memread32_phys $SCB3_periph_id_3]
-	puts [format "SCB3_periph_id_3:		%08X" $data]
-
-	set SCB3_comp_id_0 0x30101FF0
-	set data [memread32_phys $SCB3_comp_id_0]
-	puts [format "SCB3_comp_id_0:		%08X" $data]
-
-	set SCB3_comp_id_1 0x30101FF4
-	set data [memread32_phys $SCB3_comp_id_1]
-	puts [format "SCB3_comp_id_1:		%08X" $data]
-
-	set SCB3_comp_id_2 0x30101FF8
-	set data [memread32_phys $SCB3_comp_id_2]
-	puts [format "SCB3_comp_id_2:		%08X" $data]
-
-	set SCB3_comp_id_3 0x30101FFC
-	set data [memread32_phys $SCB3_comp_id_3]
-	puts [format "SCB3_comp_id_3:		%08X" $data]
-
-	set SCB3_apb_clko8_ib_fn_mod_iss_bm 0x30102008
-	set data [memread32_phys $SCB3_apb_clko8_ib_fn_mod_iss_bm]
-	puts [format "SCB3_apb_clko8_ib_fn_mod_iss_bm:		%08X" $data]
-
 	set SCB3_apb_clko8_ib_sync_mode 0x30102020
 	set data [memread32_phys $SCB3_apb_clko8_ib_sync_mode]
 	puts [format "SCB3_apb_clko8_ib_sync_mode:		%08X" $data]
-
-	set SCB3_apb_sclk0_1_ib_fn_mod_iss_bm 0x30103008
-	set data [memread32_phys $SCB3_apb_sclk0_1_ib_fn_mod_iss_bm]
-	puts [format "SCB3_apb_sclk0_1_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_apb_clko6_ib_fn_mod_iss_bm 0x30104008
-	set data [memread32_phys $SCB3_apb_clko6_ib_fn_mod_iss_bm]
-	puts [format "SCB3_apb_clko6_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_apb_clko3_ib_fn_mod_iss_bm 0x30105008
-	set data [memread32_phys $SCB3_apb_clko3_ib_fn_mod_iss_bm]
-	puts [format "SCB3_apb_clko3_ib_fn_mod_iss_bm:		%08X" $data]
 
 	set SCB3_apb_clko3_ib_sync_mode 0x30105020
 	set data [memread32_phys $SCB3_apb_clko3_ib_sync_mode]
 	puts [format "SCB3_apb_clko3_ib_sync_mode:		%08X" $data]
 
-	set SCB3_dai1_fn_mod_iss_bm 0x30108008
-	set data [memread32_phys $SCB3_dai1_fn_mod_iss_bm]
-	puts [format "SCB3_dai1_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_dai1_ahb_cntl 0x30108044
-	set data [memread32_phys $SCB3_dai1_ahb_cntl]
-	puts [format "SCB3_dai1_ahb_cntl:		%08X" $data]
-
-	set SCB3_spif_fabric_fn_mod_iss_bm 0x30109008
-	set data [memread32_phys $SCB3_spif_fabric_fn_mod_iss_bm]
-	puts [format "SCB3_spif_fabric_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_dai0_fn_mod_iss_bm 0x3010A008
-	set data [memread32_phys $SCB3_dai0_fn_mod_iss_bm]
-	puts [format "SCB3_dai0_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_dai0_ahb_cntl 0x3010A044
-	set data [memread32_phys $SCB3_dai0_ahb_cntl]
-	puts [format "SCB3_dai0_ahb_cntl:		%08X" $data]
-
-	set SCB3_apb_clko4_ib_fn_mod_iss_bm 0x3010B008
-	set data [memread32_phys $SCB3_apb_clko4_ib_fn_mod_iss_bm]
-	puts [format "SCB3_apb_clko4_ib_fn_mod_iss_bm:		%08X" $data]
-
 	set SCB3_apb_clko4_ib_sync_mode 0x3010B020
 	set data [memread32_phys $SCB3_apb_clko4_ib_sync_mode]
 	puts [format "SCB3_apb_clko4_ib_sync_mode:		%08X" $data]
-
-	set SCB3_crypto_0_fn_mod_iss_bm 0x3010C008
-	set data [memread32_phys $SCB3_crypto_0_fn_mod_iss_bm]
-	puts [format "SCB3_crypto_0_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_crypto_0_ahb_cntl 0x3010C044
-	set data [memread32_phys $SCB3_crypto_0_ahb_cntl]
-	puts [format "SCB3_crypto_0_ahb_cntl:		%08X" $data]
-
-	set SCB3_crypto_1_fn_mod_iss_bm 0x3010E008
-	set data [memread32_phys $SCB3_crypto_1_fn_mod_iss_bm]
-	puts [format "SCB3_crypto_1_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_crypto_1_ahb_cntl 0x3010E044
-	set data [memread32_phys $SCB3_crypto_1_ahb_cntl]
-	puts [format "SCB3_crypto_1_ahb_cntl:		%08X" $data]
-
-	set SCB3_apb_sclk0_0_ib_fn_mod_iss_bm 0x3010F008
-	set data [memread32_phys $SCB3_apb_sclk0_0_ib_fn_mod_iss_bm]
-	puts [format "SCB3_apb_sclk0_0_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_gic_port0_ib_fn_mod_iss_bm 0x30110008
-	set data [memread32_phys $SCB3_gic_port0_ib_fn_mod_iss_bm]
-	puts [format "SCB3_gic_port0_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_gic_port0_ib_fn_mod2 0x30110024
-	set data [memread32_phys $SCB3_gic_port0_ib_fn_mod2]
-	puts [format "SCB3_gic_port0_ib_fn_mod2:		%08X" $data]
-
-	set SCB3_gic_port0_ib_fn_mod 0x30110108
-	set data [memread32_phys $SCB3_gic_port0_ib_fn_mod]
-	puts [format "SCB3_gic_port0_ib_fn_mod:		%08X" $data]
-
-	set SCB3_sh0_acc_mmr_fn_mod_iss_bm 0x30112008
-	set data [memread32_phys $SCB3_sh0_acc_mmr_fn_mod_iss_bm]
-	puts [format "SCB3_sh0_acc_mmr_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_sh1_acc_mmr_fn_mod_iss_bm 0x30113008
-	set data [memread32_phys $SCB3_sh1_acc_mmr_fn_mod_iss_bm]
-	puts [format "SCB3_sh1_acc_mmr_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_sdio0_fn_mod_iss_bm 0x30114008
-	set data [memread32_phys $SCB3_sdio0_fn_mod_iss_bm]
-	puts [format "SCB3_sdio0_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_sdio0_ahb_cntl 0x30114044
-	set data [memread32_phys $SCB3_sdio0_ahb_cntl]
-	puts [format "SCB3_sdio0_ahb_cntl:		%08X" $data]
-
-	set SCB3_usb0_fn_mod_iss_bm 0x30115008
-	set data [memread32_phys $SCB3_usb0_fn_mod_iss_bm]
-	puts [format "SCB3_usb0_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_usb0_ahb_cntl 0x30115044
-	set data [memread32_phys $SCB3_usb0_ahb_cntl]
-	puts [format "SCB3_usb0_ahb_cntl:		%08X" $data]
-
-	set SCB3_stm0_ib_fn_mod_iss_bm 0x30123008
-	set data [memread32_phys $SCB3_stm0_ib_fn_mod_iss_bm]
-	puts [format "SCB3_stm0_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_stm0_ib_fn_mod2 0x30123024
-	set data [memread32_phys $SCB3_stm0_ib_fn_mod2]
-	puts [format "SCB3_stm0_ib_fn_mod2:		%08X" $data]
-
-	set SCB3_stm0_ib_fn_mod 0x30123108
-	set data [memread32_phys $SCB3_stm0_ib_fn_mod]
-	puts [format "SCB3_stm0_ib_fn_mod:		%08X" $data]
-
-	set SCB3_dlmdma0_fn_mod_iss_bm 0x3012C008
-	set data [memread32_phys $SCB3_dlmdma0_fn_mod_iss_bm]
-	puts [format "SCB3_dlmdma0_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB3_dlmdma0_ahb_cntl 0x3012C044
-	set data [memread32_phys $SCB3_dlmdma0_ahb_cntl]
-	puts [format "SCB3_dlmdma0_ahb_cntl:		%08X" $data]
-
-	set SCB3_smmr_fn_mod 0x30142108
-	set data [memread32_phys $SCB3_smmr_fn_mod]
-	puts [format "SCB3_smmr_fn_mod:		%08X" $data]
 
 }
 
@@ -1441,10 +681,6 @@ proc show_SCB1 {} {
 	set SCB1_mst_ib_sync_mode 0x30200020
 	set data [memread32_phys $SCB1_mst_ib_sync_mode]
 	puts [format "SCB1_mst_ib_sync_mode:		%08X" $data]
-
-	set SCB1_mst_ib_fn_mod2 0x30200024
-	set data [memread32_phys $SCB1_mst_ib_fn_mod2]
-	puts [format "SCB1_mst_ib_fn_mod2:		%08X" $data]
 
 }
 
@@ -1571,101 +807,9 @@ proc show_SCB5 {} {
 }
 
 proc show_SCB6 {} {
-	set SCB6_periph_id_4 0x30601FD0
-	set data [memread32_phys $SCB6_periph_id_4]
-	puts [format "SCB6_periph_id_4:		%08X" $data]
-
-	set SCB6_periph_id_5 0x30601FD4
-	set data [memread32_phys $SCB6_periph_id_5]
-	puts [format "SCB6_periph_id_5:		%08X" $data]
-
-	set SCB6_periph_id_6 0x30601FD8
-	set data [memread32_phys $SCB6_periph_id_6]
-	puts [format "SCB6_periph_id_6:		%08X" $data]
-
-	set SCB6_periph_id_7 0x30601FDC
-	set data [memread32_phys $SCB6_periph_id_7]
-	puts [format "SCB6_periph_id_7:		%08X" $data]
-
-	set SCB6_periph_id_0 0x30601FE0
-	set data [memread32_phys $SCB6_periph_id_0]
-	puts [format "SCB6_periph_id_0:		%08X" $data]
-
-	set SCB6_periph_id_1 0x30601FE4
-	set data [memread32_phys $SCB6_periph_id_1]
-	puts [format "SCB6_periph_id_1:		%08X" $data]
-
-	set SCB6_periph_id_2 0x30601FE8
-	set data [memread32_phys $SCB6_periph_id_2]
-	puts [format "SCB6_periph_id_2:		%08X" $data]
-
-	set SCB6_periph_id_3 0x30601FEC
-	set data [memread32_phys $SCB6_periph_id_3]
-	puts [format "SCB6_periph_id_3:		%08X" $data]
-
-	set SCB6_comp_id_0 0x30601FF0
-	set data [memread32_phys $SCB6_comp_id_0]
-	puts [format "SCB6_comp_id_0:		%08X" $data]
-
-	set SCB6_comp_id_1 0x30601FF4
-	set data [memread32_phys $SCB6_comp_id_1]
-	puts [format "SCB6_comp_id_1:		%08X" $data]
-
-	set SCB6_comp_id_2 0x30601FF8
-	set data [memread32_phys $SCB6_comp_id_2]
-	puts [format "SCB6_comp_id_2:		%08X" $data]
-
-	set SCB6_comp_id_3 0x30601FFC
-	set data [memread32_phys $SCB6_comp_id_3]
-	puts [format "SCB6_comp_id_3:		%08X" $data]
-
-	set SCB6_FABRIC_M1_ib_fn_mod_iss_bm 0x30602008
-	set data [memread32_phys $SCB6_FABRIC_M1_ib_fn_mod_iss_bm]
-	puts [format "SCB6_FABRIC_M1_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB6_FABRIC_M1_ib_sync_mode 0x30602020
-	set data [memread32_phys $SCB6_FABRIC_M1_ib_sync_mode]
-	puts [format "SCB6_FABRIC_M1_ib_sync_mode:		%08X" $data]
-
-	set SCB6_FABRIC_M1_ib_fn_mod 0x30602108
-	set data [memread32_phys $SCB6_FABRIC_M1_ib_fn_mod]
-	puts [format "SCB6_FABRIC_M1_ib_fn_mod:		%08X" $data]
-
-	set SCB6_GIC_S_fn_mod_iss_bm 0x30603008
-	set data [memread32_phys $SCB6_GIC_S_fn_mod_iss_bm]
-	puts [format "SCB6_GIC_S_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB6_A55_MMR_fn_mod_iss_bm 0x30604008
-	set data [memread32_phys $SCB6_A55_MMR_fn_mod_iss_bm]
-	puts [format "SCB6_A55_MMR_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB6_FABRIC_M0_ib_fn_mod_iss_bm 0x30605008
-	set data [memread32_phys $SCB6_FABRIC_M0_ib_fn_mod_iss_bm]
-	puts [format "SCB6_FABRIC_M0_ib_fn_mod_iss_bm:		%08X" $data]
-
-	set SCB6_FABRIC_M0_ib_sync_mode 0x30605020
-	set data [memread32_phys $SCB6_FABRIC_M0_ib_sync_mode]
-	puts [format "SCB6_FABRIC_M0_ib_sync_mode:		%08X" $data]
-
-	set SCB6_FABRIC_M0_ib_fn_mod 0x30605108
-	set data [memread32_phys $SCB6_FABRIC_M0_ib_fn_mod]
-	puts [format "SCB6_FABRIC_M0_ib_fn_mod:		%08X" $data]
-
-	set SCB6_A55_PPI_ib_sync_mode 0x30642020
-	set data [memread32_phys $SCB6_A55_PPI_ib_sync_mode]
-	puts [format "SCB6_A55_PPI_ib_sync_mode:		%08X" $data]
-
-	set SCB6_A55_PPI_ib_fn_mod 0x30642108
-	set data [memread32_phys $SCB6_A55_PPI_ib_fn_mod]
-	puts [format "SCB6_A55_PPI_ib_fn_mod:		%08X" $data]
-
 	set SCB6_A55_M0_ib_fn_mod 0x30643108
 	set data [memread32_phys $SCB6_A55_M0_ib_fn_mod]
 	puts [format "SCB6_A55_M0_ib_fn_mod:		%08X" $data]
-
-	set SCB6_GIC_M_fn_mod 0x30644108
-	set data [memread32_phys $SCB6_GIC_M_fn_mod]
-	puts [format "SCB6_GIC_M_fn_mod:		%08X" $data]
 
 }
 
@@ -8493,3004 +7637,2964 @@ proc show_SPI2 {} {
 }
 
 proc show_EMAC0 {} {
-	set EMAC0_MAC_Configuration 0x31040000
-	set data [memread32_phys $EMAC0_MAC_Configuration]
-	puts [format "EMAC0_MAC_Configuration:		%08X" $data]
-
-	set EMAC0_MAC_Ext_Configuration 0x31040004
-	set data [memread32_phys $EMAC0_MAC_Ext_Configuration]
-	puts [format "EMAC0_MAC_Ext_Configuration:		%08X" $data]
-
-	set EMAC0_MAC_Packet_Filter 0x31040008
-	set data [memread32_phys $EMAC0_MAC_Packet_Filter]
-	puts [format "EMAC0_MAC_Packet_Filter:		%08X" $data]
-
-	set EMAC0_MAC_Watchdog_Timeout 0x3104000C
-	set data [memread32_phys $EMAC0_MAC_Watchdog_Timeout]
-	puts [format "EMAC0_MAC_Watchdog_Timeout:		%08X" $data]
-
-	set EMAC0_MAC_Hash_Table_Reg0 0x31040010
-	set data [memread32_phys $EMAC0_MAC_Hash_Table_Reg0]
-	puts [format "EMAC0_MAC_Hash_Table_Reg0:		%08X" $data]
-
-	set EMAC0_MAC_Hash_Table_Reg1 0x31040014
-	set data [memread32_phys $EMAC0_MAC_Hash_Table_Reg1]
-	puts [format "EMAC0_MAC_Hash_Table_Reg1:		%08X" $data]
-
-	set EMAC0_MAC_Hash_Table_Reg2 0x31040018
-	set data [memread32_phys $EMAC0_MAC_Hash_Table_Reg2]
-	puts [format "EMAC0_MAC_Hash_Table_Reg2:		%08X" $data]
-
-	set EMAC0_MAC_Hash_Table_Reg3 0x3104001C
-	set data [memread32_phys $EMAC0_MAC_Hash_Table_Reg3]
-	puts [format "EMAC0_MAC_Hash_Table_Reg3:		%08X" $data]
-
-	set EMAC0_MAC_Hash_Table_Reg4 0x31040020
-	set data [memread32_phys $EMAC0_MAC_Hash_Table_Reg4]
-	puts [format "EMAC0_MAC_Hash_Table_Reg4:		%08X" $data]
-
-	set EMAC0_MAC_Hash_Table_Reg5 0x31040024
-	set data [memread32_phys $EMAC0_MAC_Hash_Table_Reg5]
-	puts [format "EMAC0_MAC_Hash_Table_Reg5:		%08X" $data]
-
-	set EMAC0_MAC_Hash_Table_Reg6 0x31040028
-	set data [memread32_phys $EMAC0_MAC_Hash_Table_Reg6]
-	puts [format "EMAC0_MAC_Hash_Table_Reg6:		%08X" $data]
-
-	set EMAC0_MAC_Hash_Table_Reg7 0x3104002C
-	set data [memread32_phys $EMAC0_MAC_Hash_Table_Reg7]
-	puts [format "EMAC0_MAC_Hash_Table_Reg7:		%08X" $data]
-
-	set EMAC0_MAC_VLAN_Tag_Ctrl 0x31040050
-	set data [memread32_phys $EMAC0_MAC_VLAN_Tag_Ctrl]
-	puts [format "EMAC0_MAC_VLAN_Tag_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_VLAN_Tag_Data 0x31040054
-	set data [memread32_phys $EMAC0_MAC_VLAN_Tag_Data]
-	puts [format "EMAC0_MAC_VLAN_Tag_Data:		%08X" $data]
-
-	set EMAC0_MAC_VLAN_Hash_Table 0x31040058
-	set data [memread32_phys $EMAC0_MAC_VLAN_Hash_Table]
-	puts [format "EMAC0_MAC_VLAN_Hash_Table:		%08X" $data]
-
-	set EMAC0_MAC_VLAN_Incl 0x31040060
-	set data [memread32_phys $EMAC0_MAC_VLAN_Incl]
-	puts [format "EMAC0_MAC_VLAN_Incl:		%08X" $data]
-
-	set EMAC0_MAC_Inner_VLAN_Incl 0x31040064
-	set data [memread32_phys $EMAC0_MAC_Inner_VLAN_Incl]
-	puts [format "EMAC0_MAC_Inner_VLAN_Incl:		%08X" $data]
-
-	set EMAC0_MAC_Q0_Tx_Flow_Ctrl 0x31040070
-	set data [memread32_phys $EMAC0_MAC_Q0_Tx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Q0_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Q1_Tx_Flow_Ctrl 0x31040074
-	set data [memread32_phys $EMAC0_MAC_Q1_Tx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Q1_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Q2_Tx_Flow_Ctrl 0x31040078
-	set data [memread32_phys $EMAC0_MAC_Q2_Tx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Q2_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Q3_Tx_Flow_Ctrl 0x3104007C
-	set data [memread32_phys $EMAC0_MAC_Q3_Tx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Q3_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Q4_Tx_Flow_Ctrl 0x31040080
-	set data [memread32_phys $EMAC0_MAC_Q4_Tx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Q4_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Q5_Tx_Flow_Ctrl 0x31040084
-	set data [memread32_phys $EMAC0_MAC_Q5_Tx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Q5_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Q6_Tx_Flow_Ctrl 0x31040088
-	set data [memread32_phys $EMAC0_MAC_Q6_Tx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Q6_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Q7_Tx_Flow_Ctrl 0x3104008C
-	set data [memread32_phys $EMAC0_MAC_Q7_Tx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Q7_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Rx_Flow_Ctrl 0x31040090
-	set data [memread32_phys $EMAC0_MAC_Rx_Flow_Ctrl]
-	puts [format "EMAC0_MAC_Rx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_RxQ_Ctrl4 0x31040094
-	set data [memread32_phys $EMAC0_MAC_RxQ_Ctrl4]
-	puts [format "EMAC0_MAC_RxQ_Ctrl4:		%08X" $data]
-
-	set EMAC0_MAC_TxQ_Prty_Map0 0x31040098
-	set data [memread32_phys $EMAC0_MAC_TxQ_Prty_Map0]
-	puts [format "EMAC0_MAC_TxQ_Prty_Map0:		%08X" $data]
-
-	set EMAC0_MAC_TxQ_Prty_Map1 0x3104009C
-	set data [memread32_phys $EMAC0_MAC_TxQ_Prty_Map1]
-	puts [format "EMAC0_MAC_TxQ_Prty_Map1:		%08X" $data]
-
-	set EMAC0_MAC_RxQ_Ctrl0 0x310400A0
-	set data [memread32_phys $EMAC0_MAC_RxQ_Ctrl0]
-	puts [format "EMAC0_MAC_RxQ_Ctrl0:		%08X" $data]
-
-	set EMAC0_MAC_RxQ_Ctrl1 0x310400A4
-	set data [memread32_phys $EMAC0_MAC_RxQ_Ctrl1]
-	puts [format "EMAC0_MAC_RxQ_Ctrl1:		%08X" $data]
-
-	set EMAC0_MAC_RxQ_Ctrl2 0x310400A8
-	set data [memread32_phys $EMAC0_MAC_RxQ_Ctrl2]
-	puts [format "EMAC0_MAC_RxQ_Ctrl2:		%08X" $data]
-
-	set EMAC0_MAC_RxQ_Ctrl3 0x310400AC
-	set data [memread32_phys $EMAC0_MAC_RxQ_Ctrl3]
-	puts [format "EMAC0_MAC_RxQ_Ctrl3:		%08X" $data]
-
-	set EMAC0_MAC_Interrupt_Status 0x310400B0
-	set data [memread32_phys $EMAC0_MAC_Interrupt_Status]
-	puts [format "EMAC0_MAC_Interrupt_Status:		%08X" $data]
-
-	set EMAC0_MAC_Interrupt_Enable 0x310400B4
-	set data [memread32_phys $EMAC0_MAC_Interrupt_Enable]
-	puts [format "EMAC0_MAC_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_MAC_Rx_Tx_Status 0x310400B8
-	set data [memread32_phys $EMAC0_MAC_Rx_Tx_Status]
-	puts [format "EMAC0_MAC_Rx_Tx_Status:		%08X" $data]
-
-	set EMAC0_MAC_PMT_Control_Status 0x310400C0
-	set data [memread32_phys $EMAC0_MAC_PMT_Control_Status]
-	puts [format "EMAC0_MAC_PMT_Control_Status:		%08X" $data]
-
-	set EMAC0_MAC_RWK_Packet_Filter 0x310400C4
-	set data [memread32_phys $EMAC0_MAC_RWK_Packet_Filter]
-	puts [format "EMAC0_MAC_RWK_Packet_Filter:		%08X" $data]
-
-	set EMAC0_MAC_LPI_Control_Status 0x310400D0
-	set data [memread32_phys $EMAC0_MAC_LPI_Control_Status]
-	puts [format "EMAC0_MAC_LPI_Control_Status:		%08X" $data]
-
-	set EMAC0_MAC_LPI_Timers_Control 0x310400D4
-	set data [memread32_phys $EMAC0_MAC_LPI_Timers_Control]
-	puts [format "EMAC0_MAC_LPI_Timers_Control:		%08X" $data]
-
-	set EMAC0_MAC_LPI_Entry_Timer 0x310400D8
-	set data [memread32_phys $EMAC0_MAC_LPI_Entry_Timer]
-	puts [format "EMAC0_MAC_LPI_Entry_Timer:		%08X" $data]
-
-	set EMAC0_MAC_1US_Tic_Counter 0x310400DC
-	set data [memread32_phys $EMAC0_MAC_1US_Tic_Counter]
-	puts [format "EMAC0_MAC_1US_Tic_Counter:		%08X" $data]
-
-	set EMAC0_MAC_PHYIF_Control_Status 0x310400F8
-	set data [memread32_phys $EMAC0_MAC_PHYIF_Control_Status]
-	puts [format "EMAC0_MAC_PHYIF_Control_Status:		%08X" $data]
-
-	set EMAC0_MAC_Version 0x31040110
-	set data [memread32_phys $EMAC0_MAC_Version]
-	puts [format "EMAC0_MAC_Version:		%08X" $data]
-
-	set EMAC0_MAC_Debug 0x31040114
-	set data [memread32_phys $EMAC0_MAC_Debug]
-	puts [format "EMAC0_MAC_Debug:		%08X" $data]
-
-	set EMAC0_MAC_HW_Feature0 0x3104011C
-	set data [memread32_phys $EMAC0_MAC_HW_Feature0]
-	puts [format "EMAC0_MAC_HW_Feature0:		%08X" $data]
-
-	set EMAC0_MAC_HW_Feature1 0x31040120
-	set data [memread32_phys $EMAC0_MAC_HW_Feature1]
-	puts [format "EMAC0_MAC_HW_Feature1:		%08X" $data]
-
-	set EMAC0_MAC_HW_Feature2 0x31040124
-	set data [memread32_phys $EMAC0_MAC_HW_Feature2]
-	puts [format "EMAC0_MAC_HW_Feature2:		%08X" $data]
-
-	set EMAC0_MAC_HW_Feature3 0x31040128
-	set data [memread32_phys $EMAC0_MAC_HW_Feature3]
-	puts [format "EMAC0_MAC_HW_Feature3:		%08X" $data]
-
-	set EMAC0_MAC_MDIO_Address 0x31040200
-	set data [memread32_phys $EMAC0_MAC_MDIO_Address]
-	puts [format "EMAC0_MAC_MDIO_Address:		%08X" $data]
-
-	set EMAC0_MAC_MDIO_Data 0x31040204
-	set data [memread32_phys $EMAC0_MAC_MDIO_Data]
-	puts [format "EMAC0_MAC_MDIO_Data:		%08X" $data]
-
-	set EMAC0_MAC_ARP_Address 0x31040210
-	set data [memread32_phys $EMAC0_MAC_ARP_Address]
-	puts [format "EMAC0_MAC_ARP_Address:		%08X" $data]
-
-	set EMAC0_MAC_CSR_SW_Ctrl 0x31040230
-	set data [memread32_phys $EMAC0_MAC_CSR_SW_Ctrl]
-	puts [format "EMAC0_MAC_CSR_SW_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_FPE_CTRL_STS 0x31040234
-	set data [memread32_phys $EMAC0_MAC_FPE_CTRL_STS]
-	puts [format "EMAC0_MAC_FPE_CTRL_STS:		%08X" $data]
-
-	set EMAC0_MAC_Ext_Cfg1 0x31040238
-	set data [memread32_phys $EMAC0_MAC_Ext_Cfg1]
-	puts [format "EMAC0_MAC_Ext_Cfg1:		%08X" $data]
-
-	set EMAC0_MAC_Presn_Time_ns 0x31040240
-	set data [memread32_phys $EMAC0_MAC_Presn_Time_ns]
-	puts [format "EMAC0_MAC_Presn_Time_ns:		%08X" $data]
-
-	set EMAC0_MAC_Presn_Time_Updt 0x31040244
-	set data [memread32_phys $EMAC0_MAC_Presn_Time_Updt]
-	puts [format "EMAC0_MAC_Presn_Time_Updt:		%08X" $data]
-
-	set EMAC0_MAC_Address0_High 0x31040300
-	set data [memread32_phys $EMAC0_MAC_Address0_High]
-	puts [format "EMAC0_MAC_Address0_High:		%08X" $data]
-
-	set EMAC0_MAC_Address0_Low 0x31040304
-	set data [memread32_phys $EMAC0_MAC_Address0_Low]
-	puts [format "EMAC0_MAC_Address0_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address1_High 0x31040308
-	set data [memread32_phys $EMAC0_MAC_Address1_High]
-	puts [format "EMAC0_MAC_Address1_High:		%08X" $data]
-
-	set EMAC0_MAC_Address1_Low 0x3104030C
-	set data [memread32_phys $EMAC0_MAC_Address1_Low]
-	puts [format "EMAC0_MAC_Address1_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address2_High 0x31040310
-	set data [memread32_phys $EMAC0_MAC_Address2_High]
-	puts [format "EMAC0_MAC_Address2_High:		%08X" $data]
-
-	set EMAC0_MAC_Address2_Low 0x31040314
-	set data [memread32_phys $EMAC0_MAC_Address2_Low]
-	puts [format "EMAC0_MAC_Address2_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address3_High 0x31040318
-	set data [memread32_phys $EMAC0_MAC_Address3_High]
-	puts [format "EMAC0_MAC_Address3_High:		%08X" $data]
-
-	set EMAC0_MAC_Address3_Low 0x3104031C
-	set data [memread32_phys $EMAC0_MAC_Address3_Low]
-	puts [format "EMAC0_MAC_Address3_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address4_High 0x31040320
-	set data [memread32_phys $EMAC0_MAC_Address4_High]
-	puts [format "EMAC0_MAC_Address4_High:		%08X" $data]
-
-	set EMAC0_MAC_Address4_Low 0x31040324
-	set data [memread32_phys $EMAC0_MAC_Address4_Low]
-	puts [format "EMAC0_MAC_Address4_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address5_High 0x31040328
-	set data [memread32_phys $EMAC0_MAC_Address5_High]
-	puts [format "EMAC0_MAC_Address5_High:		%08X" $data]
-
-	set EMAC0_MAC_Address5_Low 0x3104032C
-	set data [memread32_phys $EMAC0_MAC_Address5_Low]
-	puts [format "EMAC0_MAC_Address5_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address6_High 0x31040330
-	set data [memread32_phys $EMAC0_MAC_Address6_High]
-	puts [format "EMAC0_MAC_Address6_High:		%08X" $data]
-
-	set EMAC0_MAC_Address6_Low 0x31040334
-	set data [memread32_phys $EMAC0_MAC_Address6_Low]
-	puts [format "EMAC0_MAC_Address6_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address7_High 0x31040338
-	set data [memread32_phys $EMAC0_MAC_Address7_High]
-	puts [format "EMAC0_MAC_Address7_High:		%08X" $data]
-
-	set EMAC0_MAC_Address7_Low 0x3104033C
-	set data [memread32_phys $EMAC0_MAC_Address7_Low]
-	puts [format "EMAC0_MAC_Address7_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address8_High 0x31040340
-	set data [memread32_phys $EMAC0_MAC_Address8_High]
-	puts [format "EMAC0_MAC_Address8_High:		%08X" $data]
-
-	set EMAC0_MAC_Address8_Low 0x31040344
-	set data [memread32_phys $EMAC0_MAC_Address8_Low]
-	puts [format "EMAC0_MAC_Address8_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address9_High 0x31040348
-	set data [memread32_phys $EMAC0_MAC_Address9_High]
-	puts [format "EMAC0_MAC_Address9_High:		%08X" $data]
-
-	set EMAC0_MAC_Address9_Low 0x3104034C
-	set data [memread32_phys $EMAC0_MAC_Address9_Low]
-	puts [format "EMAC0_MAC_Address9_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address10_High 0x31040350
-	set data [memread32_phys $EMAC0_MAC_Address10_High]
-	puts [format "EMAC0_MAC_Address10_High:		%08X" $data]
-
-	set EMAC0_MAC_Address10_Low 0x31040354
-	set data [memread32_phys $EMAC0_MAC_Address10_Low]
-	puts [format "EMAC0_MAC_Address10_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address11_High 0x31040358
-	set data [memread32_phys $EMAC0_MAC_Address11_High]
-	puts [format "EMAC0_MAC_Address11_High:		%08X" $data]
-
-	set EMAC0_MAC_Address11_Low 0x3104035C
-	set data [memread32_phys $EMAC0_MAC_Address11_Low]
-	puts [format "EMAC0_MAC_Address11_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address12_High 0x31040360
-	set data [memread32_phys $EMAC0_MAC_Address12_High]
-	puts [format "EMAC0_MAC_Address12_High:		%08X" $data]
-
-	set EMAC0_MAC_Address12_Low 0x31040364
-	set data [memread32_phys $EMAC0_MAC_Address12_Low]
-	puts [format "EMAC0_MAC_Address12_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address13_High 0x31040368
-	set data [memread32_phys $EMAC0_MAC_Address13_High]
-	puts [format "EMAC0_MAC_Address13_High:		%08X" $data]
-
-	set EMAC0_MAC_Address13_Low 0x3104036C
-	set data [memread32_phys $EMAC0_MAC_Address13_Low]
-	puts [format "EMAC0_MAC_Address13_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address14_High 0x31040370
-	set data [memread32_phys $EMAC0_MAC_Address14_High]
-	puts [format "EMAC0_MAC_Address14_High:		%08X" $data]
-
-	set EMAC0_MAC_Address14_Low 0x31040374
-	set data [memread32_phys $EMAC0_MAC_Address14_Low]
-	puts [format "EMAC0_MAC_Address14_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address15_High 0x31040378
-	set data [memread32_phys $EMAC0_MAC_Address15_High]
-	puts [format "EMAC0_MAC_Address15_High:		%08X" $data]
-
-	set EMAC0_MAC_Address15_Low 0x3104037C
-	set data [memread32_phys $EMAC0_MAC_Address15_Low]
-	puts [format "EMAC0_MAC_Address15_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address16_High 0x31040380
-	set data [memread32_phys $EMAC0_MAC_Address16_High]
-	puts [format "EMAC0_MAC_Address16_High:		%08X" $data]
-
-	set EMAC0_MAC_Address16_Low 0x31040384
-	set data [memread32_phys $EMAC0_MAC_Address16_Low]
-	puts [format "EMAC0_MAC_Address16_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address17_High 0x31040388
-	set data [memread32_phys $EMAC0_MAC_Address17_High]
-	puts [format "EMAC0_MAC_Address17_High:		%08X" $data]
-
-	set EMAC0_MAC_Address17_Low 0x3104038C
-	set data [memread32_phys $EMAC0_MAC_Address17_Low]
-	puts [format "EMAC0_MAC_Address17_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address18_High 0x31040390
-	set data [memread32_phys $EMAC0_MAC_Address18_High]
-	puts [format "EMAC0_MAC_Address18_High:		%08X" $data]
-
-	set EMAC0_MAC_Address18_Low 0x31040394
-	set data [memread32_phys $EMAC0_MAC_Address18_Low]
-	puts [format "EMAC0_MAC_Address18_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address19_High 0x31040398
-	set data [memread32_phys $EMAC0_MAC_Address19_High]
-	puts [format "EMAC0_MAC_Address19_High:		%08X" $data]
-
-	set EMAC0_MAC_Address19_Low 0x3104039C
-	set data [memread32_phys $EMAC0_MAC_Address19_Low]
-	puts [format "EMAC0_MAC_Address19_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address20_High 0x310403A0
-	set data [memread32_phys $EMAC0_MAC_Address20_High]
-	puts [format "EMAC0_MAC_Address20_High:		%08X" $data]
-
-	set EMAC0_MAC_Address20_Low 0x310403A4
-	set data [memread32_phys $EMAC0_MAC_Address20_Low]
-	puts [format "EMAC0_MAC_Address20_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address21_High 0x310403A8
-	set data [memread32_phys $EMAC0_MAC_Address21_High]
-	puts [format "EMAC0_MAC_Address21_High:		%08X" $data]
-
-	set EMAC0_MAC_Address21_Low 0x310403AC
-	set data [memread32_phys $EMAC0_MAC_Address21_Low]
-	puts [format "EMAC0_MAC_Address21_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address22_High 0x310403B0
-	set data [memread32_phys $EMAC0_MAC_Address22_High]
-	puts [format "EMAC0_MAC_Address22_High:		%08X" $data]
-
-	set EMAC0_MAC_Address22_Low 0x310403B4
-	set data [memread32_phys $EMAC0_MAC_Address22_Low]
-	puts [format "EMAC0_MAC_Address22_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address23_High 0x310403B8
-	set data [memread32_phys $EMAC0_MAC_Address23_High]
-	puts [format "EMAC0_MAC_Address23_High:		%08X" $data]
-
-	set EMAC0_MAC_Address23_Low 0x310403BC
-	set data [memread32_phys $EMAC0_MAC_Address23_Low]
-	puts [format "EMAC0_MAC_Address23_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address24_High 0x310403C0
-	set data [memread32_phys $EMAC0_MAC_Address24_High]
-	puts [format "EMAC0_MAC_Address24_High:		%08X" $data]
-
-	set EMAC0_MAC_Address24_Low 0x310403C4
-	set data [memread32_phys $EMAC0_MAC_Address24_Low]
-	puts [format "EMAC0_MAC_Address24_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address25_High 0x310403C8
-	set data [memread32_phys $EMAC0_MAC_Address25_High]
-	puts [format "EMAC0_MAC_Address25_High:		%08X" $data]
-
-	set EMAC0_MAC_Address25_Low 0x310403CC
-	set data [memread32_phys $EMAC0_MAC_Address25_Low]
-	puts [format "EMAC0_MAC_Address25_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address26_High 0x310403D0
-	set data [memread32_phys $EMAC0_MAC_Address26_High]
-	puts [format "EMAC0_MAC_Address26_High:		%08X" $data]
-
-	set EMAC0_MAC_Address26_Low 0x310403D4
-	set data [memread32_phys $EMAC0_MAC_Address26_Low]
-	puts [format "EMAC0_MAC_Address26_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address27_High 0x310403D8
-	set data [memread32_phys $EMAC0_MAC_Address27_High]
-	puts [format "EMAC0_MAC_Address27_High:		%08X" $data]
-
-	set EMAC0_MAC_Address27_Low 0x310403DC
-	set data [memread32_phys $EMAC0_MAC_Address27_Low]
-	puts [format "EMAC0_MAC_Address27_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address28_High 0x310403E0
-	set data [memread32_phys $EMAC0_MAC_Address28_High]
-	puts [format "EMAC0_MAC_Address28_High:		%08X" $data]
-
-	set EMAC0_MAC_Address28_Low 0x310403E4
-	set data [memread32_phys $EMAC0_MAC_Address28_Low]
-	puts [format "EMAC0_MAC_Address28_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address29_High 0x310403E8
-	set data [memread32_phys $EMAC0_MAC_Address29_High]
-	puts [format "EMAC0_MAC_Address29_High:		%08X" $data]
-
-	set EMAC0_MAC_Address29_Low 0x310403EC
-	set data [memread32_phys $EMAC0_MAC_Address29_Low]
-	puts [format "EMAC0_MAC_Address29_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address30_High 0x310403F0
-	set data [memread32_phys $EMAC0_MAC_Address30_High]
-	puts [format "EMAC0_MAC_Address30_High:		%08X" $data]
-
-	set EMAC0_MAC_Address30_Low 0x310403F4
-	set data [memread32_phys $EMAC0_MAC_Address30_Low]
-	puts [format "EMAC0_MAC_Address30_Low:		%08X" $data]
-
-	set EMAC0_MAC_Address31_High 0x310403F8
-	set data [memread32_phys $EMAC0_MAC_Address31_High]
-	puts [format "EMAC0_MAC_Address31_High:		%08X" $data]
-
-	set EMAC0_MAC_Address31_Low 0x310403FC
-	set data [memread32_phys $EMAC0_MAC_Address31_Low]
-	puts [format "EMAC0_MAC_Address31_Low:		%08X" $data]
-
-	set EMAC0_MMC_Control 0x31040700
-	set data [memread32_phys $EMAC0_MMC_Control]
-	puts [format "EMAC0_MMC_Control:		%08X" $data]
-
-	set EMAC0_MMC_Rx_Interrupt 0x31040704
-	set data [memread32_phys $EMAC0_MMC_Rx_Interrupt]
-	puts [format "EMAC0_MMC_Rx_Interrupt:		%08X" $data]
-
-	set EMAC0_MMC_Tx_Interrupt 0x31040708
-	set data [memread32_phys $EMAC0_MMC_Tx_Interrupt]
-	puts [format "EMAC0_MMC_Tx_Interrupt:		%08X" $data]
-
-	set EMAC0_MMC_Rx_Interrupt_Mask 0x3104070C
-	set data [memread32_phys $EMAC0_MMC_Rx_Interrupt_Mask]
-	puts [format "EMAC0_MMC_Rx_Interrupt_Mask:		%08X" $data]
-
-	set EMAC0_MMC_Tx_Interrupt_Mask 0x31040710
-	set data [memread32_phys $EMAC0_MMC_Tx_Interrupt_Mask]
-	puts [format "EMAC0_MMC_Tx_Interrupt_Mask:		%08X" $data]
-
-	set EMAC0_Tx_Octet_Count_Good_Bad 0x31040714
-	set data [memread32_phys $EMAC0_Tx_Octet_Count_Good_Bad]
-	puts [format "EMAC0_Tx_Octet_Count_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_Packet_Count_Good_Bad 0x31040718
-	set data [memread32_phys $EMAC0_Tx_Packet_Count_Good_Bad]
-	puts [format "EMAC0_Tx_Packet_Count_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_Broadcast_Packets_Good 0x3104071C
-	set data [memread32_phys $EMAC0_Tx_Broadcast_Packets_Good]
-	puts [format "EMAC0_Tx_Broadcast_Packets_Good:		%08X" $data]
-
-	set EMAC0_Tx_Multicast_Packets_Good 0x31040720
-	set data [memread32_phys $EMAC0_Tx_Multicast_Packets_Good]
-	puts [format "EMAC0_Tx_Multicast_Packets_Good:		%08X" $data]
-
-	set EMAC0_Tx_64Octets_Packets_Good_Bad 0x31040724
-	set data [memread32_phys $EMAC0_Tx_64Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_64Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_65To127Octets_Packets_Good_Bad 0x31040728
-	set data [memread32_phys $EMAC0_Tx_65To127Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_65To127Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_128To255Octets_Packets_Good_Bad 0x3104072C
-	set data [memread32_phys $EMAC0_Tx_128To255Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_128To255Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_256To511Octets_Packets_Good_Bad 0x31040730
-	set data [memread32_phys $EMAC0_Tx_256To511Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_256To511Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_512To1023Octets_Packets_Good_Bad 0x31040734
-	set data [memread32_phys $EMAC0_Tx_512To1023Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_512To1023Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_1024ToMaxOctets_Packets_Good_Bad 0x31040738
-	set data [memread32_phys $EMAC0_Tx_1024ToMaxOctets_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_1024ToMaxOctets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_Unicast_Packets_Good_Bad 0x3104073C
-	set data [memread32_phys $EMAC0_Tx_Unicast_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_Unicast_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_Multicast_Packets_Good_Bad 0x31040740
-	set data [memread32_phys $EMAC0_Tx_Multicast_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_Multicast_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_Broadcast_Packets_Good_Bad 0x31040744
-	set data [memread32_phys $EMAC0_Tx_Broadcast_Packets_Good_Bad]
-	puts [format "EMAC0_Tx_Broadcast_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Tx_Underflow_Error_Packets 0x31040748
-	set data [memread32_phys $EMAC0_Tx_Underflow_Error_Packets]
-	puts [format "EMAC0_Tx_Underflow_Error_Packets:		%08X" $data]
-
-	set EMAC0_Tx_Single_Collision_Good_Packets 0x3104074C
-	set data [memread32_phys $EMAC0_Tx_Single_Collision_Good_Packets]
-	puts [format "EMAC0_Tx_Single_Collision_Good_Packets:		%08X" $data]
-
-	set EMAC0_Tx_Multiple_Collision_Good_Packets 0x31040750
-	set data [memread32_phys $EMAC0_Tx_Multiple_Collision_Good_Packets]
-	puts [format "EMAC0_Tx_Multiple_Collision_Good_Packets:		%08X" $data]
-
-	set EMAC0_Tx_Deferred_Packets 0x31040754
-	set data [memread32_phys $EMAC0_Tx_Deferred_Packets]
-	puts [format "EMAC0_Tx_Deferred_Packets:		%08X" $data]
-
-	set EMAC0_Tx_Late_Collision_Packets 0x31040758
-	set data [memread32_phys $EMAC0_Tx_Late_Collision_Packets]
-	puts [format "EMAC0_Tx_Late_Collision_Packets:		%08X" $data]
-
-	set EMAC0_Tx_Excessive_Collision_Packets 0x3104075C
-	set data [memread32_phys $EMAC0_Tx_Excessive_Collision_Packets]
-	puts [format "EMAC0_Tx_Excessive_Collision_Packets:		%08X" $data]
-
-	set EMAC0_Tx_Carrier_Error_Packets 0x31040760
-	set data [memread32_phys $EMAC0_Tx_Carrier_Error_Packets]
-	puts [format "EMAC0_Tx_Carrier_Error_Packets:		%08X" $data]
-
-	set EMAC0_Tx_Octet_Count_Good 0x31040764
-	set data [memread32_phys $EMAC0_Tx_Octet_Count_Good]
-	puts [format "EMAC0_Tx_Octet_Count_Good:		%08X" $data]
-
-	set EMAC0_Tx_Packet_Count_Good 0x31040768
-	set data [memread32_phys $EMAC0_Tx_Packet_Count_Good]
-	puts [format "EMAC0_Tx_Packet_Count_Good:		%08X" $data]
-
-	set EMAC0_Tx_Excessive_Deferral_Error 0x3104076C
-	set data [memread32_phys $EMAC0_Tx_Excessive_Deferral_Error]
-	puts [format "EMAC0_Tx_Excessive_Deferral_Error:		%08X" $data]
-
-	set EMAC0_Tx_Pause_Packets 0x31040770
-	set data [memread32_phys $EMAC0_Tx_Pause_Packets]
-	puts [format "EMAC0_Tx_Pause_Packets:		%08X" $data]
-
-	set EMAC0_Tx_VLAN_Packets_Good 0x31040774
-	set data [memread32_phys $EMAC0_Tx_VLAN_Packets_Good]
-	puts [format "EMAC0_Tx_VLAN_Packets_Good:		%08X" $data]
-
-	set EMAC0_Tx_OSize_Packets_Good 0x31040778
-	set data [memread32_phys $EMAC0_Tx_OSize_Packets_Good]
-	puts [format "EMAC0_Tx_OSize_Packets_Good:		%08X" $data]
-
-	set EMAC0_Rx_Packets_Count_Good_Bad 0x31040780
-	set data [memread32_phys $EMAC0_Rx_Packets_Count_Good_Bad]
-	puts [format "EMAC0_Rx_Packets_Count_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_Octet_Count_Good_Bad 0x31040784
-	set data [memread32_phys $EMAC0_Rx_Octet_Count_Good_Bad]
-	puts [format "EMAC0_Rx_Octet_Count_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_Octet_Count_Good 0x31040788
-	set data [memread32_phys $EMAC0_Rx_Octet_Count_Good]
-	puts [format "EMAC0_Rx_Octet_Count_Good:		%08X" $data]
-
-	set EMAC0_Rx_Broadcast_Packets_Good 0x3104078C
-	set data [memread32_phys $EMAC0_Rx_Broadcast_Packets_Good]
-	puts [format "EMAC0_Rx_Broadcast_Packets_Good:		%08X" $data]
-
-	set EMAC0_Rx_Multicast_Packets_Good 0x31040790
-	set data [memread32_phys $EMAC0_Rx_Multicast_Packets_Good]
-	puts [format "EMAC0_Rx_Multicast_Packets_Good:		%08X" $data]
-
-	set EMAC0_Rx_CRC_Error_Packets 0x31040794
-	set data [memread32_phys $EMAC0_Rx_CRC_Error_Packets]
-	puts [format "EMAC0_Rx_CRC_Error_Packets:		%08X" $data]
-
-	set EMAC0_Rx_Alignment_Error_Packets 0x31040798
-	set data [memread32_phys $EMAC0_Rx_Alignment_Error_Packets]
-	puts [format "EMAC0_Rx_Alignment_Error_Packets:		%08X" $data]
-
-	set EMAC0_Rx_Runt_Error_Packets 0x3104079C
-	set data [memread32_phys $EMAC0_Rx_Runt_Error_Packets]
-	puts [format "EMAC0_Rx_Runt_Error_Packets:		%08X" $data]
-
-	set EMAC0_Rx_Jabber_Error_Packets 0x310407A0
-	set data [memread32_phys $EMAC0_Rx_Jabber_Error_Packets]
-	puts [format "EMAC0_Rx_Jabber_Error_Packets:		%08X" $data]
-
-	set EMAC0_Rx_Undersize_Packets_Good 0x310407A4
-	set data [memread32_phys $EMAC0_Rx_Undersize_Packets_Good]
-	puts [format "EMAC0_Rx_Undersize_Packets_Good:		%08X" $data]
-
-	set EMAC0_Rx_Oversize_Packets_Good 0x310407A8
-	set data [memread32_phys $EMAC0_Rx_Oversize_Packets_Good]
-	puts [format "EMAC0_Rx_Oversize_Packets_Good:		%08X" $data]
-
-	set EMAC0_Rx_64Octets_Packets_Good_Bad 0x310407AC
-	set data [memread32_phys $EMAC0_Rx_64Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Rx_64Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_65To127Octets_Packets_Good_Bad 0x310407B0
-	set data [memread32_phys $EMAC0_Rx_65To127Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Rx_65To127Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_128To255Octets_Packets_Good_Bad 0x310407B4
-	set data [memread32_phys $EMAC0_Rx_128To255Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Rx_128To255Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_256To511Octets_Packets_Good_Bad 0x310407B8
-	set data [memread32_phys $EMAC0_Rx_256To511Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Rx_256To511Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_512To1023Octets_Packets_Good_Bad 0x310407BC
-	set data [memread32_phys $EMAC0_Rx_512To1023Octets_Packets_Good_Bad]
-	puts [format "EMAC0_Rx_512To1023Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_1024ToMaxOctets_Packets_Good_Bad 0x310407C0
-	set data [memread32_phys $EMAC0_Rx_1024ToMaxOctets_Packets_Good_Bad]
-	puts [format "EMAC0_Rx_1024ToMaxOctets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_Unicast_Packets_Good 0x310407C4
-	set data [memread32_phys $EMAC0_Rx_Unicast_Packets_Good]
-	puts [format "EMAC0_Rx_Unicast_Packets_Good:		%08X" $data]
-
-	set EMAC0_Rx_Length_Error_Packets 0x310407C8
-	set data [memread32_phys $EMAC0_Rx_Length_Error_Packets]
-	puts [format "EMAC0_Rx_Length_Error_Packets:		%08X" $data]
-
-	set EMAC0_Rx_Out_Of_Range_Type_Packets 0x310407CC
-	set data [memread32_phys $EMAC0_Rx_Out_Of_Range_Type_Packets]
-	puts [format "EMAC0_Rx_Out_Of_Range_Type_Packets:		%08X" $data]
-
-	set EMAC0_Rx_Pause_Packets 0x310407D0
-	set data [memread32_phys $EMAC0_Rx_Pause_Packets]
-	puts [format "EMAC0_Rx_Pause_Packets:		%08X" $data]
-
-	set EMAC0_Rx_FIFO_Overflow_Packets 0x310407D4
-	set data [memread32_phys $EMAC0_Rx_FIFO_Overflow_Packets]
-	puts [format "EMAC0_Rx_FIFO_Overflow_Packets:		%08X" $data]
-
-	set EMAC0_Rx_VLAN_Packets_Good_Bad 0x310407D8
-	set data [memread32_phys $EMAC0_Rx_VLAN_Packets_Good_Bad]
-	puts [format "EMAC0_Rx_VLAN_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC0_Rx_Watchdog_Error_Packets 0x310407DC
-	set data [memread32_phys $EMAC0_Rx_Watchdog_Error_Packets]
-	puts [format "EMAC0_Rx_Watchdog_Error_Packets:		%08X" $data]
-
-	set EMAC0_Rx_Receive_Error_Packets 0x310407E0
-	set data [memread32_phys $EMAC0_Rx_Receive_Error_Packets]
-	puts [format "EMAC0_Rx_Receive_Error_Packets:		%08X" $data]
-
-	set EMAC0_Rx_Control_Packets_Good 0x310407E4
-	set data [memread32_phys $EMAC0_Rx_Control_Packets_Good]
-	puts [format "EMAC0_Rx_Control_Packets_Good:		%08X" $data]
-
-	set EMAC0_Tx_LPI_USEC_Cntr 0x310407EC
-	set data [memread32_phys $EMAC0_Tx_LPI_USEC_Cntr]
-	puts [format "EMAC0_Tx_LPI_USEC_Cntr:		%08X" $data]
-
-	set EMAC0_Tx_LPI_Tran_Cntr 0x310407F0
-	set data [memread32_phys $EMAC0_Tx_LPI_Tran_Cntr]
-	puts [format "EMAC0_Tx_LPI_Tran_Cntr:		%08X" $data]
-
-	set EMAC0_Rx_LPI_USEC_Cntr 0x310407F4
-	set data [memread32_phys $EMAC0_Rx_LPI_USEC_Cntr]
-	puts [format "EMAC0_Rx_LPI_USEC_Cntr:		%08X" $data]
-
-	set EMAC0_Rx_LPI_Tran_Cntr 0x310407F8
-	set data [memread32_phys $EMAC0_Rx_LPI_Tran_Cntr]
-	puts [format "EMAC0_Rx_LPI_Tran_Cntr:		%08X" $data]
-
-	set EMAC0_MMC_IPC_Rx_Interrupt_Mask 0x31040800
-	set data [memread32_phys $EMAC0_MMC_IPC_Rx_Interrupt_Mask]
-	puts [format "EMAC0_MMC_IPC_Rx_Interrupt_Mask:		%08X" $data]
-
-	set EMAC0_MMC_IPC_Rx_Interrupt 0x31040808
-	set data [memread32_phys $EMAC0_MMC_IPC_Rx_Interrupt]
-	puts [format "EMAC0_MMC_IPC_Rx_Interrupt:		%08X" $data]
-
-	set EMAC0_RxIPv4_Good_Packets 0x31040810
-	set data [memread32_phys $EMAC0_RxIPv4_Good_Packets]
-	puts [format "EMAC0_RxIPv4_Good_Packets:		%08X" $data]
-
-	set EMAC0_RxIPv4_Header_Error_Packets 0x31040814
-	set data [memread32_phys $EMAC0_RxIPv4_Header_Error_Packets]
-	puts [format "EMAC0_RxIPv4_Header_Error_Packets:		%08X" $data]
-
-	set EMAC0_RxIPv4_No_Payload_Packets 0x31040818
-	set data [memread32_phys $EMAC0_RxIPv4_No_Payload_Packets]
-	puts [format "EMAC0_RxIPv4_No_Payload_Packets:		%08X" $data]
-
-	set EMAC0_RxIPv4_Fragmented_Packets 0x3104081C
-	set data [memread32_phys $EMAC0_RxIPv4_Fragmented_Packets]
-	puts [format "EMAC0_RxIPv4_Fragmented_Packets:		%08X" $data]
-
-	set EMAC0_RxIPv4_UDP_Checksum_Disabled_Packets 0x31040820
-	set data [memread32_phys $EMAC0_RxIPv4_UDP_Checksum_Disabled_Packets]
-	puts [format "EMAC0_RxIPv4_UDP_Checksum_Disabled_Packets:		%08X" $data]
-
-	set EMAC0_RxIPv6_Good_Packets 0x31040824
-	set data [memread32_phys $EMAC0_RxIPv6_Good_Packets]
-	puts [format "EMAC0_RxIPv6_Good_Packets:		%08X" $data]
-
-	set EMAC0_RxIPv6_Header_Error_Packets 0x31040828
-	set data [memread32_phys $EMAC0_RxIPv6_Header_Error_Packets]
-	puts [format "EMAC0_RxIPv6_Header_Error_Packets:		%08X" $data]
-
-	set EMAC0_RxIPv6_No_Payload_Packets 0x3104082C
-	set data [memread32_phys $EMAC0_RxIPv6_No_Payload_Packets]
-	puts [format "EMAC0_RxIPv6_No_Payload_Packets:		%08X" $data]
-
-	set EMAC0_RxUDP_Good_Packets 0x31040830
-	set data [memread32_phys $EMAC0_RxUDP_Good_Packets]
-	puts [format "EMAC0_RxUDP_Good_Packets:		%08X" $data]
-
-	set EMAC0_RxUDP_Error_Packets 0x31040834
-	set data [memread32_phys $EMAC0_RxUDP_Error_Packets]
-	puts [format "EMAC0_RxUDP_Error_Packets:		%08X" $data]
-
-	set EMAC0_RxTCP_Good_Packets 0x31040838
-	set data [memread32_phys $EMAC0_RxTCP_Good_Packets]
-	puts [format "EMAC0_RxTCP_Good_Packets:		%08X" $data]
-
-	set EMAC0_RxTCP_Error_Packets 0x3104083C
-	set data [memread32_phys $EMAC0_RxTCP_Error_Packets]
-	puts [format "EMAC0_RxTCP_Error_Packets:		%08X" $data]
-
-	set EMAC0_RxICMP_Good_Packets 0x31040840
-	set data [memread32_phys $EMAC0_RxICMP_Good_Packets]
-	puts [format "EMAC0_RxICMP_Good_Packets:		%08X" $data]
-
-	set EMAC0_RxICMP_Error_Packets 0x31040844
-	set data [memread32_phys $EMAC0_RxICMP_Error_Packets]
-	puts [format "EMAC0_RxICMP_Error_Packets:		%08X" $data]
-
-	set EMAC0_RxIPv4_Good_Octets 0x31040850
-	set data [memread32_phys $EMAC0_RxIPv4_Good_Octets]
-	puts [format "EMAC0_RxIPv4_Good_Octets:		%08X" $data]
-
-	set EMAC0_RxIPv4_Header_Error_Octets 0x31040854
-	set data [memread32_phys $EMAC0_RxIPv4_Header_Error_Octets]
-	puts [format "EMAC0_RxIPv4_Header_Error_Octets:		%08X" $data]
-
-	set EMAC0_RxIPv4_No_Payload_Octets 0x31040858
-	set data [memread32_phys $EMAC0_RxIPv4_No_Payload_Octets]
-	puts [format "EMAC0_RxIPv4_No_Payload_Octets:		%08X" $data]
-
-	set EMAC0_RxIPv4_Fragmented_Octets 0x3104085C
-	set data [memread32_phys $EMAC0_RxIPv4_Fragmented_Octets]
-	puts [format "EMAC0_RxIPv4_Fragmented_Octets:		%08X" $data]
-
-	set EMAC0_RxIPv4_UDP_Checksum_Disable_Octets 0x31040860
-	set data [memread32_phys $EMAC0_RxIPv4_UDP_Checksum_Disable_Octets]
-	puts [format "EMAC0_RxIPv4_UDP_Checksum_Disable_Octets:		%08X" $data]
-
-	set EMAC0_RxIPv6_Good_Octets 0x31040864
-	set data [memread32_phys $EMAC0_RxIPv6_Good_Octets]
-	puts [format "EMAC0_RxIPv6_Good_Octets:		%08X" $data]
-
-	set EMAC0_RxIPv6_Header_Error_Octets 0x31040868
-	set data [memread32_phys $EMAC0_RxIPv6_Header_Error_Octets]
-	puts [format "EMAC0_RxIPv6_Header_Error_Octets:		%08X" $data]
-
-	set EMAC0_RxIPv6_No_Payload_Octets 0x3104086C
-	set data [memread32_phys $EMAC0_RxIPv6_No_Payload_Octets]
-	puts [format "EMAC0_RxIPv6_No_Payload_Octets:		%08X" $data]
-
-	set EMAC0_RxUDP_Good_Octets 0x31040870
-	set data [memread32_phys $EMAC0_RxUDP_Good_Octets]
-	puts [format "EMAC0_RxUDP_Good_Octets:		%08X" $data]
-
-	set EMAC0_RxUDP_Error_Octets 0x31040874
-	set data [memread32_phys $EMAC0_RxUDP_Error_Octets]
-	puts [format "EMAC0_RxUDP_Error_Octets:		%08X" $data]
-
-	set EMAC0_RxTCP_Good_Octets 0x31040878
-	set data [memread32_phys $EMAC0_RxTCP_Good_Octets]
-	puts [format "EMAC0_RxTCP_Good_Octets:		%08X" $data]
-
-	set EMAC0_RxTCP_Error_Octets 0x3104087C
-	set data [memread32_phys $EMAC0_RxTCP_Error_Octets]
-	puts [format "EMAC0_RxTCP_Error_Octets:		%08X" $data]
-
-	set EMAC0_RxICMP_Good_Octets 0x31040880
-	set data [memread32_phys $EMAC0_RxICMP_Good_Octets]
-	puts [format "EMAC0_RxICMP_Good_Octets:		%08X" $data]
-
-	set EMAC0_RxICMP_Error_Octets 0x31040884
-	set data [memread32_phys $EMAC0_RxICMP_Error_Octets]
-	puts [format "EMAC0_RxICMP_Error_Octets:		%08X" $data]
-
-	set EMAC0_MMC_FPE_Tx_Interrupt 0x310408A0
-	set data [memread32_phys $EMAC0_MMC_FPE_Tx_Interrupt]
-	puts [format "EMAC0_MMC_FPE_Tx_Interrupt:		%08X" $data]
-
-	set EMAC0_MMC_FPE_Tx_Interrupt_Mask 0x310408A4
-	set data [memread32_phys $EMAC0_MMC_FPE_Tx_Interrupt_Mask]
-	puts [format "EMAC0_MMC_FPE_Tx_Interrupt_Mask:		%08X" $data]
-
-	set EMAC0_MMC_Tx_FPE_Fragment_Cntr 0x310408A8
-	set data [memread32_phys $EMAC0_MMC_Tx_FPE_Fragment_Cntr]
-	puts [format "EMAC0_MMC_Tx_FPE_Fragment_Cntr:		%08X" $data]
-
-	set EMAC0_MMC_Tx_Hold_Req_Cntr 0x310408AC
-	set data [memread32_phys $EMAC0_MMC_Tx_Hold_Req_Cntr]
-	puts [format "EMAC0_MMC_Tx_Hold_Req_Cntr:		%08X" $data]
-
-	set EMAC0_MMC_FPE_Rx_Interrupt 0x310408C0
-	set data [memread32_phys $EMAC0_MMC_FPE_Rx_Interrupt]
-	puts [format "EMAC0_MMC_FPE_Rx_Interrupt:		%08X" $data]
-
-	set EMAC0_MMC_FPE_Rx_Interrupt_Mask 0x310408C4
-	set data [memread32_phys $EMAC0_MMC_FPE_Rx_Interrupt_Mask]
-	puts [format "EMAC0_MMC_FPE_Rx_Interrupt_Mask:		%08X" $data]
-
-	set EMAC0_MMC_Rx_Packet_Assembly_Err_Cntr 0x310408C8
-	set data [memread32_phys $EMAC0_MMC_Rx_Packet_Assembly_Err_Cntr]
-	puts [format "EMAC0_MMC_Rx_Packet_Assembly_Err_Cntr:		%08X" $data]
-
-	set EMAC0_MMC_Rx_Packet_SMD_Err_Cntr 0x310408CC
-	set data [memread32_phys $EMAC0_MMC_Rx_Packet_SMD_Err_Cntr]
-	puts [format "EMAC0_MMC_Rx_Packet_SMD_Err_Cntr:		%08X" $data]
-
-	set EMAC0_MMC_Rx_Packet_Assembly_OK_Cntr 0x310408D0
-	set data [memread32_phys $EMAC0_MMC_Rx_Packet_Assembly_OK_Cntr]
-	puts [format "EMAC0_MMC_Rx_Packet_Assembly_OK_Cntr:		%08X" $data]
-
-	set EMAC0_MMC_Rx_FPE_Fragment_Cntr 0x310408D4
-	set data [memread32_phys $EMAC0_MMC_Rx_FPE_Fragment_Cntr]
-	puts [format "EMAC0_MMC_Rx_FPE_Fragment_Cntr:		%08X" $data]
-
-	set EMAC0_MAC_L3_L4_Control0 0x31040900
-	set data [memread32_phys $EMAC0_MAC_L3_L4_Control0]
-	puts [format "EMAC0_MAC_L3_L4_Control0:		%08X" $data]
-
-	set EMAC0_MAC_Layer4_Address0 0x31040904
-	set data [memread32_phys $EMAC0_MAC_Layer4_Address0]
-	puts [format "EMAC0_MAC_Layer4_Address0:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr0_Reg0 0x31040910
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr0_Reg0]
-	puts [format "EMAC0_MAC_Layer3_Addr0_Reg0:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr1_Reg0 0x31040914
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr1_Reg0]
-	puts [format "EMAC0_MAC_Layer3_Addr1_Reg0:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr2_Reg0 0x31040918
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr2_Reg0]
-	puts [format "EMAC0_MAC_Layer3_Addr2_Reg0:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr3_Reg0 0x3104091C
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr3_Reg0]
-	puts [format "EMAC0_MAC_Layer3_Addr3_Reg0:		%08X" $data]
-
-	set EMAC0_MAC_L3_L4_Control1 0x31040930
-	set data [memread32_phys $EMAC0_MAC_L3_L4_Control1]
-	puts [format "EMAC0_MAC_L3_L4_Control1:		%08X" $data]
-
-	set EMAC0_MAC_Layer4_Address1 0x31040934
-	set data [memread32_phys $EMAC0_MAC_Layer4_Address1]
-	puts [format "EMAC0_MAC_Layer4_Address1:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr0_Reg1 0x31040940
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr0_Reg1]
-	puts [format "EMAC0_MAC_Layer3_Addr0_Reg1:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr1_Reg1 0x31040944
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr1_Reg1]
-	puts [format "EMAC0_MAC_Layer3_Addr1_Reg1:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr2_Reg1 0x31040948
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr2_Reg1]
-	puts [format "EMAC0_MAC_Layer3_Addr2_Reg1:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr3_Reg1 0x3104094C
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr3_Reg1]
-	puts [format "EMAC0_MAC_Layer3_Addr3_Reg1:		%08X" $data]
-
-	set EMAC0_MAC_L3_L4_Control2 0x31040960
-	set data [memread32_phys $EMAC0_MAC_L3_L4_Control2]
-	puts [format "EMAC0_MAC_L3_L4_Control2:		%08X" $data]
-
-	set EMAC0_MAC_Layer4_Address2 0x31040964
-	set data [memread32_phys $EMAC0_MAC_Layer4_Address2]
-	puts [format "EMAC0_MAC_Layer4_Address2:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr0_Reg2 0x31040970
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr0_Reg2]
-	puts [format "EMAC0_MAC_Layer3_Addr0_Reg2:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr1_Reg2 0x31040974
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr1_Reg2]
-	puts [format "EMAC0_MAC_Layer3_Addr1_Reg2:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr2_Reg2 0x31040978
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr2_Reg2]
-	puts [format "EMAC0_MAC_Layer3_Addr2_Reg2:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr3_Reg2 0x3104097C
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr3_Reg2]
-	puts [format "EMAC0_MAC_Layer3_Addr3_Reg2:		%08X" $data]
-
-	set EMAC0_MAC_L3_L4_Control3 0x31040990
-	set data [memread32_phys $EMAC0_MAC_L3_L4_Control3]
-	puts [format "EMAC0_MAC_L3_L4_Control3:		%08X" $data]
-
-	set EMAC0_MAC_Layer4_Address3 0x31040994
-	set data [memread32_phys $EMAC0_MAC_Layer4_Address3]
-	puts [format "EMAC0_MAC_Layer4_Address3:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr0_Reg3 0x310409A0
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr0_Reg3]
-	puts [format "EMAC0_MAC_Layer3_Addr0_Reg3:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr1_Reg3 0x310409A4
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr1_Reg3]
-	puts [format "EMAC0_MAC_Layer3_Addr1_Reg3:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr2_Reg3 0x310409A8
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr2_Reg3]
-	puts [format "EMAC0_MAC_Layer3_Addr2_Reg3:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr3_Reg3 0x310409AC
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr3_Reg3]
-	puts [format "EMAC0_MAC_Layer3_Addr3_Reg3:		%08X" $data]
-
-	set EMAC0_MAC_L3_L4_Control4 0x310409C0
-	set data [memread32_phys $EMAC0_MAC_L3_L4_Control4]
-	puts [format "EMAC0_MAC_L3_L4_Control4:		%08X" $data]
-
-	set EMAC0_MAC_Layer4_Address4 0x310409C4
-	set data [memread32_phys $EMAC0_MAC_Layer4_Address4]
-	puts [format "EMAC0_MAC_Layer4_Address4:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr0_Reg4 0x310409D0
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr0_Reg4]
-	puts [format "EMAC0_MAC_Layer3_Addr0_Reg4:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr1_Reg4 0x310409D4
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr1_Reg4]
-	puts [format "EMAC0_MAC_Layer3_Addr1_Reg4:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr2_Reg4 0x310409D8
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr2_Reg4]
-	puts [format "EMAC0_MAC_Layer3_Addr2_Reg4:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr3_Reg4 0x310409DC
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr3_Reg4]
-	puts [format "EMAC0_MAC_Layer3_Addr3_Reg4:		%08X" $data]
-
-	set EMAC0_MAC_L3_L4_Control5 0x310409F0
-	set data [memread32_phys $EMAC0_MAC_L3_L4_Control5]
-	puts [format "EMAC0_MAC_L3_L4_Control5:		%08X" $data]
-
-	set EMAC0_MAC_Layer4_Address5 0x310409F4
-	set data [memread32_phys $EMAC0_MAC_Layer4_Address5]
-	puts [format "EMAC0_MAC_Layer4_Address5:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr0_Reg5 0x31040A00
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr0_Reg5]
-	puts [format "EMAC0_MAC_Layer3_Addr0_Reg5:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr1_Reg5 0x31040A04
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr1_Reg5]
-	puts [format "EMAC0_MAC_Layer3_Addr1_Reg5:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr2_Reg5 0x31040A08
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr2_Reg5]
-	puts [format "EMAC0_MAC_Layer3_Addr2_Reg5:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr3_Reg5 0x31040A0C
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr3_Reg5]
-	puts [format "EMAC0_MAC_Layer3_Addr3_Reg5:		%08X" $data]
-
-	set EMAC0_MAC_L3_L4_Control6 0x31040A20
-	set data [memread32_phys $EMAC0_MAC_L3_L4_Control6]
-	puts [format "EMAC0_MAC_L3_L4_Control6:		%08X" $data]
-
-	set EMAC0_MAC_Layer4_Address6 0x31040A24
-	set data [memread32_phys $EMAC0_MAC_Layer4_Address6]
-	puts [format "EMAC0_MAC_Layer4_Address6:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr0_Reg6 0x31040A30
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr0_Reg6]
-	puts [format "EMAC0_MAC_Layer3_Addr0_Reg6:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr1_Reg6 0x31040A34
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr1_Reg6]
-	puts [format "EMAC0_MAC_Layer3_Addr1_Reg6:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr2_Reg6 0x31040A38
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr2_Reg6]
-	puts [format "EMAC0_MAC_Layer3_Addr2_Reg6:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr3_Reg6 0x31040A3C
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr3_Reg6]
-	puts [format "EMAC0_MAC_Layer3_Addr3_Reg6:		%08X" $data]
-
-	set EMAC0_MAC_L3_L4_Control7 0x31040A50
-	set data [memread32_phys $EMAC0_MAC_L3_L4_Control7]
-	puts [format "EMAC0_MAC_L3_L4_Control7:		%08X" $data]
-
-	set EMAC0_MAC_Layer4_Address7 0x31040A54
-	set data [memread32_phys $EMAC0_MAC_Layer4_Address7]
-	puts [format "EMAC0_MAC_Layer4_Address7:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr0_Reg7 0x31040A60
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr0_Reg7]
-	puts [format "EMAC0_MAC_Layer3_Addr0_Reg7:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr1_Reg7 0x31040A64
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr1_Reg7]
-	puts [format "EMAC0_MAC_Layer3_Addr1_Reg7:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr2_Reg7 0x31040A68
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr2_Reg7]
-	puts [format "EMAC0_MAC_Layer3_Addr2_Reg7:		%08X" $data]
-
-	set EMAC0_MAC_Layer3_Addr3_Reg7 0x31040A6C
-	set data [memread32_phys $EMAC0_MAC_Layer3_Addr3_Reg7]
-	puts [format "EMAC0_MAC_Layer3_Addr3_Reg7:		%08X" $data]
-
-	set EMAC0_MAC_Indir_Access_Ctrl 0x31040A70
-	set data [memread32_phys $EMAC0_MAC_Indir_Access_Ctrl]
-	puts [format "EMAC0_MAC_Indir_Access_Ctrl:		%08X" $data]
-
-	set EMAC0_MAC_Indir_Access_Data 0x31040A74
-	set data [memread32_phys $EMAC0_MAC_Indir_Access_Data]
-	puts [format "EMAC0_MAC_Indir_Access_Data:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Control 0x31040B00
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Control]
-	puts [format "EMAC0_MAC_Timestamp_Control:		%08X" $data]
-
-	set EMAC0_MAC_Sub_Second_Increment 0x31040B04
-	set data [memread32_phys $EMAC0_MAC_Sub_Second_Increment]
-	puts [format "EMAC0_MAC_Sub_Second_Increment:		%08X" $data]
-
-	set EMAC0_MAC_System_Time_Seconds 0x31040B08
-	set data [memread32_phys $EMAC0_MAC_System_Time_Seconds]
-	puts [format "EMAC0_MAC_System_Time_Seconds:		%08X" $data]
-
-	set EMAC0_MAC_System_Time_Nanoseconds 0x31040B0C
-	set data [memread32_phys $EMAC0_MAC_System_Time_Nanoseconds]
-	puts [format "EMAC0_MAC_System_Time_Nanoseconds:		%08X" $data]
-
-	set EMAC0_MAC_System_Time_Seconds_Update 0x31040B10
-	set data [memread32_phys $EMAC0_MAC_System_Time_Seconds_Update]
-	puts [format "EMAC0_MAC_System_Time_Seconds_Update:		%08X" $data]
-
-	set EMAC0_MAC_System_Time_Nanoseconds_Update 0x31040B14
-	set data [memread32_phys $EMAC0_MAC_System_Time_Nanoseconds_Update]
-	puts [format "EMAC0_MAC_System_Time_Nanoseconds_Update:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Addend 0x31040B18
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Addend]
-	puts [format "EMAC0_MAC_Timestamp_Addend:		%08X" $data]
-
-	set EMAC0_MAC_System_Time_Higher_Word_Seconds 0x31040B1C
-	set data [memread32_phys $EMAC0_MAC_System_Time_Higher_Word_Seconds]
-	puts [format "EMAC0_MAC_System_Time_Higher_Word_Seconds:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Status 0x31040B20
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Status]
-	puts [format "EMAC0_MAC_Timestamp_Status:		%08X" $data]
-
-	set EMAC0_MAC_Tx_Timestamp_Status_Nanoseconds 0x31040B30
-	set data [memread32_phys $EMAC0_MAC_Tx_Timestamp_Status_Nanoseconds]
-	puts [format "EMAC0_MAC_Tx_Timestamp_Status_Nanoseconds:		%08X" $data]
-
-	set EMAC0_MAC_Tx_Timestamp_Status_Seconds 0x31040B34
-	set data [memread32_phys $EMAC0_MAC_Tx_Timestamp_Status_Seconds]
-	puts [format "EMAC0_MAC_Tx_Timestamp_Status_Seconds:		%08X" $data]
-
-	set EMAC0_MAC_Auxiliary_Control 0x31040B40
-	set data [memread32_phys $EMAC0_MAC_Auxiliary_Control]
-	puts [format "EMAC0_MAC_Auxiliary_Control:		%08X" $data]
-
-	set EMAC0_MAC_Auxiliary_Timestamp_Nanoseconds 0x31040B48
-	set data [memread32_phys $EMAC0_MAC_Auxiliary_Timestamp_Nanoseconds]
-	puts [format "EMAC0_MAC_Auxiliary_Timestamp_Nanoseconds:		%08X" $data]
-
-	set EMAC0_MAC_Auxiliary_Timestamp_Seconds 0x31040B4C
-	set data [memread32_phys $EMAC0_MAC_Auxiliary_Timestamp_Seconds]
-	puts [format "EMAC0_MAC_Auxiliary_Timestamp_Seconds:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Ingress_Asym_Corr 0x31040B50
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Ingress_Asym_Corr]
-	puts [format "EMAC0_MAC_Timestamp_Ingress_Asym_Corr:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Egress_Asym_Corr 0x31040B54
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Egress_Asym_Corr]
-	puts [format "EMAC0_MAC_Timestamp_Egress_Asym_Corr:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Ingress_Corr_Nanosecond 0x31040B58
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Ingress_Corr_Nanosecond]
-	puts [format "EMAC0_MAC_Timestamp_Ingress_Corr_Nanosecond:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Egress_Corr_Nanosecond 0x31040B5C
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Egress_Corr_Nanosecond]
-	puts [format "EMAC0_MAC_Timestamp_Egress_Corr_Nanosecond:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Ingress_Corr_Subnanosec 0x31040B60
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Ingress_Corr_Subnanosec]
-	puts [format "EMAC0_MAC_Timestamp_Ingress_Corr_Subnanosec:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Egress_Corr_Subnanosec 0x31040B64
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Egress_Corr_Subnanosec]
-	puts [format "EMAC0_MAC_Timestamp_Egress_Corr_Subnanosec:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Ingress_Latency 0x31040B68
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Ingress_Latency]
-	puts [format "EMAC0_MAC_Timestamp_Ingress_Latency:		%08X" $data]
-
-	set EMAC0_MAC_Timestamp_Egress_Latency 0x31040B6C
-	set data [memread32_phys $EMAC0_MAC_Timestamp_Egress_Latency]
-	puts [format "EMAC0_MAC_Timestamp_Egress_Latency:		%08X" $data]
-
-	set EMAC0_MAC_PPS_Control 0x31040B70
-	set data [memread32_phys $EMAC0_MAC_PPS_Control]
-	puts [format "EMAC0_MAC_PPS_Control:		%08X" $data]
-
-	set EMAC0_MAC_PPS0_Target_Time_Seconds 0x31040B80
-	set data [memread32_phys $EMAC0_MAC_PPS0_Target_Time_Seconds]
-	puts [format "EMAC0_MAC_PPS0_Target_Time_Seconds:		%08X" $data]
-
-	set EMAC0_MAC_PPS0_Target_Time_Nanoseconds 0x31040B84
-	set data [memread32_phys $EMAC0_MAC_PPS0_Target_Time_Nanoseconds]
-	puts [format "EMAC0_MAC_PPS0_Target_Time_Nanoseconds:		%08X" $data]
-
-	set EMAC0_MAC_PPS0_Interval 0x31040B88
-	set data [memread32_phys $EMAC0_MAC_PPS0_Interval]
-	puts [format "EMAC0_MAC_PPS0_Interval:		%08X" $data]
-
-	set EMAC0_MAC_PPS0_Width 0x31040B8C
-	set data [memread32_phys $EMAC0_MAC_PPS0_Width]
-	puts [format "EMAC0_MAC_PPS0_Width:		%08X" $data]
-
-	set EMAC0_MAC_PPS1_Target_Time_Seconds 0x31040B90
-	set data [memread32_phys $EMAC0_MAC_PPS1_Target_Time_Seconds]
-	puts [format "EMAC0_MAC_PPS1_Target_Time_Seconds:		%08X" $data]
-
-	set EMAC0_MAC_PPS1_Target_Time_Nanoseconds 0x31040B94
-	set data [memread32_phys $EMAC0_MAC_PPS1_Target_Time_Nanoseconds]
-	puts [format "EMAC0_MAC_PPS1_Target_Time_Nanoseconds:		%08X" $data]
-
-	set EMAC0_MAC_PPS1_Interval 0x31040B98
-	set data [memread32_phys $EMAC0_MAC_PPS1_Interval]
-	puts [format "EMAC0_MAC_PPS1_Interval:		%08X" $data]
-
-	set EMAC0_MAC_PPS1_Width 0x31040B9C
-	set data [memread32_phys $EMAC0_MAC_PPS1_Width]
-	puts [format "EMAC0_MAC_PPS1_Width:		%08X" $data]
-
-	set EMAC0_MAC_PPS2_Target_Time_Seconds 0x31040BA0
-	set data [memread32_phys $EMAC0_MAC_PPS2_Target_Time_Seconds]
-	puts [format "EMAC0_MAC_PPS2_Target_Time_Seconds:		%08X" $data]
-
-	set EMAC0_MAC_PPS2_Target_Time_Nanoseconds 0x31040BA4
-	set data [memread32_phys $EMAC0_MAC_PPS2_Target_Time_Nanoseconds]
-	puts [format "EMAC0_MAC_PPS2_Target_Time_Nanoseconds:		%08X" $data]
-
-	set EMAC0_MAC_PPS2_Interval 0x31040BA8
-	set data [memread32_phys $EMAC0_MAC_PPS2_Interval]
-	puts [format "EMAC0_MAC_PPS2_Interval:		%08X" $data]
-
-	set EMAC0_MAC_PPS2_Width 0x31040BAC
-	set data [memread32_phys $EMAC0_MAC_PPS2_Width]
-	puts [format "EMAC0_MAC_PPS2_Width:		%08X" $data]
-
-	set EMAC0_MAC_PPS3_Target_Time_Seconds 0x31040BB0
-	set data [memread32_phys $EMAC0_MAC_PPS3_Target_Time_Seconds]
-	puts [format "EMAC0_MAC_PPS3_Target_Time_Seconds:		%08X" $data]
-
-	set EMAC0_MAC_PPS3_Target_Time_Nanoseconds 0x31040BB4
-	set data [memread32_phys $EMAC0_MAC_PPS3_Target_Time_Nanoseconds]
-	puts [format "EMAC0_MAC_PPS3_Target_Time_Nanoseconds:		%08X" $data]
-
-	set EMAC0_MAC_PPS3_Interval 0x31040BB8
-	set data [memread32_phys $EMAC0_MAC_PPS3_Interval]
-	puts [format "EMAC0_MAC_PPS3_Interval:		%08X" $data]
-
-	set EMAC0_MAC_PPS3_Width 0x31040BBC
-	set data [memread32_phys $EMAC0_MAC_PPS3_Width]
-	puts [format "EMAC0_MAC_PPS3_Width:		%08X" $data]
-
-	set EMAC0_MAC_PTO_Control 0x31040BC0
-	set data [memread32_phys $EMAC0_MAC_PTO_Control]
-	puts [format "EMAC0_MAC_PTO_Control:		%08X" $data]
-
-	set EMAC0_MAC_Source_Port_Identity0 0x31040BC4
-	set data [memread32_phys $EMAC0_MAC_Source_Port_Identity0]
-	puts [format "EMAC0_MAC_Source_Port_Identity0:		%08X" $data]
-
-	set EMAC0_MAC_Source_Port_Identity1 0x31040BC8
-	set data [memread32_phys $EMAC0_MAC_Source_Port_Identity1]
-	puts [format "EMAC0_MAC_Source_Port_Identity1:		%08X" $data]
-
-	set EMAC0_MAC_Source_Port_Identity2 0x31040BCC
-	set data [memread32_phys $EMAC0_MAC_Source_Port_Identity2]
-	puts [format "EMAC0_MAC_Source_Port_Identity2:		%08X" $data]
-
-	set EMAC0_MAC_Log_Message_Interval 0x31040BD0
-	set data [memread32_phys $EMAC0_MAC_Log_Message_Interval]
-	puts [format "EMAC0_MAC_Log_Message_Interval:		%08X" $data]
-
-	set EMAC0_MTL_Operation_Mode 0x31040C00
-	set data [memread32_phys $EMAC0_MTL_Operation_Mode]
-	puts [format "EMAC0_MTL_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_Interrupt_Status 0x31040C20
-	set data [memread32_phys $EMAC0_MTL_Interrupt_Status]
-	puts [format "EMAC0_MTL_Interrupt_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ_DMA_Map0 0x31040C30
-	set data [memread32_phys $EMAC0_MTL_RxQ_DMA_Map0]
-	puts [format "EMAC0_MTL_RxQ_DMA_Map0:		%08X" $data]
-
-	set EMAC0_MTL_RxQ_DMA_Map1 0x31040C34
-	set data [memread32_phys $EMAC0_MTL_RxQ_DMA_Map1]
-	puts [format "EMAC0_MTL_RxQ_DMA_Map1:		%08X" $data]
-
-	set EMAC0_MTL_TBS_CTRL 0x31040C40
-	set data [memread32_phys $EMAC0_MTL_TBS_CTRL]
-	puts [format "EMAC0_MTL_TBS_CTRL:		%08X" $data]
-
-	set EMAC0_MTL_EST_Control 0x31040C50
-	set data [memread32_phys $EMAC0_MTL_EST_Control]
-	puts [format "EMAC0_MTL_EST_Control:		%08X" $data]
-
-	set EMAC0_MTL_EST_Ext_Control 0x31040C54
-	set data [memread32_phys $EMAC0_MTL_EST_Ext_Control]
-	puts [format "EMAC0_MTL_EST_Ext_Control:		%08X" $data]
-
-	set EMAC0_MTL_EST_Status 0x31040C58
-	set data [memread32_phys $EMAC0_MTL_EST_Status]
-	puts [format "EMAC0_MTL_EST_Status:		%08X" $data]
-
-	set EMAC0_MTL_EST_Sch_Error 0x31040C60
-	set data [memread32_phys $EMAC0_MTL_EST_Sch_Error]
-	puts [format "EMAC0_MTL_EST_Sch_Error:		%08X" $data]
-
-	set EMAC0_MTL_EST_Frm_Size_Error 0x31040C64
-	set data [memread32_phys $EMAC0_MTL_EST_Frm_Size_Error]
-	puts [format "EMAC0_MTL_EST_Frm_Size_Error:		%08X" $data]
-
-	set EMAC0_MTL_EST_Frm_Size_Capture 0x31040C68
-	set data [memread32_phys $EMAC0_MTL_EST_Frm_Size_Capture]
-	puts [format "EMAC0_MTL_EST_Frm_Size_Capture:		%08X" $data]
-
-	set EMAC0_MTL_EST_Intr_Enable 0x31040C70
-	set data [memread32_phys $EMAC0_MTL_EST_Intr_Enable]
-	puts [format "EMAC0_MTL_EST_Intr_Enable:		%08X" $data]
-
-	set EMAC0_MTL_EST_GCL_Control 0x31040C80
-	set data [memread32_phys $EMAC0_MTL_EST_GCL_Control]
-	puts [format "EMAC0_MTL_EST_GCL_Control:		%08X" $data]
-
-	set EMAC0_MTL_EST_GCL_Data 0x31040C84
-	set data [memread32_phys $EMAC0_MTL_EST_GCL_Data]
-	puts [format "EMAC0_MTL_EST_GCL_Data:		%08X" $data]
-
-	set EMAC0_MTL_FPE_CTRL_STS 0x31040C90
-	set data [memread32_phys $EMAC0_MTL_FPE_CTRL_STS]
-	puts [format "EMAC0_MTL_FPE_CTRL_STS:		%08X" $data]
-
-	set EMAC0_MTL_FPE_Advance 0x31040C94
-	set data [memread32_phys $EMAC0_MTL_FPE_Advance]
-	puts [format "EMAC0_MTL_FPE_Advance:		%08X" $data]
-
-	set EMAC0_MTL_TxQ0_Operation_Mode 0x31040D00
-	set data [memread32_phys $EMAC0_MTL_TxQ0_Operation_Mode]
-	puts [format "EMAC0_MTL_TxQ0_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_TxQ0_Underflow 0x31040D04
-	set data [memread32_phys $EMAC0_MTL_TxQ0_Underflow]
-	puts [format "EMAC0_MTL_TxQ0_Underflow:		%08X" $data]
-
-	set EMAC0_MTL_TxQ0_Debug 0x31040D08
-	set data [memread32_phys $EMAC0_MTL_TxQ0_Debug]
-	puts [format "EMAC0_MTL_TxQ0_Debug:		%08X" $data]
-
-	set EMAC0_MTL_TxQ0_ETS_Status 0x31040D14
-	set data [memread32_phys $EMAC0_MTL_TxQ0_ETS_Status]
-	puts [format "EMAC0_MTL_TxQ0_ETS_Status:		%08X" $data]
-
-	set EMAC0_MTL_TxQ0_Quantum_Weight 0x31040D18
-	set data [memread32_phys $EMAC0_MTL_TxQ0_Quantum_Weight]
-	puts [format "EMAC0_MTL_TxQ0_Quantum_Weight:		%08X" $data]
-
-	set EMAC0_MTL_Q0_Interrupt_Control_Status 0x31040D2C
-	set data [memread32_phys $EMAC0_MTL_Q0_Interrupt_Control_Status]
-	puts [format "EMAC0_MTL_Q0_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ0_Operation_Mode 0x31040D30
-	set data [memread32_phys $EMAC0_MTL_RxQ0_Operation_Mode]
-	puts [format "EMAC0_MTL_RxQ0_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_RxQ0_Missed_Packet_Overflow_Cnt 0x31040D34
-	set data [memread32_phys $EMAC0_MTL_RxQ0_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC0_MTL_RxQ0_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC0_MTL_RxQ0_Debug 0x31040D38
-	set data [memread32_phys $EMAC0_MTL_RxQ0_Debug]
-	puts [format "EMAC0_MTL_RxQ0_Debug:		%08X" $data]
-
-	set EMAC0_MTL_RxQ0_Control 0x31040D3C
-	set data [memread32_phys $EMAC0_MTL_RxQ0_Control]
-	puts [format "EMAC0_MTL_RxQ0_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_Operation_Mode 0x31040D40
-	set data [memread32_phys $EMAC0_MTL_TxQ1_Operation_Mode]
-	puts [format "EMAC0_MTL_TxQ1_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_Underflow 0x31040D44
-	set data [memread32_phys $EMAC0_MTL_TxQ1_Underflow]
-	puts [format "EMAC0_MTL_TxQ1_Underflow:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_Debug 0x31040D48
-	set data [memread32_phys $EMAC0_MTL_TxQ1_Debug]
-	puts [format "EMAC0_MTL_TxQ1_Debug:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_ETS_Control 0x31040D50
-	set data [memread32_phys $EMAC0_MTL_TxQ1_ETS_Control]
-	puts [format "EMAC0_MTL_TxQ1_ETS_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_ETS_Status 0x31040D54
-	set data [memread32_phys $EMAC0_MTL_TxQ1_ETS_Status]
-	puts [format "EMAC0_MTL_TxQ1_ETS_Status:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_Quantum_Weight 0x31040D58
-	set data [memread32_phys $EMAC0_MTL_TxQ1_Quantum_Weight]
-	puts [format "EMAC0_MTL_TxQ1_Quantum_Weight:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_SendSlopeCredit 0x31040D5C
-	set data [memread32_phys $EMAC0_MTL_TxQ1_SendSlopeCredit]
-	puts [format "EMAC0_MTL_TxQ1_SendSlopeCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_HiCredit 0x31040D60
-	set data [memread32_phys $EMAC0_MTL_TxQ1_HiCredit]
-	puts [format "EMAC0_MTL_TxQ1_HiCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ1_LoCredit 0x31040D64
-	set data [memread32_phys $EMAC0_MTL_TxQ1_LoCredit]
-	puts [format "EMAC0_MTL_TxQ1_LoCredit:		%08X" $data]
-
-	set EMAC0_MTL_Q1_Interrupt_Control_Status 0x31040D6C
-	set data [memread32_phys $EMAC0_MTL_Q1_Interrupt_Control_Status]
-	puts [format "EMAC0_MTL_Q1_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ1_Operation_Mode 0x31040D70
-	set data [memread32_phys $EMAC0_MTL_RxQ1_Operation_Mode]
-	puts [format "EMAC0_MTL_RxQ1_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_RxQ1_Missed_Packet_Overflow_Cnt 0x31040D74
-	set data [memread32_phys $EMAC0_MTL_RxQ1_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC0_MTL_RxQ1_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC0_MTL_RxQ1_Debug 0x31040D78
-	set data [memread32_phys $EMAC0_MTL_RxQ1_Debug]
-	puts [format "EMAC0_MTL_RxQ1_Debug:		%08X" $data]
-
-	set EMAC0_MTL_RxQ1_Control 0x31040D7C
-	set data [memread32_phys $EMAC0_MTL_RxQ1_Control]
-	puts [format "EMAC0_MTL_RxQ1_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_Operation_Mode 0x31040D80
-	set data [memread32_phys $EMAC0_MTL_TxQ2_Operation_Mode]
-	puts [format "EMAC0_MTL_TxQ2_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_Underflow 0x31040D84
-	set data [memread32_phys $EMAC0_MTL_TxQ2_Underflow]
-	puts [format "EMAC0_MTL_TxQ2_Underflow:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_Debug 0x31040D88
-	set data [memread32_phys $EMAC0_MTL_TxQ2_Debug]
-	puts [format "EMAC0_MTL_TxQ2_Debug:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_ETS_Control 0x31040D90
-	set data [memread32_phys $EMAC0_MTL_TxQ2_ETS_Control]
-	puts [format "EMAC0_MTL_TxQ2_ETS_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_ETS_Status 0x31040D94
-	set data [memread32_phys $EMAC0_MTL_TxQ2_ETS_Status]
-	puts [format "EMAC0_MTL_TxQ2_ETS_Status:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_Quantum_Weight 0x31040D98
-	set data [memread32_phys $EMAC0_MTL_TxQ2_Quantum_Weight]
-	puts [format "EMAC0_MTL_TxQ2_Quantum_Weight:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_SendSlopeCredit 0x31040D9C
-	set data [memread32_phys $EMAC0_MTL_TxQ2_SendSlopeCredit]
-	puts [format "EMAC0_MTL_TxQ2_SendSlopeCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_HiCredit 0x31040DA0
-	set data [memread32_phys $EMAC0_MTL_TxQ2_HiCredit]
-	puts [format "EMAC0_MTL_TxQ2_HiCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ2_LoCredit 0x31040DA4
-	set data [memread32_phys $EMAC0_MTL_TxQ2_LoCredit]
-	puts [format "EMAC0_MTL_TxQ2_LoCredit:		%08X" $data]
-
-	set EMAC0_MTL_Q2_Interrupt_Control_Status 0x31040DAC
-	set data [memread32_phys $EMAC0_MTL_Q2_Interrupt_Control_Status]
-	puts [format "EMAC0_MTL_Q2_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ2_Operation_Mode 0x31040DB0
-	set data [memread32_phys $EMAC0_MTL_RxQ2_Operation_Mode]
-	puts [format "EMAC0_MTL_RxQ2_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_RxQ2_Missed_Packet_Overflow_Cnt 0x31040DB4
-	set data [memread32_phys $EMAC0_MTL_RxQ2_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC0_MTL_RxQ2_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC0_MTL_RxQ2_Debug 0x31040DB8
-	set data [memread32_phys $EMAC0_MTL_RxQ2_Debug]
-	puts [format "EMAC0_MTL_RxQ2_Debug:		%08X" $data]
-
-	set EMAC0_MTL_RxQ2_Control 0x31040DBC
-	set data [memread32_phys $EMAC0_MTL_RxQ2_Control]
-	puts [format "EMAC0_MTL_RxQ2_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_Operation_Mode 0x31040DC0
-	set data [memread32_phys $EMAC0_MTL_TxQ3_Operation_Mode]
-	puts [format "EMAC0_MTL_TxQ3_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_Underflow 0x31040DC4
-	set data [memread32_phys $EMAC0_MTL_TxQ3_Underflow]
-	puts [format "EMAC0_MTL_TxQ3_Underflow:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_Debug 0x31040DC8
-	set data [memread32_phys $EMAC0_MTL_TxQ3_Debug]
-	puts [format "EMAC0_MTL_TxQ3_Debug:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_ETS_Control 0x31040DD0
-	set data [memread32_phys $EMAC0_MTL_TxQ3_ETS_Control]
-	puts [format "EMAC0_MTL_TxQ3_ETS_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_ETS_Status 0x31040DD4
-	set data [memread32_phys $EMAC0_MTL_TxQ3_ETS_Status]
-	puts [format "EMAC0_MTL_TxQ3_ETS_Status:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_Quantum_Weight 0x31040DD8
-	set data [memread32_phys $EMAC0_MTL_TxQ3_Quantum_Weight]
-	puts [format "EMAC0_MTL_TxQ3_Quantum_Weight:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_SendSlopeCredit 0x31040DDC
-	set data [memread32_phys $EMAC0_MTL_TxQ3_SendSlopeCredit]
-	puts [format "EMAC0_MTL_TxQ3_SendSlopeCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_HiCredit 0x31040DE0
-	set data [memread32_phys $EMAC0_MTL_TxQ3_HiCredit]
-	puts [format "EMAC0_MTL_TxQ3_HiCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ3_LoCredit 0x31040DE4
-	set data [memread32_phys $EMAC0_MTL_TxQ3_LoCredit]
-	puts [format "EMAC0_MTL_TxQ3_LoCredit:		%08X" $data]
-
-	set EMAC0_MTL_Q3_Interrupt_Control_Status 0x31040DEC
-	set data [memread32_phys $EMAC0_MTL_Q3_Interrupt_Control_Status]
-	puts [format "EMAC0_MTL_Q3_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ3_Operation_Mode 0x31040DF0
-	set data [memread32_phys $EMAC0_MTL_RxQ3_Operation_Mode]
-	puts [format "EMAC0_MTL_RxQ3_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_RxQ3_Missed_Packet_Overflow_Cnt 0x31040DF4
-	set data [memread32_phys $EMAC0_MTL_RxQ3_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC0_MTL_RxQ3_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC0_MTL_RxQ3_Debug 0x31040DF8
-	set data [memread32_phys $EMAC0_MTL_RxQ3_Debug]
-	puts [format "EMAC0_MTL_RxQ3_Debug:		%08X" $data]
-
-	set EMAC0_MTL_RxQ3_Control 0x31040DFC
-	set data [memread32_phys $EMAC0_MTL_RxQ3_Control]
-	puts [format "EMAC0_MTL_RxQ3_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_Operation_Mode 0x31040E00
-	set data [memread32_phys $EMAC0_MTL_TxQ4_Operation_Mode]
-	puts [format "EMAC0_MTL_TxQ4_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_Underflow 0x31040E04
-	set data [memread32_phys $EMAC0_MTL_TxQ4_Underflow]
-	puts [format "EMAC0_MTL_TxQ4_Underflow:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_Debug 0x31040E08
-	set data [memread32_phys $EMAC0_MTL_TxQ4_Debug]
-	puts [format "EMAC0_MTL_TxQ4_Debug:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_ETS_Control 0x31040E10
-	set data [memread32_phys $EMAC0_MTL_TxQ4_ETS_Control]
-	puts [format "EMAC0_MTL_TxQ4_ETS_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_ETS_Status 0x31040E14
-	set data [memread32_phys $EMAC0_MTL_TxQ4_ETS_Status]
-	puts [format "EMAC0_MTL_TxQ4_ETS_Status:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_Quantum_Weight 0x31040E18
-	set data [memread32_phys $EMAC0_MTL_TxQ4_Quantum_Weight]
-	puts [format "EMAC0_MTL_TxQ4_Quantum_Weight:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_SendSlopeCredit 0x31040E1C
-	set data [memread32_phys $EMAC0_MTL_TxQ4_SendSlopeCredit]
-	puts [format "EMAC0_MTL_TxQ4_SendSlopeCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_HiCredit 0x31040E20
-	set data [memread32_phys $EMAC0_MTL_TxQ4_HiCredit]
-	puts [format "EMAC0_MTL_TxQ4_HiCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ4_LoCredit 0x31040E24
-	set data [memread32_phys $EMAC0_MTL_TxQ4_LoCredit]
-	puts [format "EMAC0_MTL_TxQ4_LoCredit:		%08X" $data]
-
-	set EMAC0_MTL_Q4_Interrupt_Control_Status 0x31040E2C
-	set data [memread32_phys $EMAC0_MTL_Q4_Interrupt_Control_Status]
-	puts [format "EMAC0_MTL_Q4_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ4_Operation_Mode 0x31040E30
-	set data [memread32_phys $EMAC0_MTL_RxQ4_Operation_Mode]
-	puts [format "EMAC0_MTL_RxQ4_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_RxQ4_Missed_Packet_Overflow_Cnt 0x31040E34
-	set data [memread32_phys $EMAC0_MTL_RxQ4_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC0_MTL_RxQ4_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC0_MTL_RxQ4_Debug 0x31040E38
-	set data [memread32_phys $EMAC0_MTL_RxQ4_Debug]
-	puts [format "EMAC0_MTL_RxQ4_Debug:		%08X" $data]
-
-	set EMAC0_MTL_RxQ4_Control 0x31040E3C
-	set data [memread32_phys $EMAC0_MTL_RxQ4_Control]
-	puts [format "EMAC0_MTL_RxQ4_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_Operation_Mode 0x31040E40
-	set data [memread32_phys $EMAC0_MTL_TxQ5_Operation_Mode]
-	puts [format "EMAC0_MTL_TxQ5_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_Underflow 0x31040E44
-	set data [memread32_phys $EMAC0_MTL_TxQ5_Underflow]
-	puts [format "EMAC0_MTL_TxQ5_Underflow:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_Debug 0x31040E48
-	set data [memread32_phys $EMAC0_MTL_TxQ5_Debug]
-	puts [format "EMAC0_MTL_TxQ5_Debug:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_ETS_Control 0x31040E50
-	set data [memread32_phys $EMAC0_MTL_TxQ5_ETS_Control]
-	puts [format "EMAC0_MTL_TxQ5_ETS_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_ETS_Status 0x31040E54
-	set data [memread32_phys $EMAC0_MTL_TxQ5_ETS_Status]
-	puts [format "EMAC0_MTL_TxQ5_ETS_Status:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_Quantum_Weight 0x31040E58
-	set data [memread32_phys $EMAC0_MTL_TxQ5_Quantum_Weight]
-	puts [format "EMAC0_MTL_TxQ5_Quantum_Weight:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_SendSlopeCredit 0x31040E5C
-	set data [memread32_phys $EMAC0_MTL_TxQ5_SendSlopeCredit]
-	puts [format "EMAC0_MTL_TxQ5_SendSlopeCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_HiCredit 0x31040E60
-	set data [memread32_phys $EMAC0_MTL_TxQ5_HiCredit]
-	puts [format "EMAC0_MTL_TxQ5_HiCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ5_LoCredit 0x31040E64
-	set data [memread32_phys $EMAC0_MTL_TxQ5_LoCredit]
-	puts [format "EMAC0_MTL_TxQ5_LoCredit:		%08X" $data]
-
-	set EMAC0_MTL_Q5_Interrupt_Control_Status 0x31040E6C
-	set data [memread32_phys $EMAC0_MTL_Q5_Interrupt_Control_Status]
-	puts [format "EMAC0_MTL_Q5_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ5_Operation_Mode 0x31040E70
-	set data [memread32_phys $EMAC0_MTL_RxQ5_Operation_Mode]
-	puts [format "EMAC0_MTL_RxQ5_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_RxQ5_Missed_Packet_Overflow_Cnt 0x31040E74
-	set data [memread32_phys $EMAC0_MTL_RxQ5_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC0_MTL_RxQ5_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC0_MTL_RxQ5_Debug 0x31040E78
-	set data [memread32_phys $EMAC0_MTL_RxQ5_Debug]
-	puts [format "EMAC0_MTL_RxQ5_Debug:		%08X" $data]
-
-	set EMAC0_MTL_RxQ5_Control 0x31040E7C
-	set data [memread32_phys $EMAC0_MTL_RxQ5_Control]
-	puts [format "EMAC0_MTL_RxQ5_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_Operation_Mode 0x31040E80
-	set data [memread32_phys $EMAC0_MTL_TxQ6_Operation_Mode]
-	puts [format "EMAC0_MTL_TxQ6_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_Underflow 0x31040E84
-	set data [memread32_phys $EMAC0_MTL_TxQ6_Underflow]
-	puts [format "EMAC0_MTL_TxQ6_Underflow:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_Debug 0x31040E88
-	set data [memread32_phys $EMAC0_MTL_TxQ6_Debug]
-	puts [format "EMAC0_MTL_TxQ6_Debug:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_ETS_Control 0x31040E90
-	set data [memread32_phys $EMAC0_MTL_TxQ6_ETS_Control]
-	puts [format "EMAC0_MTL_TxQ6_ETS_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_ETS_Status 0x31040E94
-	set data [memread32_phys $EMAC0_MTL_TxQ6_ETS_Status]
-	puts [format "EMAC0_MTL_TxQ6_ETS_Status:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_Quantum_Weight 0x31040E98
-	set data [memread32_phys $EMAC0_MTL_TxQ6_Quantum_Weight]
-	puts [format "EMAC0_MTL_TxQ6_Quantum_Weight:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_SendSlopeCredit 0x31040E9C
-	set data [memread32_phys $EMAC0_MTL_TxQ6_SendSlopeCredit]
-	puts [format "EMAC0_MTL_TxQ6_SendSlopeCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_HiCredit 0x31040EA0
-	set data [memread32_phys $EMAC0_MTL_TxQ6_HiCredit]
-	puts [format "EMAC0_MTL_TxQ6_HiCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ6_LoCredit 0x31040EA4
-	set data [memread32_phys $EMAC0_MTL_TxQ6_LoCredit]
-	puts [format "EMAC0_MTL_TxQ6_LoCredit:		%08X" $data]
-
-	set EMAC0_MTL_Q6_Interrupt_Control_Status 0x31040EAC
-	set data [memread32_phys $EMAC0_MTL_Q6_Interrupt_Control_Status]
-	puts [format "EMAC0_MTL_Q6_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ6_Operation_Mode 0x31040EB0
-	set data [memread32_phys $EMAC0_MTL_RxQ6_Operation_Mode]
-	puts [format "EMAC0_MTL_RxQ6_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_RxQ6_Missed_Packet_Overflow_Cnt 0x31040EB4
-	set data [memread32_phys $EMAC0_MTL_RxQ6_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC0_MTL_RxQ6_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC0_MTL_RxQ6_Debug 0x31040EB8
-	set data [memread32_phys $EMAC0_MTL_RxQ6_Debug]
-	puts [format "EMAC0_MTL_RxQ6_Debug:		%08X" $data]
-
-	set EMAC0_MTL_RxQ6_Control 0x31040EBC
-	set data [memread32_phys $EMAC0_MTL_RxQ6_Control]
-	puts [format "EMAC0_MTL_RxQ6_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_Operation_Mode 0x31040EC0
-	set data [memread32_phys $EMAC0_MTL_TxQ7_Operation_Mode]
-	puts [format "EMAC0_MTL_TxQ7_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_Underflow 0x31040EC4
-	set data [memread32_phys $EMAC0_MTL_TxQ7_Underflow]
-	puts [format "EMAC0_MTL_TxQ7_Underflow:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_Debug 0x31040EC8
-	set data [memread32_phys $EMAC0_MTL_TxQ7_Debug]
-	puts [format "EMAC0_MTL_TxQ7_Debug:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_ETS_Control 0x31040ED0
-	set data [memread32_phys $EMAC0_MTL_TxQ7_ETS_Control]
-	puts [format "EMAC0_MTL_TxQ7_ETS_Control:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_ETS_Status 0x31040ED4
-	set data [memread32_phys $EMAC0_MTL_TxQ7_ETS_Status]
-	puts [format "EMAC0_MTL_TxQ7_ETS_Status:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_Quantum_Weight 0x31040ED8
-	set data [memread32_phys $EMAC0_MTL_TxQ7_Quantum_Weight]
-	puts [format "EMAC0_MTL_TxQ7_Quantum_Weight:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_SendSlopeCredit 0x31040EDC
-	set data [memread32_phys $EMAC0_MTL_TxQ7_SendSlopeCredit]
-	puts [format "EMAC0_MTL_TxQ7_SendSlopeCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_HiCredit 0x31040EE0
-	set data [memread32_phys $EMAC0_MTL_TxQ7_HiCredit]
-	puts [format "EMAC0_MTL_TxQ7_HiCredit:		%08X" $data]
-
-	set EMAC0_MTL_TxQ7_LoCredit 0x31040EE4
-	set data [memread32_phys $EMAC0_MTL_TxQ7_LoCredit]
-	puts [format "EMAC0_MTL_TxQ7_LoCredit:		%08X" $data]
-
-	set EMAC0_MTL_Q7_Interrupt_Control_Status 0x31040EEC
-	set data [memread32_phys $EMAC0_MTL_Q7_Interrupt_Control_Status]
-	puts [format "EMAC0_MTL_Q7_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC0_MTL_RxQ7_Operation_Mode 0x31040EF0
-	set data [memread32_phys $EMAC0_MTL_RxQ7_Operation_Mode]
-	puts [format "EMAC0_MTL_RxQ7_Operation_Mode:		%08X" $data]
-
-	set EMAC0_MTL_RxQ7_Missed_Packet_Overflow_Cnt 0x31040EF4
-	set data [memread32_phys $EMAC0_MTL_RxQ7_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC0_MTL_RxQ7_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC0_MTL_RxQ7_Debug 0x31040EF8
-	set data [memread32_phys $EMAC0_MTL_RxQ7_Debug]
-	puts [format "EMAC0_MTL_RxQ7_Debug:		%08X" $data]
-
-	set EMAC0_MTL_RxQ7_Control 0x31040EFC
-	set data [memread32_phys $EMAC0_MTL_RxQ7_Control]
-	puts [format "EMAC0_MTL_RxQ7_Control:		%08X" $data]
-
-	set EMAC0_DMA_Mode 0x31041000
-	set data [memread32_phys $EMAC0_DMA_Mode]
-	puts [format "EMAC0_DMA_Mode:		%08X" $data]
-
-	set EMAC0_DMA_SysBus_Mode 0x31041004
-	set data [memread32_phys $EMAC0_DMA_SysBus_Mode]
-	puts [format "EMAC0_DMA_SysBus_Mode:		%08X" $data]
-
-	set EMAC0_DMA_Interrupt_Status 0x31041008
-	set data [memread32_phys $EMAC0_DMA_Interrupt_Status]
-	puts [format "EMAC0_DMA_Interrupt_Status:		%08X" $data]
-
-	set EMAC0_DMA_Debug_Status0 0x3104100C
-	set data [memread32_phys $EMAC0_DMA_Debug_Status0]
-	puts [format "EMAC0_DMA_Debug_Status0:		%08X" $data]
-
-	set EMAC0_DMA_Debug_Status1 0x31041010
-	set data [memread32_phys $EMAC0_DMA_Debug_Status1]
-	puts [format "EMAC0_DMA_Debug_Status1:		%08X" $data]
-
-	set EMAC0_DMA_Debug_Status2 0x31041014
-	set data [memread32_phys $EMAC0_DMA_Debug_Status2]
-	puts [format "EMAC0_DMA_Debug_Status2:		%08X" $data]
-
-	set EMAC0_AXI_LPI_Entry_Interval 0x31041040
-	set data [memread32_phys $EMAC0_AXI_LPI_Entry_Interval]
-	puts [format "EMAC0_AXI_LPI_Entry_Interval:		%08X" $data]
-
-	set EMAC0_DMA_TBS_CTRL0 0x31041050
-	set data [memread32_phys $EMAC0_DMA_TBS_CTRL0]
-	puts [format "EMAC0_DMA_TBS_CTRL0:		%08X" $data]
-
-	set EMAC0_DMA_TBS_CTRL1 0x31041054
-	set data [memread32_phys $EMAC0_DMA_TBS_CTRL1]
-	puts [format "EMAC0_DMA_TBS_CTRL1:		%08X" $data]
-
-	set EMAC0_DMA_TBS_CTRL2 0x31041058
-	set data [memread32_phys $EMAC0_DMA_TBS_CTRL2]
-	puts [format "EMAC0_DMA_TBS_CTRL2:		%08X" $data]
-
-	set EMAC0_DMA_TBS_CTRL3 0x3104105C
-	set data [memread32_phys $EMAC0_DMA_TBS_CTRL3]
-	puts [format "EMAC0_DMA_TBS_CTRL3:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Control 0x31041100
-	set data [memread32_phys $EMAC0_DMA_CH0_Control]
-	puts [format "EMAC0_DMA_CH0_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Tx_Control 0x31041104
-	set data [memread32_phys $EMAC0_DMA_CH0_Tx_Control]
-	puts [format "EMAC0_DMA_CH0_Tx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Rx_Control 0x31041108
-	set data [memread32_phys $EMAC0_DMA_CH0_Rx_Control]
-	puts [format "EMAC0_DMA_CH0_Rx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH0_TxDesc_List_Address 0x31041114
-	set data [memread32_phys $EMAC0_DMA_CH0_TxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH0_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH0_RxDesc_List_Address 0x3104111C
-	set data [memread32_phys $EMAC0_DMA_CH0_RxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH0_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH0_TxDesc_Tail_Pointer 0x31041120
-	set data [memread32_phys $EMAC0_DMA_CH0_TxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH0_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH0_RxDesc_Tail_Pointer 0x31041128
-	set data [memread32_phys $EMAC0_DMA_CH0_RxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH0_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH0_TxDesc_Ring_Length 0x3104112C
-	set data [memread32_phys $EMAC0_DMA_CH0_TxDesc_Ring_Length]
-	puts [format "EMAC0_DMA_CH0_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Rx_Control2 0x31041130
-	set data [memread32_phys $EMAC0_DMA_CH0_Rx_Control2]
-	puts [format "EMAC0_DMA_CH0_Rx_Control2:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Interrupt_Enable 0x31041134
-	set data [memread32_phys $EMAC0_DMA_CH0_Interrupt_Enable]
-	puts [format "EMAC0_DMA_CH0_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Rx_Interrupt_Watchdog_Timer 0x31041138
-	set data [memread32_phys $EMAC0_DMA_CH0_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC0_DMA_CH0_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Slot_Function_Control_Status 0x3104113C
-	set data [memread32_phys $EMAC0_DMA_CH0_Slot_Function_Control_Status]
-	puts [format "EMAC0_DMA_CH0_Slot_Function_Control_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Current_App_TxDesc 0x31041144
-	set data [memread32_phys $EMAC0_DMA_CH0_Current_App_TxDesc]
-	puts [format "EMAC0_DMA_CH0_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Current_App_RxDesc 0x3104114C
-	set data [memread32_phys $EMAC0_DMA_CH0_Current_App_RxDesc]
-	puts [format "EMAC0_DMA_CH0_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Current_App_TxBuffer 0x31041154
-	set data [memread32_phys $EMAC0_DMA_CH0_Current_App_TxBuffer]
-	puts [format "EMAC0_DMA_CH0_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Current_App_RxBuffer 0x3104115C
-	set data [memread32_phys $EMAC0_DMA_CH0_Current_App_RxBuffer]
-	puts [format "EMAC0_DMA_CH0_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Status 0x31041160
-	set data [memread32_phys $EMAC0_DMA_CH0_Status]
-	puts [format "EMAC0_DMA_CH0_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH0_Miss_Frame_Cnt 0x31041164
-	set data [memread32_phys $EMAC0_DMA_CH0_Miss_Frame_Cnt]
-	puts [format "EMAC0_DMA_CH0_Miss_Frame_Cnt:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Control 0x31041180
-	set data [memread32_phys $EMAC0_DMA_CH1_Control]
-	puts [format "EMAC0_DMA_CH1_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Tx_Control 0x31041184
-	set data [memread32_phys $EMAC0_DMA_CH1_Tx_Control]
-	puts [format "EMAC0_DMA_CH1_Tx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Rx_Control 0x31041188
-	set data [memread32_phys $EMAC0_DMA_CH1_Rx_Control]
-	puts [format "EMAC0_DMA_CH1_Rx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH1_TxDesc_List_Address 0x31041194
-	set data [memread32_phys $EMAC0_DMA_CH1_TxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH1_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH1_RxDesc_List_Address 0x3104119C
-	set data [memread32_phys $EMAC0_DMA_CH1_RxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH1_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH1_TxDesc_Tail_Pointer 0x310411A0
-	set data [memread32_phys $EMAC0_DMA_CH1_TxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH1_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH1_RxDesc_Tail_Pointer 0x310411A8
-	set data [memread32_phys $EMAC0_DMA_CH1_RxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH1_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH1_TxDesc_Ring_Length 0x310411AC
-	set data [memread32_phys $EMAC0_DMA_CH1_TxDesc_Ring_Length]
-	puts [format "EMAC0_DMA_CH1_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Rx_Control2 0x310411B0
-	set data [memread32_phys $EMAC0_DMA_CH1_Rx_Control2]
-	puts [format "EMAC0_DMA_CH1_Rx_Control2:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Interrupt_Enable 0x310411B4
-	set data [memread32_phys $EMAC0_DMA_CH1_Interrupt_Enable]
-	puts [format "EMAC0_DMA_CH1_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Rx_Interrupt_Watchdog_Timer 0x310411B8
-	set data [memread32_phys $EMAC0_DMA_CH1_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC0_DMA_CH1_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Slot_Function_Control_Status 0x310411BC
-	set data [memread32_phys $EMAC0_DMA_CH1_Slot_Function_Control_Status]
-	puts [format "EMAC0_DMA_CH1_Slot_Function_Control_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Current_App_TxDesc 0x310411C4
-	set data [memread32_phys $EMAC0_DMA_CH1_Current_App_TxDesc]
-	puts [format "EMAC0_DMA_CH1_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Current_App_RxDesc 0x310411CC
-	set data [memread32_phys $EMAC0_DMA_CH1_Current_App_RxDesc]
-	puts [format "EMAC0_DMA_CH1_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Current_App_TxBuffer 0x310411D4
-	set data [memread32_phys $EMAC0_DMA_CH1_Current_App_TxBuffer]
-	puts [format "EMAC0_DMA_CH1_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Current_App_RxBuffer 0x310411DC
-	set data [memread32_phys $EMAC0_DMA_CH1_Current_App_RxBuffer]
-	puts [format "EMAC0_DMA_CH1_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Status 0x310411E0
-	set data [memread32_phys $EMAC0_DMA_CH1_Status]
-	puts [format "EMAC0_DMA_CH1_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH1_Miss_Frame_Cnt 0x310411E4
-	set data [memread32_phys $EMAC0_DMA_CH1_Miss_Frame_Cnt]
-	puts [format "EMAC0_DMA_CH1_Miss_Frame_Cnt:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Control 0x31041200
-	set data [memread32_phys $EMAC0_DMA_CH2_Control]
-	puts [format "EMAC0_DMA_CH2_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Tx_Control 0x31041204
-	set data [memread32_phys $EMAC0_DMA_CH2_Tx_Control]
-	puts [format "EMAC0_DMA_CH2_Tx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Rx_Control 0x31041208
-	set data [memread32_phys $EMAC0_DMA_CH2_Rx_Control]
-	puts [format "EMAC0_DMA_CH2_Rx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH2_TxDesc_List_Address 0x31041214
-	set data [memread32_phys $EMAC0_DMA_CH2_TxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH2_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH2_RxDesc_List_Address 0x3104121C
-	set data [memread32_phys $EMAC0_DMA_CH2_RxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH2_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH2_TxDesc_Tail_Pointer 0x31041220
-	set data [memread32_phys $EMAC0_DMA_CH2_TxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH2_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH2_RxDesc_Tail_Pointer 0x31041228
-	set data [memread32_phys $EMAC0_DMA_CH2_RxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH2_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH2_TxDesc_Ring_Length 0x3104122C
-	set data [memread32_phys $EMAC0_DMA_CH2_TxDesc_Ring_Length]
-	puts [format "EMAC0_DMA_CH2_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Rx_Control2 0x31041230
-	set data [memread32_phys $EMAC0_DMA_CH2_Rx_Control2]
-	puts [format "EMAC0_DMA_CH2_Rx_Control2:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Interrupt_Enable 0x31041234
-	set data [memread32_phys $EMAC0_DMA_CH2_Interrupt_Enable]
-	puts [format "EMAC0_DMA_CH2_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Rx_Interrupt_Watchdog_Timer 0x31041238
-	set data [memread32_phys $EMAC0_DMA_CH2_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC0_DMA_CH2_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Slot_Function_Control_Status 0x3104123C
-	set data [memread32_phys $EMAC0_DMA_CH2_Slot_Function_Control_Status]
-	puts [format "EMAC0_DMA_CH2_Slot_Function_Control_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Current_App_TxDesc 0x31041244
-	set data [memread32_phys $EMAC0_DMA_CH2_Current_App_TxDesc]
-	puts [format "EMAC0_DMA_CH2_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Current_App_RxDesc 0x3104124C
-	set data [memread32_phys $EMAC0_DMA_CH2_Current_App_RxDesc]
-	puts [format "EMAC0_DMA_CH2_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Current_App_TxBuffer 0x31041254
-	set data [memread32_phys $EMAC0_DMA_CH2_Current_App_TxBuffer]
-	puts [format "EMAC0_DMA_CH2_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Current_App_RxBuffer 0x3104125C
-	set data [memread32_phys $EMAC0_DMA_CH2_Current_App_RxBuffer]
-	puts [format "EMAC0_DMA_CH2_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Status 0x31041260
-	set data [memread32_phys $EMAC0_DMA_CH2_Status]
-	puts [format "EMAC0_DMA_CH2_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH2_Miss_Frame_Cnt 0x31041264
-	set data [memread32_phys $EMAC0_DMA_CH2_Miss_Frame_Cnt]
-	puts [format "EMAC0_DMA_CH2_Miss_Frame_Cnt:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Control 0x31041280
-	set data [memread32_phys $EMAC0_DMA_CH3_Control]
-	puts [format "EMAC0_DMA_CH3_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Tx_Control 0x31041284
-	set data [memread32_phys $EMAC0_DMA_CH3_Tx_Control]
-	puts [format "EMAC0_DMA_CH3_Tx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Rx_Control 0x31041288
-	set data [memread32_phys $EMAC0_DMA_CH3_Rx_Control]
-	puts [format "EMAC0_DMA_CH3_Rx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH3_TxDesc_List_Address 0x31041294
-	set data [memread32_phys $EMAC0_DMA_CH3_TxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH3_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH3_RxDesc_List_Address 0x3104129C
-	set data [memread32_phys $EMAC0_DMA_CH3_RxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH3_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH3_TxDesc_Tail_Pointer 0x310412A0
-	set data [memread32_phys $EMAC0_DMA_CH3_TxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH3_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH3_RxDesc_Tail_Pointer 0x310412A8
-	set data [memread32_phys $EMAC0_DMA_CH3_RxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH3_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH3_TxDesc_Ring_Length 0x310412AC
-	set data [memread32_phys $EMAC0_DMA_CH3_TxDesc_Ring_Length]
-	puts [format "EMAC0_DMA_CH3_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Rx_Control2 0x310412B0
-	set data [memread32_phys $EMAC0_DMA_CH3_Rx_Control2]
-	puts [format "EMAC0_DMA_CH3_Rx_Control2:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Interrupt_Enable 0x310412B4
-	set data [memread32_phys $EMAC0_DMA_CH3_Interrupt_Enable]
-	puts [format "EMAC0_DMA_CH3_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Rx_Interrupt_Watchdog_Timer 0x310412B8
-	set data [memread32_phys $EMAC0_DMA_CH3_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC0_DMA_CH3_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Slot_Function_Control_Status 0x310412BC
-	set data [memread32_phys $EMAC0_DMA_CH3_Slot_Function_Control_Status]
-	puts [format "EMAC0_DMA_CH3_Slot_Function_Control_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Current_App_TxDesc 0x310412C4
-	set data [memread32_phys $EMAC0_DMA_CH3_Current_App_TxDesc]
-	puts [format "EMAC0_DMA_CH3_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Current_App_RxDesc 0x310412CC
-	set data [memread32_phys $EMAC0_DMA_CH3_Current_App_RxDesc]
-	puts [format "EMAC0_DMA_CH3_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Current_App_TxBuffer 0x310412D4
-	set data [memread32_phys $EMAC0_DMA_CH3_Current_App_TxBuffer]
-	puts [format "EMAC0_DMA_CH3_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Current_App_RxBuffer 0x310412DC
-	set data [memread32_phys $EMAC0_DMA_CH3_Current_App_RxBuffer]
-	puts [format "EMAC0_DMA_CH3_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Status 0x310412E0
-	set data [memread32_phys $EMAC0_DMA_CH3_Status]
-	puts [format "EMAC0_DMA_CH3_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH3_Miss_Frame_Cnt 0x310412E4
-	set data [memread32_phys $EMAC0_DMA_CH3_Miss_Frame_Cnt]
-	puts [format "EMAC0_DMA_CH3_Miss_Frame_Cnt:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Control 0x31041300
-	set data [memread32_phys $EMAC0_DMA_CH4_Control]
-	puts [format "EMAC0_DMA_CH4_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Tx_Control 0x31041304
-	set data [memread32_phys $EMAC0_DMA_CH4_Tx_Control]
-	puts [format "EMAC0_DMA_CH4_Tx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Rx_Control 0x31041308
-	set data [memread32_phys $EMAC0_DMA_CH4_Rx_Control]
-	puts [format "EMAC0_DMA_CH4_Rx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH4_TxDesc_List_Address 0x31041314
-	set data [memread32_phys $EMAC0_DMA_CH4_TxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH4_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH4_RxDesc_List_Address 0x3104131C
-	set data [memread32_phys $EMAC0_DMA_CH4_RxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH4_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH4_TxDesc_Tail_Pointer 0x31041320
-	set data [memread32_phys $EMAC0_DMA_CH4_TxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH4_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH4_RxDesc_Tail_Pointer 0x31041328
-	set data [memread32_phys $EMAC0_DMA_CH4_RxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH4_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH4_TxDesc_Ring_Length 0x3104132C
-	set data [memread32_phys $EMAC0_DMA_CH4_TxDesc_Ring_Length]
-	puts [format "EMAC0_DMA_CH4_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Rx_Control2 0x31041330
-	set data [memread32_phys $EMAC0_DMA_CH4_Rx_Control2]
-	puts [format "EMAC0_DMA_CH4_Rx_Control2:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Interrupt_Enable 0x31041334
-	set data [memread32_phys $EMAC0_DMA_CH4_Interrupt_Enable]
-	puts [format "EMAC0_DMA_CH4_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Rx_Interrupt_Watchdog_Timer 0x31041338
-	set data [memread32_phys $EMAC0_DMA_CH4_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC0_DMA_CH4_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Slot_Function_Control_Status 0x3104133C
-	set data [memread32_phys $EMAC0_DMA_CH4_Slot_Function_Control_Status]
-	puts [format "EMAC0_DMA_CH4_Slot_Function_Control_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Current_App_TxDesc 0x31041344
-	set data [memread32_phys $EMAC0_DMA_CH4_Current_App_TxDesc]
-	puts [format "EMAC0_DMA_CH4_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Current_App_RxDesc 0x3104134C
-	set data [memread32_phys $EMAC0_DMA_CH4_Current_App_RxDesc]
-	puts [format "EMAC0_DMA_CH4_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Current_App_TxBuffer 0x31041354
-	set data [memread32_phys $EMAC0_DMA_CH4_Current_App_TxBuffer]
-	puts [format "EMAC0_DMA_CH4_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Current_App_RxBuffer 0x3104135C
-	set data [memread32_phys $EMAC0_DMA_CH4_Current_App_RxBuffer]
-	puts [format "EMAC0_DMA_CH4_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Status 0x31041360
-	set data [memread32_phys $EMAC0_DMA_CH4_Status]
-	puts [format "EMAC0_DMA_CH4_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH4_Miss_Frame_Cnt 0x31041364
-	set data [memread32_phys $EMAC0_DMA_CH4_Miss_Frame_Cnt]
-	puts [format "EMAC0_DMA_CH4_Miss_Frame_Cnt:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Control 0x31041380
-	set data [memread32_phys $EMAC0_DMA_CH5_Control]
-	puts [format "EMAC0_DMA_CH5_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Tx_Control 0x31041384
-	set data [memread32_phys $EMAC0_DMA_CH5_Tx_Control]
-	puts [format "EMAC0_DMA_CH5_Tx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Rx_Control 0x31041388
-	set data [memread32_phys $EMAC0_DMA_CH5_Rx_Control]
-	puts [format "EMAC0_DMA_CH5_Rx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH5_TxDesc_List_Address 0x31041394
-	set data [memread32_phys $EMAC0_DMA_CH5_TxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH5_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH5_RxDesc_List_Address 0x3104139C
-	set data [memread32_phys $EMAC0_DMA_CH5_RxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH5_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH5_TxDesc_Tail_Pointer 0x310413A0
-	set data [memread32_phys $EMAC0_DMA_CH5_TxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH5_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH5_RxDesc_Tail_Pointer 0x310413A8
-	set data [memread32_phys $EMAC0_DMA_CH5_RxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH5_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH5_TxDesc_Ring_Length 0x310413AC
-	set data [memread32_phys $EMAC0_DMA_CH5_TxDesc_Ring_Length]
-	puts [format "EMAC0_DMA_CH5_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Rx_Control2 0x310413B0
-	set data [memread32_phys $EMAC0_DMA_CH5_Rx_Control2]
-	puts [format "EMAC0_DMA_CH5_Rx_Control2:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Interrupt_Enable 0x310413B4
-	set data [memread32_phys $EMAC0_DMA_CH5_Interrupt_Enable]
-	puts [format "EMAC0_DMA_CH5_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Rx_Interrupt_Watchdog_Timer 0x310413B8
-	set data [memread32_phys $EMAC0_DMA_CH5_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC0_DMA_CH5_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Slot_Function_Control_Status 0x310413BC
-	set data [memread32_phys $EMAC0_DMA_CH5_Slot_Function_Control_Status]
-	puts [format "EMAC0_DMA_CH5_Slot_Function_Control_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Current_App_TxDesc 0x310413C4
-	set data [memread32_phys $EMAC0_DMA_CH5_Current_App_TxDesc]
-	puts [format "EMAC0_DMA_CH5_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Current_App_RxDesc 0x310413CC
-	set data [memread32_phys $EMAC0_DMA_CH5_Current_App_RxDesc]
-	puts [format "EMAC0_DMA_CH5_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Current_App_TxBuffer 0x310413D4
-	set data [memread32_phys $EMAC0_DMA_CH5_Current_App_TxBuffer]
-	puts [format "EMAC0_DMA_CH5_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Current_App_RxBuffer 0x310413DC
-	set data [memread32_phys $EMAC0_DMA_CH5_Current_App_RxBuffer]
-	puts [format "EMAC0_DMA_CH5_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Status 0x310413E0
-	set data [memread32_phys $EMAC0_DMA_CH5_Status]
-	puts [format "EMAC0_DMA_CH5_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH5_Miss_Frame_Cnt 0x310413E4
-	set data [memread32_phys $EMAC0_DMA_CH5_Miss_Frame_Cnt]
-	puts [format "EMAC0_DMA_CH5_Miss_Frame_Cnt:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Control 0x31041400
-	set data [memread32_phys $EMAC0_DMA_CH6_Control]
-	puts [format "EMAC0_DMA_CH6_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Tx_Control 0x31041404
-	set data [memread32_phys $EMAC0_DMA_CH6_Tx_Control]
-	puts [format "EMAC0_DMA_CH6_Tx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Rx_Control 0x31041408
-	set data [memread32_phys $EMAC0_DMA_CH6_Rx_Control]
-	puts [format "EMAC0_DMA_CH6_Rx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH6_TxDesc_List_Address 0x31041414
-	set data [memread32_phys $EMAC0_DMA_CH6_TxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH6_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH6_RxDesc_List_Address 0x3104141C
-	set data [memread32_phys $EMAC0_DMA_CH6_RxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH6_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH6_TxDesc_Tail_Pointer 0x31041420
-	set data [memread32_phys $EMAC0_DMA_CH6_TxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH6_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH6_RxDesc_Tail_Pointer 0x31041428
-	set data [memread32_phys $EMAC0_DMA_CH6_RxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH6_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH6_TxDesc_Ring_Length 0x3104142C
-	set data [memread32_phys $EMAC0_DMA_CH6_TxDesc_Ring_Length]
-	puts [format "EMAC0_DMA_CH6_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Rx_Control2 0x31041430
-	set data [memread32_phys $EMAC0_DMA_CH6_Rx_Control2]
-	puts [format "EMAC0_DMA_CH6_Rx_Control2:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Interrupt_Enable 0x31041434
-	set data [memread32_phys $EMAC0_DMA_CH6_Interrupt_Enable]
-	puts [format "EMAC0_DMA_CH6_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Rx_Interrupt_Watchdog_Timer 0x31041438
-	set data [memread32_phys $EMAC0_DMA_CH6_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC0_DMA_CH6_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Slot_Function_Control_Status 0x3104143C
-	set data [memread32_phys $EMAC0_DMA_CH6_Slot_Function_Control_Status]
-	puts [format "EMAC0_DMA_CH6_Slot_Function_Control_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Current_App_TxDesc 0x31041444
-	set data [memread32_phys $EMAC0_DMA_CH6_Current_App_TxDesc]
-	puts [format "EMAC0_DMA_CH6_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Current_App_RxDesc 0x3104144C
-	set data [memread32_phys $EMAC0_DMA_CH6_Current_App_RxDesc]
-	puts [format "EMAC0_DMA_CH6_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Current_App_TxBuffer 0x31041454
-	set data [memread32_phys $EMAC0_DMA_CH6_Current_App_TxBuffer]
-	puts [format "EMAC0_DMA_CH6_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Current_App_RxBuffer 0x3104145C
-	set data [memread32_phys $EMAC0_DMA_CH6_Current_App_RxBuffer]
-	puts [format "EMAC0_DMA_CH6_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Status 0x31041460
-	set data [memread32_phys $EMAC0_DMA_CH6_Status]
-	puts [format "EMAC0_DMA_CH6_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH6_Miss_Frame_Cnt 0x31041464
-	set data [memread32_phys $EMAC0_DMA_CH6_Miss_Frame_Cnt]
-	puts [format "EMAC0_DMA_CH6_Miss_Frame_Cnt:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Control 0x31041480
-	set data [memread32_phys $EMAC0_DMA_CH7_Control]
-	puts [format "EMAC0_DMA_CH7_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Tx_Control 0x31041484
-	set data [memread32_phys $EMAC0_DMA_CH7_Tx_Control]
-	puts [format "EMAC0_DMA_CH7_Tx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Rx_Control 0x31041488
-	set data [memread32_phys $EMAC0_DMA_CH7_Rx_Control]
-	puts [format "EMAC0_DMA_CH7_Rx_Control:		%08X" $data]
-
-	set EMAC0_DMA_CH7_TxDesc_List_Address 0x31041494
-	set data [memread32_phys $EMAC0_DMA_CH7_TxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH7_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH7_RxDesc_List_Address 0x3104149C
-	set data [memread32_phys $EMAC0_DMA_CH7_RxDesc_List_Address]
-	puts [format "EMAC0_DMA_CH7_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC0_DMA_CH7_TxDesc_Tail_Pointer 0x310414A0
-	set data [memread32_phys $EMAC0_DMA_CH7_TxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH7_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH7_RxDesc_Tail_Pointer 0x310414A8
-	set data [memread32_phys $EMAC0_DMA_CH7_RxDesc_Tail_Pointer]
-	puts [format "EMAC0_DMA_CH7_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC0_DMA_CH7_TxDesc_Ring_Length 0x310414AC
-	set data [memread32_phys $EMAC0_DMA_CH7_TxDesc_Ring_Length]
-	puts [format "EMAC0_DMA_CH7_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Rx_Control2 0x310414B0
-	set data [memread32_phys $EMAC0_DMA_CH7_Rx_Control2]
-	puts [format "EMAC0_DMA_CH7_Rx_Control2:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Interrupt_Enable 0x310414B4
-	set data [memread32_phys $EMAC0_DMA_CH7_Interrupt_Enable]
-	puts [format "EMAC0_DMA_CH7_Interrupt_Enable:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Rx_Interrupt_Watchdog_Timer 0x310414B8
-	set data [memread32_phys $EMAC0_DMA_CH7_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC0_DMA_CH7_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Slot_Function_Control_Status 0x310414BC
-	set data [memread32_phys $EMAC0_DMA_CH7_Slot_Function_Control_Status]
-	puts [format "EMAC0_DMA_CH7_Slot_Function_Control_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Current_App_TxDesc 0x310414C4
-	set data [memread32_phys $EMAC0_DMA_CH7_Current_App_TxDesc]
-	puts [format "EMAC0_DMA_CH7_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Current_App_RxDesc 0x310414CC
-	set data [memread32_phys $EMAC0_DMA_CH7_Current_App_RxDesc]
-	puts [format "EMAC0_DMA_CH7_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Current_App_TxBuffer 0x310414D4
-	set data [memread32_phys $EMAC0_DMA_CH7_Current_App_TxBuffer]
-	puts [format "EMAC0_DMA_CH7_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Current_App_RxBuffer 0x310414DC
-	set data [memread32_phys $EMAC0_DMA_CH7_Current_App_RxBuffer]
-	puts [format "EMAC0_DMA_CH7_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Status 0x310414E0
-	set data [memread32_phys $EMAC0_DMA_CH7_Status]
-	puts [format "EMAC0_DMA_CH7_Status:		%08X" $data]
-
-	set EMAC0_DMA_CH7_Miss_Frame_Cnt 0x310414E4
-	set data [memread32_phys $EMAC0_DMA_CH7_Miss_Frame_Cnt]
-	puts [format "EMAC0_DMA_CH7_Miss_Frame_Cnt:		%08X" $data]
+	set EMAC0_MAC_CFG 0x31040000
+	set data [memread32_phys $EMAC0_MAC_CFG]
+	puts [format "EMAC0_MAC_CFG:		%08X" $data]
+
+	set EMAC0_MAC_EXT_CFG 0x31040004
+	set data [memread32_phys $EMAC0_MAC_EXT_CFG]
+	puts [format "EMAC0_MAC_EXT_CFG:		%08X" $data]
+
+	set EMAC0_MACPKT_FILT 0x31040008
+	set data [memread32_phys $EMAC0_MACPKT_FILT]
+	puts [format "EMAC0_MACPKT_FILT:		%08X" $data]
+
+	set EMAC0_WDT_TMOUT 0x3104000C
+	set data [memread32_phys $EMAC0_WDT_TMOUT]
+	puts [format "EMAC0_WDT_TMOUT:		%08X" $data]
+
+	set EMAC0_HASHTBL_REG0 0x31040010
+	set data [memread32_phys $EMAC0_HASHTBL_REG0]
+	puts [format "EMAC0_HASHTBL_REG0:		%08X" $data]
+
+	set EMAC0_HASHTBL_REG1 0x31040014
+	set data [memread32_phys $EMAC0_HASHTBL_REG1]
+	puts [format "EMAC0_HASHTBL_REG1:		%08X" $data]
+
+	set EMAC0_HASHTBL_REG2 0x31040018
+	set data [memread32_phys $EMAC0_HASHTBL_REG2]
+	puts [format "EMAC0_HASHTBL_REG2:		%08X" $data]
+
+	set EMAC0_HASHTBL_REG3 0x3104001C
+	set data [memread32_phys $EMAC0_HASHTBL_REG3]
+	puts [format "EMAC0_HASHTBL_REG3:		%08X" $data]
+
+	set EMAC0_HASHTBL_REG4 0x31040020
+	set data [memread32_phys $EMAC0_HASHTBL_REG4]
+	puts [format "EMAC0_HASHTBL_REG4:		%08X" $data]
+
+	set EMAC0_HASHTBL_REG5 0x31040024
+	set data [memread32_phys $EMAC0_HASHTBL_REG5]
+	puts [format "EMAC0_HASHTBL_REG5:		%08X" $data]
+
+	set EMAC0_HASHTBL_REG6 0x31040028
+	set data [memread32_phys $EMAC0_HASHTBL_REG6]
+	puts [format "EMAC0_HASHTBL_REG6:		%08X" $data]
+
+	set EMAC0_HASHTBL_REG7 0x3104002C
+	set data [memread32_phys $EMAC0_HASHTBL_REG7]
+	puts [format "EMAC0_HASHTBL_REG7:		%08X" $data]
+
+	set EMAC0_VLANTAG_CTL 0x31040050
+	set data [memread32_phys $EMAC0_VLANTAG_CTL]
+	puts [format "EMAC0_VLANTAG_CTL:		%08X" $data]
+
+	set EMAC0_VLANTAG_DAT 0x31040054
+	set data [memread32_phys $EMAC0_VLANTAG_DAT]
+	puts [format "EMAC0_VLANTAG_DAT:		%08X" $data]
+
+	set EMAC0_VLAN_HASHTBL 0x31040058
+	set data [memread32_phys $EMAC0_VLAN_HASHTBL]
+	puts [format "EMAC0_VLAN_HASHTBL:		%08X" $data]
+
+	set EMAC0_VLAN_INCL 0x31040060
+	set data [memread32_phys $EMAC0_VLAN_INCL]
+	puts [format "EMAC0_VLAN_INCL:		%08X" $data]
+
+	set EMAC0_INVLAN_INCL 0x31040064
+	set data [memread32_phys $EMAC0_INVLAN_INCL]
+	puts [format "EMAC0_INVLAN_INCL:		%08X" $data]
+
+	set EMAC0_Q1_TXFLOW_CTL 0x31040074
+	set data [memread32_phys $EMAC0_Q1_TXFLOW_CTL]
+	puts [format "EMAC0_Q1_TXFLOW_CTL:		%08X" $data]
+
+	set EMAC0_Q2_TXFLOW_CTL 0x31040078
+	set data [memread32_phys $EMAC0_Q2_TXFLOW_CTL]
+	puts [format "EMAC0_Q2_TXFLOW_CTL:		%08X" $data]
+
+	set EMAC0_Q3_TXFLOW_CTL 0x3104007C
+	set data [memread32_phys $EMAC0_Q3_TXFLOW_CTL]
+	puts [format "EMAC0_Q3_TXFLOW_CTL:		%08X" $data]
+
+	set EMAC0_Q4_TXFLOW_CTL 0x31040080
+	set data [memread32_phys $EMAC0_Q4_TXFLOW_CTL]
+	puts [format "EMAC0_Q4_TXFLOW_CTL:		%08X" $data]
+
+	set EMAC0_Q5_TXFLOW_CTL 0x31040084
+	set data [memread32_phys $EMAC0_Q5_TXFLOW_CTL]
+	puts [format "EMAC0_Q5_TXFLOW_CTL:		%08X" $data]
+
+	set EMAC0_Q6_TXFLOW_CTL 0x31040088
+	set data [memread32_phys $EMAC0_Q6_TXFLOW_CTL]
+	puts [format "EMAC0_Q6_TXFLOW_CTL:		%08X" $data]
+
+	set EMAC0_Q7_TXFLOW_CTL 0x3104008C
+	set data [memread32_phys $EMAC0_Q7_TXFLOW_CTL]
+	puts [format "EMAC0_Q7_TXFLOW_CTL:		%08X" $data]
+
+	set EMAC0_RXFLOW_CTL 0x31040090
+	set data [memread32_phys $EMAC0_RXFLOW_CTL]
+	puts [format "EMAC0_RXFLOW_CTL:		%08X" $data]
+
+	set EMAC0_RXQ_CTL4 0x31040094
+	set data [memread32_phys $EMAC0_RXQ_CTL4]
+	puts [format "EMAC0_RXQ_CTL4:		%08X" $data]
+
+	set EMAC0_TXQ_PRTY_MAP0 0x31040098
+	set data [memread32_phys $EMAC0_TXQ_PRTY_MAP0]
+	puts [format "EMAC0_TXQ_PRTY_MAP0:		%08X" $data]
+
+	set EMAC0_TXQ_PRTY_MAP01 0x3104009C
+	set data [memread32_phys $EMAC0_TXQ_PRTY_MAP01]
+	puts [format "EMAC0_TXQ_PRTY_MAP01:		%08X" $data]
+
+	set EMAC0_RXQ_CTL0 0x310400A0
+	set data [memread32_phys $EMAC0_RXQ_CTL0]
+	puts [format "EMAC0_RXQ_CTL0:		%08X" $data]
+
+	set EMAC0_RXQ_CTL1 0x310400A4
+	set data [memread32_phys $EMAC0_RXQ_CTL1]
+	puts [format "EMAC0_RXQ_CTL1:		%08X" $data]
+
+	set EMAC0_RXQ_CTL2 0x310400A8
+	set data [memread32_phys $EMAC0_RXQ_CTL2]
+	puts [format "EMAC0_RXQ_CTL2:		%08X" $data]
+
+	set EMAC0_RXQ_CTL3 0x310400AC
+	set data [memread32_phys $EMAC0_RXQ_CTL3]
+	puts [format "EMAC0_RXQ_CTL3:		%08X" $data]
+
+	set EMAC0_MAC_ISTAT 0x310400B0
+	set data [memread32_phys $EMAC0_MAC_ISTAT]
+	puts [format "EMAC0_MAC_ISTAT:		%08X" $data]
+
+	set EMAC0_MAC_IEN 0x310400B4
+	set data [memread32_phys $EMAC0_MAC_IEN]
+	puts [format "EMAC0_MAC_IEN:		%08X" $data]
+
+	set EMAC0_RXTX_STAT 0x310400B8
+	set data [memread32_phys $EMAC0_RXTX_STAT]
+	puts [format "EMAC0_RXTX_STAT:		%08X" $data]
+
+	set EMAC0_LPI_CTLSTAT 0x310400D0
+	set data [memread32_phys $EMAC0_LPI_CTLSTAT]
+	puts [format "EMAC0_LPI_CTLSTAT:		%08X" $data]
+
+	set EMAC0_LPI_TMRSCTL 0x310400D4
+	set data [memread32_phys $EMAC0_LPI_TMRSCTL]
+	puts [format "EMAC0_LPI_TMRSCTL:		%08X" $data]
+
+	set EMAC0_LPI_ENTR_TMR 0x310400D8
+	set data [memread32_phys $EMAC0_LPI_ENTR_TMR]
+	puts [format "EMAC0_LPI_ENTR_TMR:		%08X" $data]
+
+	set EMAC0_ONEUS_TIC_CNT 0x310400DC
+	set data [memread32_phys $EMAC0_ONEUS_TIC_CNT]
+	puts [format "EMAC0_ONEUS_TIC_CNT:		%08X" $data]
+
+	set EMAC0_PHYIF_CTLSTAT 0x310400F8
+	set data [memread32_phys $EMAC0_PHYIF_CTLSTAT]
+	puts [format "EMAC0_PHYIF_CTLSTAT:		%08X" $data]
+
+	set EMAC0_MAC_DBG 0x31040114
+	set data [memread32_phys $EMAC0_MAC_DBG]
+	puts [format "EMAC0_MAC_DBG:		%08X" $data]
+
+	set EMAC0_HW_FTR_PSNT0 0x3104011C
+	set data [memread32_phys $EMAC0_HW_FTR_PSNT0]
+	puts [format "EMAC0_HW_FTR_PSNT0:		%08X" $data]
+
+	set EMAC0_HW_FTR_PSNT1 0x31040120
+	set data [memread32_phys $EMAC0_HW_FTR_PSNT1]
+	puts [format "EMAC0_HW_FTR_PSNT1:		%08X" $data]
+
+	set EMAC0_HW_FTR_PSNT2 0x31040124
+	set data [memread32_phys $EMAC0_HW_FTR_PSNT2]
+	puts [format "EMAC0_HW_FTR_PSNT2:		%08X" $data]
+
+	set EMAC0_HW_FTR_PSNT3 0x31040128
+	set data [memread32_phys $EMAC0_HW_FTR_PSNT3]
+	puts [format "EMAC0_HW_FTR_PSNT3:		%08X" $data]
+
+	set EMAC0_MDIO_ADDR 0x31040200
+	set data [memread32_phys $EMAC0_MDIO_ADDR]
+	puts [format "EMAC0_MDIO_ADDR:		%08X" $data]
+
+	set EMAC0_MDIO_DATA 0x31040204
+	set data [memread32_phys $EMAC0_MDIO_DATA]
+	puts [format "EMAC0_MDIO_DATA:		%08X" $data]
+
+	set EMAC0_ARP_ADDR 0x31040210
+	set data [memread32_phys $EMAC0_ARP_ADDR]
+	puts [format "EMAC0_ARP_ADDR:		%08X" $data]
+
+	set EMAC0_CSR_SW_CTL 0x31040230
+	set data [memread32_phys $EMAC0_CSR_SW_CTL]
+	puts [format "EMAC0_CSR_SW_CTL:		%08X" $data]
+
+	set EMAC0_FPE_CTLSTAT 0x31040234
+	set data [memread32_phys $EMAC0_FPE_CTLSTAT]
+	puts [format "EMAC0_FPE_CTLSTAT:		%08X" $data]
+
+	set EMAC0_SPLM_OFST_CFG 0x31040238
+	set data [memread32_phys $EMAC0_SPLM_OFST_CFG]
+	puts [format "EMAC0_SPLM_OFST_CFG:		%08X" $data]
+
+	set EMAC0_PRSNTM_NSEC 0x31040240
+	set data [memread32_phys $EMAC0_PRSNTM_NSEC]
+	puts [format "EMAC0_PRSNTM_NSEC:		%08X" $data]
+
+	set EMAC0_PRSNTM_UPDT 0x31040244
+	set data [memread32_phys $EMAC0_PRSNTM_UPDT]
+	puts [format "EMAC0_PRSNTM_UPDT:		%08X" $data]
+
+	set EMAC0_ADDR0_HI 0x31040300
+	set data [memread32_phys $EMAC0_ADDR0_HI]
+	puts [format "EMAC0_ADDR0_HI:		%08X" $data]
+
+	set EMAC0_ADDR0_LO 0x31040304
+	set data [memread32_phys $EMAC0_ADDR0_LO]
+	puts [format "EMAC0_ADDR0_LO:		%08X" $data]
+
+	set EMAC0_MMC_CTRL 0x31040700
+	set data [memread32_phys $EMAC0_MMC_CTRL]
+	puts [format "EMAC0_MMC_CTRL:		%08X" $data]
+
+	set EMAC0_MMC_RXINT 0x31040704
+	set data [memread32_phys $EMAC0_MMC_RXINT]
+	puts [format "EMAC0_MMC_RXINT:		%08X" $data]
+
+	set EMAC0_MMC_TXINT 0x31040708
+	set data [memread32_phys $EMAC0_MMC_TXINT]
+	puts [format "EMAC0_MMC_TXINT:		%08X" $data]
+
+	set EMAC0_MMC_RXIMSK 0x3104070C
+	set data [memread32_phys $EMAC0_MMC_RXIMSK]
+	puts [format "EMAC0_MMC_RXIMSK:		%08X" $data]
+
+	set EMAC0_MMC_TXIMSK 0x31040710
+	set data [memread32_phys $EMAC0_MMC_TXIMSK]
+	puts [format "EMAC0_MMC_TXIMSK:		%08X" $data]
+
+	set EMAC0_TX_OCNT_GB 0x31040714
+	set data [memread32_phys $EMAC0_TX_OCNT_GB]
+	puts [format "EMAC0_TX_OCNT_GB:		%08X" $data]
+
+	set EMAC0_TX_PCNT_GB 0x31040718
+	set data [memread32_phys $EMAC0_TX_PCNT_GB]
+	puts [format "EMAC0_TX_PCNT_GB:		%08X" $data]
+
+	set EMAC0_TX_BCST_PCNT_G 0x3104071C
+	set data [memread32_phys $EMAC0_TX_BCST_PCNT_G]
+	puts [format "EMAC0_TX_BCST_PCNT_G:		%08X" $data]
+
+	set EMAC0_TX_MCST_PCNT_G 0x31040720
+	set data [memread32_phys $EMAC0_TX_MCST_PCNT_G]
+	puts [format "EMAC0_TX_MCST_PCNT_G:		%08X" $data]
+
+	set EMAC0_TX64_GB 0x31040724
+	set data [memread32_phys $EMAC0_TX64_GB]
+	puts [format "EMAC0_TX64_GB:		%08X" $data]
+
+	set EMAC0_TX65TO127_GB 0x31040728
+	set data [memread32_phys $EMAC0_TX65TO127_GB]
+	puts [format "EMAC0_TX65TO127_GB:		%08X" $data]
+
+	set EMAC0_TX128TO255_GB 0x3104072C
+	set data [memread32_phys $EMAC0_TX128TO255_GB]
+	puts [format "EMAC0_TX128TO255_GB:		%08X" $data]
+
+	set EMAC0_TX256TO511_GB 0x31040730
+	set data [memread32_phys $EMAC0_TX256TO511_GB]
+	puts [format "EMAC0_TX256TO511_GB:		%08X" $data]
+
+	set EMAC0_TX512TO1023_GB 0x31040734
+	set data [memread32_phys $EMAC0_TX512TO1023_GB]
+	puts [format "EMAC0_TX512TO1023_GB:		%08X" $data]
+
+	set EMAC0_TX1024TOMAX_GB 0x31040738
+	set data [memread32_phys $EMAC0_TX1024TOMAX_GB]
+	puts [format "EMAC0_TX1024TOMAX_GB:		%08X" $data]
+
+	set EMAC0_TX_UCST_PCNT_GB 0x3104073C
+	set data [memread32_phys $EMAC0_TX_UCST_PCNT_GB]
+	puts [format "EMAC0_TX_UCST_PCNT_GB:		%08X" $data]
+
+	set EMAC0_TX_MCST_PCNT_GB 0x31040740
+	set data [memread32_phys $EMAC0_TX_MCST_PCNT_GB]
+	puts [format "EMAC0_TX_MCST_PCNT_GB:		%08X" $data]
+
+	set EMAC0_TX_BCST_PCNT_GB 0x31040744
+	set data [memread32_phys $EMAC0_TX_BCST_PCNT_GB]
+	puts [format "EMAC0_TX_BCST_PCNT_GB:		%08X" $data]
+
+	set EMAC0_TX_URFL_PCNT 0x31040748
+	set data [memread32_phys $EMAC0_TX_URFL_PCNT]
+	puts [format "EMAC0_TX_URFL_PCNT:		%08X" $data]
+
+	set EMAC0_TX_SNGLCOL_PCNT_G 0x3104074C
+	set data [memread32_phys $EMAC0_TX_SNGLCOL_PCNT_G]
+	puts [format "EMAC0_TX_SNGLCOL_PCNT_G:		%08X" $data]
+
+	set EMAC0_TX_MCOL_PCNT_G 0x31040750
+	set data [memread32_phys $EMAC0_TX_MCOL_PCNT_G]
+	puts [format "EMAC0_TX_MCOL_PCNT_G:		%08X" $data]
+
+	set EMAC0_TX_DFRD_PCNT 0x31040754
+	set data [memread32_phys $EMAC0_TX_DFRD_PCNT]
+	puts [format "EMAC0_TX_DFRD_PCNT:		%08X" $data]
+
+	set EMAC0_TX_LTCOL_PCNT 0x31040758
+	set data [memread32_phys $EMAC0_TX_LTCOL_PCNT]
+	puts [format "EMAC0_TX_LTCOL_PCNT:		%08X" $data]
+
+	set EMAC0_TX_EXCOL_PCNT 0x3104075C
+	set data [memread32_phys $EMAC0_TX_EXCOL_PCNT]
+	puts [format "EMAC0_TX_EXCOL_PCNT:		%08X" $data]
+
+	set EMAC0_TX_CRERR_PCNT 0x31040760
+	set data [memread32_phys $EMAC0_TX_CRERR_PCNT]
+	puts [format "EMAC0_TX_CRERR_PCNT:		%08X" $data]
+
+	set EMAC0_TX_OCNT_G 0x31040764
+	set data [memread32_phys $EMAC0_TX_OCNT_G]
+	puts [format "EMAC0_TX_OCNT_G:		%08X" $data]
+
+	set EMAC0_TX_PCNT_G 0x31040768
+	set data [memread32_phys $EMAC0_TX_PCNT_G]
+	puts [format "EMAC0_TX_PCNT_G:		%08X" $data]
+
+	set EMAC0_TX_EXDFRL_PCNT 0x3104076C
+	set data [memread32_phys $EMAC0_TX_EXDFRL_PCNT]
+	puts [format "EMAC0_TX_EXDFRL_PCNT:		%08X" $data]
+
+	set EMAC0_TX_PAUSE_PCNT 0x31040770
+	set data [memread32_phys $EMAC0_TX_PAUSE_PCNT]
+	puts [format "EMAC0_TX_PAUSE_PCNT:		%08X" $data]
+
+	set EMAC0_TX_VLAN_PCNT_G 0x31040774
+	set data [memread32_phys $EMAC0_TX_VLAN_PCNT_G]
+	puts [format "EMAC0_TX_VLAN_PCNT_G:		%08X" $data]
+
+	set EMAC0_TX_OSIZE_PCNT_G 0x31040778
+	set data [memread32_phys $EMAC0_TX_OSIZE_PCNT_G]
+	puts [format "EMAC0_TX_OSIZE_PCNT_G:		%08X" $data]
+
+	set EMAC0_RX_PCNT_GB 0x31040780
+	set data [memread32_phys $EMAC0_RX_PCNT_GB]
+	puts [format "EMAC0_RX_PCNT_GB:		%08X" $data]
+
+	set EMAC0_RX_OCNT_GB 0x31040784
+	set data [memread32_phys $EMAC0_RX_OCNT_GB]
+	puts [format "EMAC0_RX_OCNT_GB:		%08X" $data]
+
+	set EMAC0_RX_OCNT_G 0x31040788
+	set data [memread32_phys $EMAC0_RX_OCNT_G]
+	puts [format "EMAC0_RX_OCNT_G:		%08X" $data]
+
+	set EMAC0_RX_BCERR_PCNT_G 0x3104078C
+	set data [memread32_phys $EMAC0_RX_BCERR_PCNT_G]
+	puts [format "EMAC0_RX_BCERR_PCNT_G:		%08X" $data]
+
+	set EMAC0_RX_MCST_PCNT_G 0x31040790
+	set data [memread32_phys $EMAC0_RX_MCST_PCNT_G]
+	puts [format "EMAC0_RX_MCST_PCNT_G:		%08X" $data]
+
+	set EMAC0_RX_CRCERR_PCNT 0x31040794
+	set data [memread32_phys $EMAC0_RX_CRCERR_PCNT]
+	puts [format "EMAC0_RX_CRCERR_PCNT:		%08X" $data]
+
+	set EMAC0_RX_ALGNERR_PCNT 0x31040798
+	set data [memread32_phys $EMAC0_RX_ALGNERR_PCNT]
+	puts [format "EMAC0_RX_ALGNERR_PCNT:		%08X" $data]
+
+	set EMAC0_RX_RNTERR_PCNT 0x3104079C
+	set data [memread32_phys $EMAC0_RX_RNTERR_PCNT]
+	puts [format "EMAC0_RX_RNTERR_PCNT:		%08X" $data]
+
+	set EMAC0_RX_JBERR_PCNT 0x310407A0
+	set data [memread32_phys $EMAC0_RX_JBERR_PCNT]
+	puts [format "EMAC0_RX_JBERR_PCNT:		%08X" $data]
+
+	set EMAC0_RX_UNDRSZ_PCNT_G 0x310407A4
+	set data [memread32_phys $EMAC0_RX_UNDRSZ_PCNT_G]
+	puts [format "EMAC0_RX_UNDRSZ_PCNT_G:		%08X" $data]
+
+	set EMAC0_RX_OVRSZ_PCNT 0x310407A8
+	set data [memread32_phys $EMAC0_RX_OVRSZ_PCNT]
+	puts [format "EMAC0_RX_OVRSZ_PCNT:		%08X" $data]
+
+	set EMAC0_RX64_GB 0x310407AC
+	set data [memread32_phys $EMAC0_RX64_GB]
+	puts [format "EMAC0_RX64_GB:		%08X" $data]
+
+	set EMAC0_RX65TO127_GB 0x310407B0
+	set data [memread32_phys $EMAC0_RX65TO127_GB]
+	puts [format "EMAC0_RX65TO127_GB:		%08X" $data]
+
+	set EMAC0_RX128TO255_GB 0x310407B4
+	set data [memread32_phys $EMAC0_RX128TO255_GB]
+	puts [format "EMAC0_RX128TO255_GB:		%08X" $data]
+
+	set EMAC0_RX256TO511_GB 0x310407B8
+	set data [memread32_phys $EMAC0_RX256TO511_GB]
+	puts [format "EMAC0_RX256TO511_GB:		%08X" $data]
+
+	set EMAC0_RX512TO1023_GB 0x310407BC
+	set data [memread32_phys $EMAC0_RX512TO1023_GB]
+	puts [format "EMAC0_RX512TO1023_GB:		%08X" $data]
+
+	set EMAC0_RX1024TOMAX_GB 0x310407C0
+	set data [memread32_phys $EMAC0_RX1024TOMAX_GB]
+	puts [format "EMAC0_RX1024TOMAX_GB:		%08X" $data]
+
+	set EMAC0_RX_UCST_PCNT_G 0x310407C4
+	set data [memread32_phys $EMAC0_RX_UCST_PCNT_G]
+	puts [format "EMAC0_RX_UCST_PCNT_G:		%08X" $data]
+
+	set EMAC0_RX_LENERR_PCNT 0x310407C8
+	set data [memread32_phys $EMAC0_RX_LENERR_PCNT]
+	puts [format "EMAC0_RX_LENERR_PCNT:		%08X" $data]
+
+	set EMAC0_RX_ORTYPE_PCNT 0x310407CC
+	set data [memread32_phys $EMAC0_RX_ORTYPE_PCNT]
+	puts [format "EMAC0_RX_ORTYPE_PCNT:		%08X" $data]
+
+	set EMAC0_RX_PAUSE_PCNT 0x310407D0
+	set data [memread32_phys $EMAC0_RX_PAUSE_PCNT]
+	puts [format "EMAC0_RX_PAUSE_PCNT:		%08X" $data]
+
+	set EMAC0_RX_FIFOOVFL_PCNT 0x310407D4
+	set data [memread32_phys $EMAC0_RX_FIFOOVFL_PCNT]
+	puts [format "EMAC0_RX_FIFOOVFL_PCNT:		%08X" $data]
+
+	set EMAC0_RX_VLAN_PCNT_GB 0x310407D8
+	set data [memread32_phys $EMAC0_RX_VLAN_PCNT_GB]
+	puts [format "EMAC0_RX_VLAN_PCNT_GB:		%08X" $data]
+
+	set EMAC0_RX_WDTERR_PCNT 0x310407DC
+	set data [memread32_phys $EMAC0_RX_WDTERR_PCNT]
+	puts [format "EMAC0_RX_WDTERR_PCNT:		%08X" $data]
+
+	set EMAC0_RX_ERR_PCNT 0x310407E0
+	set data [memread32_phys $EMAC0_RX_ERR_PCNT]
+	puts [format "EMAC0_RX_ERR_PCNT:		%08X" $data]
+
+	set EMAC0_RX_CTL_PCNT_G 0x310407E4
+	set data [memread32_phys $EMAC0_RX_CTL_PCNT_G]
+	puts [format "EMAC0_RX_CTL_PCNT_G:		%08X" $data]
+
+	set EMAC0_TX_LPIUSEC_CNT 0x310407EC
+	set data [memread32_phys $EMAC0_TX_LPIUSEC_CNT]
+	puts [format "EMAC0_TX_LPIUSEC_CNT:		%08X" $data]
+
+	set EMAC0_TX_LPITRAN_CNT 0x310407F0
+	set data [memread32_phys $EMAC0_TX_LPITRAN_CNT]
+	puts [format "EMAC0_TX_LPITRAN_CNT:		%08X" $data]
+
+	set EMAC0_RX_LPIUSEC_CNT 0x310407F4
+	set data [memread32_phys $EMAC0_RX_LPIUSEC_CNT]
+	puts [format "EMAC0_RX_LPIUSEC_CNT:		%08X" $data]
+
+	set EMAC0_RX_LPITRAN_CNT 0x310407F8
+	set data [memread32_phys $EMAC0_RX_LPITRAN_CNT]
+	puts [format "EMAC0_RX_LPITRAN_CNT:		%08X" $data]
+
+	set EMAC0_MMC_IPC_RXIMSK 0x31040800
+	set data [memread32_phys $EMAC0_MMC_IPC_RXIMSK]
+	puts [format "EMAC0_MMC_IPC_RXIMSK:		%08X" $data]
+
+	set EMAC0_MMC_IPC_RXINT 0x31040808
+	set data [memread32_phys $EMAC0_MMC_IPC_RXINT]
+	puts [format "EMAC0_MMC_IPC_RXINT:		%08X" $data]
+
+	set EMAC0_RXIPV4_PCNT_G 0x31040810
+	set data [memread32_phys $EMAC0_RXIPV4_PCNT_G]
+	puts [format "EMAC0_RXIPV4_PCNT_G:		%08X" $data]
+
+	set EMAC0_RXIPV4_HDRERR_PCNT 0x31040814
+	set data [memread32_phys $EMAC0_RXIPV4_HDRERR_PCNT]
+	puts [format "EMAC0_RXIPV4_HDRERR_PCNT:		%08X" $data]
+
+	set EMAC0_RXIPV4_PYLD_PCNT 0x31040818
+	set data [memread32_phys $EMAC0_RXIPV4_PYLD_PCNT]
+	puts [format "EMAC0_RXIPV4_PYLD_PCNT:		%08X" $data]
+
+	set EMAC0_RXIPV4_FRGMT_PCNT 0x3104081C
+	set data [memread32_phys $EMAC0_RXIPV4_FRGMT_PCNT]
+	puts [format "EMAC0_RXIPV4_FRGMT_PCNT:		%08X" $data]
+
+	set EMAC0_RXIPV4_UDPCSD_PCNT 0x31040820
+	set data [memread32_phys $EMAC0_RXIPV4_UDPCSD_PCNT]
+	puts [format "EMAC0_RXIPV4_UDPCSD_PCNT:		%08X" $data]
+
+	set EMAC0_RXIPV6_PCNT_G 0x31040824
+	set data [memread32_phys $EMAC0_RXIPV6_PCNT_G]
+	puts [format "EMAC0_RXIPV6_PCNT_G:		%08X" $data]
+
+	set EMAC0_RXIPV6_HDRERR_PCNT 0x31040828
+	set data [memread32_phys $EMAC0_RXIPV6_HDRERR_PCNT]
+	puts [format "EMAC0_RXIPV6_HDRERR_PCNT:		%08X" $data]
+
+	set EMAC0_RXIPV6_PYLD_PCNT 0x3104082C
+	set data [memread32_phys $EMAC0_RXIPV6_PYLD_PCNT]
+	puts [format "EMAC0_RXIPV6_PYLD_PCNT:		%08X" $data]
+
+	set EMAC0_RXUDP_PCNT_G 0x31040830
+	set data [memread32_phys $EMAC0_RXUDP_PCNT_G]
+	puts [format "EMAC0_RXUDP_PCNT_G:		%08X" $data]
+
+	set EMAC0_RXUDP_ERR_PCNT 0x31040834
+	set data [memread32_phys $EMAC0_RXUDP_ERR_PCNT]
+	puts [format "EMAC0_RXUDP_ERR_PCNT:		%08X" $data]
+
+	set EMAC0_RXTCP_PCNT_G 0x31040838
+	set data [memread32_phys $EMAC0_RXTCP_PCNT_G]
+	puts [format "EMAC0_RXTCP_PCNT_G:		%08X" $data]
+
+	set EMAC0_RXTCP_ERR_PCNT 0x3104083C
+	set data [memread32_phys $EMAC0_RXTCP_ERR_PCNT]
+	puts [format "EMAC0_RXTCP_ERR_PCNT:		%08X" $data]
+
+	set EMAC0_RXICMP_PCNT_G 0x31040840
+	set data [memread32_phys $EMAC0_RXICMP_PCNT_G]
+	puts [format "EMAC0_RXICMP_PCNT_G:		%08X" $data]
+
+	set EMAC0_RXICMP_ERR_PCNT 0x31040844
+	set data [memread32_phys $EMAC0_RXICMP_ERR_PCNT]
+	puts [format "EMAC0_RXICMP_ERR_PCNT:		%08X" $data]
+
+	set EMAC0_RXIPV4_OCNT_G 0x31040850
+	set data [memread32_phys $EMAC0_RXIPV4_OCNT_G]
+	puts [format "EMAC0_RXIPV4_OCNT_G:		%08X" $data]
+
+	set EMAC0_RXIPV4_HDRERR_OCNT 0x31040854
+	set data [memread32_phys $EMAC0_RXIPV4_HDRERR_OCNT]
+	puts [format "EMAC0_RXIPV4_HDRERR_OCNT:		%08X" $data]
+
+	set EMAC0_RXIPV4_PYLD_OCNT 0x31040858
+	set data [memread32_phys $EMAC0_RXIPV4_PYLD_OCNT]
+	puts [format "EMAC0_RXIPV4_PYLD_OCNT:		%08X" $data]
+
+	set EMAC0_RXIPV4_FRGMT_OCNT 0x3104085C
+	set data [memread32_phys $EMAC0_RXIPV4_FRGMT_OCNT]
+	puts [format "EMAC0_RXIPV4_FRGMT_OCNT:		%08X" $data]
+
+	set EMAC0_RXIPV4_UDPCSD_OCNT 0x31040860
+	set data [memread32_phys $EMAC0_RXIPV4_UDPCSD_OCNT]
+	puts [format "EMAC0_RXIPV4_UDPCSD_OCNT:		%08X" $data]
+
+	set EMAC0_RXIPV6_OCNT_G 0x31040864
+	set data [memread32_phys $EMAC0_RXIPV6_OCNT_G]
+	puts [format "EMAC0_RXIPV6_OCNT_G:		%08X" $data]
+
+	set EMAC0_RXIPV6_HDRERR_OCNT 0x31040868
+	set data [memread32_phys $EMAC0_RXIPV6_HDRERR_OCNT]
+	puts [format "EMAC0_RXIPV6_HDRERR_OCNT:		%08X" $data]
+
+	set EMAC0_RXIPV6_PYLD_OCNT 0x3104086C
+	set data [memread32_phys $EMAC0_RXIPV6_PYLD_OCNT]
+	puts [format "EMAC0_RXIPV6_PYLD_OCNT:		%08X" $data]
+
+	set EMAC0_RXUDP_OCNT_G 0x31040870
+	set data [memread32_phys $EMAC0_RXUDP_OCNT_G]
+	puts [format "EMAC0_RXUDP_OCNT_G:		%08X" $data]
+
+	set EMAC0_RXUDP_ERR_OCNT 0x31040874
+	set data [memread32_phys $EMAC0_RXUDP_ERR_OCNT]
+	puts [format "EMAC0_RXUDP_ERR_OCNT:		%08X" $data]
+
+	set EMAC0_RXTCP_OCNT_G 0x31040878
+	set data [memread32_phys $EMAC0_RXTCP_OCNT_G]
+	puts [format "EMAC0_RXTCP_OCNT_G:		%08X" $data]
+
+	set EMAC0_RXTCP_ERR_OCNT 0x3104087C
+	set data [memread32_phys $EMAC0_RXTCP_ERR_OCNT]
+	puts [format "EMAC0_RXTCP_ERR_OCNT:		%08X" $data]
+
+	set EMAC0_RXICMP_OCNT_G 0x31040880
+	set data [memread32_phys $EMAC0_RXICMP_OCNT_G]
+	puts [format "EMAC0_RXICMP_OCNT_G:		%08X" $data]
+
+	set EMAC0_RXICMP_ERR_OCNT 0x31040884
+	set data [memread32_phys $EMAC0_RXICMP_ERR_OCNT]
+	puts [format "EMAC0_RXICMP_ERR_OCNT:		%08X" $data]
+
+	set EMAC0_MMC_FPE_TXINT 0x310408A0
+	set data [memread32_phys $EMAC0_MMC_FPE_TXINT]
+	puts [format "EMAC0_MMC_FPE_TXINT:		%08X" $data]
+
+	set EMAC0_MMC_FPE_TXIMSK 0x310408A4
+	set data [memread32_phys $EMAC0_MMC_FPE_TXIMSK]
+	puts [format "EMAC0_MMC_FPE_TXIMSK:		%08X" $data]
+
+	set EMAC0_TXFPE_FRGMNT_CNT 0x310408A8
+	set data [memread32_phys $EMAC0_TXFPE_FRGMNT_CNT]
+	puts [format "EMAC0_TXFPE_FRGMNT_CNT:		%08X" $data]
+
+	set EMAC0_TXHLDRQ_CNT 0x310408AC
+	set data [memread32_phys $EMAC0_TXHLDRQ_CNT]
+	puts [format "EMAC0_TXHLDRQ_CNT:		%08X" $data]
+
+	set EMAC0_MMC_FPE_RXINT 0x310408C0
+	set data [memread32_phys $EMAC0_MMC_FPE_RXINT]
+	puts [format "EMAC0_MMC_FPE_RXINT:		%08X" $data]
+
+	set EMAC0_MMC_FPE_RXIMSK 0x310408C4
+	set data [memread32_phys $EMAC0_MMC_FPE_RXIMSK]
+	puts [format "EMAC0_MMC_FPE_RXIMSK:		%08X" $data]
+
+	set EMAC0_RXPKT_ASERR_CNT 0x310408C8
+	set data [memread32_phys $EMAC0_RXPKT_ASERR_CNT]
+	puts [format "EMAC0_RXPKT_ASERR_CNT:		%08X" $data]
+
+	set EMAC0_RXPKT_SMDERR_CNT 0x310408CC
+	set data [memread32_phys $EMAC0_RXPKT_SMDERR_CNT]
+	puts [format "EMAC0_RXPKT_SMDERR_CNT:		%08X" $data]
+
+	set EMAC0_RXPKT_ASOK_CNT 0x310408D0
+	set data [memread32_phys $EMAC0_RXPKT_ASOK_CNT]
+	puts [format "EMAC0_RXPKT_ASOK_CNT:		%08X" $data]
+
+	set EMAC0_RXFPE_FRGMNT_CNT 0x310408D4
+	set data [memread32_phys $EMAC0_RXFPE_FRGMNT_CNT]
+	puts [format "EMAC0_RXFPE_FRGMNT_CNT:		%08X" $data]
+
+	set EMAC0_L3L4_CTL7 0x31040A50
+	set data [memread32_phys $EMAC0_L3L4_CTL7]
+	puts [format "EMAC0_L3L4_CTL7:		%08X" $data]
+
+	set EMAC0_L4_ADDR7 0x31040A54
+	set data [memread32_phys $EMAC0_L4_ADDR7]
+	puts [format "EMAC0_L4_ADDR7:		%08X" $data]
+
+	set EMAC0_L3_ADDR0_REG7 0x31040A60
+	set data [memread32_phys $EMAC0_L3_ADDR0_REG7]
+	puts [format "EMAC0_L3_ADDR0_REG7:		%08X" $data]
+
+	set EMAC0_L3_ADDR1_REG7 0x31040A64
+	set data [memread32_phys $EMAC0_L3_ADDR1_REG7]
+	puts [format "EMAC0_L3_ADDR1_REG7:		%08X" $data]
+
+	set EMAC0_L3_ADDR2_REG7 0x31040A68
+	set data [memread32_phys $EMAC0_L3_ADDR2_REG7]
+	puts [format "EMAC0_L3_ADDR2_REG7:		%08X" $data]
+
+	set EMAC0_L3_ADDR3_REG7 0x31040A6C
+	set data [memread32_phys $EMAC0_L3_ADDR3_REG7]
+	puts [format "EMAC0_L3_ADDR3_REG7:		%08X" $data]
+
+	set EMAC0_INDR_ACC_CTL 0x31040A70
+	set data [memread32_phys $EMAC0_INDR_ACC_CTL]
+	puts [format "EMAC0_INDR_ACC_CTL:		%08X" $data]
+
+	set EMAC0_INDR_ACC_DAT 0x31040A74
+	set data [memread32_phys $EMAC0_INDR_ACC_DAT]
+	puts [format "EMAC0_INDR_ACC_DAT:		%08X" $data]
+
+	set EMAC0_TM_CTL 0x31040B00
+	set data [memread32_phys $EMAC0_TM_CTL]
+	puts [format "EMAC0_TM_CTL:		%08X" $data]
+
+	set EMAC0_TM_SUBSEC 0x31040B04
+	set data [memread32_phys $EMAC0_TM_SUBSEC]
+	puts [format "EMAC0_TM_SUBSEC:		%08X" $data]
+
+	set EMAC0_TM_SEC 0x31040B08
+	set data [memread32_phys $EMAC0_TM_SEC]
+	puts [format "EMAC0_TM_SEC:		%08X" $data]
+
+	set EMAC0_TM_NSEC 0x31040B0C
+	set data [memread32_phys $EMAC0_TM_NSEC]
+	puts [format "EMAC0_TM_NSEC:		%08X" $data]
+
+	set EMAC0_TM_SECUPDT 0x31040B10
+	set data [memread32_phys $EMAC0_TM_SECUPDT]
+	puts [format "EMAC0_TM_SECUPDT:		%08X" $data]
+
+	set EMAC0_TM_NSECUPDT 0x31040B14
+	set data [memread32_phys $EMAC0_TM_NSECUPDT]
+	puts [format "EMAC0_TM_NSECUPDT:		%08X" $data]
+
+	set EMAC0_TM_ADDEND 0x31040B18
+	set data [memread32_phys $EMAC0_TM_ADDEND]
+	puts [format "EMAC0_TM_ADDEND:		%08X" $data]
+
+	set EMAC0_TM_HISEC 0x31040B1C
+	set data [memread32_phys $EMAC0_TM_HISEC]
+	puts [format "EMAC0_TM_HISEC:		%08X" $data]
+
+	set EMAC0_TM_STAT 0x31040B20
+	set data [memread32_phys $EMAC0_TM_STAT]
+	puts [format "EMAC0_TM_STAT:		%08X" $data]
+
+	set EMAC0_TXTMSTAT_NSEC 0x31040B30
+	set data [memread32_phys $EMAC0_TXTMSTAT_NSEC]
+	puts [format "EMAC0_TXTMSTAT_NSEC:		%08X" $data]
+
+	set EMAC0_TXTMSTAT_SEC 0x31040B34
+	set data [memread32_phys $EMAC0_TXTMSTAT_SEC]
+	puts [format "EMAC0_TXTMSTAT_SEC:		%08X" $data]
+
+	set EMAC0_TM_AUX_CTL 0x31040B40
+	set data [memread32_phys $EMAC0_TM_AUX_CTL]
+	puts [format "EMAC0_TM_AUX_CTL:		%08X" $data]
+
+	set EMAC0_TM_AUXTS_NSEC 0x31040B48
+	set data [memread32_phys $EMAC0_TM_AUXTS_NSEC]
+	puts [format "EMAC0_TM_AUXTS_NSEC:		%08X" $data]
+
+	set EMAC0_TM_AUXTS_SEC 0x31040B4C
+	set data [memread32_phys $EMAC0_TM_AUXTS_SEC]
+	puts [format "EMAC0_TM_AUXTS_SEC:		%08X" $data]
+
+	set EMAC0_TM_INGASYM_CORR 0x31040B50
+	set data [memread32_phys $EMAC0_TM_INGASYM_CORR]
+	puts [format "EMAC0_TM_INGASYM_CORR:		%08X" $data]
+
+	set EMAC0_TM_EGASYM_CORR 0x31040B54
+	set data [memread32_phys $EMAC0_TM_EGASYM_CORR]
+	puts [format "EMAC0_TM_EGASYM_CORR:		%08X" $data]
+
+	set EMAC0_TM_INGCORR_NSEC 0x31040B58
+	set data [memread32_phys $EMAC0_TM_INGCORR_NSEC]
+	puts [format "EMAC0_TM_INGCORR_NSEC:		%08X" $data]
+
+	set EMAC0_TM_EGCORR_NSEC 0x31040B5C
+	set data [memread32_phys $EMAC0_TM_EGCORR_NSEC]
+	puts [format "EMAC0_TM_EGCORR_NSEC:		%08X" $data]
+
+	set EMAC0_TM_INGCORR_SNSEC 0x31040B60
+	set data [memread32_phys $EMAC0_TM_INGCORR_SNSEC]
+	puts [format "EMAC0_TM_INGCORR_SNSEC:		%08X" $data]
+
+	set EMAC0_TM_EGCORR_SNSEC 0x31040B64
+	set data [memread32_phys $EMAC0_TM_EGCORR_SNSEC]
+	puts [format "EMAC0_TM_EGCORR_SNSEC:		%08X" $data]
+
+	set EMAC0_TM_ING_LTNCY 0x31040B68
+	set data [memread32_phys $EMAC0_TM_ING_LTNCY]
+	puts [format "EMAC0_TM_ING_LTNCY:		%08X" $data]
+
+	set EMAC0_TM_EG_LTNCY 0x31040B6C
+	set data [memread32_phys $EMAC0_TM_EG_LTNCY]
+	puts [format "EMAC0_TM_EG_LTNCY:		%08X" $data]
+
+	set EMAC0_PPS_CTL 0x31040B70
+	set data [memread32_phys $EMAC0_PPS_CTL]
+	puts [format "EMAC0_PPS_CTL:		%08X" $data]
+
+	set EMAC0_PTO_CTL 0x31040BC0
+	set data [memread32_phys $EMAC0_PTO_CTL]
+	puts [format "EMAC0_PTO_CTL:		%08X" $data]
+
+	set EMAC0_SRCPRT_IDNTY0 0x31040BC4
+	set data [memread32_phys $EMAC0_SRCPRT_IDNTY0]
+	puts [format "EMAC0_SRCPRT_IDNTY0:		%08X" $data]
+
+	set EMAC0_SRCPRT_IDNTY1 0x31040BC8
+	set data [memread32_phys $EMAC0_SRCPRT_IDNTY1]
+	puts [format "EMAC0_SRCPRT_IDNTY1:		%08X" $data]
+
+	set EMAC0_SRCPRT_IDNTY2 0x31040BCC
+	set data [memread32_phys $EMAC0_SRCPRT_IDNTY2]
+	puts [format "EMAC0_SRCPRT_IDNTY2:		%08X" $data]
+
+	set EMAC0_LOG_MSG_INTVL 0x31040BD0
+	set data [memread32_phys $EMAC0_LOG_MSG_INTVL]
+	puts [format "EMAC0_LOG_MSG_INTVL:		%08X" $data]
+
+	set EMAC0_MTL_OPMODE 0x31040C00
+	set data [memread32_phys $EMAC0_MTL_OPMODE]
+	puts [format "EMAC0_MTL_OPMODE:		%08X" $data]
+
+	set EMAC0_MTL_ISTAT 0x31040C20
+	set data [memread32_phys $EMAC0_MTL_ISTAT]
+	puts [format "EMAC0_MTL_ISTAT:		%08X" $data]
+
+	set EMAC0_RXQ_DMA_MAP0 0x31040C30
+	set data [memread32_phys $EMAC0_RXQ_DMA_MAP0]
+	puts [format "EMAC0_RXQ_DMA_MAP0:		%08X" $data]
+
+	set EMAC0_RXQ_DMA_MAP1 0x31040C34
+	set data [memread32_phys $EMAC0_RXQ_DMA_MAP1]
+	puts [format "EMAC0_RXQ_DMA_MAP1:		%08X" $data]
+
+	set EMAC0_TBS_CTRL 0x31040C40
+	set data [memread32_phys $EMAC0_TBS_CTRL]
+	puts [format "EMAC0_TBS_CTRL:		%08X" $data]
+
+	set EMAC0_EST_CTL 0x31040C50
+	set data [memread32_phys $EMAC0_EST_CTL]
+	puts [format "EMAC0_EST_CTL:		%08X" $data]
+
+	set EMAC0_EST_EXT_CTL 0x31040C54
+	set data [memread32_phys $EMAC0_EST_EXT_CTL]
+	puts [format "EMAC0_EST_EXT_CTL:		%08X" $data]
+
+	set EMAC0_EST_STAT 0x31040C58
+	set data [memread32_phys $EMAC0_EST_STAT]
+	puts [format "EMAC0_EST_STAT:		%08X" $data]
+
+	set EMAC0_EST_SCH_ERR 0x31040C60
+	set data [memread32_phys $EMAC0_EST_SCH_ERR]
+	puts [format "EMAC0_EST_SCH_ERR:		%08X" $data]
+
+	set EMAC0_EST_FRMSZ_ERR 0x31040C64
+	set data [memread32_phys $EMAC0_EST_FRMSZ_ERR]
+	puts [format "EMAC0_EST_FRMSZ_ERR:		%08X" $data]
+
+	set EMAC0_EST_FRMSZ_CAP 0x31040C68
+	set data [memread32_phys $EMAC0_EST_FRMSZ_CAP]
+	puts [format "EMAC0_EST_FRMSZ_CAP:		%08X" $data]
+
+	set EMAC0_EST_IEN 0x31040C70
+	set data [memread32_phys $EMAC0_EST_IEN]
+	puts [format "EMAC0_EST_IEN:		%08X" $data]
+
+	set EMAC0_EST_GCL_CTL 0x31040C80
+	set data [memread32_phys $EMAC0_EST_GCL_CTL]
+	puts [format "EMAC0_EST_GCL_CTL:		%08X" $data]
+
+	set EMAC0_EST_GCL_DAT 0x31040C84
+	set data [memread32_phys $EMAC0_EST_GCL_DAT]
+	puts [format "EMAC0_EST_GCL_DAT:		%08X" $data]
+
+	set EMAC0_FPE_CTRLSTS 0x31040C90
+	set data [memread32_phys $EMAC0_FPE_CTRLSTS]
+	puts [format "EMAC0_FPE_CTRLSTS:		%08X" $data]
+
+	set EMAC0_FPE_ADV 0x31040C94
+	set data [memread32_phys $EMAC0_FPE_ADV]
+	puts [format "EMAC0_FPE_ADV:		%08X" $data]
+
+	set EMAC0_TQ0_OPMODE 0x31040D00
+	set data [memread32_phys $EMAC0_TQ0_OPMODE]
+	puts [format "EMAC0_TQ0_OPMODE:		%08X" $data]
+
+	set EMAC0_TQ0_URFL 0x31040D04
+	set data [memread32_phys $EMAC0_TQ0_URFL]
+	puts [format "EMAC0_TQ0_URFL:		%08X" $data]
+
+	set EMAC0_TQ0_DBG 0x31040D08
+	set data [memread32_phys $EMAC0_TQ0_DBG]
+	puts [format "EMAC0_TQ0_DBG:		%08X" $data]
+
+	set EMAC0_TQ0_ETS_STAT 0x31040D14
+	set data [memread32_phys $EMAC0_TQ0_ETS_STAT]
+	puts [format "EMAC0_TQ0_ETS_STAT:		%08X" $data]
+
+	set EMAC0_TQ0_QTMWGT 0x31040D18
+	set data [memread32_phys $EMAC0_TQ0_QTMWGT]
+	puts [format "EMAC0_TQ0_QTMWGT:		%08X" $data]
+
+	set EMAC0_Q0_INT_CTLSTAT 0x31040D2C
+	set data [memread32_phys $EMAC0_Q0_INT_CTLSTAT]
+	puts [format "EMAC0_Q0_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC0_RQ0_OPMODE 0x31040D30
+	set data [memread32_phys $EMAC0_RQ0_OPMODE]
+	puts [format "EMAC0_RQ0_OPMODE:		%08X" $data]
+
+	set EMAC0_RQ0_MSPKTOF_CNT 0x31040D34
+	set data [memread32_phys $EMAC0_RQ0_MSPKTOF_CNT]
+	puts [format "EMAC0_RQ0_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC0_RQ0_DBG 0x31040D38
+	set data [memread32_phys $EMAC0_RQ0_DBG]
+	puts [format "EMAC0_RQ0_DBG:		%08X" $data]
+
+	set EMAC0_RQ0_CTL 0x31040D3C
+	set data [memread32_phys $EMAC0_RQ0_CTL]
+	puts [format "EMAC0_RQ0_CTL:		%08X" $data]
+
+	set EMAC0_DMA_MODE 0x31041000
+	set data [memread32_phys $EMAC0_DMA_MODE]
+	puts [format "EMAC0_DMA_MODE:		%08X" $data]
+
+	set EMAC0_DMA_SYSBMODE 0x31041004
+	set data [memread32_phys $EMAC0_DMA_SYSBMODE]
+	puts [format "EMAC0_DMA_SYSBMODE:		%08X" $data]
+
+	set EMAC0_DMA_ISTAT 0x31041008
+	set data [memread32_phys $EMAC0_DMA_ISTAT]
+	puts [format "EMAC0_DMA_ISTAT:		%08X" $data]
+
+	set EMAC0_DMA_DBG_STAT0 0x3104100C
+	set data [memread32_phys $EMAC0_DMA_DBG_STAT0]
+	puts [format "EMAC0_DMA_DBG_STAT0:		%08X" $data]
+
+	set EMAC0_DMA_DBG_STAT1 0x31041010
+	set data [memread32_phys $EMAC0_DMA_DBG_STAT1]
+	puts [format "EMAC0_DMA_DBG_STAT1:		%08X" $data]
+
+	set EMAC0_DMA_DBG_STAT2 0x31041014
+	set data [memread32_phys $EMAC0_DMA_DBG_STAT2]
+	puts [format "EMAC0_DMA_DBG_STAT2:		%08X" $data]
+
+	set EMAC0_DMA_TBS_CTL0 0x31041050
+	set data [memread32_phys $EMAC0_DMA_TBS_CTL0]
+	puts [format "EMAC0_DMA_TBS_CTL0:		%08X" $data]
+
+	set EMAC0_DMA_TBS_CTL1 0x31041054
+	set data [memread32_phys $EMAC0_DMA_TBS_CTL1]
+	puts [format "EMAC0_DMA_TBS_CTL1:		%08X" $data]
+
+	set EMAC0_DMA_TBS_CTL2 0x31041058
+	set data [memread32_phys $EMAC0_DMA_TBS_CTL2]
+	puts [format "EMAC0_DMA_TBS_CTL2:		%08X" $data]
+
+	set EMAC0_DMA_TBS_CTL3 0x3104105C
+	set data [memread32_phys $EMAC0_DMA_TBS_CTL3]
+	puts [format "EMAC0_DMA_TBS_CTL3:		%08X" $data]
+
+	set EMAC0_ADDR1_HI 0x31040308
+	set data [memread32_phys $EMAC0_ADDR1_HI]
+	puts [format "EMAC0_ADDR1_HI:		%08X" $data]
+
+	set EMAC0_ADDR2_HI 0x31040310
+	set data [memread32_phys $EMAC0_ADDR2_HI]
+	puts [format "EMAC0_ADDR2_HI:		%08X" $data]
+
+	set EMAC0_ADDR3_HI 0x31040318
+	set data [memread32_phys $EMAC0_ADDR3_HI]
+	puts [format "EMAC0_ADDR3_HI:		%08X" $data]
+
+	set EMAC0_ADDR4_HI 0x31040320
+	set data [memread32_phys $EMAC0_ADDR4_HI]
+	puts [format "EMAC0_ADDR4_HI:		%08X" $data]
+
+	set EMAC0_ADDR5_HI 0x31040328
+	set data [memread32_phys $EMAC0_ADDR5_HI]
+	puts [format "EMAC0_ADDR5_HI:		%08X" $data]
+
+	set EMAC0_ADDR6_HI 0x31040330
+	set data [memread32_phys $EMAC0_ADDR6_HI]
+	puts [format "EMAC0_ADDR6_HI:		%08X" $data]
+
+	set EMAC0_ADDR7_HI 0x31040338
+	set data [memread32_phys $EMAC0_ADDR7_HI]
+	puts [format "EMAC0_ADDR7_HI:		%08X" $data]
+
+	set EMAC0_ADDR8_HI 0x31040340
+	set data [memread32_phys $EMAC0_ADDR8_HI]
+	puts [format "EMAC0_ADDR8_HI:		%08X" $data]
+
+	set EMAC0_ADDR9_HI 0x31040348
+	set data [memread32_phys $EMAC0_ADDR9_HI]
+	puts [format "EMAC0_ADDR9_HI:		%08X" $data]
+
+	set EMAC0_ADDR10_HI 0x31040350
+	set data [memread32_phys $EMAC0_ADDR10_HI]
+	puts [format "EMAC0_ADDR10_HI:		%08X" $data]
+
+	set EMAC0_ADDR11_HI 0x31040358
+	set data [memread32_phys $EMAC0_ADDR11_HI]
+	puts [format "EMAC0_ADDR11_HI:		%08X" $data]
+
+	set EMAC0_ADDR12_HI 0x31040360
+	set data [memread32_phys $EMAC0_ADDR12_HI]
+	puts [format "EMAC0_ADDR12_HI:		%08X" $data]
+
+	set EMAC0_ADDR13_HI 0x31040368
+	set data [memread32_phys $EMAC0_ADDR13_HI]
+	puts [format "EMAC0_ADDR13_HI:		%08X" $data]
+
+	set EMAC0_ADDR14_HI 0x31040370
+	set data [memread32_phys $EMAC0_ADDR14_HI]
+	puts [format "EMAC0_ADDR14_HI:		%08X" $data]
+
+	set EMAC0_ADDR15_HI 0x31040378
+	set data [memread32_phys $EMAC0_ADDR15_HI]
+	puts [format "EMAC0_ADDR15_HI:		%08X" $data]
+
+	set EMAC0_ADDR16_HI 0x31040380
+	set data [memread32_phys $EMAC0_ADDR16_HI]
+	puts [format "EMAC0_ADDR16_HI:		%08X" $data]
+
+	set EMAC0_ADDR17_HI 0x31040388
+	set data [memread32_phys $EMAC0_ADDR17_HI]
+	puts [format "EMAC0_ADDR17_HI:		%08X" $data]
+
+	set EMAC0_ADDR18_HI 0x31040390
+	set data [memread32_phys $EMAC0_ADDR18_HI]
+	puts [format "EMAC0_ADDR18_HI:		%08X" $data]
+
+	set EMAC0_ADDR19_HI 0x31040398
+	set data [memread32_phys $EMAC0_ADDR19_HI]
+	puts [format "EMAC0_ADDR19_HI:		%08X" $data]
+
+	set EMAC0_ADDR20_HI 0x310403A0
+	set data [memread32_phys $EMAC0_ADDR20_HI]
+	puts [format "EMAC0_ADDR20_HI:		%08X" $data]
+
+	set EMAC0_ADDR21_HI 0x310403A8
+	set data [memread32_phys $EMAC0_ADDR21_HI]
+	puts [format "EMAC0_ADDR21_HI:		%08X" $data]
+
+	set EMAC0_ADDR22_HI 0x310403B0
+	set data [memread32_phys $EMAC0_ADDR22_HI]
+	puts [format "EMAC0_ADDR22_HI:		%08X" $data]
+
+	set EMAC0_ADDR23_HI 0x310403B8
+	set data [memread32_phys $EMAC0_ADDR23_HI]
+	puts [format "EMAC0_ADDR23_HI:		%08X" $data]
+
+	set EMAC0_ADDR24_HI 0x310403C0
+	set data [memread32_phys $EMAC0_ADDR24_HI]
+	puts [format "EMAC0_ADDR24_HI:		%08X" $data]
+
+	set EMAC0_ADDR25_HI 0x310403C8
+	set data [memread32_phys $EMAC0_ADDR25_HI]
+	puts [format "EMAC0_ADDR25_HI:		%08X" $data]
+
+	set EMAC0_ADDR26_HI 0x310403D0
+	set data [memread32_phys $EMAC0_ADDR26_HI]
+	puts [format "EMAC0_ADDR26_HI:		%08X" $data]
+
+	set EMAC0_ADDR27_HI 0x310403D8
+	set data [memread32_phys $EMAC0_ADDR27_HI]
+	puts [format "EMAC0_ADDR27_HI:		%08X" $data]
+
+	set EMAC0_ADDR28_HI 0x310403E0
+	set data [memread32_phys $EMAC0_ADDR28_HI]
+	puts [format "EMAC0_ADDR28_HI:		%08X" $data]
+
+	set EMAC0_ADDR29_HI 0x310403E8
+	set data [memread32_phys $EMAC0_ADDR29_HI]
+	puts [format "EMAC0_ADDR29_HI:		%08X" $data]
+
+	set EMAC0_ADDR30_HI 0x310403F0
+	set data [memread32_phys $EMAC0_ADDR30_HI]
+	puts [format "EMAC0_ADDR30_HI:		%08X" $data]
+
+	set EMAC0_ADDR31_HI 0x310403F8
+	set data [memread32_phys $EMAC0_ADDR31_HI]
+	puts [format "EMAC0_ADDR31_HI:		%08X" $data]
+
+	set EMAC0_ADDR1_LO 0x3104030C
+	set data [memread32_phys $EMAC0_ADDR1_LO]
+	puts [format "EMAC0_ADDR1_LO:		%08X" $data]
+
+	set EMAC0_ADDR2_LO 0x31040314
+	set data [memread32_phys $EMAC0_ADDR2_LO]
+	puts [format "EMAC0_ADDR2_LO:		%08X" $data]
+
+	set EMAC0_ADDR3_LO 0x3104031C
+	set data [memread32_phys $EMAC0_ADDR3_LO]
+	puts [format "EMAC0_ADDR3_LO:		%08X" $data]
+
+	set EMAC0_ADDR4_LO 0x31040324
+	set data [memread32_phys $EMAC0_ADDR4_LO]
+	puts [format "EMAC0_ADDR4_LO:		%08X" $data]
+
+	set EMAC0_ADDR5_LO 0x3104032C
+	set data [memread32_phys $EMAC0_ADDR5_LO]
+	puts [format "EMAC0_ADDR5_LO:		%08X" $data]
+
+	set EMAC0_ADDR6_LO 0x31040334
+	set data [memread32_phys $EMAC0_ADDR6_LO]
+	puts [format "EMAC0_ADDR6_LO:		%08X" $data]
+
+	set EMAC0_ADDR7_LO 0x3104033C
+	set data [memread32_phys $EMAC0_ADDR7_LO]
+	puts [format "EMAC0_ADDR7_LO:		%08X" $data]
+
+	set EMAC0_ADDR8_LO 0x31040344
+	set data [memread32_phys $EMAC0_ADDR8_LO]
+	puts [format "EMAC0_ADDR8_LO:		%08X" $data]
+
+	set EMAC0_ADDR9_LO 0x3104034C
+	set data [memread32_phys $EMAC0_ADDR9_LO]
+	puts [format "EMAC0_ADDR9_LO:		%08X" $data]
+
+	set EMAC0_ADDR10_LO 0x31040354
+	set data [memread32_phys $EMAC0_ADDR10_LO]
+	puts [format "EMAC0_ADDR10_LO:		%08X" $data]
+
+	set EMAC0_ADDR11_LO 0x3104035C
+	set data [memread32_phys $EMAC0_ADDR11_LO]
+	puts [format "EMAC0_ADDR11_LO:		%08X" $data]
+
+	set EMAC0_ADDR12_LO 0x31040364
+	set data [memread32_phys $EMAC0_ADDR12_LO]
+	puts [format "EMAC0_ADDR12_LO:		%08X" $data]
+
+	set EMAC0_ADDR13_LO 0x3104036C
+	set data [memread32_phys $EMAC0_ADDR13_LO]
+	puts [format "EMAC0_ADDR13_LO:		%08X" $data]
+
+	set EMAC0_ADDR14_LO 0x31040374
+	set data [memread32_phys $EMAC0_ADDR14_LO]
+	puts [format "EMAC0_ADDR14_LO:		%08X" $data]
+
+	set EMAC0_ADDR15_LO 0x3104037C
+	set data [memread32_phys $EMAC0_ADDR15_LO]
+	puts [format "EMAC0_ADDR15_LO:		%08X" $data]
+
+	set EMAC0_ADDR16_LO 0x31040384
+	set data [memread32_phys $EMAC0_ADDR16_LO]
+	puts [format "EMAC0_ADDR16_LO:		%08X" $data]
+
+	set EMAC0_ADDR17_LO 0x3104038C
+	set data [memread32_phys $EMAC0_ADDR17_LO]
+	puts [format "EMAC0_ADDR17_LO:		%08X" $data]
+
+	set EMAC0_ADDR18_LO 0x31040394
+	set data [memread32_phys $EMAC0_ADDR18_LO]
+	puts [format "EMAC0_ADDR18_LO:		%08X" $data]
+
+	set EMAC0_ADDR19_LO 0x3104039C
+	set data [memread32_phys $EMAC0_ADDR19_LO]
+	puts [format "EMAC0_ADDR19_LO:		%08X" $data]
+
+	set EMAC0_ADDR20_LO 0x310403A4
+	set data [memread32_phys $EMAC0_ADDR20_LO]
+	puts [format "EMAC0_ADDR20_LO:		%08X" $data]
+
+	set EMAC0_ADDR21_LO 0x310403AC
+	set data [memread32_phys $EMAC0_ADDR21_LO]
+	puts [format "EMAC0_ADDR21_LO:		%08X" $data]
+
+	set EMAC0_ADDR22_LO 0x310403B4
+	set data [memread32_phys $EMAC0_ADDR22_LO]
+	puts [format "EMAC0_ADDR22_LO:		%08X" $data]
+
+	set EMAC0_ADDR23_LO 0x310403BC
+	set data [memread32_phys $EMAC0_ADDR23_LO]
+	puts [format "EMAC0_ADDR23_LO:		%08X" $data]
+
+	set EMAC0_ADDR24_LO 0x310403C4
+	set data [memread32_phys $EMAC0_ADDR24_LO]
+	puts [format "EMAC0_ADDR24_LO:		%08X" $data]
+
+	set EMAC0_ADDR25_LO 0x310403CC
+	set data [memread32_phys $EMAC0_ADDR25_LO]
+	puts [format "EMAC0_ADDR25_LO:		%08X" $data]
+
+	set EMAC0_ADDR26_LO 0x310403D4
+	set data [memread32_phys $EMAC0_ADDR26_LO]
+	puts [format "EMAC0_ADDR26_LO:		%08X" $data]
+
+	set EMAC0_ADDR27_LO 0x310403DC
+	set data [memread32_phys $EMAC0_ADDR27_LO]
+	puts [format "EMAC0_ADDR27_LO:		%08X" $data]
+
+	set EMAC0_ADDR28_LO 0x310403E4
+	set data [memread32_phys $EMAC0_ADDR28_LO]
+	puts [format "EMAC0_ADDR28_LO:		%08X" $data]
+
+	set EMAC0_ADDR29_LO 0x310403EC
+	set data [memread32_phys $EMAC0_ADDR29_LO]
+	puts [format "EMAC0_ADDR29_LO:		%08X" $data]
+
+	set EMAC0_ADDR30_LO 0x310403F4
+	set data [memread32_phys $EMAC0_ADDR30_LO]
+	puts [format "EMAC0_ADDR30_LO:		%08X" $data]
+
+	set EMAC0_ADDR31_LO 0x310403FC
+	set data [memread32_phys $EMAC0_ADDR31_LO]
+	puts [format "EMAC0_ADDR31_LO:		%08X" $data]
+
+	set EMAC0_DMA0_CTL 0x31041100
+	set data [memread32_phys $EMAC0_DMA0_CTL]
+	puts [format "EMAC0_DMA0_CTL:		%08X" $data]
+
+	set EMAC0_DMA1_CTL 0x31041180
+	set data [memread32_phys $EMAC0_DMA1_CTL]
+	puts [format "EMAC0_DMA1_CTL:		%08X" $data]
+
+	set EMAC0_DMA2_CTL 0x31041200
+	set data [memread32_phys $EMAC0_DMA2_CTL]
+	puts [format "EMAC0_DMA2_CTL:		%08X" $data]
+
+	set EMAC0_DMA3_CTL 0x31041280
+	set data [memread32_phys $EMAC0_DMA3_CTL]
+	puts [format "EMAC0_DMA3_CTL:		%08X" $data]
+
+	set EMAC0_DMA4_CTL 0x31041300
+	set data [memread32_phys $EMAC0_DMA4_CTL]
+	puts [format "EMAC0_DMA4_CTL:		%08X" $data]
+
+	set EMAC0_DMA5_CTL 0x31041380
+	set data [memread32_phys $EMAC0_DMA5_CTL]
+	puts [format "EMAC0_DMA5_CTL:		%08X" $data]
+
+	set EMAC0_DMA6_CTL 0x31041400
+	set data [memread32_phys $EMAC0_DMA6_CTL]
+	puts [format "EMAC0_DMA6_CTL:		%08X" $data]
+
+	set EMAC0_DMA7_CTL 0x31041480
+	set data [memread32_phys $EMAC0_DMA7_CTL]
+	puts [format "EMAC0_DMA7_CTL:		%08X" $data]
+
+	set EMAC0_DMA0_TXCTL 0x31041104
+	set data [memread32_phys $EMAC0_DMA0_TXCTL]
+	puts [format "EMAC0_DMA0_TXCTL:		%08X" $data]
+
+	set EMAC0_DMA1_TXCTL 0x31041184
+	set data [memread32_phys $EMAC0_DMA1_TXCTL]
+	puts [format "EMAC0_DMA1_TXCTL:		%08X" $data]
+
+	set EMAC0_DMA2_TXCTL 0x31041204
+	set data [memread32_phys $EMAC0_DMA2_TXCTL]
+	puts [format "EMAC0_DMA2_TXCTL:		%08X" $data]
+
+	set EMAC0_DMA3_TXCTL 0x31041284
+	set data [memread32_phys $EMAC0_DMA3_TXCTL]
+	puts [format "EMAC0_DMA3_TXCTL:		%08X" $data]
+
+	set EMAC0_DMA4_TXCTL 0x31041304
+	set data [memread32_phys $EMAC0_DMA4_TXCTL]
+	puts [format "EMAC0_DMA4_TXCTL:		%08X" $data]
+
+	set EMAC0_DMA5_TXCTL 0x31041384
+	set data [memread32_phys $EMAC0_DMA5_TXCTL]
+	puts [format "EMAC0_DMA5_TXCTL:		%08X" $data]
+
+	set EMAC0_DMA6_TXCTL 0x31041404
+	set data [memread32_phys $EMAC0_DMA6_TXCTL]
+	puts [format "EMAC0_DMA6_TXCTL:		%08X" $data]
+
+	set EMAC0_DMA7_TXCTL 0x31041484
+	set data [memread32_phys $EMAC0_DMA7_TXCTL]
+	puts [format "EMAC0_DMA7_TXCTL:		%08X" $data]
+
+	set EMAC0_DMA0_RXCTL 0x31041108
+	set data [memread32_phys $EMAC0_DMA0_RXCTL]
+	puts [format "EMAC0_DMA0_RXCTL:		%08X" $data]
+
+	set EMAC0_DMA1_RXCTL 0x31041188
+	set data [memread32_phys $EMAC0_DMA1_RXCTL]
+	puts [format "EMAC0_DMA1_RXCTL:		%08X" $data]
+
+	set EMAC0_DMA2_RXCTL 0x31041208
+	set data [memread32_phys $EMAC0_DMA2_RXCTL]
+	puts [format "EMAC0_DMA2_RXCTL:		%08X" $data]
+
+	set EMAC0_DMA3_RXCTL 0x31041288
+	set data [memread32_phys $EMAC0_DMA3_RXCTL]
+	puts [format "EMAC0_DMA3_RXCTL:		%08X" $data]
+
+	set EMAC0_DMA4_RXCTL 0x31041308
+	set data [memread32_phys $EMAC0_DMA4_RXCTL]
+	puts [format "EMAC0_DMA4_RXCTL:		%08X" $data]
+
+	set EMAC0_DMA5_RXCTL 0x31041388
+	set data [memread32_phys $EMAC0_DMA5_RXCTL]
+	puts [format "EMAC0_DMA5_RXCTL:		%08X" $data]
+
+	set EMAC0_DMA6_RXCTL 0x31041408
+	set data [memread32_phys $EMAC0_DMA6_RXCTL]
+	puts [format "EMAC0_DMA6_RXCTL:		%08X" $data]
+
+	set EMAC0_DMA7_RXCTL 0x31041488
+	set data [memread32_phys $EMAC0_DMA7_RXCTL]
+	puts [format "EMAC0_DMA7_RXCTL:		%08X" $data]
+
+	set EMAC0_DMA0_TXDSC_ADDR 0x31041114
+	set data [memread32_phys $EMAC0_DMA0_TXDSC_ADDR]
+	puts [format "EMAC0_DMA0_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA1_TXDSC_ADDR 0x31041194
+	set data [memread32_phys $EMAC0_DMA1_TXDSC_ADDR]
+	puts [format "EMAC0_DMA1_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA2_TXDSC_ADDR 0x31041214
+	set data [memread32_phys $EMAC0_DMA2_TXDSC_ADDR]
+	puts [format "EMAC0_DMA2_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA3_TXDSC_ADDR 0x31041294
+	set data [memread32_phys $EMAC0_DMA3_TXDSC_ADDR]
+	puts [format "EMAC0_DMA3_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA4_TXDSC_ADDR 0x31041314
+	set data [memread32_phys $EMAC0_DMA4_TXDSC_ADDR]
+	puts [format "EMAC0_DMA4_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA5_TXDSC_ADDR 0x31041394
+	set data [memread32_phys $EMAC0_DMA5_TXDSC_ADDR]
+	puts [format "EMAC0_DMA5_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA6_TXDSC_ADDR 0x31041414
+	set data [memread32_phys $EMAC0_DMA6_TXDSC_ADDR]
+	puts [format "EMAC0_DMA6_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA7_TXDSC_ADDR 0x31041494
+	set data [memread32_phys $EMAC0_DMA7_TXDSC_ADDR]
+	puts [format "EMAC0_DMA7_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA0_RXDSC_ADDR 0x3104111C
+	set data [memread32_phys $EMAC0_DMA0_RXDSC_ADDR]
+	puts [format "EMAC0_DMA0_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA1_RXDSC_ADDR 0x3104119C
+	set data [memread32_phys $EMAC0_DMA1_RXDSC_ADDR]
+	puts [format "EMAC0_DMA1_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA2_RXDSC_ADDR 0x3104121C
+	set data [memread32_phys $EMAC0_DMA2_RXDSC_ADDR]
+	puts [format "EMAC0_DMA2_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA3_RXDSC_ADDR 0x3104129C
+	set data [memread32_phys $EMAC0_DMA3_RXDSC_ADDR]
+	puts [format "EMAC0_DMA3_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA4_RXDSC_ADDR 0x3104131C
+	set data [memread32_phys $EMAC0_DMA4_RXDSC_ADDR]
+	puts [format "EMAC0_DMA4_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA5_RXDSC_ADDR 0x3104139C
+	set data [memread32_phys $EMAC0_DMA5_RXDSC_ADDR]
+	puts [format "EMAC0_DMA5_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA6_RXDSC_ADDR 0x3104141C
+	set data [memread32_phys $EMAC0_DMA6_RXDSC_ADDR]
+	puts [format "EMAC0_DMA6_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA7_RXDSC_ADDR 0x3104149C
+	set data [memread32_phys $EMAC0_DMA7_RXDSC_ADDR]
+	puts [format "EMAC0_DMA7_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC0_DMA0_TXDSC_TLPTR 0x31041120
+	set data [memread32_phys $EMAC0_DMA0_TXDSC_TLPTR]
+	puts [format "EMAC0_DMA0_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA1_TXDSC_TLPTR 0x310411A0
+	set data [memread32_phys $EMAC0_DMA1_TXDSC_TLPTR]
+	puts [format "EMAC0_DMA1_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA2_TXDSC_TLPTR 0x31041220
+	set data [memread32_phys $EMAC0_DMA2_TXDSC_TLPTR]
+	puts [format "EMAC0_DMA2_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA3_TXDSC_TLPTR 0x310412A0
+	set data [memread32_phys $EMAC0_DMA3_TXDSC_TLPTR]
+	puts [format "EMAC0_DMA3_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA4_TXDSC_TLPTR 0x31041320
+	set data [memread32_phys $EMAC0_DMA4_TXDSC_TLPTR]
+	puts [format "EMAC0_DMA4_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA5_TXDSC_TLPTR 0x310413A0
+	set data [memread32_phys $EMAC0_DMA5_TXDSC_TLPTR]
+	puts [format "EMAC0_DMA5_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA6_TXDSC_TLPTR 0x31041420
+	set data [memread32_phys $EMAC0_DMA6_TXDSC_TLPTR]
+	puts [format "EMAC0_DMA6_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA7_TXDSC_TLPTR 0x310414A0
+	set data [memread32_phys $EMAC0_DMA7_TXDSC_TLPTR]
+	puts [format "EMAC0_DMA7_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA0_RXDSC_TLPTR 0x31041128
+	set data [memread32_phys $EMAC0_DMA0_RXDSC_TLPTR]
+	puts [format "EMAC0_DMA0_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA1_RXDSC_TLPTR 0x310411A8
+	set data [memread32_phys $EMAC0_DMA1_RXDSC_TLPTR]
+	puts [format "EMAC0_DMA1_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA2_RXDSC_TLPTR 0x31041228
+	set data [memread32_phys $EMAC0_DMA2_RXDSC_TLPTR]
+	puts [format "EMAC0_DMA2_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA3_RXDSC_TLPTR 0x310412A8
+	set data [memread32_phys $EMAC0_DMA3_RXDSC_TLPTR]
+	puts [format "EMAC0_DMA3_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA4_RXDSC_TLPTR 0x31041328
+	set data [memread32_phys $EMAC0_DMA4_RXDSC_TLPTR]
+	puts [format "EMAC0_DMA4_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA5_RXDSC_TLPTR 0x310413A8
+	set data [memread32_phys $EMAC0_DMA5_RXDSC_TLPTR]
+	puts [format "EMAC0_DMA5_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA6_RXDSC_TLPTR 0x31041428
+	set data [memread32_phys $EMAC0_DMA6_RXDSC_TLPTR]
+	puts [format "EMAC0_DMA6_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA7_RXDSC_TLPTR 0x310414A8
+	set data [memread32_phys $EMAC0_DMA7_RXDSC_TLPTR]
+	puts [format "EMAC0_DMA7_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC0_DMA0_TXDSC_RLEN 0x3104112C
+	set data [memread32_phys $EMAC0_DMA0_TXDSC_RLEN]
+	puts [format "EMAC0_DMA0_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC0_DMA1_TXDSC_RLEN 0x310411AC
+	set data [memread32_phys $EMAC0_DMA1_TXDSC_RLEN]
+	puts [format "EMAC0_DMA1_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC0_DMA2_TXDSC_RLEN 0x3104122C
+	set data [memread32_phys $EMAC0_DMA2_TXDSC_RLEN]
+	puts [format "EMAC0_DMA2_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC0_DMA3_TXDSC_RLEN 0x310412AC
+	set data [memread32_phys $EMAC0_DMA3_TXDSC_RLEN]
+	puts [format "EMAC0_DMA3_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC0_DMA4_TXDSC_RLEN 0x3104132C
+	set data [memread32_phys $EMAC0_DMA4_TXDSC_RLEN]
+	puts [format "EMAC0_DMA4_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC0_DMA5_TXDSC_RLEN 0x310413AC
+	set data [memread32_phys $EMAC0_DMA5_TXDSC_RLEN]
+	puts [format "EMAC0_DMA5_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC0_DMA6_TXDSC_RLEN 0x3104142C
+	set data [memread32_phys $EMAC0_DMA6_TXDSC_RLEN]
+	puts [format "EMAC0_DMA6_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC0_DMA7_TXDSC_RLEN 0x310414AC
+	set data [memread32_phys $EMAC0_DMA7_TXDSC_RLEN]
+	puts [format "EMAC0_DMA7_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC0_DMA0_RXCTL2 0x31041130
+	set data [memread32_phys $EMAC0_DMA0_RXCTL2]
+	puts [format "EMAC0_DMA0_RXCTL2:		%08X" $data]
+
+	set EMAC0_DMA1_RXCTL2 0x310411B0
+	set data [memread32_phys $EMAC0_DMA1_RXCTL2]
+	puts [format "EMAC0_DMA1_RXCTL2:		%08X" $data]
+
+	set EMAC0_DMA2_RXCTL2 0x31041230
+	set data [memread32_phys $EMAC0_DMA2_RXCTL2]
+	puts [format "EMAC0_DMA2_RXCTL2:		%08X" $data]
+
+	set EMAC0_DMA3_RXCTL2 0x310412B0
+	set data [memread32_phys $EMAC0_DMA3_RXCTL2]
+	puts [format "EMAC0_DMA3_RXCTL2:		%08X" $data]
+
+	set EMAC0_DMA4_RXCTL2 0x31041330
+	set data [memread32_phys $EMAC0_DMA4_RXCTL2]
+	puts [format "EMAC0_DMA4_RXCTL2:		%08X" $data]
+
+	set EMAC0_DMA5_RXCTL2 0x310413B0
+	set data [memread32_phys $EMAC0_DMA5_RXCTL2]
+	puts [format "EMAC0_DMA5_RXCTL2:		%08X" $data]
+
+	set EMAC0_DMA6_RXCTL2 0x31041430
+	set data [memread32_phys $EMAC0_DMA6_RXCTL2]
+	puts [format "EMAC0_DMA6_RXCTL2:		%08X" $data]
+
+	set EMAC0_DMA7_RXCTL2 0x310414B0
+	set data [memread32_phys $EMAC0_DMA7_RXCTL2]
+	puts [format "EMAC0_DMA7_RXCTL2:		%08X" $data]
+
+	set EMAC0_DMA0_IEN 0x31041134
+	set data [memread32_phys $EMAC0_DMA0_IEN]
+	puts [format "EMAC0_DMA0_IEN:		%08X" $data]
+
+	set EMAC0_DMA1_IEN 0x310411B4
+	set data [memread32_phys $EMAC0_DMA1_IEN]
+	puts [format "EMAC0_DMA1_IEN:		%08X" $data]
+
+	set EMAC0_DMA2_IEN 0x31041234
+	set data [memread32_phys $EMAC0_DMA2_IEN]
+	puts [format "EMAC0_DMA2_IEN:		%08X" $data]
+
+	set EMAC0_DMA3_IEN 0x310412B4
+	set data [memread32_phys $EMAC0_DMA3_IEN]
+	puts [format "EMAC0_DMA3_IEN:		%08X" $data]
+
+	set EMAC0_DMA4_IEN 0x31041334
+	set data [memread32_phys $EMAC0_DMA4_IEN]
+	puts [format "EMAC0_DMA4_IEN:		%08X" $data]
+
+	set EMAC0_DMA5_IEN 0x310413B4
+	set data [memread32_phys $EMAC0_DMA5_IEN]
+	puts [format "EMAC0_DMA5_IEN:		%08X" $data]
+
+	set EMAC0_DMA6_IEN 0x31041434
+	set data [memread32_phys $EMAC0_DMA6_IEN]
+	puts [format "EMAC0_DMA6_IEN:		%08X" $data]
+
+	set EMAC0_DMA7_IEN 0x310414B4
+	set data [memread32_phys $EMAC0_DMA7_IEN]
+	puts [format "EMAC0_DMA7_IEN:		%08X" $data]
+
+	set EMAC0_DMA0_RXINTWDTMR 0x31041138
+	set data [memread32_phys $EMAC0_DMA0_RXINTWDTMR]
+	puts [format "EMAC0_DMA0_RXINTWDTMR:		%08X" $data]
+
+	set EMAC0_DMA1_RXINTWDTMR 0x310411B8
+	set data [memread32_phys $EMAC0_DMA1_RXINTWDTMR]
+	puts [format "EMAC0_DMA1_RXINTWDTMR:		%08X" $data]
+
+	set EMAC0_DMA2_RXINTWDTMR 0x31041238
+	set data [memread32_phys $EMAC0_DMA2_RXINTWDTMR]
+	puts [format "EMAC0_DMA2_RXINTWDTMR:		%08X" $data]
+
+	set EMAC0_DMA3_RXINTWDTMR 0x310412B8
+	set data [memread32_phys $EMAC0_DMA3_RXINTWDTMR]
+	puts [format "EMAC0_DMA3_RXINTWDTMR:		%08X" $data]
+
+	set EMAC0_DMA4_RXINTWDTMR 0x31041338
+	set data [memread32_phys $EMAC0_DMA4_RXINTWDTMR]
+	puts [format "EMAC0_DMA4_RXINTWDTMR:		%08X" $data]
+
+	set EMAC0_DMA5_RXINTWDTMR 0x310413B8
+	set data [memread32_phys $EMAC0_DMA5_RXINTWDTMR]
+	puts [format "EMAC0_DMA5_RXINTWDTMR:		%08X" $data]
+
+	set EMAC0_DMA6_RXINTWDTMR 0x31041438
+	set data [memread32_phys $EMAC0_DMA6_RXINTWDTMR]
+	puts [format "EMAC0_DMA6_RXINTWDTMR:		%08X" $data]
+
+	set EMAC0_DMA7_RXINTWDTMR 0x310414B8
+	set data [memread32_phys $EMAC0_DMA7_RXINTWDTMR]
+	puts [format "EMAC0_DMA7_RXINTWDTMR:		%08X" $data]
+
+	set EMAC0_DMA0_SFN_CTLSTAT 0x3104113C
+	set data [memread32_phys $EMAC0_DMA0_SFN_CTLSTAT]
+	puts [format "EMAC0_DMA0_SFN_CTLSTAT:		%08X" $data]
+
+	set EMAC0_DMA1_SFN_CTLSTAT 0x310411BC
+	set data [memread32_phys $EMAC0_DMA1_SFN_CTLSTAT]
+	puts [format "EMAC0_DMA1_SFN_CTLSTAT:		%08X" $data]
+
+	set EMAC0_DMA2_SFN_CTLSTAT 0x3104123C
+	set data [memread32_phys $EMAC0_DMA2_SFN_CTLSTAT]
+	puts [format "EMAC0_DMA2_SFN_CTLSTAT:		%08X" $data]
+
+	set EMAC0_DMA3_SFN_CTLSTAT 0x310412BC
+	set data [memread32_phys $EMAC0_DMA3_SFN_CTLSTAT]
+	puts [format "EMAC0_DMA3_SFN_CTLSTAT:		%08X" $data]
+
+	set EMAC0_DMA4_SFN_CTLSTAT 0x3104133C
+	set data [memread32_phys $EMAC0_DMA4_SFN_CTLSTAT]
+	puts [format "EMAC0_DMA4_SFN_CTLSTAT:		%08X" $data]
+
+	set EMAC0_DMA5_SFN_CTLSTAT 0x310413BC
+	set data [memread32_phys $EMAC0_DMA5_SFN_CTLSTAT]
+	puts [format "EMAC0_DMA5_SFN_CTLSTAT:		%08X" $data]
+
+	set EMAC0_DMA6_SFN_CTLSTAT 0x3104143C
+	set data [memread32_phys $EMAC0_DMA6_SFN_CTLSTAT]
+	puts [format "EMAC0_DMA6_SFN_CTLSTAT:		%08X" $data]
+
+	set EMAC0_DMA7_SFN_CTLSTAT 0x310414BC
+	set data [memread32_phys $EMAC0_DMA7_SFN_CTLSTAT]
+	puts [format "EMAC0_DMA7_SFN_CTLSTAT:		%08X" $data]
+
+	set EMAC0_DMA0_TXDSC_CUR 0x31041144
+	set data [memread32_phys $EMAC0_DMA0_TXDSC_CUR]
+	puts [format "EMAC0_DMA0_TXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA1_TXDSC_CUR 0x310411C4
+	set data [memread32_phys $EMAC0_DMA1_TXDSC_CUR]
+	puts [format "EMAC0_DMA1_TXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA2_TXDSC_CUR 0x31041244
+	set data [memread32_phys $EMAC0_DMA2_TXDSC_CUR]
+	puts [format "EMAC0_DMA2_TXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA3_TXDSC_CUR 0x310412C4
+	set data [memread32_phys $EMAC0_DMA3_TXDSC_CUR]
+	puts [format "EMAC0_DMA3_TXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA4_TXDSC_CUR 0x31041344
+	set data [memread32_phys $EMAC0_DMA4_TXDSC_CUR]
+	puts [format "EMAC0_DMA4_TXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA5_TXDSC_CUR 0x310413C4
+	set data [memread32_phys $EMAC0_DMA5_TXDSC_CUR]
+	puts [format "EMAC0_DMA5_TXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA6_TXDSC_CUR 0x31041444
+	set data [memread32_phys $EMAC0_DMA6_TXDSC_CUR]
+	puts [format "EMAC0_DMA6_TXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA7_TXDSC_CUR 0x310414C4
+	set data [memread32_phys $EMAC0_DMA7_TXDSC_CUR]
+	puts [format "EMAC0_DMA7_TXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA0_RXDSC_CUR 0x3104114C
+	set data [memread32_phys $EMAC0_DMA0_RXDSC_CUR]
+	puts [format "EMAC0_DMA0_RXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA1_RXDSC_CUR 0x310411CC
+	set data [memread32_phys $EMAC0_DMA1_RXDSC_CUR]
+	puts [format "EMAC0_DMA1_RXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA2_RXDSC_CUR 0x3104124C
+	set data [memread32_phys $EMAC0_DMA2_RXDSC_CUR]
+	puts [format "EMAC0_DMA2_RXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA3_RXDSC_CUR 0x310412CC
+	set data [memread32_phys $EMAC0_DMA3_RXDSC_CUR]
+	puts [format "EMAC0_DMA3_RXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA4_RXDSC_CUR 0x3104134C
+	set data [memread32_phys $EMAC0_DMA4_RXDSC_CUR]
+	puts [format "EMAC0_DMA4_RXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA5_RXDSC_CUR 0x310413CC
+	set data [memread32_phys $EMAC0_DMA5_RXDSC_CUR]
+	puts [format "EMAC0_DMA5_RXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA6_RXDSC_CUR 0x3104144C
+	set data [memread32_phys $EMAC0_DMA6_RXDSC_CUR]
+	puts [format "EMAC0_DMA6_RXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA7_RXDSC_CUR 0x310414CC
+	set data [memread32_phys $EMAC0_DMA7_RXDSC_CUR]
+	puts [format "EMAC0_DMA7_RXDSC_CUR:		%08X" $data]
+
+	set EMAC0_DMA0_TXBUF_CUR 0x31041154
+	set data [memread32_phys $EMAC0_DMA0_TXBUF_CUR]
+	puts [format "EMAC0_DMA0_TXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA1_TXBUF_CUR 0x310411D4
+	set data [memread32_phys $EMAC0_DMA1_TXBUF_CUR]
+	puts [format "EMAC0_DMA1_TXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA2_TXBUF_CUR 0x31041254
+	set data [memread32_phys $EMAC0_DMA2_TXBUF_CUR]
+	puts [format "EMAC0_DMA2_TXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA3_TXBUF_CUR 0x310412D4
+	set data [memread32_phys $EMAC0_DMA3_TXBUF_CUR]
+	puts [format "EMAC0_DMA3_TXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA4_TXBUF_CUR 0x31041354
+	set data [memread32_phys $EMAC0_DMA4_TXBUF_CUR]
+	puts [format "EMAC0_DMA4_TXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA5_TXBUF_CUR 0x310413D4
+	set data [memread32_phys $EMAC0_DMA5_TXBUF_CUR]
+	puts [format "EMAC0_DMA5_TXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA6_TXBUF_CUR 0x31041454
+	set data [memread32_phys $EMAC0_DMA6_TXBUF_CUR]
+	puts [format "EMAC0_DMA6_TXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA7_TXBUF_CUR 0x310414D4
+	set data [memread32_phys $EMAC0_DMA7_TXBUF_CUR]
+	puts [format "EMAC0_DMA7_TXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA0_RXBUF_CUR 0x3104115C
+	set data [memread32_phys $EMAC0_DMA0_RXBUF_CUR]
+	puts [format "EMAC0_DMA0_RXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA1_RXBUF_CUR 0x310411DC
+	set data [memread32_phys $EMAC0_DMA1_RXBUF_CUR]
+	puts [format "EMAC0_DMA1_RXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA2_RXBUF_CUR 0x3104125C
+	set data [memread32_phys $EMAC0_DMA2_RXBUF_CUR]
+	puts [format "EMAC0_DMA2_RXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA3_RXBUF_CUR 0x310412DC
+	set data [memread32_phys $EMAC0_DMA3_RXBUF_CUR]
+	puts [format "EMAC0_DMA3_RXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA4_RXBUF_CUR 0x3104135C
+	set data [memread32_phys $EMAC0_DMA4_RXBUF_CUR]
+	puts [format "EMAC0_DMA4_RXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA5_RXBUF_CUR 0x310413DC
+	set data [memread32_phys $EMAC0_DMA5_RXBUF_CUR]
+	puts [format "EMAC0_DMA5_RXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA6_RXBUF_CUR 0x3104145C
+	set data [memread32_phys $EMAC0_DMA6_RXBUF_CUR]
+	puts [format "EMAC0_DMA6_RXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA7_RXBUF_CUR 0x310414DC
+	set data [memread32_phys $EMAC0_DMA7_RXBUF_CUR]
+	puts [format "EMAC0_DMA7_RXBUF_CUR:		%08X" $data]
+
+	set EMAC0_DMA0_STAT 0x31041160
+	set data [memread32_phys $EMAC0_DMA0_STAT]
+	puts [format "EMAC0_DMA0_STAT:		%08X" $data]
+
+	set EMAC0_DMA1_STAT 0x310411E0
+	set data [memread32_phys $EMAC0_DMA1_STAT]
+	puts [format "EMAC0_DMA1_STAT:		%08X" $data]
+
+	set EMAC0_DMA2_STAT 0x31041260
+	set data [memread32_phys $EMAC0_DMA2_STAT]
+	puts [format "EMAC0_DMA2_STAT:		%08X" $data]
+
+	set EMAC0_DMA3_STAT 0x310412E0
+	set data [memread32_phys $EMAC0_DMA3_STAT]
+	puts [format "EMAC0_DMA3_STAT:		%08X" $data]
+
+	set EMAC0_DMA4_STAT 0x31041360
+	set data [memread32_phys $EMAC0_DMA4_STAT]
+	puts [format "EMAC0_DMA4_STAT:		%08X" $data]
+
+	set EMAC0_DMA5_STAT 0x310413E0
+	set data [memread32_phys $EMAC0_DMA5_STAT]
+	puts [format "EMAC0_DMA5_STAT:		%08X" $data]
+
+	set EMAC0_DMA6_STAT 0x31041460
+	set data [memread32_phys $EMAC0_DMA6_STAT]
+	puts [format "EMAC0_DMA6_STAT:		%08X" $data]
+
+	set EMAC0_DMA7_STAT 0x310414E0
+	set data [memread32_phys $EMAC0_DMA7_STAT]
+	puts [format "EMAC0_DMA7_STAT:		%08X" $data]
+
+	set EMAC0_DMA0_MISSFRM_CNT 0x31041164
+	set data [memread32_phys $EMAC0_DMA0_MISSFRM_CNT]
+	puts [format "EMAC0_DMA0_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC0_DMA1_MISSFRM_CNT 0x310411E4
+	set data [memread32_phys $EMAC0_DMA1_MISSFRM_CNT]
+	puts [format "EMAC0_DMA1_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC0_DMA2_MISSFRM_CNT 0x31041264
+	set data [memread32_phys $EMAC0_DMA2_MISSFRM_CNT]
+	puts [format "EMAC0_DMA2_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC0_DMA3_MISSFRM_CNT 0x310412E4
+	set data [memread32_phys $EMAC0_DMA3_MISSFRM_CNT]
+	puts [format "EMAC0_DMA3_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC0_DMA4_MISSFRM_CNT 0x31041364
+	set data [memread32_phys $EMAC0_DMA4_MISSFRM_CNT]
+	puts [format "EMAC0_DMA4_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC0_DMA5_MISSFRM_CNT 0x310413E4
+	set data [memread32_phys $EMAC0_DMA5_MISSFRM_CNT]
+	puts [format "EMAC0_DMA5_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC0_DMA6_MISSFRM_CNT 0x31041464
+	set data [memread32_phys $EMAC0_DMA6_MISSFRM_CNT]
+	puts [format "EMAC0_DMA6_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC0_DMA7_MISSFRM_CNT 0x310414E4
+	set data [memread32_phys $EMAC0_DMA7_MISSFRM_CNT]
+	puts [format "EMAC0_DMA7_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC0_L3L4_CTL0 0x31040900
+	set data [memread32_phys $EMAC0_L3L4_CTL0]
+	puts [format "EMAC0_L3L4_CTL0:		%08X" $data]
+
+	set EMAC0_L3L4_CTL1 0x31040930
+	set data [memread32_phys $EMAC0_L3L4_CTL1]
+	puts [format "EMAC0_L3L4_CTL1:		%08X" $data]
+
+	set EMAC0_L3L4_CTL2 0x31040960
+	set data [memread32_phys $EMAC0_L3L4_CTL2]
+	puts [format "EMAC0_L3L4_CTL2:		%08X" $data]
+
+	set EMAC0_L3L4_CTL3 0x31040990
+	set data [memread32_phys $EMAC0_L3L4_CTL3]
+	puts [format "EMAC0_L3L4_CTL3:		%08X" $data]
+
+	set EMAC0_L3L4_CTL4 0x310409C0
+	set data [memread32_phys $EMAC0_L3L4_CTL4]
+	puts [format "EMAC0_L3L4_CTL4:		%08X" $data]
+
+	set EMAC0_L3L4_CTL5 0x310409F0
+	set data [memread32_phys $EMAC0_L3L4_CTL5]
+	puts [format "EMAC0_L3L4_CTL5:		%08X" $data]
+
+	set EMAC0_L3L4_CTL6 0x31040A20
+	set data [memread32_phys $EMAC0_L3L4_CTL6]
+	puts [format "EMAC0_L3L4_CTL6:		%08X" $data]
+
+	set EMAC0_L4_ADDR0 0x31040904
+	set data [memread32_phys $EMAC0_L4_ADDR0]
+	puts [format "EMAC0_L4_ADDR0:		%08X" $data]
+
+	set EMAC0_L4_ADDR1 0x31040934
+	set data [memread32_phys $EMAC0_L4_ADDR1]
+	puts [format "EMAC0_L4_ADDR1:		%08X" $data]
+
+	set EMAC0_L4_ADDR2 0x31040964
+	set data [memread32_phys $EMAC0_L4_ADDR2]
+	puts [format "EMAC0_L4_ADDR2:		%08X" $data]
+
+	set EMAC0_L4_ADDR3 0x31040994
+	set data [memread32_phys $EMAC0_L4_ADDR3]
+	puts [format "EMAC0_L4_ADDR3:		%08X" $data]
+
+	set EMAC0_L4_ADDR4 0x310409C4
+	set data [memread32_phys $EMAC0_L4_ADDR4]
+	puts [format "EMAC0_L4_ADDR4:		%08X" $data]
+
+	set EMAC0_L4_ADDR5 0x310409F4
+	set data [memread32_phys $EMAC0_L4_ADDR5]
+	puts [format "EMAC0_L4_ADDR5:		%08X" $data]
+
+	set EMAC0_L4_ADDR6 0x31040A24
+	set data [memread32_phys $EMAC0_L4_ADDR6]
+	puts [format "EMAC0_L4_ADDR6:		%08X" $data]
+
+	set EMAC0_L3_ADDR0_REG0 0x31040910
+	set data [memread32_phys $EMAC0_L3_ADDR0_REG0]
+	puts [format "EMAC0_L3_ADDR0_REG0:		%08X" $data]
+
+	set EMAC0_L3_ADDR0_REG1 0x31040940
+	set data [memread32_phys $EMAC0_L3_ADDR0_REG1]
+	puts [format "EMAC0_L3_ADDR0_REG1:		%08X" $data]
+
+	set EMAC0_L3_ADDR0_REG2 0x31040970
+	set data [memread32_phys $EMAC0_L3_ADDR0_REG2]
+	puts [format "EMAC0_L3_ADDR0_REG2:		%08X" $data]
+
+	set EMAC0_L3_ADDR0_REG3 0x310409A0
+	set data [memread32_phys $EMAC0_L3_ADDR0_REG3]
+	puts [format "EMAC0_L3_ADDR0_REG3:		%08X" $data]
+
+	set EMAC0_L3_ADDR0_REG4 0x310409D0
+	set data [memread32_phys $EMAC0_L3_ADDR0_REG4]
+	puts [format "EMAC0_L3_ADDR0_REG4:		%08X" $data]
+
+	set EMAC0_L3_ADDR0_REG5 0x31040A00
+	set data [memread32_phys $EMAC0_L3_ADDR0_REG5]
+	puts [format "EMAC0_L3_ADDR0_REG5:		%08X" $data]
+
+	set EMAC0_L3_ADDR0_REG6 0x31040A30
+	set data [memread32_phys $EMAC0_L3_ADDR0_REG6]
+	puts [format "EMAC0_L3_ADDR0_REG6:		%08X" $data]
+
+	set EMAC0_L3_ADDR1_REG0 0x31040914
+	set data [memread32_phys $EMAC0_L3_ADDR1_REG0]
+	puts [format "EMAC0_L3_ADDR1_REG0:		%08X" $data]
+
+	set EMAC0_L3_ADDR1_REG1 0x31040944
+	set data [memread32_phys $EMAC0_L3_ADDR1_REG1]
+	puts [format "EMAC0_L3_ADDR1_REG1:		%08X" $data]
+
+	set EMAC0_L3_ADDR1_REG2 0x31040974
+	set data [memread32_phys $EMAC0_L3_ADDR1_REG2]
+	puts [format "EMAC0_L3_ADDR1_REG2:		%08X" $data]
+
+	set EMAC0_L3_ADDR1_REG3 0x310409A4
+	set data [memread32_phys $EMAC0_L3_ADDR1_REG3]
+	puts [format "EMAC0_L3_ADDR1_REG3:		%08X" $data]
+
+	set EMAC0_L3_ADDR1_REG4 0x310409D4
+	set data [memread32_phys $EMAC0_L3_ADDR1_REG4]
+	puts [format "EMAC0_L3_ADDR1_REG4:		%08X" $data]
+
+	set EMAC0_L3_ADDR1_REG5 0x31040A04
+	set data [memread32_phys $EMAC0_L3_ADDR1_REG5]
+	puts [format "EMAC0_L3_ADDR1_REG5:		%08X" $data]
+
+	set EMAC0_L3_ADDR1_REG6 0x31040A34
+	set data [memread32_phys $EMAC0_L3_ADDR1_REG6]
+	puts [format "EMAC0_L3_ADDR1_REG6:		%08X" $data]
+
+	set EMAC0_L3_ADDR2_REG0 0x31040918
+	set data [memread32_phys $EMAC0_L3_ADDR2_REG0]
+	puts [format "EMAC0_L3_ADDR2_REG0:		%08X" $data]
+
+	set EMAC0_L3_ADDR2_REG1 0x31040948
+	set data [memread32_phys $EMAC0_L3_ADDR2_REG1]
+	puts [format "EMAC0_L3_ADDR2_REG1:		%08X" $data]
+
+	set EMAC0_L3_ADDR2_REG2 0x31040978
+	set data [memread32_phys $EMAC0_L3_ADDR2_REG2]
+	puts [format "EMAC0_L3_ADDR2_REG2:		%08X" $data]
+
+	set EMAC0_L3_ADDR2_REG3 0x310409A8
+	set data [memread32_phys $EMAC0_L3_ADDR2_REG3]
+	puts [format "EMAC0_L3_ADDR2_REG3:		%08X" $data]
+
+	set EMAC0_L3_ADDR2_REG4 0x310409D8
+	set data [memread32_phys $EMAC0_L3_ADDR2_REG4]
+	puts [format "EMAC0_L3_ADDR2_REG4:		%08X" $data]
+
+	set EMAC0_L3_ADDR2_REG5 0x31040A08
+	set data [memread32_phys $EMAC0_L3_ADDR2_REG5]
+	puts [format "EMAC0_L3_ADDR2_REG5:		%08X" $data]
+
+	set EMAC0_L3_ADDR2_REG6 0x31040A38
+	set data [memread32_phys $EMAC0_L3_ADDR2_REG6]
+	puts [format "EMAC0_L3_ADDR2_REG6:		%08X" $data]
+
+	set EMAC0_L3_ADDR3_REG0 0x3104091C
+	set data [memread32_phys $EMAC0_L3_ADDR3_REG0]
+	puts [format "EMAC0_L3_ADDR3_REG0:		%08X" $data]
+
+	set EMAC0_L3_ADDR3_REG1 0x3104094C
+	set data [memread32_phys $EMAC0_L3_ADDR3_REG1]
+	puts [format "EMAC0_L3_ADDR3_REG1:		%08X" $data]
+
+	set EMAC0_L3_ADDR3_REG2 0x3104097C
+	set data [memread32_phys $EMAC0_L3_ADDR3_REG2]
+	puts [format "EMAC0_L3_ADDR3_REG2:		%08X" $data]
+
+	set EMAC0_L3_ADDR3_REG3 0x310409AC
+	set data [memread32_phys $EMAC0_L3_ADDR3_REG3]
+	puts [format "EMAC0_L3_ADDR3_REG3:		%08X" $data]
+
+	set EMAC0_L3_ADDR3_REG4 0x310409DC
+	set data [memread32_phys $EMAC0_L3_ADDR3_REG4]
+	puts [format "EMAC0_L3_ADDR3_REG4:		%08X" $data]
+
+	set EMAC0_L3_ADDR3_REG5 0x31040A0C
+	set data [memread32_phys $EMAC0_L3_ADDR3_REG5]
+	puts [format "EMAC0_L3_ADDR3_REG5:		%08X" $data]
+
+	set EMAC0_L3_ADDR3_REG6 0x31040A3C
+	set data [memread32_phys $EMAC0_L3_ADDR3_REG6]
+	puts [format "EMAC0_L3_ADDR3_REG6:		%08X" $data]
+
+	set EMAC0_PPS0_TGTM_SEC 0x31040B80
+	set data [memread32_phys $EMAC0_PPS0_TGTM_SEC]
+	puts [format "EMAC0_PPS0_TGTM_SEC:		%08X" $data]
+
+	set EMAC0_PPS1_TGTM_SEC 0x31040B90
+	set data [memread32_phys $EMAC0_PPS1_TGTM_SEC]
+	puts [format "EMAC0_PPS1_TGTM_SEC:		%08X" $data]
+
+	set EMAC0_PPS2_TGTM_SEC 0x31040BA0
+	set data [memread32_phys $EMAC0_PPS2_TGTM_SEC]
+	puts [format "EMAC0_PPS2_TGTM_SEC:		%08X" $data]
+
+	set EMAC0_PPS3_TGTM_SEC 0x31040BB0
+	set data [memread32_phys $EMAC0_PPS3_TGTM_SEC]
+	puts [format "EMAC0_PPS3_TGTM_SEC:		%08X" $data]
+
+	set EMAC0_PPS0_TGTM_NSEC 0x31040B84
+	set data [memread32_phys $EMAC0_PPS0_TGTM_NSEC]
+	puts [format "EMAC0_PPS0_TGTM_NSEC:		%08X" $data]
+
+	set EMAC0_PPS1_TGTM_NSEC 0x31040B94
+	set data [memread32_phys $EMAC0_PPS1_TGTM_NSEC]
+	puts [format "EMAC0_PPS1_TGTM_NSEC:		%08X" $data]
+
+	set EMAC0_PPS2_TGTM_NSEC 0x31040BA4
+	set data [memread32_phys $EMAC0_PPS2_TGTM_NSEC]
+	puts [format "EMAC0_PPS2_TGTM_NSEC:		%08X" $data]
+
+	set EMAC0_PPS3_TGTM_NSEC 0x31040BB4
+	set data [memread32_phys $EMAC0_PPS3_TGTM_NSEC]
+	puts [format "EMAC0_PPS3_TGTM_NSEC:		%08X" $data]
+
+	set EMAC0_PPS0_INTVL 0x31040B88
+	set data [memread32_phys $EMAC0_PPS0_INTVL]
+	puts [format "EMAC0_PPS0_INTVL:		%08X" $data]
+
+	set EMAC0_PPS1_INTVL 0x31040B98
+	set data [memread32_phys $EMAC0_PPS1_INTVL]
+	puts [format "EMAC0_PPS1_INTVL:		%08X" $data]
+
+	set EMAC0_PPS2_INTVL 0x31040BA8
+	set data [memread32_phys $EMAC0_PPS2_INTVL]
+	puts [format "EMAC0_PPS2_INTVL:		%08X" $data]
+
+	set EMAC0_PPS3_INTVL 0x31040BB8
+	set data [memread32_phys $EMAC0_PPS3_INTVL]
+	puts [format "EMAC0_PPS3_INTVL:		%08X" $data]
+
+	set EMAC0_PPS0_WID 0x31040B8C
+	set data [memread32_phys $EMAC0_PPS0_WID]
+	puts [format "EMAC0_PPS0_WID:		%08X" $data]
+
+	set EMAC0_PPS1_WID 0x31040B9C
+	set data [memread32_phys $EMAC0_PPS1_WID]
+	puts [format "EMAC0_PPS1_WID:		%08X" $data]
+
+	set EMAC0_PPS2_WID 0x31040BAC
+	set data [memread32_phys $EMAC0_PPS2_WID]
+	puts [format "EMAC0_PPS2_WID:		%08X" $data]
+
+	set EMAC0_PPS3_WID 0x31040BBC
+	set data [memread32_phys $EMAC0_PPS3_WID]
+	puts [format "EMAC0_PPS3_WID:		%08X" $data]
+
+	set EMAC0_TQ1_OPMODE 0x31040D40
+	set data [memread32_phys $EMAC0_TQ1_OPMODE]
+	puts [format "EMAC0_TQ1_OPMODE:		%08X" $data]
+
+	set EMAC0_TQ2_OPMODE 0x31040D80
+	set data [memread32_phys $EMAC0_TQ2_OPMODE]
+	puts [format "EMAC0_TQ2_OPMODE:		%08X" $data]
+
+	set EMAC0_TQ3_OPMODE 0x31040DC0
+	set data [memread32_phys $EMAC0_TQ3_OPMODE]
+	puts [format "EMAC0_TQ3_OPMODE:		%08X" $data]
+
+	set EMAC0_TQ4_OPMODE 0x31040E00
+	set data [memread32_phys $EMAC0_TQ4_OPMODE]
+	puts [format "EMAC0_TQ4_OPMODE:		%08X" $data]
+
+	set EMAC0_TQ5_OPMODE 0x31040E40
+	set data [memread32_phys $EMAC0_TQ5_OPMODE]
+	puts [format "EMAC0_TQ5_OPMODE:		%08X" $data]
+
+	set EMAC0_TQ6_OPMODE 0x31040E80
+	set data [memread32_phys $EMAC0_TQ6_OPMODE]
+	puts [format "EMAC0_TQ6_OPMODE:		%08X" $data]
+
+	set EMAC0_TQ7_OPMODE 0x31040EC0
+	set data [memread32_phys $EMAC0_TQ7_OPMODE]
+	puts [format "EMAC0_TQ7_OPMODE:		%08X" $data]
+
+	set EMAC0_TQ1_URFL 0x31040D44
+	set data [memread32_phys $EMAC0_TQ1_URFL]
+	puts [format "EMAC0_TQ1_URFL:		%08X" $data]
+
+	set EMAC0_TQ2_URFL 0x31040D84
+	set data [memread32_phys $EMAC0_TQ2_URFL]
+	puts [format "EMAC0_TQ2_URFL:		%08X" $data]
+
+	set EMAC0_TQ3_URFL 0x31040DC4
+	set data [memread32_phys $EMAC0_TQ3_URFL]
+	puts [format "EMAC0_TQ3_URFL:		%08X" $data]
+
+	set EMAC0_TQ4_URFL 0x31040E04
+	set data [memread32_phys $EMAC0_TQ4_URFL]
+	puts [format "EMAC0_TQ4_URFL:		%08X" $data]
+
+	set EMAC0_TQ5_URFL 0x31040E44
+	set data [memread32_phys $EMAC0_TQ5_URFL]
+	puts [format "EMAC0_TQ5_URFL:		%08X" $data]
+
+	set EMAC0_TQ6_URFL 0x31040E84
+	set data [memread32_phys $EMAC0_TQ6_URFL]
+	puts [format "EMAC0_TQ6_URFL:		%08X" $data]
+
+	set EMAC0_TQ7_URFL 0x31040EC4
+	set data [memread32_phys $EMAC0_TQ7_URFL]
+	puts [format "EMAC0_TQ7_URFL:		%08X" $data]
+
+	set EMAC0_TQ1_DBG 0x31040D48
+	set data [memread32_phys $EMAC0_TQ1_DBG]
+	puts [format "EMAC0_TQ1_DBG:		%08X" $data]
+
+	set EMAC0_TQ2_DBG 0x31040D88
+	set data [memread32_phys $EMAC0_TQ2_DBG]
+	puts [format "EMAC0_TQ2_DBG:		%08X" $data]
+
+	set EMAC0_TQ3_DBG 0x31040DC8
+	set data [memread32_phys $EMAC0_TQ3_DBG]
+	puts [format "EMAC0_TQ3_DBG:		%08X" $data]
+
+	set EMAC0_TQ4_DBG 0x31040E08
+	set data [memread32_phys $EMAC0_TQ4_DBG]
+	puts [format "EMAC0_TQ4_DBG:		%08X" $data]
+
+	set EMAC0_TQ5_DBG 0x31040E48
+	set data [memread32_phys $EMAC0_TQ5_DBG]
+	puts [format "EMAC0_TQ5_DBG:		%08X" $data]
+
+	set EMAC0_TQ6_DBG 0x31040E88
+	set data [memread32_phys $EMAC0_TQ6_DBG]
+	puts [format "EMAC0_TQ6_DBG:		%08X" $data]
+
+	set EMAC0_TQ7_DBG 0x31040EC8
+	set data [memread32_phys $EMAC0_TQ7_DBG]
+	puts [format "EMAC0_TQ7_DBG:		%08X" $data]
+
+	set EMAC0_TQ1_ETS_CTL 0x31040D50
+	set data [memread32_phys $EMAC0_TQ1_ETS_CTL]
+	puts [format "EMAC0_TQ1_ETS_CTL:		%08X" $data]
+
+	set EMAC0_TQ2_ETS_CTL 0x31040D90
+	set data [memread32_phys $EMAC0_TQ2_ETS_CTL]
+	puts [format "EMAC0_TQ2_ETS_CTL:		%08X" $data]
+
+	set EMAC0_TQ3_ETS_CTL 0x31040DD0
+	set data [memread32_phys $EMAC0_TQ3_ETS_CTL]
+	puts [format "EMAC0_TQ3_ETS_CTL:		%08X" $data]
+
+	set EMAC0_TQ4_ETS_CTL 0x31040E10
+	set data [memread32_phys $EMAC0_TQ4_ETS_CTL]
+	puts [format "EMAC0_TQ4_ETS_CTL:		%08X" $data]
+
+	set EMAC0_TQ5_ETS_CTL 0x31040E50
+	set data [memread32_phys $EMAC0_TQ5_ETS_CTL]
+	puts [format "EMAC0_TQ5_ETS_CTL:		%08X" $data]
+
+	set EMAC0_TQ6_ETS_CTL 0x31040E90
+	set data [memread32_phys $EMAC0_TQ6_ETS_CTL]
+	puts [format "EMAC0_TQ6_ETS_CTL:		%08X" $data]
+
+	set EMAC0_TQ7_ETS_CTL 0x31040ED0
+	set data [memread32_phys $EMAC0_TQ7_ETS_CTL]
+	puts [format "EMAC0_TQ7_ETS_CTL:		%08X" $data]
+
+	set EMAC0_TQ1_ETS_STAT 0x31040D54
+	set data [memread32_phys $EMAC0_TQ1_ETS_STAT]
+	puts [format "EMAC0_TQ1_ETS_STAT:		%08X" $data]
+
+	set EMAC0_TQ2_ETS_STAT 0x31040D94
+	set data [memread32_phys $EMAC0_TQ2_ETS_STAT]
+	puts [format "EMAC0_TQ2_ETS_STAT:		%08X" $data]
+
+	set EMAC0_TQ3_ETS_STAT 0x31040DD4
+	set data [memread32_phys $EMAC0_TQ3_ETS_STAT]
+	puts [format "EMAC0_TQ3_ETS_STAT:		%08X" $data]
+
+	set EMAC0_TQ4_ETS_STAT 0x31040E14
+	set data [memread32_phys $EMAC0_TQ4_ETS_STAT]
+	puts [format "EMAC0_TQ4_ETS_STAT:		%08X" $data]
+
+	set EMAC0_TQ5_ETS_STAT 0x31040E54
+	set data [memread32_phys $EMAC0_TQ5_ETS_STAT]
+	puts [format "EMAC0_TQ5_ETS_STAT:		%08X" $data]
+
+	set EMAC0_TQ6_ETS_STAT 0x31040E94
+	set data [memread32_phys $EMAC0_TQ6_ETS_STAT]
+	puts [format "EMAC0_TQ6_ETS_STAT:		%08X" $data]
+
+	set EMAC0_TQ7_ETS_STAT 0x31040ED4
+	set data [memread32_phys $EMAC0_TQ7_ETS_STAT]
+	puts [format "EMAC0_TQ7_ETS_STAT:		%08X" $data]
+
+	set EMAC0_TQ1_QTMWGT 0x31040D58
+	set data [memread32_phys $EMAC0_TQ1_QTMWGT]
+	puts [format "EMAC0_TQ1_QTMWGT:		%08X" $data]
+
+	set EMAC0_TQ2_QTMWGT 0x31040D98
+	set data [memread32_phys $EMAC0_TQ2_QTMWGT]
+	puts [format "EMAC0_TQ2_QTMWGT:		%08X" $data]
+
+	set EMAC0_TQ3_QTMWGT 0x31040DD8
+	set data [memread32_phys $EMAC0_TQ3_QTMWGT]
+	puts [format "EMAC0_TQ3_QTMWGT:		%08X" $data]
+
+	set EMAC0_TQ4_QTMWGT 0x31040E18
+	set data [memread32_phys $EMAC0_TQ4_QTMWGT]
+	puts [format "EMAC0_TQ4_QTMWGT:		%08X" $data]
+
+	set EMAC0_TQ5_QTMWGT 0x31040E58
+	set data [memread32_phys $EMAC0_TQ5_QTMWGT]
+	puts [format "EMAC0_TQ5_QTMWGT:		%08X" $data]
+
+	set EMAC0_TQ6_QTMWGT 0x31040E98
+	set data [memread32_phys $EMAC0_TQ6_QTMWGT]
+	puts [format "EMAC0_TQ6_QTMWGT:		%08X" $data]
+
+	set EMAC0_TQ7_QTMWGT 0x31040ED8
+	set data [memread32_phys $EMAC0_TQ7_QTMWGT]
+	puts [format "EMAC0_TQ7_QTMWGT:		%08X" $data]
+
+	set EMAC0_TQ1_SSCRDT 0x31040D5C
+	set data [memread32_phys $EMAC0_TQ1_SSCRDT]
+	puts [format "EMAC0_TQ1_SSCRDT:		%08X" $data]
+
+	set EMAC0_TQ2_SSCRDT 0x31040D9C
+	set data [memread32_phys $EMAC0_TQ2_SSCRDT]
+	puts [format "EMAC0_TQ2_SSCRDT:		%08X" $data]
+
+	set EMAC0_TQ3_SSCRDT 0x31040DDC
+	set data [memread32_phys $EMAC0_TQ3_SSCRDT]
+	puts [format "EMAC0_TQ3_SSCRDT:		%08X" $data]
+
+	set EMAC0_TQ4_SSCRDT 0x31040E1C
+	set data [memread32_phys $EMAC0_TQ4_SSCRDT]
+	puts [format "EMAC0_TQ4_SSCRDT:		%08X" $data]
+
+	set EMAC0_TQ5_SSCRDT 0x31040E5C
+	set data [memread32_phys $EMAC0_TQ5_SSCRDT]
+	puts [format "EMAC0_TQ5_SSCRDT:		%08X" $data]
+
+	set EMAC0_TQ6_SSCRDT 0x31040E9C
+	set data [memread32_phys $EMAC0_TQ6_SSCRDT]
+	puts [format "EMAC0_TQ6_SSCRDT:		%08X" $data]
+
+	set EMAC0_TQ7_SSCRDT 0x31040EDC
+	set data [memread32_phys $EMAC0_TQ7_SSCRDT]
+	puts [format "EMAC0_TQ7_SSCRDT:		%08X" $data]
+
+	set EMAC0_TQ1_HICRDT 0x31040D60
+	set data [memread32_phys $EMAC0_TQ1_HICRDT]
+	puts [format "EMAC0_TQ1_HICRDT:		%08X" $data]
+
+	set EMAC0_TQ2_HICRDT 0x31040DA0
+	set data [memread32_phys $EMAC0_TQ2_HICRDT]
+	puts [format "EMAC0_TQ2_HICRDT:		%08X" $data]
+
+	set EMAC0_TQ3_HICRDT 0x31040DE0
+	set data [memread32_phys $EMAC0_TQ3_HICRDT]
+	puts [format "EMAC0_TQ3_HICRDT:		%08X" $data]
+
+	set EMAC0_TQ4_HICRDT 0x31040E20
+	set data [memread32_phys $EMAC0_TQ4_HICRDT]
+	puts [format "EMAC0_TQ4_HICRDT:		%08X" $data]
+
+	set EMAC0_TQ5_HICRDT 0x31040E60
+	set data [memread32_phys $EMAC0_TQ5_HICRDT]
+	puts [format "EMAC0_TQ5_HICRDT:		%08X" $data]
+
+	set EMAC0_TQ6_HICRDT 0x31040EA0
+	set data [memread32_phys $EMAC0_TQ6_HICRDT]
+	puts [format "EMAC0_TQ6_HICRDT:		%08X" $data]
+
+	set EMAC0_TQ7_HICRDT 0x31040EE0
+	set data [memread32_phys $EMAC0_TQ7_HICRDT]
+	puts [format "EMAC0_TQ7_HICRDT:		%08X" $data]
+
+	set EMAC0_TQ1_LOCRDT 0x31040D64
+	set data [memread32_phys $EMAC0_TQ1_LOCRDT]
+	puts [format "EMAC0_TQ1_LOCRDT:		%08X" $data]
+
+	set EMAC0_TQ2_LOCRDT 0x31040DA4
+	set data [memread32_phys $EMAC0_TQ2_LOCRDT]
+	puts [format "EMAC0_TQ2_LOCRDT:		%08X" $data]
+
+	set EMAC0_TQ3_LOCRDT 0x31040DE4
+	set data [memread32_phys $EMAC0_TQ3_LOCRDT]
+	puts [format "EMAC0_TQ3_LOCRDT:		%08X" $data]
+
+	set EMAC0_TQ4_LOCRDT 0x31040E24
+	set data [memread32_phys $EMAC0_TQ4_LOCRDT]
+	puts [format "EMAC0_TQ4_LOCRDT:		%08X" $data]
+
+	set EMAC0_TQ5_LOCRDT 0x31040E64
+	set data [memread32_phys $EMAC0_TQ5_LOCRDT]
+	puts [format "EMAC0_TQ5_LOCRDT:		%08X" $data]
+
+	set EMAC0_TQ6_LOCRDT 0x31040EA4
+	set data [memread32_phys $EMAC0_TQ6_LOCRDT]
+	puts [format "EMAC0_TQ6_LOCRDT:		%08X" $data]
+
+	set EMAC0_TQ7_LOCRDT 0x31040EE4
+	set data [memread32_phys $EMAC0_TQ7_LOCRDT]
+	puts [format "EMAC0_TQ7_LOCRDT:		%08X" $data]
+
+	set EMAC0_Q1_INT_CTLSTAT 0x31040D6C
+	set data [memread32_phys $EMAC0_Q1_INT_CTLSTAT]
+	puts [format "EMAC0_Q1_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC0_Q2_INT_CTLSTAT 0x31040DAC
+	set data [memread32_phys $EMAC0_Q2_INT_CTLSTAT]
+	puts [format "EMAC0_Q2_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC0_Q3_INT_CTLSTAT 0x31040DEC
+	set data [memread32_phys $EMAC0_Q3_INT_CTLSTAT]
+	puts [format "EMAC0_Q3_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC0_Q4_INT_CTLSTAT 0x31040E2C
+	set data [memread32_phys $EMAC0_Q4_INT_CTLSTAT]
+	puts [format "EMAC0_Q4_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC0_Q5_INT_CTLSTAT 0x31040E6C
+	set data [memread32_phys $EMAC0_Q5_INT_CTLSTAT]
+	puts [format "EMAC0_Q5_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC0_Q6_INT_CTLSTAT 0x31040EAC
+	set data [memread32_phys $EMAC0_Q6_INT_CTLSTAT]
+	puts [format "EMAC0_Q6_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC0_Q7_INT_CTLSTAT 0x31040EEC
+	set data [memread32_phys $EMAC0_Q7_INT_CTLSTAT]
+	puts [format "EMAC0_Q7_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC0_RQ1_OPMODE 0x31040D70
+	set data [memread32_phys $EMAC0_RQ1_OPMODE]
+	puts [format "EMAC0_RQ1_OPMODE:		%08X" $data]
+
+	set EMAC0_RQ2_OPMODE 0x31040DB0
+	set data [memread32_phys $EMAC0_RQ2_OPMODE]
+	puts [format "EMAC0_RQ2_OPMODE:		%08X" $data]
+
+	set EMAC0_RQ3_OPMODE 0x31040DF0
+	set data [memread32_phys $EMAC0_RQ3_OPMODE]
+	puts [format "EMAC0_RQ3_OPMODE:		%08X" $data]
+
+	set EMAC0_RQ4_OPMODE 0x31040E30
+	set data [memread32_phys $EMAC0_RQ4_OPMODE]
+	puts [format "EMAC0_RQ4_OPMODE:		%08X" $data]
+
+	set EMAC0_RQ5_OPMODE 0x31040E70
+	set data [memread32_phys $EMAC0_RQ5_OPMODE]
+	puts [format "EMAC0_RQ5_OPMODE:		%08X" $data]
+
+	set EMAC0_RQ6_OPMODE 0x31040EB0
+	set data [memread32_phys $EMAC0_RQ6_OPMODE]
+	puts [format "EMAC0_RQ6_OPMODE:		%08X" $data]
+
+	set EMAC0_RQ7_OPMODE 0x31040EF0
+	set data [memread32_phys $EMAC0_RQ7_OPMODE]
+	puts [format "EMAC0_RQ7_OPMODE:		%08X" $data]
+
+	set EMAC0_RQ1_MSPKTOF_CNT 0x31040D74
+	set data [memread32_phys $EMAC0_RQ1_MSPKTOF_CNT]
+	puts [format "EMAC0_RQ1_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC0_RQ2_MSPKTOF_CNT 0x31040DB4
+	set data [memread32_phys $EMAC0_RQ2_MSPKTOF_CNT]
+	puts [format "EMAC0_RQ2_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC0_RQ3_MSPKTOF_CNT 0x31040DF4
+	set data [memread32_phys $EMAC0_RQ3_MSPKTOF_CNT]
+	puts [format "EMAC0_RQ3_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC0_RQ4_MSPKTOF_CNT 0x31040E34
+	set data [memread32_phys $EMAC0_RQ4_MSPKTOF_CNT]
+	puts [format "EMAC0_RQ4_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC0_RQ5_MSPKTOF_CNT 0x31040E74
+	set data [memread32_phys $EMAC0_RQ5_MSPKTOF_CNT]
+	puts [format "EMAC0_RQ5_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC0_RQ6_MSPKTOF_CNT 0x31040EB4
+	set data [memread32_phys $EMAC0_RQ6_MSPKTOF_CNT]
+	puts [format "EMAC0_RQ6_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC0_RQ7_MSPKTOF_CNT 0x31040EF4
+	set data [memread32_phys $EMAC0_RQ7_MSPKTOF_CNT]
+	puts [format "EMAC0_RQ7_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC0_RQ1_DBG 0x31040D78
+	set data [memread32_phys $EMAC0_RQ1_DBG]
+	puts [format "EMAC0_RQ1_DBG:		%08X" $data]
+
+	set EMAC0_RQ2_DBG 0x31040DB8
+	set data [memread32_phys $EMAC0_RQ2_DBG]
+	puts [format "EMAC0_RQ2_DBG:		%08X" $data]
+
+	set EMAC0_RQ3_DBG 0x31040DF8
+	set data [memread32_phys $EMAC0_RQ3_DBG]
+	puts [format "EMAC0_RQ3_DBG:		%08X" $data]
+
+	set EMAC0_RQ4_DBG 0x31040E38
+	set data [memread32_phys $EMAC0_RQ4_DBG]
+	puts [format "EMAC0_RQ4_DBG:		%08X" $data]
+
+	set EMAC0_RQ5_DBG 0x31040E78
+	set data [memread32_phys $EMAC0_RQ5_DBG]
+	puts [format "EMAC0_RQ5_DBG:		%08X" $data]
+
+	set EMAC0_RQ6_DBG 0x31040EB8
+	set data [memread32_phys $EMAC0_RQ6_DBG]
+	puts [format "EMAC0_RQ6_DBG:		%08X" $data]
+
+	set EMAC0_RQ7_DBG 0x31040EF8
+	set data [memread32_phys $EMAC0_RQ7_DBG]
+	puts [format "EMAC0_RQ7_DBG:		%08X" $data]
+
+	set EMAC0_RQ1_CTL 0x31040D7C
+	set data [memread32_phys $EMAC0_RQ1_CTL]
+	puts [format "EMAC0_RQ1_CTL:		%08X" $data]
+
+	set EMAC0_RQ2_CTL 0x31040DBC
+	set data [memread32_phys $EMAC0_RQ2_CTL]
+	puts [format "EMAC0_RQ2_CTL:		%08X" $data]
+
+	set EMAC0_RQ3_CTL 0x31040DFC
+	set data [memread32_phys $EMAC0_RQ3_CTL]
+	puts [format "EMAC0_RQ3_CTL:		%08X" $data]
+
+	set EMAC0_RQ4_CTL 0x31040E3C
+	set data [memread32_phys $EMAC0_RQ4_CTL]
+	puts [format "EMAC0_RQ4_CTL:		%08X" $data]
+
+	set EMAC0_RQ5_CTL 0x31040E7C
+	set data [memread32_phys $EMAC0_RQ5_CTL]
+	puts [format "EMAC0_RQ5_CTL:		%08X" $data]
+
+	set EMAC0_RQ6_CTL 0x31040EBC
+	set data [memread32_phys $EMAC0_RQ6_CTL]
+	puts [format "EMAC0_RQ6_CTL:		%08X" $data]
+
+	set EMAC0_RQ7_CTL 0x31040EFC
+	set data [memread32_phys $EMAC0_RQ7_CTL]
+	puts [format "EMAC0_RQ7_CTL:		%08X" $data]
 
 }
 
 proc show_EMAC1 {} {
-	set EMAC1_MAC_Configuration 0x31042000
-	set data [memread32_phys $EMAC1_MAC_Configuration]
-	puts [format "EMAC1_MAC_Configuration:		%08X" $data]
-
-	set EMAC1_MAC_Ext_Configuration 0x31042004
-	set data [memread32_phys $EMAC1_MAC_Ext_Configuration]
-	puts [format "EMAC1_MAC_Ext_Configuration:		%08X" $data]
-
-	set EMAC1_MAC_Packet_Filter 0x31042008
-	set data [memread32_phys $EMAC1_MAC_Packet_Filter]
-	puts [format "EMAC1_MAC_Packet_Filter:		%08X" $data]
-
-	set EMAC1_MAC_Watchdog_Timeout 0x3104200C
-	set data [memread32_phys $EMAC1_MAC_Watchdog_Timeout]
-	puts [format "EMAC1_MAC_Watchdog_Timeout:		%08X" $data]
-
-	set EMAC1_MAC_Hash_Table_Reg0 0x31042010
-	set data [memread32_phys $EMAC1_MAC_Hash_Table_Reg0]
-	puts [format "EMAC1_MAC_Hash_Table_Reg0:		%08X" $data]
-
-	set EMAC1_MAC_Hash_Table_Reg1 0x31042014
-	set data [memread32_phys $EMAC1_MAC_Hash_Table_Reg1]
-	puts [format "EMAC1_MAC_Hash_Table_Reg1:		%08X" $data]
-
-	set EMAC1_MAC_VLAN_Tag_Ctrl 0x31042050
-	set data [memread32_phys $EMAC1_MAC_VLAN_Tag_Ctrl]
-	puts [format "EMAC1_MAC_VLAN_Tag_Ctrl:		%08X" $data]
-
-	set EMAC1_MAC_VLAN_Tag_Data 0x31042054
-	set data [memread32_phys $EMAC1_MAC_VLAN_Tag_Data]
-	puts [format "EMAC1_MAC_VLAN_Tag_Data:		%08X" $data]
-
-	set EMAC1_MAC_VLAN_Hash_Table 0x31042058
-	set data [memread32_phys $EMAC1_MAC_VLAN_Hash_Table]
-	puts [format "EMAC1_MAC_VLAN_Hash_Table:		%08X" $data]
-
-	set EMAC1_MAC_VLAN_Incl 0x31042060
-	set data [memread32_phys $EMAC1_MAC_VLAN_Incl]
-	puts [format "EMAC1_MAC_VLAN_Incl:		%08X" $data]
-
-	set EMAC1_MAC_Q0_Tx_Flow_Ctrl 0x31042070
-	set data [memread32_phys $EMAC1_MAC_Q0_Tx_Flow_Ctrl]
-	puts [format "EMAC1_MAC_Q0_Tx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC1_MAC_Rx_Flow_Ctrl 0x31042090
-	set data [memread32_phys $EMAC1_MAC_Rx_Flow_Ctrl]
-	puts [format "EMAC1_MAC_Rx_Flow_Ctrl:		%08X" $data]
-
-	set EMAC1_MAC_Interrupt_Status 0x310420B0
-	set data [memread32_phys $EMAC1_MAC_Interrupt_Status]
-	puts [format "EMAC1_MAC_Interrupt_Status:		%08X" $data]
-
-	set EMAC1_MAC_Interrupt_Enable 0x310420B4
-	set data [memread32_phys $EMAC1_MAC_Interrupt_Enable]
-	puts [format "EMAC1_MAC_Interrupt_Enable:		%08X" $data]
-
-	set EMAC1_MAC_Rx_Tx_Status 0x310420B8
-	set data [memread32_phys $EMAC1_MAC_Rx_Tx_Status]
-	puts [format "EMAC1_MAC_Rx_Tx_Status:		%08X" $data]
-
-	set EMAC1_MAC_PMT_Control_Status 0x310420C0
-	set data [memread32_phys $EMAC1_MAC_PMT_Control_Status]
-	puts [format "EMAC1_MAC_PMT_Control_Status:		%08X" $data]
-
-	set EMAC1_MAC_RWK_Packet_Filter 0x310420C4
-	set data [memread32_phys $EMAC1_MAC_RWK_Packet_Filter]
-	puts [format "EMAC1_MAC_RWK_Packet_Filter:		%08X" $data]
-
-	set EMAC1_MAC_Version 0x31042110
-	set data [memread32_phys $EMAC1_MAC_Version]
-	puts [format "EMAC1_MAC_Version:		%08X" $data]
-
-	set EMAC1_MAC_Debug 0x31042114
-	set data [memread32_phys $EMAC1_MAC_Debug]
-	puts [format "EMAC1_MAC_Debug:		%08X" $data]
-
-	set EMAC1_MAC_HW_Feature0 0x3104211C
-	set data [memread32_phys $EMAC1_MAC_HW_Feature0]
-	puts [format "EMAC1_MAC_HW_Feature0:		%08X" $data]
-
-	set EMAC1_MAC_HW_Feature1 0x31042120
-	set data [memread32_phys $EMAC1_MAC_HW_Feature1]
-	puts [format "EMAC1_MAC_HW_Feature1:		%08X" $data]
-
-	set EMAC1_MAC_HW_Feature2 0x31042124
-	set data [memread32_phys $EMAC1_MAC_HW_Feature2]
-	puts [format "EMAC1_MAC_HW_Feature2:		%08X" $data]
-
-	set EMAC1_MAC_HW_Feature3 0x31042128
-	set data [memread32_phys $EMAC1_MAC_HW_Feature3]
-	puts [format "EMAC1_MAC_HW_Feature3:		%08X" $data]
-
-	set EMAC1_MAC_MDIO_Address 0x31042200
-	set data [memread32_phys $EMAC1_MAC_MDIO_Address]
-	puts [format "EMAC1_MAC_MDIO_Address:		%08X" $data]
-
-	set EMAC1_MAC_MDIO_Data 0x31042204
-	set data [memread32_phys $EMAC1_MAC_MDIO_Data]
-	puts [format "EMAC1_MAC_MDIO_Data:		%08X" $data]
-
-	set EMAC1_MAC_CSR_SW_Ctrl 0x31042230
-	set data [memread32_phys $EMAC1_MAC_CSR_SW_Ctrl]
-	puts [format "EMAC1_MAC_CSR_SW_Ctrl:		%08X" $data]
-
-	set EMAC1_MAC_Address0_High 0x31042300
-	set data [memread32_phys $EMAC1_MAC_Address0_High]
-	puts [format "EMAC1_MAC_Address0_High:		%08X" $data]
-
-	set EMAC1_MAC_Address0_Low 0x31042304
-	set data [memread32_phys $EMAC1_MAC_Address0_Low]
-	puts [format "EMAC1_MAC_Address0_Low:		%08X" $data]
-
-	set EMAC1_MAC_Address1_High 0x31042308
-	set data [memread32_phys $EMAC1_MAC_Address1_High]
-	puts [format "EMAC1_MAC_Address1_High:		%08X" $data]
-
-	set EMAC1_MAC_Address1_Low 0x3104230C
-	set data [memread32_phys $EMAC1_MAC_Address1_Low]
-	puts [format "EMAC1_MAC_Address1_Low:		%08X" $data]
-
-	set EMAC1_MMC_Control 0x31042700
-	set data [memread32_phys $EMAC1_MMC_Control]
-	puts [format "EMAC1_MMC_Control:		%08X" $data]
-
-	set EMAC1_MMC_Rx_Interrupt 0x31042704
-	set data [memread32_phys $EMAC1_MMC_Rx_Interrupt]
-	puts [format "EMAC1_MMC_Rx_Interrupt:		%08X" $data]
-
-	set EMAC1_MMC_Tx_Interrupt 0x31042708
-	set data [memread32_phys $EMAC1_MMC_Tx_Interrupt]
-	puts [format "EMAC1_MMC_Tx_Interrupt:		%08X" $data]
-
-	set EMAC1_MMC_Rx_Interrupt_Mask 0x3104270C
-	set data [memread32_phys $EMAC1_MMC_Rx_Interrupt_Mask]
-	puts [format "EMAC1_MMC_Rx_Interrupt_Mask:		%08X" $data]
-
-	set EMAC1_MMC_Tx_Interrupt_Mask 0x31042710
-	set data [memread32_phys $EMAC1_MMC_Tx_Interrupt_Mask]
-	puts [format "EMAC1_MMC_Tx_Interrupt_Mask:		%08X" $data]
-
-	set EMAC1_Tx_Octet_Count_Good_Bad 0x31042714
-	set data [memread32_phys $EMAC1_Tx_Octet_Count_Good_Bad]
-	puts [format "EMAC1_Tx_Octet_Count_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_Packet_Count_Good_Bad 0x31042718
-	set data [memread32_phys $EMAC1_Tx_Packet_Count_Good_Bad]
-	puts [format "EMAC1_Tx_Packet_Count_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_Broadcast_Packets_Good 0x3104271C
-	set data [memread32_phys $EMAC1_Tx_Broadcast_Packets_Good]
-	puts [format "EMAC1_Tx_Broadcast_Packets_Good:		%08X" $data]
-
-	set EMAC1_Tx_Multicast_Packets_Good 0x31042720
-	set data [memread32_phys $EMAC1_Tx_Multicast_Packets_Good]
-	puts [format "EMAC1_Tx_Multicast_Packets_Good:		%08X" $data]
-
-	set EMAC1_Tx_64Octets_Packets_Good_Bad 0x31042724
-	set data [memread32_phys $EMAC1_Tx_64Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_64Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_65To127Octets_Packets_Good_Bad 0x31042728
-	set data [memread32_phys $EMAC1_Tx_65To127Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_65To127Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_128To255Octets_Packets_Good_Bad 0x3104272C
-	set data [memread32_phys $EMAC1_Tx_128To255Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_128To255Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_256To511Octets_Packets_Good_Bad 0x31042730
-	set data [memread32_phys $EMAC1_Tx_256To511Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_256To511Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_512To1023Octets_Packets_Good_Bad 0x31042734
-	set data [memread32_phys $EMAC1_Tx_512To1023Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_512To1023Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_1024ToMaxOctets_Packets_Good_Bad 0x31042738
-	set data [memread32_phys $EMAC1_Tx_1024ToMaxOctets_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_1024ToMaxOctets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_Unicast_Packets_Good_Bad 0x3104273C
-	set data [memread32_phys $EMAC1_Tx_Unicast_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_Unicast_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_Multicast_Packets_Good_Bad 0x31042740
-	set data [memread32_phys $EMAC1_Tx_Multicast_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_Multicast_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_Broadcast_Packets_Good_Bad 0x31042744
-	set data [memread32_phys $EMAC1_Tx_Broadcast_Packets_Good_Bad]
-	puts [format "EMAC1_Tx_Broadcast_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Tx_Underflow_Error_Packets 0x31042748
-	set data [memread32_phys $EMAC1_Tx_Underflow_Error_Packets]
-	puts [format "EMAC1_Tx_Underflow_Error_Packets:		%08X" $data]
-
-	set EMAC1_Tx_Single_Collision_Good_Packets 0x3104274C
-	set data [memread32_phys $EMAC1_Tx_Single_Collision_Good_Packets]
-	puts [format "EMAC1_Tx_Single_Collision_Good_Packets:		%08X" $data]
-
-	set EMAC1_Tx_Multiple_Collision_Good_Packets 0x31042750
-	set data [memread32_phys $EMAC1_Tx_Multiple_Collision_Good_Packets]
-	puts [format "EMAC1_Tx_Multiple_Collision_Good_Packets:		%08X" $data]
-
-	set EMAC1_Tx_Deferred_Packets 0x31042754
-	set data [memread32_phys $EMAC1_Tx_Deferred_Packets]
-	puts [format "EMAC1_Tx_Deferred_Packets:		%08X" $data]
-
-	set EMAC1_Tx_Late_Collision_Packets 0x31042758
-	set data [memread32_phys $EMAC1_Tx_Late_Collision_Packets]
-	puts [format "EMAC1_Tx_Late_Collision_Packets:		%08X" $data]
-
-	set EMAC1_Tx_Excessive_Collision_Packets 0x3104275C
-	set data [memread32_phys $EMAC1_Tx_Excessive_Collision_Packets]
-	puts [format "EMAC1_Tx_Excessive_Collision_Packets:		%08X" $data]
-
-	set EMAC1_Tx_Carrier_Error_Packets 0x31042760
-	set data [memread32_phys $EMAC1_Tx_Carrier_Error_Packets]
-	puts [format "EMAC1_Tx_Carrier_Error_Packets:		%08X" $data]
-
-	set EMAC1_Tx_Octet_Count_Good 0x31042764
-	set data [memread32_phys $EMAC1_Tx_Octet_Count_Good]
-	puts [format "EMAC1_Tx_Octet_Count_Good:		%08X" $data]
-
-	set EMAC1_Tx_Packet_Count_Good 0x31042768
-	set data [memread32_phys $EMAC1_Tx_Packet_Count_Good]
-	puts [format "EMAC1_Tx_Packet_Count_Good:		%08X" $data]
-
-	set EMAC1_Tx_Excessive_Deferral_Error 0x3104276C
-	set data [memread32_phys $EMAC1_Tx_Excessive_Deferral_Error]
-	puts [format "EMAC1_Tx_Excessive_Deferral_Error:		%08X" $data]
-
-	set EMAC1_Tx_Pause_Packets 0x31042770
-	set data [memread32_phys $EMAC1_Tx_Pause_Packets]
-	puts [format "EMAC1_Tx_Pause_Packets:		%08X" $data]
-
-	set EMAC1_Tx_VLAN_Packets_Good 0x31042774
-	set data [memread32_phys $EMAC1_Tx_VLAN_Packets_Good]
-	puts [format "EMAC1_Tx_VLAN_Packets_Good:		%08X" $data]
-
-	set EMAC1_Tx_OSize_Packets_Good 0x31042778
-	set data [memread32_phys $EMAC1_Tx_OSize_Packets_Good]
-	puts [format "EMAC1_Tx_OSize_Packets_Good:		%08X" $data]
-
-	set EMAC1_Rx_Packets_Count_Good_Bad 0x31042780
-	set data [memread32_phys $EMAC1_Rx_Packets_Count_Good_Bad]
-	puts [format "EMAC1_Rx_Packets_Count_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_Octet_Count_Good_Bad 0x31042784
-	set data [memread32_phys $EMAC1_Rx_Octet_Count_Good_Bad]
-	puts [format "EMAC1_Rx_Octet_Count_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_Octet_Count_Good 0x31042788
-	set data [memread32_phys $EMAC1_Rx_Octet_Count_Good]
-	puts [format "EMAC1_Rx_Octet_Count_Good:		%08X" $data]
-
-	set EMAC1_Rx_Broadcast_Packets_Good 0x3104278C
-	set data [memread32_phys $EMAC1_Rx_Broadcast_Packets_Good]
-	puts [format "EMAC1_Rx_Broadcast_Packets_Good:		%08X" $data]
-
-	set EMAC1_Rx_Multicast_Packets_Good 0x31042790
-	set data [memread32_phys $EMAC1_Rx_Multicast_Packets_Good]
-	puts [format "EMAC1_Rx_Multicast_Packets_Good:		%08X" $data]
-
-	set EMAC1_Rx_CRC_Error_Packets 0x31042794
-	set data [memread32_phys $EMAC1_Rx_CRC_Error_Packets]
-	puts [format "EMAC1_Rx_CRC_Error_Packets:		%08X" $data]
-
-	set EMAC1_Rx_Alignment_Error_Packets 0x31042798
-	set data [memread32_phys $EMAC1_Rx_Alignment_Error_Packets]
-	puts [format "EMAC1_Rx_Alignment_Error_Packets:		%08X" $data]
-
-	set EMAC1_Rx_Runt_Error_Packets 0x3104279C
-	set data [memread32_phys $EMAC1_Rx_Runt_Error_Packets]
-	puts [format "EMAC1_Rx_Runt_Error_Packets:		%08X" $data]
-
-	set EMAC1_Rx_Jabber_Error_Packets 0x310427A0
-	set data [memread32_phys $EMAC1_Rx_Jabber_Error_Packets]
-	puts [format "EMAC1_Rx_Jabber_Error_Packets:		%08X" $data]
-
-	set EMAC1_Rx_Undersize_Packets_Good 0x310427A4
-	set data [memread32_phys $EMAC1_Rx_Undersize_Packets_Good]
-	puts [format "EMAC1_Rx_Undersize_Packets_Good:		%08X" $data]
-
-	set EMAC1_Rx_Oversize_Packets_Good 0x310427A8
-	set data [memread32_phys $EMAC1_Rx_Oversize_Packets_Good]
-	puts [format "EMAC1_Rx_Oversize_Packets_Good:		%08X" $data]
-
-	set EMAC1_Rx_64Octets_Packets_Good_Bad 0x310427AC
-	set data [memread32_phys $EMAC1_Rx_64Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Rx_64Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_65To127Octets_Packets_Good_Bad 0x310427B0
-	set data [memread32_phys $EMAC1_Rx_65To127Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Rx_65To127Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_128To255Octets_Packets_Good_Bad 0x310427B4
-	set data [memread32_phys $EMAC1_Rx_128To255Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Rx_128To255Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_256To511Octets_Packets_Good_Bad 0x310427B8
-	set data [memread32_phys $EMAC1_Rx_256To511Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Rx_256To511Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_512To1023Octets_Packets_Good_Bad 0x310427BC
-	set data [memread32_phys $EMAC1_Rx_512To1023Octets_Packets_Good_Bad]
-	puts [format "EMAC1_Rx_512To1023Octets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_1024ToMaxOctets_Packets_Good_Bad 0x310427C0
-	set data [memread32_phys $EMAC1_Rx_1024ToMaxOctets_Packets_Good_Bad]
-	puts [format "EMAC1_Rx_1024ToMaxOctets_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_Unicast_Packets_Good 0x310427C4
-	set data [memread32_phys $EMAC1_Rx_Unicast_Packets_Good]
-	puts [format "EMAC1_Rx_Unicast_Packets_Good:		%08X" $data]
-
-	set EMAC1_Rx_Length_Error_Packets 0x310427C8
-	set data [memread32_phys $EMAC1_Rx_Length_Error_Packets]
-	puts [format "EMAC1_Rx_Length_Error_Packets:		%08X" $data]
-
-	set EMAC1_Rx_Out_Of_Range_Type_Packets 0x310427CC
-	set data [memread32_phys $EMAC1_Rx_Out_Of_Range_Type_Packets]
-	puts [format "EMAC1_Rx_Out_Of_Range_Type_Packets:		%08X" $data]
-
-	set EMAC1_Rx_Pause_Packets 0x310427D0
-	set data [memread32_phys $EMAC1_Rx_Pause_Packets]
-	puts [format "EMAC1_Rx_Pause_Packets:		%08X" $data]
-
-	set EMAC1_Rx_FIFO_Overflow_Packets 0x310427D4
-	set data [memread32_phys $EMAC1_Rx_FIFO_Overflow_Packets]
-	puts [format "EMAC1_Rx_FIFO_Overflow_Packets:		%08X" $data]
-
-	set EMAC1_Rx_VLAN_Packets_Good_Bad 0x310427D8
-	set data [memread32_phys $EMAC1_Rx_VLAN_Packets_Good_Bad]
-	puts [format "EMAC1_Rx_VLAN_Packets_Good_Bad:		%08X" $data]
-
-	set EMAC1_Rx_Watchdog_Error_Packets 0x310427DC
-	set data [memread32_phys $EMAC1_Rx_Watchdog_Error_Packets]
-	puts [format "EMAC1_Rx_Watchdog_Error_Packets:		%08X" $data]
-
-	set EMAC1_Rx_Receive_Error_Packets 0x310427E0
-	set data [memread32_phys $EMAC1_Rx_Receive_Error_Packets]
-	puts [format "EMAC1_Rx_Receive_Error_Packets:		%08X" $data]
-
-	set EMAC1_Rx_Control_Packets_Good 0x310427E4
-	set data [memread32_phys $EMAC1_Rx_Control_Packets_Good]
-	puts [format "EMAC1_Rx_Control_Packets_Good:		%08X" $data]
-
-	set EMAC1_MMC_IPC_Rx_Interrupt_Mask 0x31042800
-	set data [memread32_phys $EMAC1_MMC_IPC_Rx_Interrupt_Mask]
-	puts [format "EMAC1_MMC_IPC_Rx_Interrupt_Mask:		%08X" $data]
-
-	set EMAC1_MMC_IPC_Rx_Interrupt 0x31042808
-	set data [memread32_phys $EMAC1_MMC_IPC_Rx_Interrupt]
-	puts [format "EMAC1_MMC_IPC_Rx_Interrupt:		%08X" $data]
-
-	set EMAC1_RxIPv4_Good_Packets 0x31042810
-	set data [memread32_phys $EMAC1_RxIPv4_Good_Packets]
-	puts [format "EMAC1_RxIPv4_Good_Packets:		%08X" $data]
-
-	set EMAC1_RxIPv4_Header_Error_Packets 0x31042814
-	set data [memread32_phys $EMAC1_RxIPv4_Header_Error_Packets]
-	puts [format "EMAC1_RxIPv4_Header_Error_Packets:		%08X" $data]
-
-	set EMAC1_RxIPv4_No_Payload_Packets 0x31042818
-	set data [memread32_phys $EMAC1_RxIPv4_No_Payload_Packets]
-	puts [format "EMAC1_RxIPv4_No_Payload_Packets:		%08X" $data]
-
-	set EMAC1_RxIPv4_Fragmented_Packets 0x3104281C
-	set data [memread32_phys $EMAC1_RxIPv4_Fragmented_Packets]
-	puts [format "EMAC1_RxIPv4_Fragmented_Packets:		%08X" $data]
-
-	set EMAC1_RxIPv4_UDP_Checksum_Disabled_Packets 0x31042820
-	set data [memread32_phys $EMAC1_RxIPv4_UDP_Checksum_Disabled_Packets]
-	puts [format "EMAC1_RxIPv4_UDP_Checksum_Disabled_Packets:		%08X" $data]
-
-	set EMAC1_RxIPv6_Good_Packets 0x31042824
-	set data [memread32_phys $EMAC1_RxIPv6_Good_Packets]
-	puts [format "EMAC1_RxIPv6_Good_Packets:		%08X" $data]
-
-	set EMAC1_RxIPv6_Header_Error_Packets 0x31042828
-	set data [memread32_phys $EMAC1_RxIPv6_Header_Error_Packets]
-	puts [format "EMAC1_RxIPv6_Header_Error_Packets:		%08X" $data]
-
-	set EMAC1_RxIPv6_No_Payload_Packets 0x3104282C
-	set data [memread32_phys $EMAC1_RxIPv6_No_Payload_Packets]
-	puts [format "EMAC1_RxIPv6_No_Payload_Packets:		%08X" $data]
-
-	set EMAC1_RxUDP_Good_Packets 0x31042830
-	set data [memread32_phys $EMAC1_RxUDP_Good_Packets]
-	puts [format "EMAC1_RxUDP_Good_Packets:		%08X" $data]
-
-	set EMAC1_RxUDP_Error_Packets 0x31042834
-	set data [memread32_phys $EMAC1_RxUDP_Error_Packets]
-	puts [format "EMAC1_RxUDP_Error_Packets:		%08X" $data]
-
-	set EMAC1_RxTCP_Good_Packets 0x31042838
-	set data [memread32_phys $EMAC1_RxTCP_Good_Packets]
-	puts [format "EMAC1_RxTCP_Good_Packets:		%08X" $data]
-
-	set EMAC1_RxTCP_Error_Packets 0x3104283C
-	set data [memread32_phys $EMAC1_RxTCP_Error_Packets]
-	puts [format "EMAC1_RxTCP_Error_Packets:		%08X" $data]
-
-	set EMAC1_RxICMP_Good_Packets 0x31042840
-	set data [memread32_phys $EMAC1_RxICMP_Good_Packets]
-	puts [format "EMAC1_RxICMP_Good_Packets:		%08X" $data]
-
-	set EMAC1_RxICMP_Error_Packets 0x31042844
-	set data [memread32_phys $EMAC1_RxICMP_Error_Packets]
-	puts [format "EMAC1_RxICMP_Error_Packets:		%08X" $data]
-
-	set EMAC1_RxIPv4_Good_Octets 0x31042850
-	set data [memread32_phys $EMAC1_RxIPv4_Good_Octets]
-	puts [format "EMAC1_RxIPv4_Good_Octets:		%08X" $data]
-
-	set EMAC1_RxIPv4_Header_Error_Octets 0x31042854
-	set data [memread32_phys $EMAC1_RxIPv4_Header_Error_Octets]
-	puts [format "EMAC1_RxIPv4_Header_Error_Octets:		%08X" $data]
-
-	set EMAC1_RxIPv4_No_Payload_Octets 0x31042858
-	set data [memread32_phys $EMAC1_RxIPv4_No_Payload_Octets]
-	puts [format "EMAC1_RxIPv4_No_Payload_Octets:		%08X" $data]
-
-	set EMAC1_RxIPv4_Fragmented_Octets 0x3104285C
-	set data [memread32_phys $EMAC1_RxIPv4_Fragmented_Octets]
-	puts [format "EMAC1_RxIPv4_Fragmented_Octets:		%08X" $data]
-
-	set EMAC1_RxIPv4_UDP_Checksum_Disable_Octets 0x31042860
-	set data [memread32_phys $EMAC1_RxIPv4_UDP_Checksum_Disable_Octets]
-	puts [format "EMAC1_RxIPv4_UDP_Checksum_Disable_Octets:		%08X" $data]
-
-	set EMAC1_RxIPv6_Good_Octets 0x31042864
-	set data [memread32_phys $EMAC1_RxIPv6_Good_Octets]
-	puts [format "EMAC1_RxIPv6_Good_Octets:		%08X" $data]
-
-	set EMAC1_RxIPv6_Header_Error_Octets 0x31042868
-	set data [memread32_phys $EMAC1_RxIPv6_Header_Error_Octets]
-	puts [format "EMAC1_RxIPv6_Header_Error_Octets:		%08X" $data]
-
-	set EMAC1_RxIPv6_No_Payload_Octets 0x3104286C
-	set data [memread32_phys $EMAC1_RxIPv6_No_Payload_Octets]
-	puts [format "EMAC1_RxIPv6_No_Payload_Octets:		%08X" $data]
-
-	set EMAC1_RxUDP_Good_Octets 0x31042870
-	set data [memread32_phys $EMAC1_RxUDP_Good_Octets]
-	puts [format "EMAC1_RxUDP_Good_Octets:		%08X" $data]
-
-	set EMAC1_RxUDP_Error_Octets 0x31042874
-	set data [memread32_phys $EMAC1_RxUDP_Error_Octets]
-	puts [format "EMAC1_RxUDP_Error_Octets:		%08X" $data]
-
-	set EMAC1_RxTCP_Good_Octets 0x31042878
-	set data [memread32_phys $EMAC1_RxTCP_Good_Octets]
-	puts [format "EMAC1_RxTCP_Good_Octets:		%08X" $data]
-
-	set EMAC1_RxTCP_Error_Octets 0x3104287C
-	set data [memread32_phys $EMAC1_RxTCP_Error_Octets]
-	puts [format "EMAC1_RxTCP_Error_Octets:		%08X" $data]
-
-	set EMAC1_RxICMP_Good_Octets 0x31042880
-	set data [memread32_phys $EMAC1_RxICMP_Good_Octets]
-	puts [format "EMAC1_RxICMP_Good_Octets:		%08X" $data]
-
-	set EMAC1_RxICMP_Error_Octets 0x31042884
-	set data [memread32_phys $EMAC1_RxICMP_Error_Octets]
-	puts [format "EMAC1_RxICMP_Error_Octets:		%08X" $data]
-
-	set EMAC1_MAC_L3_L4_Control0 0x31042900
-	set data [memread32_phys $EMAC1_MAC_L3_L4_Control0]
-	puts [format "EMAC1_MAC_L3_L4_Control0:		%08X" $data]
-
-	set EMAC1_MAC_Layer4_Address0 0x31042904
-	set data [memread32_phys $EMAC1_MAC_Layer4_Address0]
-	puts [format "EMAC1_MAC_Layer4_Address0:		%08X" $data]
-
-	set EMAC1_MAC_Layer3_Addr0_Reg0 0x31042910
-	set data [memread32_phys $EMAC1_MAC_Layer3_Addr0_Reg0]
-	puts [format "EMAC1_MAC_Layer3_Addr0_Reg0:		%08X" $data]
-
-	set EMAC1_MAC_Layer3_Addr1_Reg0 0x31042914
-	set data [memread32_phys $EMAC1_MAC_Layer3_Addr1_Reg0]
-	puts [format "EMAC1_MAC_Layer3_Addr1_Reg0:		%08X" $data]
-
-	set EMAC1_MAC_Layer3_Addr2_Reg0 0x31042918
-	set data [memread32_phys $EMAC1_MAC_Layer3_Addr2_Reg0]
-	puts [format "EMAC1_MAC_Layer3_Addr2_Reg0:		%08X" $data]
-
-	set EMAC1_MAC_Layer3_Addr3_Reg0 0x3104291C
-	set data [memread32_phys $EMAC1_MAC_Layer3_Addr3_Reg0]
-	puts [format "EMAC1_MAC_Layer3_Addr3_Reg0:		%08X" $data]
-
-	set EMAC1_MTL_Operation_Mode 0x31042C00
-	set data [memread32_phys $EMAC1_MTL_Operation_Mode]
-	puts [format "EMAC1_MTL_Operation_Mode:		%08X" $data]
-
-	set EMAC1_MTL_Interrupt_Status 0x31042C20
-	set data [memread32_phys $EMAC1_MTL_Interrupt_Status]
-	puts [format "EMAC1_MTL_Interrupt_Status:		%08X" $data]
-
-	set EMAC1_MTL_TxQ0_Operation_Mode 0x31042D00
-	set data [memread32_phys $EMAC1_MTL_TxQ0_Operation_Mode]
-	puts [format "EMAC1_MTL_TxQ0_Operation_Mode:		%08X" $data]
-
-	set EMAC1_MTL_TxQ0_Underflow 0x31042D04
-	set data [memread32_phys $EMAC1_MTL_TxQ0_Underflow]
-	puts [format "EMAC1_MTL_TxQ0_Underflow:		%08X" $data]
-
-	set EMAC1_MTL_TxQ0_Debug 0x31042D08
-	set data [memread32_phys $EMAC1_MTL_TxQ0_Debug]
-	puts [format "EMAC1_MTL_TxQ0_Debug:		%08X" $data]
-
-	set EMAC1_MTL_Q0_Interrupt_Control_Status 0x31042D2C
-	set data [memread32_phys $EMAC1_MTL_Q0_Interrupt_Control_Status]
-	puts [format "EMAC1_MTL_Q0_Interrupt_Control_Status:		%08X" $data]
-
-	set EMAC1_MTL_RxQ0_Operation_Mode 0x31042D30
-	set data [memread32_phys $EMAC1_MTL_RxQ0_Operation_Mode]
-	puts [format "EMAC1_MTL_RxQ0_Operation_Mode:		%08X" $data]
-
-	set EMAC1_MTL_RxQ0_Missed_Packet_Overflow_Cnt 0x31042D34
-	set data [memread32_phys $EMAC1_MTL_RxQ0_Missed_Packet_Overflow_Cnt]
-	puts [format "EMAC1_MTL_RxQ0_Missed_Packet_Overflow_Cnt:		%08X" $data]
-
-	set EMAC1_MTL_RxQ0_Debug 0x31042D38
-	set data [memread32_phys $EMAC1_MTL_RxQ0_Debug]
-	puts [format "EMAC1_MTL_RxQ0_Debug:		%08X" $data]
-
-	set EMAC1_DMA_Mode 0x31043000
-	set data [memread32_phys $EMAC1_DMA_Mode]
-	puts [format "EMAC1_DMA_Mode:		%08X" $data]
-
-	set EMAC1_DMA_SysBus_Mode 0x31043004
-	set data [memread32_phys $EMAC1_DMA_SysBus_Mode]
-	puts [format "EMAC1_DMA_SysBus_Mode:		%08X" $data]
-
-	set EMAC1_DMA_Interrupt_Status 0x31043008
-	set data [memread32_phys $EMAC1_DMA_Interrupt_Status]
-	puts [format "EMAC1_DMA_Interrupt_Status:		%08X" $data]
-
-	set EMAC1_DMA_Debug_Status0 0x3104300C
-	set data [memread32_phys $EMAC1_DMA_Debug_Status0]
-	puts [format "EMAC1_DMA_Debug_Status0:		%08X" $data]
-
-	set EMAC1_AXI_LPI_Entry_Interval 0x31043040
-	set data [memread32_phys $EMAC1_AXI_LPI_Entry_Interval]
-	puts [format "EMAC1_AXI_LPI_Entry_Interval:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Control 0x31043100
-	set data [memread32_phys $EMAC1_DMA_CH0_Control]
-	puts [format "EMAC1_DMA_CH0_Control:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Tx_Control 0x31043104
-	set data [memread32_phys $EMAC1_DMA_CH0_Tx_Control]
-	puts [format "EMAC1_DMA_CH0_Tx_Control:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Rx_Control 0x31043108
-	set data [memread32_phys $EMAC1_DMA_CH0_Rx_Control]
-	puts [format "EMAC1_DMA_CH0_Rx_Control:		%08X" $data]
-
-	set EMAC1_DMA_CH0_TxDesc_List_Address 0x31043114
-	set data [memread32_phys $EMAC1_DMA_CH0_TxDesc_List_Address]
-	puts [format "EMAC1_DMA_CH0_TxDesc_List_Address:		%08X" $data]
-
-	set EMAC1_DMA_CH0_RxDesc_List_Address 0x3104311C
-	set data [memread32_phys $EMAC1_DMA_CH0_RxDesc_List_Address]
-	puts [format "EMAC1_DMA_CH0_RxDesc_List_Address:		%08X" $data]
-
-	set EMAC1_DMA_CH0_TxDesc_Tail_Pointer 0x31043120
-	set data [memread32_phys $EMAC1_DMA_CH0_TxDesc_Tail_Pointer]
-	puts [format "EMAC1_DMA_CH0_TxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC1_DMA_CH0_RxDesc_Tail_Pointer 0x31043128
-	set data [memread32_phys $EMAC1_DMA_CH0_RxDesc_Tail_Pointer]
-	puts [format "EMAC1_DMA_CH0_RxDesc_Tail_Pointer:		%08X" $data]
-
-	set EMAC1_DMA_CH0_TxDesc_Ring_Length 0x3104312C
-	set data [memread32_phys $EMAC1_DMA_CH0_TxDesc_Ring_Length]
-	puts [format "EMAC1_DMA_CH0_TxDesc_Ring_Length:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Rx_Control2 0x31043130
-	set data [memread32_phys $EMAC1_DMA_CH0_Rx_Control2]
-	puts [format "EMAC1_DMA_CH0_Rx_Control2:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Interrupt_Enable 0x31043134
-	set data [memread32_phys $EMAC1_DMA_CH0_Interrupt_Enable]
-	puts [format "EMAC1_DMA_CH0_Interrupt_Enable:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Rx_Interrupt_Watchdog_Timer 0x31043138
-	set data [memread32_phys $EMAC1_DMA_CH0_Rx_Interrupt_Watchdog_Timer]
-	puts [format "EMAC1_DMA_CH0_Rx_Interrupt_Watchdog_Timer:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Current_App_TxDesc 0x31043144
-	set data [memread32_phys $EMAC1_DMA_CH0_Current_App_TxDesc]
-	puts [format "EMAC1_DMA_CH0_Current_App_TxDesc:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Current_App_RxDesc 0x3104314C
-	set data [memread32_phys $EMAC1_DMA_CH0_Current_App_RxDesc]
-	puts [format "EMAC1_DMA_CH0_Current_App_RxDesc:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Current_App_TxBuffer 0x31043154
-	set data [memread32_phys $EMAC1_DMA_CH0_Current_App_TxBuffer]
-	puts [format "EMAC1_DMA_CH0_Current_App_TxBuffer:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Current_App_RxBuffer 0x3104315C
-	set data [memread32_phys $EMAC1_DMA_CH0_Current_App_RxBuffer]
-	puts [format "EMAC1_DMA_CH0_Current_App_RxBuffer:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Status 0x31043160
-	set data [memread32_phys $EMAC1_DMA_CH0_Status]
-	puts [format "EMAC1_DMA_CH0_Status:		%08X" $data]
-
-	set EMAC1_DMA_CH0_Miss_Frame_Cnt 0x31043164
-	set data [memread32_phys $EMAC1_DMA_CH0_Miss_Frame_Cnt]
-	puts [format "EMAC1_DMA_CH0_Miss_Frame_Cnt:		%08X" $data]
+	set EMAC1_MAC_CFG 0x31042000
+	set data [memread32_phys $EMAC1_MAC_CFG]
+	puts [format "EMAC1_MAC_CFG:		%08X" $data]
+
+	set EMAC1_MAC_EXT_CFG 0x31042004
+	set data [memread32_phys $EMAC1_MAC_EXT_CFG]
+	puts [format "EMAC1_MAC_EXT_CFG:		%08X" $data]
+
+	set EMAC1_MACPKT_FILT 0x31042008
+	set data [memread32_phys $EMAC1_MACPKT_FILT]
+	puts [format "EMAC1_MACPKT_FILT:		%08X" $data]
+
+	set EMAC1_WDT_TMOUT 0x3104200C
+	set data [memread32_phys $EMAC1_WDT_TMOUT]
+	puts [format "EMAC1_WDT_TMOUT:		%08X" $data]
+
+	set EMAC1_HASHTBL_REG0 0x31042010
+	set data [memread32_phys $EMAC1_HASHTBL_REG0]
+	puts [format "EMAC1_HASHTBL_REG0:		%08X" $data]
+
+	set EMAC1_HASHTBL_REG1 0x31042014
+	set data [memread32_phys $EMAC1_HASHTBL_REG1]
+	puts [format "EMAC1_HASHTBL_REG1:		%08X" $data]
+
+	set EMAC1_VLANTAG_CTL 0x31042050
+	set data [memread32_phys $EMAC1_VLANTAG_CTL]
+	puts [format "EMAC1_VLANTAG_CTL:		%08X" $data]
+
+	set EMAC1_VLANTAG_DAT 0x31042054
+	set data [memread32_phys $EMAC1_VLANTAG_DAT]
+	puts [format "EMAC1_VLANTAG_DAT:		%08X" $data]
+
+	set EMAC1_VLAN_HASHTBL 0x31042058
+	set data [memread32_phys $EMAC1_VLAN_HASHTBL]
+	puts [format "EMAC1_VLAN_HASHTBL:		%08X" $data]
+
+	set EMAC1_VLAN_INCL 0x31042060
+	set data [memread32_phys $EMAC1_VLAN_INCL]
+	puts [format "EMAC1_VLAN_INCL:		%08X" $data]
+
+	set EMAC1_RXFLOW_CTL 0x31042090
+	set data [memread32_phys $EMAC1_RXFLOW_CTL]
+	puts [format "EMAC1_RXFLOW_CTL:		%08X" $data]
+
+	set EMAC1_MAC_ISTAT 0x310420B0
+	set data [memread32_phys $EMAC1_MAC_ISTAT]
+	puts [format "EMAC1_MAC_ISTAT:		%08X" $data]
+
+	set EMAC1_MAC_IEN 0x310420B4
+	set data [memread32_phys $EMAC1_MAC_IEN]
+	puts [format "EMAC1_MAC_IEN:		%08X" $data]
+
+	set EMAC1_RXTX_STAT 0x310420B8
+	set data [memread32_phys $EMAC1_RXTX_STAT]
+	puts [format "EMAC1_RXTX_STAT:		%08X" $data]
+
+	set EMAC1_MAC_DBG 0x31042114
+	set data [memread32_phys $EMAC1_MAC_DBG]
+	puts [format "EMAC1_MAC_DBG:		%08X" $data]
+
+	set EMAC1_HW_FTR_PSNT0 0x3104211C
+	set data [memread32_phys $EMAC1_HW_FTR_PSNT0]
+	puts [format "EMAC1_HW_FTR_PSNT0:		%08X" $data]
+
+	set EMAC1_HW_FTR_PSNT1 0x31042120
+	set data [memread32_phys $EMAC1_HW_FTR_PSNT1]
+	puts [format "EMAC1_HW_FTR_PSNT1:		%08X" $data]
+
+	set EMAC1_HW_FTR_PSNT2 0x31042124
+	set data [memread32_phys $EMAC1_HW_FTR_PSNT2]
+	puts [format "EMAC1_HW_FTR_PSNT2:		%08X" $data]
+
+	set EMAC1_HW_FTR_PSNT3 0x31042128
+	set data [memread32_phys $EMAC1_HW_FTR_PSNT3]
+	puts [format "EMAC1_HW_FTR_PSNT3:		%08X" $data]
+
+	set EMAC1_MDIO_ADDR 0x31042200
+	set data [memread32_phys $EMAC1_MDIO_ADDR]
+	puts [format "EMAC1_MDIO_ADDR:		%08X" $data]
+
+	set EMAC1_MDIO_DATA 0x31042204
+	set data [memread32_phys $EMAC1_MDIO_DATA]
+	puts [format "EMAC1_MDIO_DATA:		%08X" $data]
+
+	set EMAC1_CSR_SW_CTL 0x31042230
+	set data [memread32_phys $EMAC1_CSR_SW_CTL]
+	puts [format "EMAC1_CSR_SW_CTL:		%08X" $data]
+
+	set EMAC1_ADDR0_HI 0x31042300
+	set data [memread32_phys $EMAC1_ADDR0_HI]
+	puts [format "EMAC1_ADDR0_HI:		%08X" $data]
+
+	set EMAC1_ADDR0_LO 0x31042304
+	set data [memread32_phys $EMAC1_ADDR0_LO]
+	puts [format "EMAC1_ADDR0_LO:		%08X" $data]
+
+	set EMAC1_MMC_CTRL 0x31042700
+	set data [memread32_phys $EMAC1_MMC_CTRL]
+	puts [format "EMAC1_MMC_CTRL:		%08X" $data]
+
+	set EMAC1_MMC_RXINT 0x31042704
+	set data [memread32_phys $EMAC1_MMC_RXINT]
+	puts [format "EMAC1_MMC_RXINT:		%08X" $data]
+
+	set EMAC1_MMC_TXINT 0x31042708
+	set data [memread32_phys $EMAC1_MMC_TXINT]
+	puts [format "EMAC1_MMC_TXINT:		%08X" $data]
+
+	set EMAC1_MMC_RXIMSK 0x3104270C
+	set data [memread32_phys $EMAC1_MMC_RXIMSK]
+	puts [format "EMAC1_MMC_RXIMSK:		%08X" $data]
+
+	set EMAC1_MMC_TXIMSK 0x31042710
+	set data [memread32_phys $EMAC1_MMC_TXIMSK]
+	puts [format "EMAC1_MMC_TXIMSK:		%08X" $data]
+
+	set EMAC1_TX_OCNT_GB 0x31042714
+	set data [memread32_phys $EMAC1_TX_OCNT_GB]
+	puts [format "EMAC1_TX_OCNT_GB:		%08X" $data]
+
+	set EMAC1_TX_PCNT_GB 0x31042718
+	set data [memread32_phys $EMAC1_TX_PCNT_GB]
+	puts [format "EMAC1_TX_PCNT_GB:		%08X" $data]
+
+	set EMAC1_TX_BCST_PCNT_G 0x3104271C
+	set data [memread32_phys $EMAC1_TX_BCST_PCNT_G]
+	puts [format "EMAC1_TX_BCST_PCNT_G:		%08X" $data]
+
+	set EMAC1_TX_MCST_PCNT_G 0x31042720
+	set data [memread32_phys $EMAC1_TX_MCST_PCNT_G]
+	puts [format "EMAC1_TX_MCST_PCNT_G:		%08X" $data]
+
+	set EMAC1_TX64_GB 0x31042724
+	set data [memread32_phys $EMAC1_TX64_GB]
+	puts [format "EMAC1_TX64_GB:		%08X" $data]
+
+	set EMAC1_TX65TO127_GB 0x31042728
+	set data [memread32_phys $EMAC1_TX65TO127_GB]
+	puts [format "EMAC1_TX65TO127_GB:		%08X" $data]
+
+	set EMAC1_TX128TO255_GB 0x3104272C
+	set data [memread32_phys $EMAC1_TX128TO255_GB]
+	puts [format "EMAC1_TX128TO255_GB:		%08X" $data]
+
+	set EMAC1_TX256TO511_GB 0x31042730
+	set data [memread32_phys $EMAC1_TX256TO511_GB]
+	puts [format "EMAC1_TX256TO511_GB:		%08X" $data]
+
+	set EMAC1_TX512TO1023_GB 0x31042734
+	set data [memread32_phys $EMAC1_TX512TO1023_GB]
+	puts [format "EMAC1_TX512TO1023_GB:		%08X" $data]
+
+	set EMAC1_TX1024TOMAX_GB 0x31042738
+	set data [memread32_phys $EMAC1_TX1024TOMAX_GB]
+	puts [format "EMAC1_TX1024TOMAX_GB:		%08X" $data]
+
+	set EMAC1_TX_UCST_PCNT_GB 0x3104273C
+	set data [memread32_phys $EMAC1_TX_UCST_PCNT_GB]
+	puts [format "EMAC1_TX_UCST_PCNT_GB:		%08X" $data]
+
+	set EMAC1_TX_MCST_PCNT_GB 0x31042740
+	set data [memread32_phys $EMAC1_TX_MCST_PCNT_GB]
+	puts [format "EMAC1_TX_MCST_PCNT_GB:		%08X" $data]
+
+	set EMAC1_TX_BCST_PCNT_GB 0x31042744
+	set data [memread32_phys $EMAC1_TX_BCST_PCNT_GB]
+	puts [format "EMAC1_TX_BCST_PCNT_GB:		%08X" $data]
+
+	set EMAC1_TX_URFL_PCNT 0x31042748
+	set data [memread32_phys $EMAC1_TX_URFL_PCNT]
+	puts [format "EMAC1_TX_URFL_PCNT:		%08X" $data]
+
+	set EMAC1_TX_SNGLCOL_PCNT_G 0x3104274C
+	set data [memread32_phys $EMAC1_TX_SNGLCOL_PCNT_G]
+	puts [format "EMAC1_TX_SNGLCOL_PCNT_G:		%08X" $data]
+
+	set EMAC1_TX_MCOL_PCNT_G 0x31042750
+	set data [memread32_phys $EMAC1_TX_MCOL_PCNT_G]
+	puts [format "EMAC1_TX_MCOL_PCNT_G:		%08X" $data]
+
+	set EMAC1_TX_DFRD_PCNT 0x31042754
+	set data [memread32_phys $EMAC1_TX_DFRD_PCNT]
+	puts [format "EMAC1_TX_DFRD_PCNT:		%08X" $data]
+
+	set EMAC1_TX_LTCOL_PCNT 0x31042758
+	set data [memread32_phys $EMAC1_TX_LTCOL_PCNT]
+	puts [format "EMAC1_TX_LTCOL_PCNT:		%08X" $data]
+
+	set EMAC1_TX_EXCOL_PCNT 0x3104275C
+	set data [memread32_phys $EMAC1_TX_EXCOL_PCNT]
+	puts [format "EMAC1_TX_EXCOL_PCNT:		%08X" $data]
+
+	set EMAC1_TX_CRERR_PCNT 0x31042760
+	set data [memread32_phys $EMAC1_TX_CRERR_PCNT]
+	puts [format "EMAC1_TX_CRERR_PCNT:		%08X" $data]
+
+	set EMAC1_TX_OCNT_G 0x31042764
+	set data [memread32_phys $EMAC1_TX_OCNT_G]
+	puts [format "EMAC1_TX_OCNT_G:		%08X" $data]
+
+	set EMAC1_TX_PCNT_G 0x31042768
+	set data [memread32_phys $EMAC1_TX_PCNT_G]
+	puts [format "EMAC1_TX_PCNT_G:		%08X" $data]
+
+	set EMAC1_TX_EXDFRL_PCNT 0x3104276C
+	set data [memread32_phys $EMAC1_TX_EXDFRL_PCNT]
+	puts [format "EMAC1_TX_EXDFRL_PCNT:		%08X" $data]
+
+	set EMAC1_TX_PAUSE_PCNT 0x31042770
+	set data [memread32_phys $EMAC1_TX_PAUSE_PCNT]
+	puts [format "EMAC1_TX_PAUSE_PCNT:		%08X" $data]
+
+	set EMAC1_TX_VLAN_PCNT_G 0x31042774
+	set data [memread32_phys $EMAC1_TX_VLAN_PCNT_G]
+	puts [format "EMAC1_TX_VLAN_PCNT_G:		%08X" $data]
+
+	set EMAC1_TX_OSIZE_PCNT_G 0x31042778
+	set data [memread32_phys $EMAC1_TX_OSIZE_PCNT_G]
+	puts [format "EMAC1_TX_OSIZE_PCNT_G:		%08X" $data]
+
+	set EMAC1_RX_PCNT_GB 0x31042780
+	set data [memread32_phys $EMAC1_RX_PCNT_GB]
+	puts [format "EMAC1_RX_PCNT_GB:		%08X" $data]
+
+	set EMAC1_RX_OCNT_GB 0x31042784
+	set data [memread32_phys $EMAC1_RX_OCNT_GB]
+	puts [format "EMAC1_RX_OCNT_GB:		%08X" $data]
+
+	set EMAC1_RX_OCNT_G 0x31042788
+	set data [memread32_phys $EMAC1_RX_OCNT_G]
+	puts [format "EMAC1_RX_OCNT_G:		%08X" $data]
+
+	set EMAC1_RX_BCERR_PCNT_G 0x3104278C
+	set data [memread32_phys $EMAC1_RX_BCERR_PCNT_G]
+	puts [format "EMAC1_RX_BCERR_PCNT_G:		%08X" $data]
+
+	set EMAC1_RX_MCST_PCNT_G 0x31042790
+	set data [memread32_phys $EMAC1_RX_MCST_PCNT_G]
+	puts [format "EMAC1_RX_MCST_PCNT_G:		%08X" $data]
+
+	set EMAC1_RX_CRCERR_PCNT 0x31042794
+	set data [memread32_phys $EMAC1_RX_CRCERR_PCNT]
+	puts [format "EMAC1_RX_CRCERR_PCNT:		%08X" $data]
+
+	set EMAC1_RX_ALGNERR_PCNT 0x31042798
+	set data [memread32_phys $EMAC1_RX_ALGNERR_PCNT]
+	puts [format "EMAC1_RX_ALGNERR_PCNT:		%08X" $data]
+
+	set EMAC1_RX_RNTERR_PCNT 0x3104279C
+	set data [memread32_phys $EMAC1_RX_RNTERR_PCNT]
+	puts [format "EMAC1_RX_RNTERR_PCNT:		%08X" $data]
+
+	set EMAC1_RX_JBERR_PCNT 0x310427A0
+	set data [memread32_phys $EMAC1_RX_JBERR_PCNT]
+	puts [format "EMAC1_RX_JBERR_PCNT:		%08X" $data]
+
+	set EMAC1_RX_UNDRSZ_PCNT_G 0x310427A4
+	set data [memread32_phys $EMAC1_RX_UNDRSZ_PCNT_G]
+	puts [format "EMAC1_RX_UNDRSZ_PCNT_G:		%08X" $data]
+
+	set EMAC1_RX_OVRSZ_PCNT 0x310427A8
+	set data [memread32_phys $EMAC1_RX_OVRSZ_PCNT]
+	puts [format "EMAC1_RX_OVRSZ_PCNT:		%08X" $data]
+
+	set EMAC1_RX64_GB 0x310427AC
+	set data [memread32_phys $EMAC1_RX64_GB]
+	puts [format "EMAC1_RX64_GB:		%08X" $data]
+
+	set EMAC1_RX65TO127_GB 0x310427B0
+	set data [memread32_phys $EMAC1_RX65TO127_GB]
+	puts [format "EMAC1_RX65TO127_GB:		%08X" $data]
+
+	set EMAC1_RX128TO255_GB 0x310427B4
+	set data [memread32_phys $EMAC1_RX128TO255_GB]
+	puts [format "EMAC1_RX128TO255_GB:		%08X" $data]
+
+	set EMAC1_RX256TO511_GB 0x310427B8
+	set data [memread32_phys $EMAC1_RX256TO511_GB]
+	puts [format "EMAC1_RX256TO511_GB:		%08X" $data]
+
+	set EMAC1_RX512TO1023_GB 0x310427BC
+	set data [memread32_phys $EMAC1_RX512TO1023_GB]
+	puts [format "EMAC1_RX512TO1023_GB:		%08X" $data]
+
+	set EMAC1_RX1024TOMAX_GB 0x310427C0
+	set data [memread32_phys $EMAC1_RX1024TOMAX_GB]
+	puts [format "EMAC1_RX1024TOMAX_GB:		%08X" $data]
+
+	set EMAC1_RX_UCST_PCNT_G 0x310427C4
+	set data [memread32_phys $EMAC1_RX_UCST_PCNT_G]
+	puts [format "EMAC1_RX_UCST_PCNT_G:		%08X" $data]
+
+	set EMAC1_RX_LENERR_PCNT 0x310427C8
+	set data [memread32_phys $EMAC1_RX_LENERR_PCNT]
+	puts [format "EMAC1_RX_LENERR_PCNT:		%08X" $data]
+
+	set EMAC1_RX_ORTYPE_PCNT 0x310427CC
+	set data [memread32_phys $EMAC1_RX_ORTYPE_PCNT]
+	puts [format "EMAC1_RX_ORTYPE_PCNT:		%08X" $data]
+
+	set EMAC1_RX_PAUSE_PCNT 0x310427D0
+	set data [memread32_phys $EMAC1_RX_PAUSE_PCNT]
+	puts [format "EMAC1_RX_PAUSE_PCNT:		%08X" $data]
+
+	set EMAC1_RX_FIFOOVFL_PCNT 0x310427D4
+	set data [memread32_phys $EMAC1_RX_FIFOOVFL_PCNT]
+	puts [format "EMAC1_RX_FIFOOVFL_PCNT:		%08X" $data]
+
+	set EMAC1_RX_VLAN_PCNT_GB 0x310427D8
+	set data [memread32_phys $EMAC1_RX_VLAN_PCNT_GB]
+	puts [format "EMAC1_RX_VLAN_PCNT_GB:		%08X" $data]
+
+	set EMAC1_RX_WDTERR_PCNT 0x310427DC
+	set data [memread32_phys $EMAC1_RX_WDTERR_PCNT]
+	puts [format "EMAC1_RX_WDTERR_PCNT:		%08X" $data]
+
+	set EMAC1_RX_ERR_PCNT 0x310427E0
+	set data [memread32_phys $EMAC1_RX_ERR_PCNT]
+	puts [format "EMAC1_RX_ERR_PCNT:		%08X" $data]
+
+	set EMAC1_RX_CTL_PCNT_G 0x310427E4
+	set data [memread32_phys $EMAC1_RX_CTL_PCNT_G]
+	puts [format "EMAC1_RX_CTL_PCNT_G:		%08X" $data]
+
+	set EMAC1_MMC_IPC_RXIMSK 0x31042800
+	set data [memread32_phys $EMAC1_MMC_IPC_RXIMSK]
+	puts [format "EMAC1_MMC_IPC_RXIMSK:		%08X" $data]
+
+	set EMAC1_MMC_IPC_RXINT 0x31042808
+	set data [memread32_phys $EMAC1_MMC_IPC_RXINT]
+	puts [format "EMAC1_MMC_IPC_RXINT:		%08X" $data]
+
+	set EMAC1_RXIPV4_PCNT_G 0x31042810
+	set data [memread32_phys $EMAC1_RXIPV4_PCNT_G]
+	puts [format "EMAC1_RXIPV4_PCNT_G:		%08X" $data]
+
+	set EMAC1_RXIPV4_HDRERR_PCNT 0x31042814
+	set data [memread32_phys $EMAC1_RXIPV4_HDRERR_PCNT]
+	puts [format "EMAC1_RXIPV4_HDRERR_PCNT:		%08X" $data]
+
+	set EMAC1_RXIPV4_PYLD_PCNT 0x31042818
+	set data [memread32_phys $EMAC1_RXIPV4_PYLD_PCNT]
+	puts [format "EMAC1_RXIPV4_PYLD_PCNT:		%08X" $data]
+
+	set EMAC1_RXIPV4_FRGMT_PCNT 0x3104281C
+	set data [memread32_phys $EMAC1_RXIPV4_FRGMT_PCNT]
+	puts [format "EMAC1_RXIPV4_FRGMT_PCNT:		%08X" $data]
+
+	set EMAC1_RXIPV4_UDPCSD_PCNT 0x31042820
+	set data [memread32_phys $EMAC1_RXIPV4_UDPCSD_PCNT]
+	puts [format "EMAC1_RXIPV4_UDPCSD_PCNT:		%08X" $data]
+
+	set EMAC1_RXIPV6_PCNT_G 0x31042824
+	set data [memread32_phys $EMAC1_RXIPV6_PCNT_G]
+	puts [format "EMAC1_RXIPV6_PCNT_G:		%08X" $data]
+
+	set EMAC1_RXIPV6_HDRERR_PCNT 0x31042828
+	set data [memread32_phys $EMAC1_RXIPV6_HDRERR_PCNT]
+	puts [format "EMAC1_RXIPV6_HDRERR_PCNT:		%08X" $data]
+
+	set EMAC1_RXIPV6_PYLD_PCNT 0x3104282C
+	set data [memread32_phys $EMAC1_RXIPV6_PYLD_PCNT]
+	puts [format "EMAC1_RXIPV6_PYLD_PCNT:		%08X" $data]
+
+	set EMAC1_RXUDP_PCNT_G 0x31042830
+	set data [memread32_phys $EMAC1_RXUDP_PCNT_G]
+	puts [format "EMAC1_RXUDP_PCNT_G:		%08X" $data]
+
+	set EMAC1_RXUDP_ERR_PCNT 0x31042834
+	set data [memread32_phys $EMAC1_RXUDP_ERR_PCNT]
+	puts [format "EMAC1_RXUDP_ERR_PCNT:		%08X" $data]
+
+	set EMAC1_RXTCP_PCNT_G 0x31042838
+	set data [memread32_phys $EMAC1_RXTCP_PCNT_G]
+	puts [format "EMAC1_RXTCP_PCNT_G:		%08X" $data]
+
+	set EMAC1_RXTCP_ERR_PCNT 0x3104283C
+	set data [memread32_phys $EMAC1_RXTCP_ERR_PCNT]
+	puts [format "EMAC1_RXTCP_ERR_PCNT:		%08X" $data]
+
+	set EMAC1_RXICMP_PCNT_G 0x31042840
+	set data [memread32_phys $EMAC1_RXICMP_PCNT_G]
+	puts [format "EMAC1_RXICMP_PCNT_G:		%08X" $data]
+
+	set EMAC1_RXICMP_ERR_PCNT 0x31042844
+	set data [memread32_phys $EMAC1_RXICMP_ERR_PCNT]
+	puts [format "EMAC1_RXICMP_ERR_PCNT:		%08X" $data]
+
+	set EMAC1_RXIPV4_OCNT_G 0x31042850
+	set data [memread32_phys $EMAC1_RXIPV4_OCNT_G]
+	puts [format "EMAC1_RXIPV4_OCNT_G:		%08X" $data]
+
+	set EMAC1_RXIPV4_HDRERR_OCNT 0x31042854
+	set data [memread32_phys $EMAC1_RXIPV4_HDRERR_OCNT]
+	puts [format "EMAC1_RXIPV4_HDRERR_OCNT:		%08X" $data]
+
+	set EMAC1_RXIPV4_PYLD_OCNT 0x31042858
+	set data [memread32_phys $EMAC1_RXIPV4_PYLD_OCNT]
+	puts [format "EMAC1_RXIPV4_PYLD_OCNT:		%08X" $data]
+
+	set EMAC1_RXIPV4_FRGMT_OCNT 0x3104285C
+	set data [memread32_phys $EMAC1_RXIPV4_FRGMT_OCNT]
+	puts [format "EMAC1_RXIPV4_FRGMT_OCNT:		%08X" $data]
+
+	set EMAC1_RXIPV4_UDPCSD_OCNT 0x31042860
+	set data [memread32_phys $EMAC1_RXIPV4_UDPCSD_OCNT]
+	puts [format "EMAC1_RXIPV4_UDPCSD_OCNT:		%08X" $data]
+
+	set EMAC1_RXIPV6_OCNT_G 0x31042864
+	set data [memread32_phys $EMAC1_RXIPV6_OCNT_G]
+	puts [format "EMAC1_RXIPV6_OCNT_G:		%08X" $data]
+
+	set EMAC1_RXIPV6_HDRERR_OCNT 0x31042868
+	set data [memread32_phys $EMAC1_RXIPV6_HDRERR_OCNT]
+	puts [format "EMAC1_RXIPV6_HDRERR_OCNT:		%08X" $data]
+
+	set EMAC1_RXIPV6_PYLD_OCNT 0x3104286C
+	set data [memread32_phys $EMAC1_RXIPV6_PYLD_OCNT]
+	puts [format "EMAC1_RXIPV6_PYLD_OCNT:		%08X" $data]
+
+	set EMAC1_RXUDP_OCNT_G 0x31042870
+	set data [memread32_phys $EMAC1_RXUDP_OCNT_G]
+	puts [format "EMAC1_RXUDP_OCNT_G:		%08X" $data]
+
+	set EMAC1_RXUDP_ERR_OCNT 0x31042874
+	set data [memread32_phys $EMAC1_RXUDP_ERR_OCNT]
+	puts [format "EMAC1_RXUDP_ERR_OCNT:		%08X" $data]
+
+	set EMAC1_RXTCP_OCNT_G 0x31042878
+	set data [memread32_phys $EMAC1_RXTCP_OCNT_G]
+	puts [format "EMAC1_RXTCP_OCNT_G:		%08X" $data]
+
+	set EMAC1_RXTCP_ERR_OCNT 0x3104287C
+	set data [memread32_phys $EMAC1_RXTCP_ERR_OCNT]
+	puts [format "EMAC1_RXTCP_ERR_OCNT:		%08X" $data]
+
+	set EMAC1_RXICMP_OCNT_G 0x31042880
+	set data [memread32_phys $EMAC1_RXICMP_OCNT_G]
+	puts [format "EMAC1_RXICMP_OCNT_G:		%08X" $data]
+
+	set EMAC1_RXICMP_ERR_OCNT 0x31042884
+	set data [memread32_phys $EMAC1_RXICMP_ERR_OCNT]
+	puts [format "EMAC1_RXICMP_ERR_OCNT:		%08X" $data]
+
+	set EMAC1_MTL_OPMODE 0x31042C00
+	set data [memread32_phys $EMAC1_MTL_OPMODE]
+	puts [format "EMAC1_MTL_OPMODE:		%08X" $data]
+
+	set EMAC1_MTL_ISTAT 0x31042C20
+	set data [memread32_phys $EMAC1_MTL_ISTAT]
+	puts [format "EMAC1_MTL_ISTAT:		%08X" $data]
+
+	set EMAC1_TQ0_OPMODE 0x31042D00
+	set data [memread32_phys $EMAC1_TQ0_OPMODE]
+	puts [format "EMAC1_TQ0_OPMODE:		%08X" $data]
+
+	set EMAC1_TQ0_URFL 0x31042D04
+	set data [memread32_phys $EMAC1_TQ0_URFL]
+	puts [format "EMAC1_TQ0_URFL:		%08X" $data]
+
+	set EMAC1_TQ0_DBG 0x31042D08
+	set data [memread32_phys $EMAC1_TQ0_DBG]
+	puts [format "EMAC1_TQ0_DBG:		%08X" $data]
+
+	set EMAC1_Q0_INT_CTLSTAT 0x31042D2C
+	set data [memread32_phys $EMAC1_Q0_INT_CTLSTAT]
+	puts [format "EMAC1_Q0_INT_CTLSTAT:		%08X" $data]
+
+	set EMAC1_RQ0_OPMODE 0x31042D30
+	set data [memread32_phys $EMAC1_RQ0_OPMODE]
+	puts [format "EMAC1_RQ0_OPMODE:		%08X" $data]
+
+	set EMAC1_RQ0_MSPKTOF_CNT 0x31042D34
+	set data [memread32_phys $EMAC1_RQ0_MSPKTOF_CNT]
+	puts [format "EMAC1_RQ0_MSPKTOF_CNT:		%08X" $data]
+
+	set EMAC1_RQ0_DBG 0x31042D38
+	set data [memread32_phys $EMAC1_RQ0_DBG]
+	puts [format "EMAC1_RQ0_DBG:		%08X" $data]
+
+	set EMAC1_DMA_MODE 0x31043000
+	set data [memread32_phys $EMAC1_DMA_MODE]
+	puts [format "EMAC1_DMA_MODE:		%08X" $data]
+
+	set EMAC1_DMA_SYSBMODE 0x31043004
+	set data [memread32_phys $EMAC1_DMA_SYSBMODE]
+	puts [format "EMAC1_DMA_SYSBMODE:		%08X" $data]
+
+	set EMAC1_DMA_ISTAT 0x31043008
+	set data [memread32_phys $EMAC1_DMA_ISTAT]
+	puts [format "EMAC1_DMA_ISTAT:		%08X" $data]
+
+	set EMAC1_DMA_DBG_STAT0 0x3104300C
+	set data [memread32_phys $EMAC1_DMA_DBG_STAT0]
+	puts [format "EMAC1_DMA_DBG_STAT0:		%08X" $data]
+
+	set EMAC1_ADDR1_HI 0x31042308
+	set data [memread32_phys $EMAC1_ADDR1_HI]
+	puts [format "EMAC1_ADDR1_HI:		%08X" $data]
+
+	set EMAC1_ADDR1_LO 0x3104230C
+	set data [memread32_phys $EMAC1_ADDR1_LO]
+	puts [format "EMAC1_ADDR1_LO:		%08X" $data]
+
+	set EMAC1_DMA0_CTL 0x31043100
+	set data [memread32_phys $EMAC1_DMA0_CTL]
+	puts [format "EMAC1_DMA0_CTL:		%08X" $data]
+
+	set EMAC1_DMA0_TXCTL 0x31043104
+	set data [memread32_phys $EMAC1_DMA0_TXCTL]
+	puts [format "EMAC1_DMA0_TXCTL:		%08X" $data]
+
+	set EMAC1_DMA0_RXCTL 0x31043108
+	set data [memread32_phys $EMAC1_DMA0_RXCTL]
+	puts [format "EMAC1_DMA0_RXCTL:		%08X" $data]
+
+	set EMAC1_DMA0_TXDSC_ADDR 0x31043114
+	set data [memread32_phys $EMAC1_DMA0_TXDSC_ADDR]
+	puts [format "EMAC1_DMA0_TXDSC_ADDR:		%08X" $data]
+
+	set EMAC1_DMA0_RXDSC_ADDR 0x3104311C
+	set data [memread32_phys $EMAC1_DMA0_RXDSC_ADDR]
+	puts [format "EMAC1_DMA0_RXDSC_ADDR:		%08X" $data]
+
+	set EMAC1_DMA0_TXDSC_TLPTR 0x31043120
+	set data [memread32_phys $EMAC1_DMA0_TXDSC_TLPTR]
+	puts [format "EMAC1_DMA0_TXDSC_TLPTR:		%08X" $data]
+
+	set EMAC1_DMA0_RXDSC_TLPTR 0x31043128
+	set data [memread32_phys $EMAC1_DMA0_RXDSC_TLPTR]
+	puts [format "EMAC1_DMA0_RXDSC_TLPTR:		%08X" $data]
+
+	set EMAC1_DMA0_TXDSC_RLEN 0x3104312C
+	set data [memread32_phys $EMAC1_DMA0_TXDSC_RLEN]
+	puts [format "EMAC1_DMA0_TXDSC_RLEN:		%08X" $data]
+
+	set EMAC1_DMA0_RXCTL2 0x31043130
+	set data [memread32_phys $EMAC1_DMA0_RXCTL2]
+	puts [format "EMAC1_DMA0_RXCTL2:		%08X" $data]
+
+	set EMAC1_DMA0_IEN 0x31043134
+	set data [memread32_phys $EMAC1_DMA0_IEN]
+	puts [format "EMAC1_DMA0_IEN:		%08X" $data]
+
+	set EMAC1_DMA0_RXINTWDTMR 0x31043138
+	set data [memread32_phys $EMAC1_DMA0_RXINTWDTMR]
+	puts [format "EMAC1_DMA0_RXINTWDTMR:		%08X" $data]
+
+	set EMAC1_DMA0_TXDSC_CUR 0x31043144
+	set data [memread32_phys $EMAC1_DMA0_TXDSC_CUR]
+	puts [format "EMAC1_DMA0_TXDSC_CUR:		%08X" $data]
+
+	set EMAC1_DMA0_RXDSC_CUR 0x3104314C
+	set data [memread32_phys $EMAC1_DMA0_RXDSC_CUR]
+	puts [format "EMAC1_DMA0_RXDSC_CUR:		%08X" $data]
+
+	set EMAC1_DMA0_TXBUF_CUR 0x31043154
+	set data [memread32_phys $EMAC1_DMA0_TXBUF_CUR]
+	puts [format "EMAC1_DMA0_TXBUF_CUR:		%08X" $data]
+
+	set EMAC1_DMA0_RXBUF_CUR 0x3104315C
+	set data [memread32_phys $EMAC1_DMA0_RXBUF_CUR]
+	puts [format "EMAC1_DMA0_RXBUF_CUR:		%08X" $data]
+
+	set EMAC1_DMA0_STAT 0x31043160
+	set data [memread32_phys $EMAC1_DMA0_STAT]
+	puts [format "EMAC1_DMA0_STAT:		%08X" $data]
+
+	set EMAC1_DMA0_MISSFRM_CNT 0x31043164
+	set data [memread32_phys $EMAC1_DMA0_MISSFRM_CNT]
+	puts [format "EMAC1_DMA0_MISSFRM_CNT:		%08X" $data]
+
+	set EMAC1_L3L4_CTL0 0x31042900
+	set data [memread32_phys $EMAC1_L3L4_CTL0]
+	puts [format "EMAC1_L3L4_CTL0:		%08X" $data]
+
+	set EMAC1_L4_ADDR0 0x31042904
+	set data [memread32_phys $EMAC1_L4_ADDR0]
+	puts [format "EMAC1_L4_ADDR0:		%08X" $data]
+
+	set EMAC1_L3_ADDR0_REG0 0x31042910
+	set data [memread32_phys $EMAC1_L3_ADDR0_REG0]
+	puts [format "EMAC1_L3_ADDR0_REG0:		%08X" $data]
+
+	set EMAC1_L3_ADDR1_REG0 0x31042914
+	set data [memread32_phys $EMAC1_L3_ADDR1_REG0]
+	puts [format "EMAC1_L3_ADDR1_REG0:		%08X" $data]
+
+	set EMAC1_L3_ADDR2_REG0 0x31042918
+	set data [memread32_phys $EMAC1_L3_ADDR2_REG0]
+	puts [format "EMAC1_L3_ADDR2_REG0:		%08X" $data]
+
+	set EMAC1_L3_ADDR3_REG0 0x3104291C
+	set data [memread32_phys $EMAC1_L3_ADDR3_REG0]
+	puts [format "EMAC1_L3_ADDR3_REG0:		%08X" $data]
 
 }
 
@@ -11626,6 +10730,14 @@ proc show_DMC0 {} {
 	set DMC0_DDR_CA_CTL 0x31071068
 	set data [memread32_phys $DMC0_DDR_CA_CTL]
 	puts [format "DMC0_DDR_CA_CTL:		%08X" $data]
+
+	set DMC0_DDR_SCRATCH_4 0x3107107C
+	set data [memread32_phys $DMC0_DDR_SCRATCH_4]
+	puts [format "DMC0_DDR_SCRATCH_4:		%08X" $data]
+
+	set DMC0_DDR_SCRATCH_5 0x31071080
+	set data [memread32_phys $DMC0_DDR_SCRATCH_5]
+	puts [format "DMC0_DDR_SCRATCH_5:		%08X" $data]
 
 }
 
@@ -24659,10 +23771,6 @@ proc show_EMSI0 {} {
 	set data [memread32_phys $EMSI0_RESP3]
 	puts [format "EMSI0_RESP3:		%08X" $data]
 
-	set EMSI0_BUF_DATA 0x310C7020
-	set data [memread32_phys $EMSI0_BUF_DATA]
-	puts [format "EMSI0_BUF_DATA:		%08X" $data]
-
 	set EMSI0_PSTATE 0x310C7024
 	set data [memread32_phys $EMSI0_PSTATE]
 	puts [format "EMSI0_PSTATE:		%08X" $data]
@@ -26501,57 +25609,6 @@ proc show_PKIC0 {} {
 
 }
 
-proc show_EMDMA1 {} {
-	set EMDMA1_CTL 0x310E0030
-	set data [memread32_phys $EMDMA1_CTL]
-	puts [format "EMDMA1_CTL:		%08X" $data]
-
-	set EMDMA1_INDX1 0x310E00C0
-	set data [memread32_phys $EMDMA1_INDX1]
-	puts [format "EMDMA1_INDX1:		%08X" $data]
-
-	set EMDMA1_MOD1 0x310E00C4
-	set data [memread32_phys $EMDMA1_MOD1]
-	puts [format "EMDMA1_MOD1:		%08X" $data]
-
-	set EMDMA1_CNT1 0x310E00C8
-	set data [memread32_phys $EMDMA1_CNT1]
-	puts [format "EMDMA1_CNT1:		%08X" $data]
-
-	set EMDMA1_INDX0 0x310E00CC
-	set data [memread32_phys $EMDMA1_INDX0]
-	puts [format "EMDMA1_INDX0:		%08X" $data]
-
-	set EMDMA1_MOD0 0x310E00D0
-	set data [memread32_phys $EMDMA1_MOD0]
-	puts [format "EMDMA1_MOD0:		%08X" $data]
-
-	set EMDMA1_CNT0 0x310E00D4
-	set data [memread32_phys $EMDMA1_CNT0]
-	puts [format "EMDMA1_CNT0:		%08X" $data]
-
-	set EMDMA1_CHNPTR 0x310E00D8
-	set data [memread32_phys $EMDMA1_CHNPTR]
-	puts [format "EMDMA1_CHNPTR:		%08X" $data]
-
-	set EMDMA1_BASE 0x310E00DC
-	set data [memread32_phys $EMDMA1_BASE]
-	puts [format "EMDMA1_BASE:		%08X" $data]
-
-	set EMDMA1_TPTR 0x310E00E0
-	set data [memread32_phys $EMDMA1_TPTR]
-	puts [format "EMDMA1_TPTR:		%08X" $data]
-
-	set EMDMA1_BUFLEN 0x310E00E4
-	set data [memread32_phys $EMDMA1_BUFLEN]
-	puts [format "EMDMA1_BUFLEN:		%08X" $data]
-
-	set EMDMA1_TCNT 0x310E00EC
-	set data [memread32_phys $EMDMA1_TCNT]
-	puts [format "EMDMA1_TCNT:		%08X" $data]
-
-}
-
 proc show_EMDMA0 {} {
 	set EMDMA0_CTL 0x310E002C
 	set data [memread32_phys $EMDMA0_CTL]
@@ -26600,6 +25657,57 @@ proc show_EMDMA0 {} {
 	set EMDMA0_TCNT 0x310E00AC
 	set data [memread32_phys $EMDMA0_TCNT]
 	puts [format "EMDMA0_TCNT:		%08X" $data]
+
+}
+
+proc show_EMDMA1 {} {
+	set EMDMA1_CTL 0x310E0030
+	set data [memread32_phys $EMDMA1_CTL]
+	puts [format "EMDMA1_CTL:		%08X" $data]
+
+	set EMDMA1_INDX1 0x310E00C0
+	set data [memread32_phys $EMDMA1_INDX1]
+	puts [format "EMDMA1_INDX1:		%08X" $data]
+
+	set EMDMA1_MOD1 0x310E00C4
+	set data [memread32_phys $EMDMA1_MOD1]
+	puts [format "EMDMA1_MOD1:		%08X" $data]
+
+	set EMDMA1_CNT1 0x310E00C8
+	set data [memread32_phys $EMDMA1_CNT1]
+	puts [format "EMDMA1_CNT1:		%08X" $data]
+
+	set EMDMA1_INDX0 0x310E00CC
+	set data [memread32_phys $EMDMA1_INDX0]
+	puts [format "EMDMA1_INDX0:		%08X" $data]
+
+	set EMDMA1_MOD0 0x310E00D0
+	set data [memread32_phys $EMDMA1_MOD0]
+	puts [format "EMDMA1_MOD0:		%08X" $data]
+
+	set EMDMA1_CNT0 0x310E00D4
+	set data [memread32_phys $EMDMA1_CNT0]
+	puts [format "EMDMA1_CNT0:		%08X" $data]
+
+	set EMDMA1_CHNPTR 0x310E00D8
+	set data [memread32_phys $EMDMA1_CHNPTR]
+	puts [format "EMDMA1_CHNPTR:		%08X" $data]
+
+	set EMDMA1_BASE 0x310E00DC
+	set data [memread32_phys $EMDMA1_BASE]
+	puts [format "EMDMA1_BASE:		%08X" $data]
+
+	set EMDMA1_TPTR 0x310E00E0
+	set data [memread32_phys $EMDMA1_TPTR]
+	puts [format "EMDMA1_TPTR:		%08X" $data]
+
+	set EMDMA1_BUFLEN 0x310E00E4
+	set data [memread32_phys $EMDMA1_BUFLEN]
+	puts [format "EMDMA1_BUFLEN:		%08X" $data]
+
+	set EMDMA1_TCNT 0x310E00EC
+	set data [memread32_phys $EMDMA1_TCNT]
+	puts [format "EMDMA1_TCNT:		%08X" $data]
 
 }
 
