@@ -764,9 +764,6 @@ static int jtag_ap_q_bankselect(struct adi_ap *ap, unsigned reg)
 	struct adi_dap *dap = ap->dap;
 	uint64_t sel = ap->base_addr | (reg & 0x0000FFF0);
 
-	if (sel == (dap->select & ~0xfull))
-		return ERROR_OK;
-
 	if (dap->select != DP_SELECT_INVALID)
 		sel |= dap->select & 0xf;
 	dap->select = sel;

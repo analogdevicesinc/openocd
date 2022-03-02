@@ -42,11 +42,7 @@ static inline int arm_jtag_set_instr(struct jtag_tap *tap,
 		uint32_t new_instr, void *no_verify_capture, tap_state_t end_state)
 {
 	/* inline most common code path */
-	if (buf_get_u32(tap->cur_instr, 0, tap->ir_length) != new_instr)
-		return arm_jtag_set_instr_inner(tap, new_instr, no_verify_capture, end_state);
-
-	return ERROR_OK;
-
+	return arm_jtag_set_instr_inner(tap, new_instr, no_verify_capture, end_state);
 }
 
 int arm_jtag_scann_inner(struct arm_jtag *jtag_info, uint32_t new_scan_chain, tap_state_t end_state);
