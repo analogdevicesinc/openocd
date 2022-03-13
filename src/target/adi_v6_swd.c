@@ -416,7 +416,6 @@ static void swd_constructor(void)
 	transport_register(&swd_transport);
 }
 
-#if 0
 /** Returns true if the current debug session
  * is using SWD as its transport.
  */
@@ -424,4 +423,3 @@ bool transport_is_swd(void)
 {
 	return get_current_transport() == &swd_transport;
 }
-#endif

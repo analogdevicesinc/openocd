@@ -99,3 +99,6 @@ TAGS
 
 # ctags tag files
 tags
+
+# VSCode
+.vscode
