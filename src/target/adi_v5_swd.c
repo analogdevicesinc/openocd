@@ -410,6 +410,8 @@ static struct transport swd_transport = {
 	.init = swd_init,
 };
 
+#if 0
+
 static void swd_constructor(void) __attribute__((constructor));
 static void swd_constructor(void)
 {
@@ -423,3 +425,5 @@ bool transport_is_swd(void)
 {
 	return get_current_transport() == &swd_transport;
 }
+
+#endif
