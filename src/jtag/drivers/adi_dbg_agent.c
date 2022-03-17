@@ -310,11 +310,11 @@ if (cable_params.use_usbmux)
 		ret = usbmux_open(&cable_params.mux_handle, USB_CONNECTION_TIMEOUT);
 		if (ret)
 		{
-			LOG_DEBUG("failed to open USB MUX.");
+			LOG_ERROR("failed to open USB MUX.");
 			return ERROR_FAIL;
 		}
 #else
-		LOG_DEBUG("USB MUX not supported on this host.");
+		LOG_ERROR("USB MUX is not supported on this host.");
 		return ERROR_FAIL;
 #endif
 	}
@@ -1122,13 +1122,13 @@ if (cable_params.mux_handle)
 				else
 				{
 					// Failed to acquire lock (TIMEOUT)
-					LOG_DEBUG("Timeout acquiring USB lock.");
+					LOG_ERROR("Timeout acquiring USB lock.");
 					return ERROR_TIMEOUT;
 				}
 			}
 			else
 			{
-				LOG_DEBUG("USB error: Failed to acquire USB lock (error %d).", mux_ret);
+				LOG_ERROR("USB error: Failed to acquire USB lock (error %d).", mux_ret);
 				return ERROR_FAIL;
 			}
 			usleep(100000);
