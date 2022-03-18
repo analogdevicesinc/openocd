@@ -219,7 +219,7 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	target_write_u32(target, SPIXF_SCLK_FB_CTRL, temp32);
 
 	/* Bus idle timeout */
-	temp32 = 0x1000;
+	temp32 = 0x1;
 	target_write_u32(target, SPIXF_BUS_IDLE, temp32);
 
 	/* Enable and flush the SPI ICC */
