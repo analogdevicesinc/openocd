@@ -444,7 +444,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    set cdu_stat     [expr {$cdu_cfg0 + 0x40}]
    set cdu_clkinsel [expr {$cdu_cfg0 + 0x44}]
 
-   set miscreg_eco_reg10   0x310A902C
+   set miscreg_pll2_control   0x310A902C
 
    # Reset DMC Lane by setting the DMC_DDR_LANE0_CTL0.CB_RSTDLL
    # and DMC_DDR_LANE1_CTL0.CB_RSTDLL bits
@@ -459,53 +459,53 @@ proc adspsc59x_init_ddr3 { dmc } {
 
    ###### Call to adi_configDCLK_1()
    # MSEL update
-   # Clear BYPASSB, DSEL_DIV_CHG and MSELDF_CHG */
-   # *pREG_MISCREG_ECO_REG10 &= ~(BITM_MISCREG_ECO_REG10_BYPASSB | BITM_MISCREG_ECO_REG10_MSELDF_CHG | BITM_MISCREG_ECO_REG10_DSEL_DIV_CHG) ;
+   # Clear BYPASSB, DSEL_DIV_CHG and MSELDF_CHG
+   # *pREG_MISCREG_PLL2_CONTROL &= ~(BITM_MISCREG_PLL2_CONTROL_BYPASSB | BITM_MISCREG_PLL2_CONTROL_MSELDF_CHG | BITM_MISCREG_PLL2_CONTROL_DSEL_DIV_CHG) ;
    # Cclkdelay(20);
-   pmmw $miscreg_eco_reg10 0x0 0x7
+   pmmw $miscreg_pll2_control 0x0 0x7
    after 1
 
-   # update MSEL
-   # *pREG_MISCREG_ECO_REG10 &= ~BITM_MISCREG_ECO_REG10_MSEL;
-   # *pREG_MISCREG_ECO_REG10 |= ((Msel << BITP_MISCREG_ECO_REG10_MSEL)& BITM_MISCREG_ECO_REG10_MSEL);
-   pmmw $miscreg_eco_reg10 0x0 0x000007F0
-   pmmw $miscreg_eco_reg10 0x000003F0 0x0
+   # update MSEL ("Msel" == 63)
+   # *pREG_MISCREG_PLL2_CONTROL &= ~BITM_MISCREG_PLL2_CONTROL_MSEL;
+   # *pREG_MISCREG_PLL2_CONTROL |= ((Msel << BITP_MISCREG_PLL2_CONTROL_MSEL)& BITM_MISCREG_PLL2_CONTROL_MSEL);
+   pmmw $miscreg_pll2_control 0x0 0x000007F0
+   pmmw $miscreg_pll2_control 0x000003F0 0x0
 
    # set MSELDF_CHG
-   # *pREG_MISCREG_ECO_REG10 |= BITM_MISCREG_ECO_REG10_MSELDF_CHG;
-   pmmw $miscreg_eco_reg10 0x00000002 0x0
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_MSELDF_CHG;
+   pmmw $miscreg_pll2_control 0x00000002 0x0
    # Cclkdelay(768);
    # Cclkdelay(92384);
    after 1
 
    # Set BYPASSB control bit
-   # *pREG_MISCREG_ECO_REG10 |= BITM_MISCREG_ECO_REG10_BYPASSB;
-   pmmw $miscreg_eco_reg10 0x00000001 0x0
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_BYPASSB;
+   pmmw $miscreg_pll2_control 0x00000001 0x0
 
    # DCLK Divider update
    # Clear BYPASSB, DSEL_DIV_CHG and MSELDF_CHG
-   # *pREG_MISCREG_ECO_REG10 &= ~(BITM_MISCREG_ECO_REG10_BYPASSB | BITM_MISCREG_ECO_REG10_MSELDF_CHG | BITM_MISCREG_ECO_REG10_DSEL_DIV_CHG) ;
-   pmmw $miscreg_eco_reg10 0x0 0x7
+   # *pREG_MISCREG_PLL2_CONTROL &= ~(BITM_MISCREG_PLL2_CONTROL_BYPASSB | BITM_MISCREG_PLL2_CONTROL_MSELDF_CHG | BITM_MISCREG_PLL2_CONTROL_DSEL_DIV_CHG) ;
+   pmmw $miscreg_pll2_control 0x0 0x7
 
-   # update DSEL
-   # *pREG_MISCREG_ECO_REG10 &= ~BITM_MISCREG_ECO_REG10_DSEL;
-   # *pREG_MISCREG_ECO_REG10 |= ((Dsel<< BITP_MISCREG_ECO_REG10_DSEL)& BITM_MISCREG_ECO_REG10_DSEL);
-   pmmw $miscreg_eco_reg10 0x0 0x0001F000
-   pmmw $miscreg_eco_reg10 0x00001000 0x0
+   # update DSEL ("Dsel" == 1)
+   # *pREG_MISCREG_PLL2_CONTROL &= ~BITM_MISCREG_PLL2_CONTROL_DSEL;
+   # *pREG_MISCREG_PLL2_CONTROL |= ((Dsel<< BITP_MISCREG_PLL2_CONTROL_DSEL)& BITM_MISCREG_PLL2_CONTROL_DSEL);
+   pmmw $miscreg_pll2_control 0x0 0x0001F000
+   pmmw $miscreg_pll2_control 0x00001000 0x0
 
    # set DSEL_DIV_CHG
-   # *pREG_MISCREG_ECO_REG10 |= BITM_MISCREG_ECO_REG10_DSEL_DIV_CHG;
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_DSEL_DIV_CHG;
    # Cclkdelay(768);
-   pmmw $miscreg_eco_reg10 0x00000004 0x0
+   pmmw $miscreg_pll2_control 0x00000004 0x0
    after 1
 
    # Set BYPASSB control bit
-   # *pREG_MISCREG_ECO_REG10 |= BITM_MISCREG_ECO_REG10_BYPASSB;
-   pmmw $miscreg_eco_reg10 0x00000001 0x0
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_BYPASSB;
+   pmmw $miscreg_pll2_control 0x00000001 0x0
 
    # Set the DDRCLK_FROM_3RDPLL [11] bit to connect the 3rd PLL DCLK to DMC
-   # *pREG_MISCREG_ECO_REG10 |= BITM_MISCREG_ECO_REG10_DDRCLK_FROM_3RDPLL;
-   pmmw $miscreg_eco_reg10 0x00000800 0x0
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_DDRCLK_FROM_3RDPLL;
+   pmmw $miscreg_pll2_control 0x00000800 0x0
    ###### End of call to adi_configDCLK_1()
 
    # Configure the CDU (adi_pwr_CDUInit)
@@ -610,7 +610,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
     pmmw $cgu0_pllctl 0x8 0
 
-   # Wait till PLL is enabled */
+   # Wait till PLL is enabled
    # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
    set data [memread32_phys $cgu0_stat]
    while { ![expr {$data & 0x1}] } {
@@ -717,7 +717,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    # Put PLL in to Bypass Mode
 
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
-   # Wait till PLL is enabled */
+   # Wait till PLL is enabled
    # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
    pmmw $cgu1_pllctl 0x8 0x0
    set data [memread32_phys $cgu1_stat]
@@ -753,7 +753,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
    pmmw $cgu1_pllctl 0x8 0
 
-   # Wait till PLL is enabled */
+   # Wait till PLL is enabled
    # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
    set data [memread32_phys $cgu1_stat]
    while { ![expr {$data & 0x1}] } {
@@ -770,7 +770,7 @@ proc adspsc59x_init_ddr3 { dmc } {
       set data [memread32_phys $cgu1_stat]
    }
 
-   # Wait for No-Bypass to reflect in the status*/
+   # Wait for No-Bypass to reflect in the status
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP) {}
    set data [memread32_phys $cgu1_stat]
    while { [expr {$data & 0x2}] } {
@@ -786,7 +786,7 @@ proc adspsc59x_init_ddr3 { dmc } {
          set data [memread32_phys $cgu1_ctl]
       }
 
-      # Update the new Divider values for S1SELEX via DIVEX */
+      # Update the new Divider values for S1SELEX via DIVEX
       # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 90;
       # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv;
       mww phys $cgu1_divex 0x5a0024
@@ -1122,14 +1122,14 @@ proc adspsc59x_init_ddr3 { dmc } {
 
    if { $_CHIPNAME == "adspsc598" } {
       # 800 MHz
-      set ulDDR_DLLCTLCFG 0xcf70622
-      set ulDDR_EMR2EMR3  0x200004
-      set ulDDR_CTL       0x8000a05
-      set ulDDR_MREMR1    0xd7000c0
+      set ulDDR_DLLCTLCFG 0x0cf70622
+      set ulDDR_EMR2EMR3  0x00200004
+      set ulDDR_CTL       0x08004a05
+      set ulDDR_MREMR1    0x0d7000c0
       set ulDDR_TR0       0x4271cb6b
       set ulDDR_TR1       0x60d01860
-      set ulDDR_TR2       0x45c620
-      set ulDDR_ZQCTL0    0x785a64
+      set ulDDR_TR2       0x0045c620
+      set ulDDR_ZQCTL0    0x00785a64
    } else {
       # 800 MHz
       set ulDDR_DLLCTLCFG 0x0cf70722
@@ -1267,7 +1267,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    }
 
 
-   # Delay trim required for 8000MHz and 900MHz DDR3
+   # Delay trim required for 800MHz and 900MHz DDR3
    set DelayTrim 1
 
    if { $DelayTrim } {
