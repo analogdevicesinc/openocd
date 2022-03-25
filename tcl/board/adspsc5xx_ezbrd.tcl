@@ -116,24 +116,24 @@ proc adspsc5xx_init_ddr3 { dmc } {
       set dummy_addr 0xc0000000
    }
 
-   set dmc_ctl			[expr {$dmc_baseaddr + 0x4}]
-   set dmc_stat			[expr {$dmc_baseaddr + 0x8}]
-   set dmc_cfg			[expr {$dmc_baseaddr + 0x40}]
-   set dmc_tr0			[expr {$dmc_baseaddr + 0x44}]
-   set dmc_tr1			[expr {$dmc_baseaddr + 0x48}]
-   set dmc_tr2			[expr {$dmc_baseaddr + 0x4c}]
-   set dmc_mr			[expr {$dmc_baseaddr + 0x60}]
-   set dmc_mr1			[expr {$dmc_baseaddr + 0x64}]
-   set dmc_mr2			[expr {$dmc_baseaddr + 0x68}]
-   set dmc_dllctl		[expr {$dmc_baseaddr + 0x80}]
-   set dmc_cphy_ctl		[expr {$dmc_baseaddr + 0x1c0}]
-   set dmc_phy_ctl0		[expr {$dmc_baseaddr + 0x1000}]
-   set dmc_phy_ctl1		[expr {$dmc_baseaddr + 0x1004}]
-   set dmc_phy_ctl2		[expr {$dmc_baseaddr + 0x1008}]
-   set dmc_phy_ctl3		[expr {$dmc_baseaddr + 0x100c}]
-   set dmc_phy_ctl4		[expr {$dmc_baseaddr + 0x1010}]
-   set dmc_cal_padctl0	[expr {$dmc_baseaddr + 0x1034}]
-   set dmc_cal_padctl2	[expr {$dmc_baseaddr + 0x103c}]
+   set dmc_ctl	        [expr {$dmc_baseaddr + 0x4}]
+   set dmc_stat	        [expr {$dmc_baseaddr + 0x8}]
+   set dmc_cfg	        [expr {$dmc_baseaddr + 0x40}]
+   set dmc_tr0	        [expr {$dmc_baseaddr + 0x44}]
+   set dmc_tr1	        [expr {$dmc_baseaddr + 0x48}]
+   set dmc_tr2	        [expr {$dmc_baseaddr + 0x4c}]
+   set dmc_mr	          [expr {$dmc_baseaddr + 0x60}]
+   set dmc_mr1	        [expr {$dmc_baseaddr + 0x64}]
+   set dmc_mr2	        [expr {$dmc_baseaddr + 0x68}]
+   set dmc_dllctl	      [expr {$dmc_baseaddr + 0x80}]
+   set dmc_cphy_ctl	    [expr {$dmc_baseaddr + 0x1c0}]
+   set dmc_phy_ctl0	    [expr {$dmc_baseaddr + 0x1000}]
+   set dmc_phy_ctl1	    [expr {$dmc_baseaddr + 0x1004}]
+   set dmc_phy_ctl2	    [expr {$dmc_baseaddr + 0x1008}]
+   set dmc_phy_ctl3	    [expr {$dmc_baseaddr + 0x100c}]
+   set dmc_phy_ctl4	    [expr {$dmc_baseaddr + 0x1010}]
+   set dmc_cal_padctl0  [expr {$dmc_baseaddr + 0x1034}]
+   set dmc_cal_padctl2  [expr {$dmc_baseaddr + 0x103c}]
 
    # Configure SMPU (silicon anomaly 20000018)
    if { $CHIPNAME == "adspsc589" } {
@@ -444,6 +444,8 @@ proc adspsc59x_init_ddr3 { dmc } {
    set cdu_stat     [expr {$cdu_cfg0 + 0x40}]
    set cdu_clkinsel [expr {$cdu_cfg0 + 0x44}]
 
+   set miscreg_pll2_control   0x310A902C
+
    # Reset DMC Lane by setting the DMC_DDR_LANE0_CTL0.CB_RSTDLL
    # and DMC_DDR_LANE1_CTL0.CB_RSTDLL bits
    # *pREG_DMC0_DDR_LANE0_CTL0 |= BITM_DMC_DDR_LANE0_CTL0_CB_RSTDLL;
@@ -454,6 +456,57 @@ proc adspsc59x_init_ddr3 { dmc } {
    # Wait for DLL lock - 9000 DCLK cycles
    # 1ms should be enough
    after 1
+
+   ###### Call to adi_configDCLK_1()
+   # MSEL update
+   # Clear BYPASSB, DSEL_DIV_CHG and MSELDF_CHG
+   # *pREG_MISCREG_PLL2_CONTROL &= ~(BITM_MISCREG_PLL2_CONTROL_BYPASSB | BITM_MISCREG_PLL2_CONTROL_MSELDF_CHG | BITM_MISCREG_PLL2_CONTROL_DSEL_DIV_CHG) ;
+   # Cclkdelay(20);
+   pmmw $miscreg_pll2_control 0x0 0x7
+   after 1
+
+   # update MSEL ("Msel" == 63)
+   # *pREG_MISCREG_PLL2_CONTROL &= ~BITM_MISCREG_PLL2_CONTROL_MSEL;
+   # *pREG_MISCREG_PLL2_CONTROL |= ((Msel << BITP_MISCREG_PLL2_CONTROL_MSEL)& BITM_MISCREG_PLL2_CONTROL_MSEL);
+   pmmw $miscreg_pll2_control 0x0 0x000007F0
+   pmmw $miscreg_pll2_control 0x000003F0 0x0
+
+   # set MSELDF_CHG
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_MSELDF_CHG;
+   pmmw $miscreg_pll2_control 0x00000002 0x0
+   # Cclkdelay(768);
+   # Cclkdelay(92384);
+   after 1
+
+   # Set BYPASSB control bit
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_BYPASSB;
+   pmmw $miscreg_pll2_control 0x00000001 0x0
+
+   # DCLK Divider update
+   # Clear BYPASSB, DSEL_DIV_CHG and MSELDF_CHG
+   # *pREG_MISCREG_PLL2_CONTROL &= ~(BITM_MISCREG_PLL2_CONTROL_BYPASSB | BITM_MISCREG_PLL2_CONTROL_MSELDF_CHG | BITM_MISCREG_PLL2_CONTROL_DSEL_DIV_CHG) ;
+   pmmw $miscreg_pll2_control 0x0 0x7
+
+   # update DSEL ("Dsel" == 1)
+   # *pREG_MISCREG_PLL2_CONTROL &= ~BITM_MISCREG_PLL2_CONTROL_DSEL;
+   # *pREG_MISCREG_PLL2_CONTROL |= ((Dsel<< BITP_MISCREG_PLL2_CONTROL_DSEL)& BITM_MISCREG_PLL2_CONTROL_DSEL);
+   pmmw $miscreg_pll2_control 0x0 0x0001F000
+   pmmw $miscreg_pll2_control 0x00001000 0x0
+
+   # set DSEL_DIV_CHG
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_DSEL_DIV_CHG;
+   # Cclkdelay(768);
+   pmmw $miscreg_pll2_control 0x00000004 0x0
+   after 1
+
+   # Set BYPASSB control bit
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_BYPASSB;
+   pmmw $miscreg_pll2_control 0x00000001 0x0
+
+   # Set the DDRCLK_FROM_3RDPLL [11] bit to connect the 3rd PLL DCLK to DMC
+   # *pREG_MISCREG_PLL2_CONTROL |= BITM_MISCREG_PLL2_CONTROL_DDRCLK_FROM_3RDPLL;
+   pmmw $miscreg_pll2_control 0x00000800 0x0
+   ###### End of call to adi_configDCLK_1()
 
    # Configure the CDU (adi_pwr_CDUInit)
    set cdu_cfg_in0_en 0x1
@@ -507,6 +560,7 @@ proc adspsc59x_init_ddr3 { dmc } {
       set data [memread32_phys $cgu0_stat]
    }
 
+
    # Set CGU0_DIV
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_CSEL        = 2;
    # pADI_CGU_Param_List.cgu0_settings.clocksettings.div_S0SEL       = 4;
@@ -556,7 +610,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
     pmmw $cgu0_pllctl 0x8 0
 
-   # Wait till PLL is enabled */
+   # Wait till PLL is enabled
    # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
    set data [memread32_phys $cgu0_stat]
    while { ![expr {$data & 0x1}] } {
@@ -573,7 +627,7 @@ proc adspsc59x_init_ddr3 { dmc } {
       set data [memread32_phys $cgu0_stat]
    }
 
-   # Wait for No-Bypass to reflect in the status*/
+   # Wait for No-Bypass to reflect in the status
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP) {}
    set data [memread32_phys $cgu0_stat]
    while { [expr {$data & 0x2}] } {
@@ -589,8 +643,8 @@ proc adspsc59x_init_ddr3 { dmc } {
          set data [memread32_phys $cgu0_ctl]
       }
    } else {
-			# Wait until the S1SELEXEN enable bit is actually set
-			# while(!(pDevice->pCguRegs->CGU_CTL & BITM_CGU_CTL_S1SELEXEN)) {}
+      # Wait until the S1SELEXEN enable bit is actually set
+      # while(!(pDevice->pCguRegs->CGU_CTL & BITM_CGU_CTL_S1SELEXEN)) {}
       set data [memread32_phys $cgu0_ctl]
       while { ![expr {$data & 0x20000}] } {
          set data [memread32_phys $cgu0_ctl]
@@ -661,11 +715,20 @@ proc adspsc59x_init_ddr3 { dmc } {
 
 
    # Put PLL in to Bypass Mode
-   # regValue = BITM_CGU_PLLCTL_PLLEN | BITM_CGU_PLLCTL_PLLBPST;
-   # pDevice->pCguRegs->CGU_PLLCTL = regValue;
+
+   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
+   # Wait till PLL is enabled
+   # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
+   pmmw $cgu1_pllctl 0x8 0x0
+   set data [memread32_phys $cgu1_stat]
+   while { ![expr {$data & 0x1}] } {
+      set data [memread32_phys $cgu1_stat]
+   }
+
+   # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLBPST;
    # Wait for Bypass to reflect in the status
    # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)) {};
-   mww phys $cgu1_pllctl 0x9
+   pmmw $cgu1_pllctl 0x1 0x0
    set data [memread32_phys $cgu1_stat]
    while { ![expr {$data & 0x2}] } {
       set data [memread32_phys $cgu1_stat]
@@ -690,7 +753,7 @@ proc adspsc59x_init_ddr3 { dmc } {
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
    pmmw $cgu1_pllctl 0x8 0
 
-   # Wait till PLL is enabled */
+   # Wait till PLL is enabled
    # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
    set data [memread32_phys $cgu1_stat]
    while { ![expr {$data & 0x1}] } {
@@ -707,7 +770,7 @@ proc adspsc59x_init_ddr3 { dmc } {
       set data [memread32_phys $cgu1_stat]
    }
 
-   # Wait for No-Bypass to reflect in the status*/
+   # Wait for No-Bypass to reflect in the status
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP) {}
    set data [memread32_phys $cgu1_stat]
    while { [expr {$data & 0x2}] } {
@@ -723,7 +786,7 @@ proc adspsc59x_init_ddr3 { dmc } {
          set data [memread32_phys $cgu1_ctl]
       }
 
-      # Update the new Divider values for S1SELEX via DIVEX */
+      # Update the new Divider values for S1SELEX via DIVEX
       # pADI_CGU_Param_List.cgu1_settings.clocksettings.divex_S1SELEX   = 90;
       # pDevice->pCguRegs->CGU_DIVEX = dNewCguSCLKExDiv;
       mww phys $cgu1_divex 0x5a0024
@@ -1058,27 +1121,28 @@ proc adspsc59x_init_ddr3 { dmc } {
    }
 
    if { $_CHIPNAME == "adspsc598" } {
-      # 667 MHz
-      set ulDDR_DLLCTLCFG 0xaf70622
-      set ulDDR_EMR2EMR3  0x100004
-      set ulDDR_CTL       0xa05
-      set ulDDR_MREMR1    0xb5000c0
-      set ulDDR_TR0       0x42118959
-      set ulDDR_TR1       0x50ae1450
-      set ulDDR_TR2       0x44a51e
-      set ulDDR_ZQCTL0    0x786464
+      # 800 MHz
+      set ulDDR_DLLCTLCFG 0x0cf70622
+      set ulDDR_EMR2EMR3  0x00180004
+      set ulDDR_CTL       0x08004a05
+      set ulDDR_MREMR1    0x0d7000c0
+      set ulDDR_TR0       0x4271cb6b
+      set ulDDR_TR1       0x60d01860
+      set ulDDR_TR2       0x0045c620
+      set ulDDR_ZQCTL0    0x00785a64
    } else {
-      set ulDDR_DLLCTLCFG 0x0cf70722	
-      set ulDDR_EMR2EMR3  0x00180004	
-      set ulDDR_CTL       0x08000a05	
-      set ulDDR_MREMR1    0x0d7000c0	
-      set ulDDR_TR0       0x4271cb6b	
-      set ulDDR_TR1       0x61181860	
-      set ulDDR_TR2       0x0045c620	
-      set ulDDR_ZQCTL0    0x00785a64	
+      # 800 MHz
+      set ulDDR_DLLCTLCFG 0x0cf70722
+      set ulDDR_EMR2EMR3  0x00180004
+      set ulDDR_CTL       0x08000a05
+      set ulDDR_MREMR1    0x0d7000c0
+      set ulDDR_TR0       0x4271cb6b
+      set ulDDR_TR1       0x61181860
+      set ulDDR_TR2       0x0045c620
+      set ulDDR_ZQCTL0    0x00785a64
    }
-   set ulDDR_ZQCTL1    0x00000000	
-   set ulDDR_ZQCTL2    0x70000000	
+   set ulDDR_ZQCTL1    0x00000000
+   set ulDDR_ZQCTL2    0x70000000
 
    # program timing registers
    # *pREG_DMC0_CFG = (pConfig->ulDDR_DLLCTLCFG) & 0xFFFFul;
@@ -1203,18 +1267,14 @@ proc adspsc59x_init_ddr3 { dmc } {
    }
 
 
-   # SC594 uses delay trim
-   if { $_CHIPNAME == "adspsc598" } {
-      set delay_trim 0
-   } else {
-      set delay_trim 1
-   }
+   # Delay trim required for 800MHz and 900MHz DDR3
+   set DelayTrim 1
 
-   if { $delay_trim } {
+   if { $DelayTrim } {
       # DQS delay trim
 
       # For LDQS
-      # *pREG_DMC0_DDR_LANE0_CTL1 = (*pREG_DMC0_DDR_LANE0_CTL1) | (0x000000D0);
+      # *pREG_DMC0_DDR_LANE0_CTL1 |= 0x000000D0;
       # dmcdelay(2500u);
       pmmw $dmc_ddr_lane0_ctl1 0x000000d0 0
       after 1
@@ -1225,32 +1285,22 @@ proc adspsc59x_init_ddr3 { dmc } {
       after 1
 
       # *pREG_DMC0_DDR_ROOT_CTL =0x0;
-      # stat_value = (*pREG_DMC0_DDR_SCRATCH_4 & (0xFFFF0000))>>16;
-      # WL_code_LDQS = (stat_value) & (0x0000001F);
+      # WL_code_LDQS = (*pREG_DMC0_DDR_SCRATCH_4 & 0x001F0000u) >> 16;
       mww phys $dmc_ddr_root_ctl 0x0
       set data [memread32_phys $dmc_ddr_scratch4]
       set wl_code_ldqs [expr {($data & 0x001f0000) >> 16}]
 
       # *pREG_DMC0_DDR_LANE0_CTL1 &= ~(BITM_DMC_DDR_LANE0_CTL1_BYPCODE|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN);
-      pmmw $dmc_ddr_lane0_ctl1 0 0x0000fc00
-
-      # If write leveling is enabled
-      # if((pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL == true)
-      # {
-      #    *pREG_DMC0_DDR_LANE0_CTL1 |= (((WL_code_LDQS + Lane0_DQS_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
-      # }
-      # else
-      # {
-      #    *pREG_DMC0_DDR_LANE0_CTL1 |= (((DQS_Default_Delay + Lane0_DQS_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
-      # }
+      # *pREG_DMC0_DDR_LANE0_CTL1 |= (((WL_code_LDQS + Lane0_DQ_Delay)<<BITP_DMC_DDR_LANE0_CTL1_BYPCODE) & BITM_DMC_DDR_LANE0_CTL1_BYPCODE)|BITM_DMC_DDR_LANE0_CTL1_BYPDELCHAINEN;
       # dmcdelay(2500u);
-      set lane0_dqs_delay 1
-      set ctl_val [expr {((($wl_code_ldqs + $lane0_dqs_delay) << 10) & 0x00007c00) | 0x00008000}]
+      pmmw $dmc_ddr_lane0_ctl1 0 0x0000fc00
+      set lane0_dq_delay 1
+      set ctl_val [expr {((($wl_code_ldqs + $lane0_dq_delay) << 10) & 0x00007c00) | 0x00008000}]
       pmmw $dmc_ddr_lane0_ctl1 $ctl_val 0
       after 1
 
       # For UDQS
-      # *pREG_DMC0_DDR_LANE1_CTL1 = (*pREG_DMC0_DDR_LANE1_CTL1) | (0x000000D0);
+      # *pREG_DMC0_DDR_LANE1_CTL1 |= 0x000000D0u;
       # dmcdelay(2500u);
       pmmw $dmc_ddr_lane1_ctl1 0x000000d0 0
       after 1
@@ -1261,27 +1311,17 @@ proc adspsc59x_init_ddr3 { dmc } {
       after 1
 
       # *pREG_DMC0_DDR_ROOT_CTL =0x0;
-      # stat_value = (*pREG_DMC0_DDR_SCRATCH_5 & (0xFFFF0000))>>16;
-      # WL_code_UDQS = (stat_value) & (0x0000001F);
+      # WL_code_UDQS = (*pREG_DMC0_DDR_SCRATCH_5 & 0x001F0000u) >> 16;
+      # *pREG_DMC0_DDR_LANE1_CTL1 &= ~(BITM_DMC_DDR_LANE1_CTL1_BYPCODE|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN);
+      # *pREG_DMC0_DDR_LANE1_CTL1 |= (((WL_code_UDQS + Lane1_DQ_Delay)<<BITP_DMC_DDR_LANE1_CTL1_BYPCODE) & BITM_DMC_DDR_LANE1_CTL1_BYPCODE)|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN;
       mww phys $dmc_ddr_root_ctl 0x0
       set data [memread32_phys $dmc_ddr_scratch5]
       set wl_code_udqs [expr {($data & 0x001f0000) >> 16}]
-
-      # *pREG_DMC0_DDR_LANE1_CTL1 &= ~(BITM_DMC_DDR_LANE1_CTL1_BYPCODE|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN);
       pmmw $dmc_ddr_lane1_ctl1 0 0x0000fc00
-      # If write leveling is enabled
-      # if((pConfig->ulDDR_MREMR1 & BITM_DMC_MR1_WL)>>BITP_DMC_MR1_WL == true)
-      # {
-      #    *pREG_DMC0_DDR_LANE1_CTL1 |= (((WL_code_UDQS + Lane1_DQS_Delay)<<BITP_DMC_DDR_LANE1_CTL1_BYPCODE) & BITM_DMC_DDR_LANE1_CTL1_BYPCODE)|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN;
-      # }
-      # else
-      # {
-      #    *pREG_DMC0_DDR_LANE1_CTL1 |= (((DQS_Default_Delay + Lane1_DQS_Delay)<<BITP_DMC_DDR_LANE1_CTL1_BYPCODE) & BITM_DMC_DDR_LANE1_CTL1_BYPCODE)|BITM_DMC_DDR_LANE1_CTL1_BYPDELCHAINEN;
-      # }
-      # dmcdelay(2500u);
-      set lane1_dqs_delay 1
-      set ctl_val [expr {((($wl_code_udqs + $lane1_dqs_delay) << 10) & 0x00007c00) | 0x00008000}]
-      pmmw $dmc_ddr_lane1_ctl1 $ctl_val 0
+
+      set lane1_dq_delay 1
+      set data [expr {((($wl_code_udqs + $lane1_dq_delay) << 10) & 0x00007c00) | 0x00008000}]
+      pmmw $dmc_ddr_lane1_ctl1 $data 0
       after 1
    }
 }
