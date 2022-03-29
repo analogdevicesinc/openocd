@@ -1325,3 +1325,11 @@ proc adspsc59x_init_ddr3 { dmc } {
       after 1
    }
 }
+
+proc adspsc59x_init_emac { } {
+   set pads0_pcfg0 0x31004604
+
+   # Take EMAC0 (RGMII) out of reset
+   # *pREG_PADS0_PCFG0 |= BITM_PADS_PCFG0_EMACRESET
+   pmmw $pads0_pcfg0 0x00000004 0
+}
