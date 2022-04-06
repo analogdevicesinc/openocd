@@ -48,14 +48,8 @@
 #include <strings.h>
 #endif
 
-#ifdef PKGBLDDATE
 #define OPENOCD_VERSION	\
-	"Open On-Chip Debugger " PKGVERSION VERSION RELSTR " (" PKGBLDDATE ")"
-	//"Open On-Chip Debugger " VERSION RELSTR " (" PKGBLDDATE ")"
-#else
-#define OPENOCD_VERSION	\
-	"Open On-Chip Debugger " PKGVERSION VERSION RELSTR " (" PKGBLDDATE ")"
-#endif
+	"Open On-Chip Debugger " PKGVERSION " OpenOCD " VERSION RELSTR " (" PKGBLDDATE ")"
 
 static const char openocd_startup_tcl[] = {
 #include "startup_tcl.inc"

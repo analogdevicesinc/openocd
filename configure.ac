@@ -5,7 +5,6 @@ AC_CONFIG_SRCDIR([src/openocd.c])
 
 m4_include([acx.m4])
 ACX_PKGVERSION([PKGVERSION])
-#ACX_PKGVERSION([OpenOCD])
 ACX_BUGURL([processor.tools.support@analog.com])
 
 AC_DEFINE_UNQUOTED([PKGVERSION], ["$PKGVERSION"],
