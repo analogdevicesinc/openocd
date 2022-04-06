@@ -49,7 +49,7 @@
 #endif
 
 #define OPENOCD_VERSION	\
-	"Open On-Chip Debugger " PKGVERSION " OpenOCD " VERSION RELSTR " (" PKGBLDDATE ")"
+	"Open On-Chip Debugger " PKGVERSION "OpenOCD " VERSION " " RELSTR " (" PKGBLDDATE ")"
 
 static const char openocd_startup_tcl[] = {
 #include "startup_tcl.inc"
@@ -280,12 +280,29 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	}
 	LOG_DEBUG("command registration: complete");
 
-	LOG_OUTPUT(OPENOCD_VERSION "\n"
+	/* pretty print the OPENOCD_VERSION */
+	char pretty_version[128];
+	int i = 0, j = 0;
+	/* copy the valid product version */
+	while (i < 128 && OPENOCD_VERSION[j] && OPENOCD_VERSION[j] != '+')
+	{
+		pretty_version[i++] = OPENOCD_VERSION[j++];
+	}
+
+	/* ignore everything between '+' and 'g' */
+	while (OPENOCD_VERSION[j] != 'g')
+		j++;
+
+	/* copy the valid RELSTR */
+	pretty_version[i++] = '-';
+	while (i < 128 && OPENOCD_VERSION[j] && OPENOCD_VERSION[j] != '-')
+	{
+		pretty_version[i++] = OPENOCD_VERSION[j++];
+	}
+	pretty_version[i++] = NULL;
+
+	LOG_OUTPUT(pretty_version "\n"
 		"Licensed under GNU GPL v2\n");
-	LOG_OUTPUT("\nPKGVERSION:" PKGVERSION);
-	LOG_OUTPUT("\nVERSION:" VERSION);
-	LOG_OUTPUT("\nRELSTR:" RELSTR);
-	LOG_OUTPUT("\nPKGBLDDATE:" PKGBLDDATE  "\n\n");
 
 	global_cmd_ctx = cmd_ctx;
 
