@@ -301,8 +301,7 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	}
 	pretty_version[i++] = NULL;
 
-	LOG_OUTPUT(%s "\n"
-		"Licensed under GNU GPL v2\n", pretty_version);
+	LOG_OUTPUT("%s\nLicensed under GNU GPL v2\n", pretty_version);
 
 	global_cmd_ctx = cmd_ctx;
 
