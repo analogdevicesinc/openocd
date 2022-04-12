@@ -289,17 +289,18 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 		pretty_version[i++] = OPENOCD_VERSION[j++];
 	}
 
-	/* ignore everything between '+' or '-' and 'g' until end or another '-' */
-	while (OPENOCD_VERSION[j] != 'g')
+	/* ignore everything until we find "-g" */
+	while (OPENOCD_VERSION[j] != '-' || OPENOCD_VERSION[j+1] != 'g')
 		j++;
 
-	/* copy the valid RELSTR which we assume begins with "g" */
-	pretty_version[i++] = '-';
+	/* copy the valid RELSTR which we assume begins with "g" until end or another '-' */
+	pretty_version[i++] = OPENOCD_VERSION[j++];
+	pretty_version[i++] = OPENOCD_VERSION[j++];
 	while (i < 128 && OPENOCD_VERSION[j] && OPENOCD_VERSION[j] != '-')
 	{
 		pretty_version[i++] = OPENOCD_VERSION[j++];
 	}
-	pretty_version[i++] = NULL;
+	pretty_version[i++] = 0;
 
 	LOG_OUTPUT("%s\nLicensed under GNU GPL v2\n", pretty_version);
 
