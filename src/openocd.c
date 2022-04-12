@@ -283,17 +283,17 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	/* pretty print the OPENOCD_VERSION */
 	char pretty_version[128];
 	int i = 0, j = 0;
-	/* copy the valid product version */
-	while (i < 128 && OPENOCD_VERSION[j] && OPENOCD_VERSION[j] != '+')
+	/* copy the valid product version (everything up to first '+' or '-') */
+	while (i < 128 && OPENOCD_VERSION[j] && OPENOCD_VERSION[j] != '+' && OPENOCD_VERSION[j] != '-')
 	{
 		pretty_version[i++] = OPENOCD_VERSION[j++];
 	}
 
-	/* ignore everything between '+' and 'g' */
+	/* ignore everything between '+' or '-' and 'g' until end or another '-' */
 	while (OPENOCD_VERSION[j] != 'g')
 		j++;
 
-	/* copy the valid RELSTR */
+	/* copy the valid RELSTR which we assume begins with "g" */
 	pretty_version[i++] = '-';
 	while (i < 128 && OPENOCD_VERSION[j] && OPENOCD_VERSION[j] != '-')
 	{
