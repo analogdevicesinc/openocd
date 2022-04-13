@@ -291,7 +291,7 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	
 	/* pull out a clean product version (everything up to next '+' or '-') */
 	char version[] = VERSION;
-	int i = strlen(pretty_vesion);
+	int i = strlen(pretty_version);
 	int j = 0;
 	while (i < 150 && version[j] && version[j] != '+' && version[j] != '-')
 	{
