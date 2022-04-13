@@ -48,8 +48,13 @@
 #include <strings.h>
 #endif
 
+#ifdef PKGBLDDATE
 #define OPENOCD_VERSION	\
-	"Open On-Chip Debugger " PKGVERSION "OpenOCD " VERSION " " RELSTR " (" PKGBLDDATE ")"
+	"Open On-Chip Debugger " VERSION RELSTR " (" PKGBLDDATE ")"
+#else
+#define OPENOCD_VERSION	\
+	"Open On-Chip Debugger " VERSION RELSTR
+#endif
 
 static const char openocd_startup_tcl[] = {
 #include "startup_tcl.inc"
@@ -280,26 +285,39 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	}
 	LOG_DEBUG("command registration: complete");
 
-	/* pretty print the OPENOCD_VERSION */
-	char pretty_version[128];
-	int i = 0, j = 0;
-	/* copy the valid product version (everything up to first '+' or '-') */
-	while (i < 128 && OPENOCD_VERSION[j] && OPENOCD_VERSION[j] != '+' && OPENOCD_VERSION[j] != '-')
+	/* pretty print the ADI OpenOCD version to look like this:
+		"Open On-Chip Debugger " PKGVERSION "OpenOCD " VERSION " " RELSTR " (" PKGBLDDATE ")" */
+	char pretty_version[150] = "Open On-Chip Debugger " PKGVERSION " OpenOCD ";
+	
+	/* pull out a clean product version (everything up to next '+' or '-') */
+	char version[] = VERSION;
+	int i = strlen(pretty_vesion);
+	int j = 0;
+	while (i < 150 && version[j] && version[j] != '+' && version[j] != '-')
 	{
-		pretty_version[i++] = OPENOCD_VERSION[j++];
+		pretty_version[i++] = version[j++];
 	}
 
-	/* ignore everything until we find "-g" */
-	while (OPENOCD_VERSION[j] != '-' || OPENOCD_VERSION[j+1] != 'g')
+	/* pull out a clean RELSTR, ignore everything until we find "-g" until end or another '-' */
+	char relstr[] = RELSTR;
+	j = 0;
+	while (relstr[j] != '-' || relstr[j+1] != 'g')
 		j++;
-
-	/* copy the valid RELSTR which we assume begins with "g" until end or another '-' */
-	pretty_version[i++] = OPENOCD_VERSION[j++];
-	pretty_version[i++] = OPENOCD_VERSION[j++];
-	while (i < 128 && OPENOCD_VERSION[j] && OPENOCD_VERSION[j] != '-')
+	pretty_version[i++] = relstr[j++];
+	pretty_version[i++] = relstr[j++];
+	while (i < 150 && relstr[j] && relstr[j] != '-')
 	{
-		pretty_version[i++] = OPENOCD_VERSION[j++];
+		pretty_version[i++] = relstr[j++];
 	}
+
+	/* copy the PKGBLDDATE */
+	pretty_version[i++] = ' ';
+	pretty_version[i++] = '(';
+	strcat(pretty_version, PKGBLDDATE);
+	i = strlen(pretty_version);
+	pretty_version[i++] = ')';
+
+	/* terminate the pretty string */
 	pretty_version[i++] = 0;
 
 	LOG_OUTPUT("%s\nLicensed under GNU GPL v2\n", pretty_version);
