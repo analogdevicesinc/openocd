@@ -3,6 +3,15 @@ AC_INIT([openocd], [0.10.0+dev],
   [OpenOCD Mailing List <openocd-devel@lists.sourceforge.net>])
 AC_CONFIG_SRCDIR([src/openocd.c])
 
+m4_include([acx.m4])
+ACX_PKGVERSION([PKGVERSION])
+ACX_BUGURL([processor.tools.support@analog.com])
+
+AC_DEFINE_UNQUOTED([PKGVERSION], ["$PKGVERSION"],
+		   [Define to the package version.])dnl
+AC_DEFINE_UNQUOTED([REPORT_BUGS_TO], ["$REPORT_BUGS_TO"],
+		   [Define to the URL or email address for report bugs to.])dnl
+
 m4_include([config_subdir.m4])dnl
 
 # check for makeinfo before calling AM_INIT_AUTOMAKE
