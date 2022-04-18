@@ -189,6 +189,13 @@ endif
 endif
 endif
 
+if ICE_1500
+DRIVERFILES += %D%/ice1500.c
+if USE_LIBUSBMUX
+SUBDIRS += %D%/libusbmux
+DIST_SUBDIRS += %D%/libusbmux
+endif
+
 if CMSIS_DAP
 DRIVERFILES += %D%/cmsis_dap_usb.c
 endif
