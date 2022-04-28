@@ -165,6 +165,9 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define READ_BUFFER_SIZE		0x4000
 #define MAX_DIF_SIZE			(27 * 1024)     /* 0x7008 is the max but leave some room */
 
+/* Latest firware version for ICE-1500 */
+#define CURRENT_ICE1500_FW_VERSION	0x0100
+
 
 /*
  * Internal Macros
@@ -386,7 +389,7 @@ if (cable_params.use_usbmux)
 			 ((cable_params.version >> 4) & 0x0F),
 			 ((cable_params.version)	  & 0x0F));
 
-	if (cable_params.version < 0x5)
+	if (cable_params.version < CURRENT_ICE1500_FW_VERSION)
 		LOG_WARNING("This firmware version is obsolete. Please update to the latest version.");
 
 	do_host_cmd(HOST_SET_TRST, 1, 0);
