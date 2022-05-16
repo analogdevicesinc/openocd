@@ -213,6 +213,11 @@ struct target {
 
 	/* The semihosting information, extracted from the target. */
 	struct semihosting *semihosting;
+
+	/* Some targets use CoreSight CTI to do restart */
+	bool restart_use_cti;
+	uint32_t restart_cti_reg_addr;
+	int restart_cti_channel;
 };
 
 struct target_list {
@@ -761,6 +766,7 @@ void target_handle_md_output(struct command_invocation *cmd,
 #define ERROR_TARGET_NOT_EXAMINED (-311)
 #define ERROR_TARGET_DUPLICATE_BREAKPOINT (-312)
 #define ERROR_TARGET_ALGO_EXIT  (-313)
+#define ERROR_TARGET_EXCEPTION_LEVEL (-314)
 
 extern bool get_target_reset_nag(void);
 

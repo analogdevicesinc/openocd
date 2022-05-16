@@ -10,6 +10,8 @@
  *
  *   Copyright (C) 2009-2010 by David Brownell
  *
+ *   Copyright (C) 2019, Ampere Computing LLC
+ *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
@@ -35,6 +37,7 @@
 #endif
 
 #include "arm.h"
+#include "arm_adi.h"
 #include "arm_adi_v5.h"
 #include <helper/time_support.h>
 #include <helper/list.h>
@@ -52,7 +55,7 @@
 #define JTAG_ACK_OK_FAULT	0x2
 #define JTAG_ACK_WAIT		0x1
 
-static int jtag_ap_q_abort(struct adiv5_dap *dap, uint8_t *ack);
+static int jtag_ap_q_abort(struct adi_dap *dap, uint8_t *ack);
 
 #ifdef DEBUG_WAIT
 static const char *dap_reg_name(int instr, int reg_addr)
@@ -161,7 +164,7 @@ static void log_dap_cmd(const char *header, struct dap_cmd *el)
 #endif
 }
 
-static int jtag_limit_queue_size(struct adiv5_dap *dap)
+static int jtag_limit_queue_size(struct adi_dap *dap)
 {
 	if (dap->cmd_pool_size < MAX_DAP_COMMAND_NUM)
 		return ERROR_OK;
@@ -169,12 +172,11 @@ static int jtag_limit_queue_size(struct adiv5_dap *dap)
 	return dap_run(dap);
 }
 
-static struct dap_cmd *dap_cmd_new(struct adiv5_dap *dap, uint8_t instr,
+static struct dap_cmd *dap_cmd_new(struct adi_dap *dap, uint8_t instr,
 		uint8_t reg_addr, uint8_t RnW,
 		uint8_t *outvalue, uint8_t *invalue,
 		uint32_t memaccess_tck)
 {
-
 	struct dap_cmd_pool *pool = NULL;
 
 	if (list_empty(&dap->cmd_pool)) {
@@ -202,7 +204,7 @@ static struct dap_cmd *dap_cmd_new(struct adiv5_dap *dap, uint8_t instr,
 	return cmd;
 }
 
-static void dap_cmd_release(struct adiv5_dap *dap, struct dap_cmd *cmd)
+static void dap_cmd_release(struct adi_dap *dap, struct dap_cmd *cmd)
 {
 	struct dap_cmd_pool *pool = container_of(cmd, struct dap_cmd_pool, cmd);
 	if (dap->cmd_pool_size > MAX_DAP_COMMAND_NUM)
@@ -213,7 +215,7 @@ static void dap_cmd_release(struct adiv5_dap *dap, struct dap_cmd *cmd)
 	dap->cmd_pool_size--;
 }
 
-static void flush_journal(struct adiv5_dap *dap, struct list_head *lh)
+static void flush_journal(struct adi_dap *dap, struct list_head *lh)
 {
 	struct dap_cmd *el, *tmp;
 
@@ -223,7 +225,7 @@ static void flush_journal(struct adiv5_dap *dap, struct list_head *lh)
 	}
 }
 
-static void jtag_quit(struct adiv5_dap *dap)
+static void jtag_quit(struct adi_dap *dap)
 {
 	struct dap_cmd_pool *el, *tmp;
 	struct list_head *lh = &dap->cmd_pool;
@@ -240,7 +242,7 @@ static void jtag_quit(struct adiv5_dap *dap)
  *
 ***************************************************************************/
 
-static int adi_jtag_dp_scan_cmd(struct adiv5_dap *dap, struct dap_cmd *cmd, uint8_t *ack)
+static int adi_jtag_dp_scan_cmd(struct adi_dap *dap, struct dap_cmd *cmd, uint8_t *ack)
 {
 	struct jtag_tap *tap = dap->tap;
 	int retval;
@@ -283,7 +285,7 @@ static int adi_jtag_dp_scan_cmd(struct adiv5_dap *dap, struct dap_cmd *cmd, uint
 	return ERROR_OK;
 }
 
-static int adi_jtag_dp_scan_cmd_sync(struct adiv5_dap *dap, struct dap_cmd *cmd, uint8_t *ack)
+static int adi_jtag_dp_scan_cmd_sync(struct adi_dap *dap, struct dap_cmd *cmd, uint8_t *ack)
 {
 	int retval;
 
@@ -314,7 +316,7 @@ static int adi_jtag_dp_scan_cmd_sync(struct adiv5_dap *dap, struct dap_cmd *cmd,
  * @param memaccess_tck number of idle cycles to add after AP access
  */
 
-static int adi_jtag_dp_scan(struct adiv5_dap *dap,
+static int adi_jtag_dp_scan(struct adi_dap *dap,
 		uint8_t instr, uint8_t reg_addr, uint8_t RnW,
 		uint8_t *outvalue, uint8_t *invalue,
 		uint32_t memaccess_tck, uint8_t *ack)
@@ -341,7 +343,7 @@ static int adi_jtag_dp_scan(struct adiv5_dap *dap,
  * conversions are performed (so the types of invalue and outvalue
  * must be different).
  */
-static int adi_jtag_dp_scan_u32(struct adiv5_dap *dap,
+static int adi_jtag_dp_scan_u32(struct adi_dap *dap,
 		uint8_t instr, uint8_t reg_addr, uint8_t RnW,
 		uint32_t outvalue, uint32_t *invalue,
 		uint32_t memaccess_tck, uint8_t *ack)
@@ -363,7 +365,7 @@ static int adi_jtag_dp_scan_u32(struct adiv5_dap *dap,
 	return retval;
 }
 
-static int adi_jtag_finish_read(struct adiv5_dap *dap)
+static int adi_jtag_finish_read(struct adi_dap *dap)
 {
 	int retval = ERROR_OK;
 
@@ -376,7 +378,7 @@ static int adi_jtag_finish_read(struct adiv5_dap *dap)
 	return retval;
 }
 
-static int adi_jtag_scan_inout_check_u32(struct adiv5_dap *dap,
+static int adi_jtag_scan_inout_check_u32(struct adi_dap *dap,
 		uint8_t instr, uint8_t reg_addr, uint8_t RnW,
 		uint32_t outvalue, uint32_t *invalue, uint32_t memaccess_tck)
 {
@@ -401,7 +403,7 @@ static int adi_jtag_scan_inout_check_u32(struct adiv5_dap *dap,
 	return jtag_execute_queue();
 }
 
-static int jtagdp_overrun_check(struct adiv5_dap *dap)
+static int jtagdp_overrun_check(struct adi_dap *dap)
 {
 	int retval;
 	struct dap_cmd *el, *tmp, *prev = NULL;
@@ -599,7 +601,7 @@ static int jtagdp_overrun_check(struct adiv5_dap *dap)
 	return retval;
 }
 
-static int jtagdp_transaction_endcheck(struct adiv5_dap *dap)
+static int jtagdp_transaction_endcheck(struct adi_dap *dap)
 {
 	int retval;
 	uint32_t ctrlstat, pwrmask;
@@ -650,13 +652,13 @@ static int jtagdp_transaction_endcheck(struct adiv5_dap *dap)
 
 /*--------------------------------------------------------------------------*/
 
-static int jtag_connect(struct adiv5_dap *dap)
+static int jtag_connect(struct adi_dap *dap)
 {
 	dap->do_reconnect = false;
 	return dap_dp_init(dap);
 }
 
-static int jtag_check_reconnect(struct adiv5_dap *dap)
+static int jtag_check_reconnect(struct adi_dap *dap)
 {
 	if (dap->do_reconnect)
 		return jtag_connect(dap);
@@ -664,7 +666,7 @@ static int jtag_check_reconnect(struct adiv5_dap *dap)
 	return ERROR_OK;
 }
 
-static int jtag_send_sequence(struct adiv5_dap *dap, enum swd_special_seq seq)
+static int jtag_send_sequence(struct adi_dap *dap, enum swd_special_seq seq)
 {
 	int retval;
 
@@ -686,7 +688,7 @@ static int jtag_send_sequence(struct adiv5_dap *dap, enum swd_special_seq seq)
 	return retval;
 }
 
-static int jtag_dp_q_read(struct adiv5_dap *dap, unsigned reg,
+static int jtag_dp_q_read(struct adi_dap *dap, unsigned reg,
 		uint32_t *data)
 {
 	int retval = jtag_limit_queue_size(dap);
@@ -699,7 +701,7 @@ static int jtag_dp_q_read(struct adiv5_dap *dap, unsigned reg,
 	return retval;
 }
 
-static int jtag_dp_q_write(struct adiv5_dap *dap, unsigned reg,
+static int jtag_dp_q_write(struct adi_dap *dap, unsigned reg,
 		uint32_t data)
 {
 	int retval = jtag_limit_queue_size(dap);
@@ -713,9 +715,9 @@ static int jtag_dp_q_write(struct adiv5_dap *dap, unsigned reg,
 }
 
 /** Select the AP register bank matching bits 7:4 of reg. */
-static int jtag_ap_q_bankselect(struct adiv5_ap *ap, unsigned reg)
+static int jtag_ap_q_bankselect(struct adi_ap *ap, unsigned reg)
 {
-	struct adiv5_dap *dap = ap->dap;
+	struct adi_dap *dap = ap->dap;
 	uint32_t sel = ((uint32_t)ap->ap_num << 24) | (reg & 0x000000F0);
 
 	if (sel == dap->select)
@@ -726,7 +728,7 @@ static int jtag_ap_q_bankselect(struct adiv5_ap *ap, unsigned reg)
 	return jtag_dp_q_write(dap, DP_SELECT, sel);
 }
 
-static int jtag_ap_q_read(struct adiv5_ap *ap, unsigned reg,
+static int jtag_ap_q_read(struct adi_ap *ap, unsigned reg,
 		uint32_t *data)
 {
 	int retval = jtag_limit_queue_size(ap->dap);
@@ -748,7 +750,7 @@ static int jtag_ap_q_read(struct adiv5_ap *ap, unsigned reg,
 	return retval;
 }
 
-static int jtag_ap_q_write(struct adiv5_ap *ap, unsigned reg,
+static int jtag_ap_q_write(struct adi_ap *ap, unsigned reg,
 		uint32_t data)
 {
 	int retval = jtag_limit_queue_size(ap->dap);
@@ -769,7 +771,7 @@ static int jtag_ap_q_write(struct adiv5_ap *ap, unsigned reg,
 	return retval;
 }
 
-static int jtag_ap_q_abort(struct adiv5_dap *dap, uint8_t *ack)
+static int jtag_ap_q_abort(struct adi_dap *dap, uint8_t *ack)
 {
 	/* for JTAG, this is the only valid ABORT register operation */
 	int retval =  adi_jtag_dp_scan_u32(dap, JTAG_DP_ABORT,
@@ -780,7 +782,7 @@ static int jtag_ap_q_abort(struct adiv5_dap *dap, uint8_t *ack)
 	return jtag_execute_queue();
 }
 
-static int jtag_dp_run(struct adiv5_dap *dap)
+static int jtag_dp_run(struct adi_dap *dap)
 {
 	int retval;
 	int retval2 = ERROR_OK;
@@ -795,7 +797,7 @@ static int jtag_dp_run(struct adiv5_dap *dap)
 	return (retval2 != ERROR_OK) ? retval2 : retval;
 }
 
-static int jtag_dp_sync(struct adiv5_dap *dap)
+static int jtag_dp_sync(struct adi_dap *dap)
 {
 	return jtagdp_overrun_check(dap);
 }
@@ -803,7 +805,7 @@ static int jtag_dp_sync(struct adiv5_dap *dap)
 /* FIXME don't export ... just initialize as
  * part of DAP setup
 */
-const struct dap_ops jtag_dp_ops = {
+const struct dp_ops adiv5_jtag_dp_ops = {
 	.connect             = jtag_connect,
 	.send_sequence       = jtag_send_sequence,
 	.queue_dp_read       = jtag_dp_q_read,

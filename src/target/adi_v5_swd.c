@@ -2,6 +2,8 @@
  *
  *   Copyright (C) 2010 by David Brownell
  *
+ *   Copyright (C) 2019, Ampere Computing LLC
+ *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
@@ -45,6 +47,7 @@
 #endif
 
 #include "arm.h"
+#include "arm_adi.h"
 #include "arm_adi_v5.h"
 #include <helper/time_support.h>
 
@@ -55,32 +58,32 @@
 
 static bool do_sync;
 
-static void swd_finish_read(struct adiv5_dap *dap)
+static void swd_finish_read(struct adi_dap *dap)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	if (dap->last_read != NULL) {
 		swd->read_reg(swd_cmd(true, false, DP_RDBUFF), dap->last_read, 0);
 		dap->last_read = NULL;
 	}
 }
 
-static int swd_queue_dp_write(struct adiv5_dap *dap, unsigned reg,
+static int swd_queue_dp_write(struct adi_dap *dap, unsigned reg,
 		uint32_t data);
-static int swd_queue_dp_read(struct adiv5_dap *dap, unsigned reg,
+static int swd_queue_dp_read(struct adi_dap *dap, unsigned reg,
 		uint32_t *data);
 
-static void swd_clear_sticky_errors(struct adiv5_dap *dap)
+static void swd_clear_sticky_errors(struct adi_dap *dap)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	assert(swd);
 
 	swd->write_reg(swd_cmd(false,  false, DP_ABORT),
 		STKCMPCLR | STKERRCLR | WDERRCLR | ORUNERRCLR, 0);
 }
 
-static int swd_run_inner(struct adiv5_dap *dap)
+static int swd_run_inner(struct adi_dap *dap)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	int retval;
 
 	retval = swd->run();
@@ -93,9 +96,9 @@ static int swd_run_inner(struct adiv5_dap *dap)
 	return retval;
 }
 
-static int swd_connect(struct adiv5_dap *dap)
+static int swd_connect(struct adi_dap *dap)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	uint32_t dpidr = 0xdeadbeef;
 	int status;
 
@@ -142,20 +145,20 @@ static int swd_connect(struct adiv5_dap *dap)
 	return status;
 }
 
-static int swd_send_sequence(struct adiv5_dap *dap, enum swd_special_seq seq)
+static int swd_send_sequence(struct adi_dap *dap, enum swd_special_seq seq)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	assert(swd);
 
 	return swd->switch_seq(seq);
 }
 
-static inline int check_sync(struct adiv5_dap *dap)
+static inline int check_sync(struct adi_dap *dap)
 {
 	return do_sync ? swd_run_inner(dap) : ERROR_OK;
 }
 
-static int swd_check_reconnect(struct adiv5_dap *dap)
+static int swd_check_reconnect(struct adi_dap *dap)
 {
 	if (dap->do_reconnect)
 		return swd_connect(dap);
@@ -163,9 +166,9 @@ static int swd_check_reconnect(struct adiv5_dap *dap)
 	return ERROR_OK;
 }
 
-static int swd_queue_ap_abort(struct adiv5_dap *dap, uint8_t *ack)
+static int swd_queue_ap_abort(struct adi_dap *dap, uint8_t *ack)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	assert(swd);
 
 	swd->write_reg(swd_cmd(false,  false, DP_ABORT),
@@ -174,7 +177,7 @@ static int swd_queue_ap_abort(struct adiv5_dap *dap, uint8_t *ack)
 }
 
 /** Select the DP register bank matching bits 7:4 of reg. */
-static int swd_queue_dp_bankselect(struct adiv5_dap *dap, unsigned reg)
+static int swd_queue_dp_bankselect(struct adi_dap *dap, unsigned reg)
 {
 	/* Only register address 4 is banked. */
 	if ((reg & 0xf) != 4)
@@ -196,10 +199,10 @@ static int swd_queue_dp_bankselect(struct adiv5_dap *dap, unsigned reg)
 	return retval;
 }
 
-static int swd_queue_dp_read(struct adiv5_dap *dap, unsigned reg,
+static int swd_queue_dp_read(struct adi_dap *dap, unsigned reg,
 		uint32_t *data)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	assert(swd);
 
 	int retval = swd_check_reconnect(dap);
@@ -215,10 +218,10 @@ static int swd_queue_dp_read(struct adiv5_dap *dap, unsigned reg,
 	return check_sync(dap);
 }
 
-static int swd_queue_dp_write(struct adiv5_dap *dap, unsigned reg,
+static int swd_queue_dp_write(struct adi_dap *dap, unsigned reg,
 		uint32_t data)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	assert(swd);
 
 	int retval = swd_check_reconnect(dap);
@@ -248,9 +251,9 @@ static int swd_queue_dp_write(struct adiv5_dap *dap, unsigned reg,
 }
 
 /** Select the AP register bank matching bits 7:4 of reg. */
-static int swd_queue_ap_bankselect(struct adiv5_ap *ap, unsigned reg)
+static int swd_queue_ap_bankselect(struct adi_ap *ap, unsigned reg)
 {
-	struct adiv5_dap *dap = ap->dap;
+	struct adi_dap *dap = ap->dap;
 	uint32_t sel = ((uint32_t)ap->ap_num << 24)
 			| (reg & 0x000000F0)
 			| (dap->select & DP_SELECT_DPBANK);
@@ -267,11 +270,11 @@ static int swd_queue_ap_bankselect(struct adiv5_ap *ap, unsigned reg)
 	return retval;
 }
 
-static int swd_queue_ap_read(struct adiv5_ap *ap, unsigned reg,
+static int swd_queue_ap_read(struct adi_ap *ap, unsigned reg,
 		uint32_t *data)
 {
-	struct adiv5_dap *dap = ap->dap;
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	struct adi_dap *dap = ap->dap;
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	assert(swd);
 
 	int retval = swd_check_reconnect(dap);
@@ -288,11 +291,11 @@ static int swd_queue_ap_read(struct adiv5_ap *ap, unsigned reg,
 	return check_sync(dap);
 }
 
-static int swd_queue_ap_write(struct adiv5_ap *ap, unsigned reg,
+static int swd_queue_ap_write(struct adi_ap *ap, unsigned reg,
 		uint32_t data)
 {
-	struct adiv5_dap *dap = ap->dap;
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	struct adi_dap *dap = ap->dap;
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 	assert(swd);
 
 	int retval = swd_check_reconnect(dap);
@@ -310,23 +313,23 @@ static int swd_queue_ap_write(struct adiv5_ap *ap, unsigned reg,
 }
 
 /** Executes all queued DAP operations. */
-static int swd_run(struct adiv5_dap *dap)
+static int swd_run(struct adi_dap *dap)
 {
 	swd_finish_read(dap);
 	return swd_run_inner(dap);
 }
 
 /** Put the SWJ-DP back to JTAG mode */
-static void swd_quit(struct adiv5_dap *dap)
+static void swd_quit(struct adi_dap *dap)
 {
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	const struct swd_driver *swd = adi_dap_swd_driver(dap);
 
 	swd->switch_seq(SWD_TO_JTAG);
 	/* flush the queue before exit */
 	swd->run();
 }
 
-const struct dap_ops swd_dap_ops = {
+const struct dp_ops adiv5_swd_dp_ops = {
 	.connect = swd_connect,
 	.send_sequence = swd_send_sequence,
 	.queue_dp_read = swd_queue_dp_read,
@@ -407,6 +410,8 @@ static struct transport swd_transport = {
 	.init = swd_init,
 };
 
+#if 0
+
 static void swd_constructor(void) __attribute__((constructor));
 static void swd_constructor(void)
 {
@@ -420,3 +425,5 @@ bool transport_is_swd(void)
 {
 	return get_current_transport() == &swd_transport;
 }
+
+#endif
