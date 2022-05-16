@@ -1184,7 +1184,7 @@ proc adspsc59x_init_ddr3 { dmc } {
 
    if { $_CHIPNAME == "adspsc598" } {
       # 800 MHz
-      set ulDDR_DLLCTLCFG 0x0cf70622
+      set ulDDR_DLLCTLCFG 0x0cf00622
       set ulDDR_EMR2EMR3  0x00180004
       set ulDDR_CTL       0x08004a05
       set ulDDR_MREMR1    0x0d7000c0
@@ -1194,7 +1194,7 @@ proc adspsc59x_init_ddr3 { dmc } {
       set ulDDR_ZQCTL0    0x00785a64
    } else {
       # 800 MHz
-      set ulDDR_DLLCTLCFG 0x0cf70722
+      set ulDDR_DLLCTLCFG 0x0cf00722
       set ulDDR_EMR2EMR3  0x00180004
       set ulDDR_CTL       0x08000a05
       set ulDDR_MREMR1    0x0d7000c0
