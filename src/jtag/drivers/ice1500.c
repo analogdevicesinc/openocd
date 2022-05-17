@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2022 by Analog Devices, Inc.                     *
+*   Copyright (C) 2022 by Analog Devices, Inc.                     			*
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
 *   it under the terms of the GNU General Public License as published by  *
@@ -155,6 +155,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define HOST_READ_EEPROM               	0x0B	/* read the target's EEPROM */
 #define HOST_WRITE_EEPROM              	0x0C	/* write to the target's EEPROM */
 #define HOST_SET_JTAG_FREQUENCY			0x0D	/* set JTAG frequency */
+
 
 /* Ice USB controls */
 #define WRITE_ENDPOINT			0x02
