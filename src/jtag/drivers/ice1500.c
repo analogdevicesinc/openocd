@@ -546,8 +546,7 @@ static int ice1500_khz(int khz, int *speed)
 static int ice1500_speed_div(int speed, int *khz)
 {
 	// send updated JTAG frequency to firmware
-	do_host_cmd(HOST_SET_JTAG_FREQUENCY,freq_set_1500[3],0);
-	*khz = freq_set_1500[3]*1000;
+	do_host_cmd(HOST_SET_JTAG_FREQUENCY,(*khz/1000),0);
 	return ERROR_OK;
 }
 /*
