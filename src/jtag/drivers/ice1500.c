@@ -172,8 +172,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 
 /* frequency settings for ICE-1500 */
 #define MAX_FREQ_1500	6
-static const uint8_t freq_set_1500[MAX_FREQ_1500] = { 5, 10, 15, 20, 25, 30 };
-static const uint32_t avail_freqs_1500[MAX_FREQ_1500] = { 5000000, 10000000, 15000000, 20000000, 25000000, 30000000 };
+static const uint32_t freq_set_1500[MAX_FREQ_1500] = { 5000, 10000, 15000, 20000, 25000, 30000 };
 
 /*
  * Internal Macros
@@ -545,9 +544,17 @@ static int ice1500_khz(int khz, int *speed)
 
 static int ice1500_speed_div(int speed, int *khz)
 {
-	// send updated JTAG frequency to firmware
-	do_host_cmd(HOST_SET_JTAG_FREQUENCY,(*khz/1000),0);
-	return ERROR_OK;
+	// check if the given frequency is valid
+	for (int i=0; i<MAX_FREQ_1500; i++)
+	{
+		if (freq_set_1500[i] == *khz)
+		{
+			do_host_cmd(HOST_SET_JTAG_FREQUENCY,(*khz/1000),0);
+			return ERROR_OK;
+		}
+	}
+	LOG_ERROR("Invalid frequency %d\n	Please refer to ice1500.cfg for a list of valid frequencies", *khz);
+	return ERROR_FAIL;
 }
 /*
  * Takes Data received (rcv_dataptr) and puts it in
