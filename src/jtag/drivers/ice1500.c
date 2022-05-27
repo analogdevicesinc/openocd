@@ -553,7 +553,7 @@ static int ice1500_speed_div(int speed, int *khz)
 			return ERROR_OK;
 		}
 	}
-	LOG_ERROR("\nInvalid frequency %d\n\tValid frequencies(kHz) are: %d (for FPGA), %d\n", *khz, valid_freq_set[0], valid_freq_set[1]);
+	LOG_ERROR("\nInvalid frequency %d\n\tValid frequencies(kHz) are: %d, %d\n", *khz, valid_freq_set[0], valid_freq_set[1]);
 	return ERROR_FAIL;
 }
 /*
