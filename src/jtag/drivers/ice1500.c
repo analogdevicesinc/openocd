@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2022 by Analog Devices, Inc.                     *
+*   Copyright (C) 2022 by Analog Devices, Inc.                     			*
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
 *   it under the terms of the GNU General Public License as published by  *
@@ -154,6 +154,8 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define HOST_PREP_FIRMWARE_UPDATE      	0x0A	/* prepare to update the firmware */
 #define HOST_READ_EEPROM               	0x0B	/* read the target's EEPROM */
 #define HOST_WRITE_EEPROM              	0x0C	/* write to the target's EEPROM */
+#define HOST_SET_JTAG_FREQUENCY			0x0D	/* set JTAG frequency */
+
 
 /* Ice USB controls */
 #define WRITE_ENDPOINT			0x02
@@ -168,6 +170,9 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 /* Latest firmware version for ICE-1500 */
 #define CURRENT_ICE1500_FW_VERSION	0x0100
 
+/* frequency settings for ICE-1500 */
+#define MAX_FREQ_1500	2
+static const int valid_freq_set[MAX_FREQ_1500] = { 1000, 5000 };
 
 /*
  * Internal Macros
@@ -539,8 +544,17 @@ static int ice1500_khz(int khz, int *speed)
 
 static int ice1500_speed_div(int speed, int *khz)
 {
-	*khz = 5000;
-	return ERROR_OK;
+	// check if the given frequency is valid
+	for (int i=0; i<MAX_FREQ_1500; i++)
+	{
+		if (valid_freq_set[i] == *khz)
+		{
+			do_host_cmd(HOST_SET_JTAG_FREQUENCY,(*khz/1000),0);
+			return ERROR_OK;
+		}
+	}
+	LOG_ERROR("\nInvalid frequency %d\n\tValid frequencies(kHz) are: %d, %d\n", *khz, valid_freq_set[0], valid_freq_set[1]);
+	return ERROR_FAIL;
 }
 /*
  * Takes Data received (rcv_dataptr) and puts it in
