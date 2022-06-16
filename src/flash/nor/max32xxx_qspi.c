@@ -655,8 +655,6 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 		return ERROR_FLASH_BANK_NOT_PROBED;
 	}
 
-	max32xxx_qspi_pre_op(bank);
-
 	/* Determine if we want to use the on-chip algorithm */
 	if((max32xxx_qspi_info->options & OPTIONS_ENC) || (count > 16)) {
 
@@ -672,6 +670,9 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 				}
 			}
 		}
+
+		max32xxx_qspi_pre_op(bank);
+
 		retval = max32xxx_qspi_write_block(bank, buffer, offset, count);
 
 		if (retval != ERROR_OK) {
@@ -689,6 +690,8 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 		} else {
 			goto exit;
 		}
+	} else {
+		max32xxx_qspi_pre_op(bank);
 	}
 
 	/* Send the page program command */
