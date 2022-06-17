@@ -285,6 +285,7 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	}
 	LOG_DEBUG("command registration: complete");
 
+#if 0
 	/* pretty print the ADI OpenOCD version to look like this:
 		"Open On-Chip Debugger " PKGVERSION "OpenOCD " VERSION " " RELSTR " (" PKGBLDDATE ")" */
 	char pretty_version[150] = "Open On-Chip Debugger " PKGVERSION " OpenOCD ";
@@ -299,15 +300,21 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	}
 
 	/* pull out a clean RELSTR, ignore everything until we find "-g" until end or another '-' */
-	char relstr[] = RELSTR;
-	j = 0;
-	while (relstr[j] != '-' || relstr[j+1] != 'g')
-		j++;
-	pretty_version[i++] = relstr[j++];
-	pretty_version[i++] = relstr[j++];
-	while (i < 150 && relstr[j] && relstr[j] != '-')
+	if(1)
 	{
-		pretty_version[i++] = relstr[j++];
+		char relstr[] = RELSTR;
+		j = 0;
+		while ((relstr[j] != '-' || relstr[j+1] != 'g') && relstr[j] != '\0')
+			j++;
+		if(relstr[j] != '\0')
+		{
+			pretty_version[i++] = relstr[j++];
+			pretty_version[i++] = relstr[j++];
+			while (i < 150 && relstr[j] && relstr[j] != '-')
+			{
+				pretty_version[i++] = relstr[j++];
+			}
+		}
 	}
 
 	/* copy the PKGBLDDATE */
@@ -321,7 +328,12 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	pretty_version[i++] = 0;
 
 	LOG_OUTPUT("%s\nLicensed under GNU GPL v2\n", pretty_version);
-
+#else
+	char relstr[] = RELSTR;
+	char version[] = VERSION;
+	LOG_OUTPUT("relstr: %s\n", relstr);
+	LOG_OUTPUT("version: %s\n", version);
+#endif
 	global_cmd_ctx = cmd_ctx;
 
 	return cmd_ctx;
