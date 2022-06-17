@@ -286,7 +286,7 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	LOG_DEBUG("command registration: complete");
 
 	/* pretty print the ADI OpenOCD version to look like this:
-		"Open On-Chip Debugger " PKGVERSION "OpenOCD " VERSION " " RELSTR " (" PKGBLDDATE ")" */
+		"Open On-Chip Debugger " PKGVERSION "OpenOCD " VERSION " (" PKGBLDDATE ")" */
 	char pretty_version[150] = "Open On-Chip Debugger " PKGVERSION " OpenOCD ";
 	
 	/* pull out a clean product version (everything up to next '+' or '-') */
@@ -296,18 +296,6 @@ struct command_context *setup_command_handler(Jim_Interp *interp)
 	while (i < 150 && version[j] && version[j] != '+' && version[j] != '-')
 	{
 		pretty_version[i++] = version[j++];
-	}
-
-	/* pull out a clean RELSTR, ignore everything until we find "-g" until end or another '-' */
-	char relstr[] = RELSTR;
-	j = 0;
-	while (relstr[j] != '-' || relstr[j+1] != 'g')
-		j++;
-	pretty_version[i++] = relstr[j++];
-	pretty_version[i++] = relstr[j++];
-	while (i < 150 && relstr[j] && relstr[j] != '-')
-	{
-		pretty_version[i++] = relstr[j++];
 	}
 
 	/* copy the PKGBLDDATE */
