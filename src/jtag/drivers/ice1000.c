@@ -1649,6 +1649,9 @@ static int ice1000_execute_command(struct jtag_command *cmd)
 		break;
 	case JTAG_SCAN:
 		retval = ice1000_execute_scan(cmd);
+		if (cable_params.cur_freq == 1000000 || cable_params.cur_freq == 2000000){
+			keep_alive();
+		}
 		break;
 	case JTAG_SLEEP:
 		retval = ice1000_execute_sleep(cmd);
