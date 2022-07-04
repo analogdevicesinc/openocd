@@ -1386,6 +1386,13 @@ proc adspsc59x_init_ddr3 { dmc } {
       pmmw $dmc_ddr_lane1_ctl1 $data 0
       after 1
    }
+
+   if { $_CHIPNAME == "adspsc598" } {
+     # Invalidate the DDR prefetch buffer after DMC initialization
+     # *pREG_DDRPFB0_CTL0 |= BITM_DDRPFB_CTL0_DATA_INVALIDATION
+     pmmw 0x31076000 0x00000010 0
+   }
+
 }
 
 proc adspsc59x_init_emac { } {
