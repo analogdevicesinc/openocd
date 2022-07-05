@@ -86,6 +86,8 @@ extern const struct flash_driver w600_flash;
 extern const struct flash_driver xcf_flash;
 extern const struct flash_driver xmc1xxx_flash;
 extern const struct flash_driver xmc4xxx_flash;
+extern const struct flash_driver aducm302x_flash;
+extern const struct flash_driver aducm4x50_flash;
 
 /**
  * The list of built-in flash drivers.
@@ -93,6 +95,7 @@ extern const struct flash_driver xmc4xxx_flash;
  */
 static const struct flash_driver * const flash_drivers[] = {
 	&aduc702x_flash,
+	&aducm302x_flash,
 	&aducm360_flash,
 	&ambiqmicro_flash,
 	&at91sam3_flash,

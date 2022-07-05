@@ -3,6 +3,15 @@ AC_INIT([openocd], [0.10.0+dev],
   [OpenOCD Mailing List <openocd-devel@lists.sourceforge.net>])
 AC_CONFIG_SRCDIR([src/openocd.c])
 
+m4_include([acx.m4])
+ACX_PKGVERSION([PKGVERSION])
+ACX_BUGURL([processor.tools.support@analog.com])
+
+AC_DEFINE_UNQUOTED([PKGVERSION], ["$PKGVERSION"],
+		   [Define to the package version.])dnl
+AC_DEFINE_UNQUOTED([REPORT_BUGS_TO], ["$REPORT_BUGS_TO"],
+		   [Define to the URL or email address for report bugs to.])dnl
+
 m4_include([config_subdir.m4])dnl
 
 # check for makeinfo before calling AM_INIT_AUTOMAKE
@@ -111,6 +120,9 @@ m4_define([ADAPTER_OPT], [m4_translit(ADAPTER_ARG($1), [_], [-])])
 m4_define([USB1_ADAPTERS],
 	[[[ftdi], [MPSSE mode of FTDI based devices], [FTDI]],
 	[[stlink], [ST-Link Programmer], [HLADAPTER_STLINK]],
+	[[ice1000], [Analog Devices ICE-1000], [ICE_1000]],
+	[[ice2000], [Analog Devices ICE-2000], [ICE_2000]],
+  [[adi_dbgagent], [Analog Devices Debug Agent], [ADI_DBGAGENT]],
 	[[ti_icdi], [TI ICDI JTAG Programmer], [HLADAPTER_ICDI]],
 	[[ulink], [Keil ULINK JTAG Programmer], [ULINK]],
 	[[usb_blaster_2], [Altera USB-Blaster II Compatible], [USB_BLASTER_2]],
@@ -367,6 +379,11 @@ AC_ARG_ENABLE([internal-libjaylink],
   AS_HELP_STRING([--disable-internal-libjaylink],
   [Disable building internal libjaylink]),
   [use_internal_libjaylink=$enableval], [use_internal_libjaylink=yes])
+
+AC_ARG_ENABLE([libusbmux],
+  AS_HELP_STRING([--enable-libusbmux],
+  [Enable building libusbmux]),
+  [use_libusbmux=$enableval], [use_libusbmux=no])
 
 build_minidriver=no
 AC_MSG_CHECKING([whether to enable ZY1000 minidriver])
@@ -717,6 +734,10 @@ AS_IF([test "x$enable_jlink" != "xno"], [
   ])
 ])
 
+AS_IF([test "x$enable_libusbmux" = "xyes"], [
+  AC_CONFIG_SUBDIRS([src/jtag/drivers/libusbmux])
+])
+
 # Presto needs the bitq module
 AS_IF([test "x$enable_presto" != "xno"], [
   build_bitq=yes
@@ -755,6 +776,7 @@ AM_CONDITIONAL([USE_LIBGPIOD], [test "x$use_libgpiod" = "xyes"])
 AM_CONDITIONAL([USE_HIDAPI], [test "x$use_hidapi" = "xyes"])
 AM_CONDITIONAL([USE_LIBJAYLINK], [test "x$use_libjaylink" = "xyes"])
 AM_CONDITIONAL([RSHIM], [test "x$build_rshim" = "xyes"])
+AM_CONDITIONAL([USE_LIBUSBMUX], [test "x$use_libusbmux" = "xyes"])
 
 AM_CONDITIONAL([MINIDRIVER], [test "x$build_minidriver" = "xyes"])
 AM_CONDITIONAL([MINIDRIVER_DUMMY], [test "x$build_minidriver_dummy" = "xyes"])

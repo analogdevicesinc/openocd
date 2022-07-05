@@ -111,6 +111,7 @@ static int armv7a_read_midr(struct target *target)
 	armv7a->arch = (midr >> 16) & 0xf;
 	armv7a->variant = (midr >> 20) & 0xf;
 	armv7a->implementor = (midr >> 24) & 0xff;
+#if 0
 	LOG_INFO("%s rev %" PRIx32 ", partnum %" PRIx32 ", arch %" PRIx32
 			 ", variant %" PRIx32 ", implementor %" PRIx32,
 		 target->cmd_name,
@@ -119,6 +120,7 @@ static int armv7a_read_midr(struct target *target)
 		 armv7a->arch,
 		 armv7a->variant,
 		 armv7a->implementor);
+#endif
 
 done:
 	dpm->finish(dpm);

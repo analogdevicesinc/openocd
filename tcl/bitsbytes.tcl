@@ -54,6 +54,6 @@ proc show_normalize_bitfield { VALUE MSB LSB } {
     set m [create_mask $MSB $LSB]
     set mr [expr $VALUE & $m]
     set sr [expr $mr >> $LSB]
-    echo [format "((0x%08x & 0x%08x) -> 0x%08x) >> %2d => (0x%x) %5d " $VALUE $m $mr $LSB $sr $sr]
+    log_debug [format "((0x%08x & 0x%08x) -> 0x%08x) >> %2d => (0x%x) %5d " $VALUE $m $mr $LSB $sr $sr]
    return $sr
 }

@@ -24,6 +24,7 @@ of the Open On-Chip Debugger (OpenOCD).
 @item Copyright @copyright{} 2008-2010 Oyvind Harboe @email{oyvind.harboe@@zylin.com}
 @item Copyright @copyright{} 2008 Duane Ellis @email{openocd@@duaneellis.com}
 @item Copyright @copyright{} 2009-2010 David Brownell
+@item Portions Copyright @copyright{} 2015-2022, Analog Devices, Inc.
 @end itemize
 
 @quotation
@@ -62,6 +63,8 @@ Free Documentation License''.
 * About::                            About OpenOCD
 * Developers::                       OpenOCD Developer Resources
 * Debug Adapter Hardware::           Debug Adapter Hardware
+* Supported Targets::                Supported Targets
+* Supported Boards::                 Supported Boards
 * About Jim-Tcl::                    About Jim-Tcl
 * Running::                          Running OpenOCD
 * OpenOCD Project Setup::            OpenOCD Project Setup
@@ -355,6 +358,36 @@ For more information, visit:
 
 @b{ZY1000} See: @url{http://www.ultsol.com/index.php/component/content/article/8/210-zylin-zy1000-main}
 
+@section USB Analog Devices ICE-1000 and ICE-2000
+
+The Analog Devices ICE-1000 and ICE-2000 support debugging Analog Devices
+processors. Both of them support JTAG and SWD.
+
+ICE-1000 supports frequency up to 5 MHz (1 MHz, 2 MHz, 5 MHz).
+ICE-2000 supports frequency up to 46 MHz (1 MHz, 2 MHz, 5 MHz, 9 MHz, 15 MHz, 23 MHz, 46 MHz).
+
+ICE-1000 and ICE-2000 feature a multi-color LED for indicating emulator status:
+
+@itemize @bullet
+@item @b{Green}
+@* indicates the emulator is ready for operations.
+@item @b{Yellow}
+@* indicates the emulator has an issue.
+@item @b{Magenta}
+@* indicates the emulator is in JTAG mode.
+@item @b{Cyan}
+@* indicates the emulator is in SWD mode.
+@end itemize
+
+Their firmwares can be updated using OpenOCD firmware command.
+
+@example
+openocd -f interface/ice1000.cfg \
+        -c "firmware Ice1000_firmware.hex"
+@end example
+
+For the latest firmwares or more information, visit: @url{http://www.analog.com/ice1000} and @url{http://www.analog.com/ice2000}
+
 @section USB FT2232 Based
 
 There are many USB JTAG dongles on the market, many of them based
@@ -613,6 +646,127 @@ produced, PDF schematics are easily found and it is easy to make.
 @* A JTAG driver exposing Xilinx Virtual Cable over PCI Express to OpenOCD as JTAG/SWD interface.
 
 @end itemize
+
+@node Supported Targets
+@chapter Supported Targets
+
+OpenOCD supports many targets. Below are some of them.
+
+@section Analog Devices
+
+OpenOCD supports the following targets from Analog Devices.
+
+@subsection ADuCM3027/9
+@cindex ADuCM3027
+@cindex ADuCM3029
+
+These parts are supported through @file{target/aducm3027.cfg} and
+@file{target/aducm3029.cfg}. These two parts only support SWD.
+
+@subsection ADuCM4050
+@cindex ADuCM4050
+
+This part is supported through @file{target/aducm4050.cfg}.
+This part only supports SWD.
+
+@subsection ADSP-SC570/571/572/573
+@cindex ADSP-SC570
+@cindex ADSP-SC571
+@cindex ADSP-SC572
+@cindex ADSP-SC573
+
+These parts are supported through @file{target/adspsc57x.cfg}.
+This config file uses JTAG as transport by default.
+You can use SWD as transport by commenting out @code{transport select jtag}
+and uncommenting @code{transport select swd} near the top of the config file.
+This config file does a system reset by default when GDB attaches to OpenOCD.
+If you don't want to reset the target, you can edit the @code{gdb-attach}
+event handler toward the end of the config file to change @code{reset} to @code{halt}.
+
+If the part is locked, you have two ways to unlock the part:
+
+@itemize @bullet
+
+@item @b{through OpenOCD command line}
+
+@* You can use @option{-c} to set up userkey before the config file
+
+@example
+openocd -f interface/ice1000.cfg \
+        -c "set USERKEY0 0x12345678; set USERKEY1 0x9abcdef0; \
+            set USERKEY2 0x00000000; set USERKEY3 0x5f5f5f5f; list" \
+        -f target/adspsc57x.cfg
+@end example
+
+@item @b{edit the config file}
+
+@* you can uncomment these four lines in the config file:
+
+@example
+#set USERKEY0 0x00000000
+#set USERKEY1 0x00000000
+#set USERKEY2 0x00000000
+#set USERKEY3 0x00000000
+@end example 
+
+and change @code{0x00000000} to the correct userkey.
+
+@end itemize
+
+@subsection ADSP-SC582/583/584/587/589
+@cindex ADSP-SC582
+@cindex ADSP-SC583
+@cindex ADSP-SC584
+@cindex ADSP-SC587
+@cindex ADSP-SC589
+
+These parts are supported through @file{target/adspsc58x.cfg}.
+The usage is the same as @file{target/adspsc57x.cfg} except that
+@file{target/adspsc58x.cfg} does not support system reset.
+
+@subsection ADSP-SC591/591W/592/592W/593W/594/594W
+@cindex ADSP-SC591
+@cindex ADSP-SC591W
+@cindex ADSP-SC592
+@cindex ADSP-SC592W
+@cindex ADSP-SC593W
+@cindex ADSP-SC594
+@cindex ADSP-SC594W
+
+These parts are supported through @file{target/adspsc59x.cfg}.
+Their usage is the same as @file{target/adspsc57x.cfg}.
+@node Supported Boards
+@chapter Supported Boards
+
+OpenOCD supports many boards. Below are some of them.
+
+@section Analog Devices
+
+OpenOCD supports the following boards from Analog Devices.
+
+@subsection ADSP-SC573 EZ-KIT
+@cindex ADSP-SC573 EZ-KIT
+
+This board is supported through @file{board/adspsc573_ezkit.cfg}.
+This board config file disables MMU and then initializes SDRAM when GDB connects to OpenOCD.
+
+@subsection ADSP-SC584 EZ-BRD
+@cindex ADSP-SC584 EZ-BRD
+
+This board is supported through @file{board/adspsc584_ezbrd.cfg}.
+This board config file disables MMU and then initializes SDRAM when GDB connects to OpenOCD.
+
+@subsection ADSP-SC589 EZ-BRD
+@cindex ADSP-SC589 EZ-BRD
+
+This board is supported through @file{board/adspsc589_ezbrd.cfg}.
+This board config file disables MMU and then initializes SDRAM when GDB connects to OpenOCD.
+
+@subsection EV-SC594-SOM
+@cindex EV-SC594-SOM 
+
+This board is supported through @file{board/ev-sc594-som.cfg}.
+This board config file disables MMU and then initializes SDRAM when GDB connects to OpenOCD.
 
 @node About Jim-Tcl
 @chapter About Jim-Tcl
@@ -2593,6 +2747,25 @@ stability at higher JTAG clocks.
 
 For example adapter definitions, see the configuration files shipped in the
 @file{interface/ftdi} directory.
+
+@end deffn
+
+@deffn {Interface Driver} {ice1000}
+Analog Devices ICE-1000 USB emulator. It supports JTAG and SWD transports.
+@end deffn
+
+@deffn {Interface Driver} {ice2000}
+Analog Devices ICE-2000 USB emulator. It supports JTAG and SWD transports.
+It has one driver-specific command:
+
+@deffn {Config Command} {ice2000_voltage} @option{1}|@option{2}|@option{3}
+Set voltage:
+@itemize @minus
+@item @option{1}: 1.8 V
+@item @option{2}: 2.5 V
+@item @option{3}: 3.3 V
+@end itemize
+@end deffn
 
 @end deffn
 
@@ -5551,6 +5724,22 @@ flash bank $_FLASHNAME aduc702x 0 0 0 0 $_TARGETNAME
 @end example
 @end deffn
 
+@deffn {Flash Driver} aducm302x
+The ADuCM3027/9 microcontrollers from Analog Devices include internal
+flash and use ARM Cortex-M3 cores.
+The flash size on ADuCM3027 is 128KB.
+The flash size on ADuCM3029 is 256KB.
+The flash start address is 0 on both.
+
+@example
+# ADuCM3027
+flash bank $_FLASHNAME aducm302x 0 0x20000 0 0 $_TARGETNAME
+
+# ADuCM3029
+flash bank $_FLASHNAME aducm302x 0 0x40000 0 0 $_TARGETNAME
+@end example
+@end deffn
+
 @deffn {Flash Driver} ambiqmicro
 @cindex ambiqmicro
 @cindex apollo
@@ -7858,8 +8047,9 @@ echo "Downloading kernel -- please wait"
 @end deffn
 
 @deffn Command log_output [filename | "default"]
-Redirect logging to @var{filename} or set it back to default output;
-the default log output channel is stderr.
+Redirect logging, including errors and warnings, to @var{filename};
+the initial log output channel is stdout,
+except for errors and warnings, which by default use stderr.
 @end deffn
 
 @deffn Command add_script_search_dir [directory]
@@ -8127,10 +8317,10 @@ If @var{count} is specified, displays that many units.
 see the @code{mem2array} primitives.)
 @end deffn
 
-@deffn Command mwd [phys] addr doubleword [count]
-@deffnx Command mww [phys] addr word [count]
-@deffnx Command mwh [phys] addr halfword [count]
-@deffnx Command mwb [phys] addr byte [count]
+@deffn Command mwd [phys|ignore-data-abort] addr doubleword [count]
+@deffnx Command mww [phys|ignore-data-abort] addr word [count]
+@deffnx Command mwh [phys|ignore-data-abort] addr halfword [count]
+@deffnx Command mwb [phys|ignore-data-abort] addr byte [count]
 Writes the specified @var{doubleword} (64 bits), @var{word} (32 bits),
 @var{halfword} (16 bits), or @var{byte} (8-bit) value,
 at the specified address @var{addr}.
@@ -8138,6 +8328,8 @@ When the current target has an MMU which is present and active,
 @var{addr} is interpreted as a virtual address.
 Otherwise, or if the optional @var{phys} flag is specified,
 @var{addr} is interpreted as a physical address.
+If the optional @var{ignore-data-abort} flag is specified,
+the data abort caused by this write, if there is one, will be ignored.
 If @var{count} is specified, fills that many units of consecutive address.
 @end deffn
 
