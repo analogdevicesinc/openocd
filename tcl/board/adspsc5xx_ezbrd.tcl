@@ -1388,9 +1388,12 @@ proc adspsc59x_init_ddr3 { dmc } {
    }
 
    if { $_CHIPNAME == "adspsc598" } {
-     # Invalidate the DDR prefetch buffer after DMC initialization
-     # *pREG_DDRPFB0_CTL0 |= BITM_DDRPFB_CTL0_DATA_INVALIDATION
-     pmmw 0x31076000 0x00000010 0
+      # Invalidate the DDR prefetch buffer after DMC initialization. The
+      # invalidation bit must be cleared manually.
+      # *pREG_DDRPFB0_CTL0 |= BITM_DDRPFB_CTL0_DATA_INVALIDATION;
+      # *pREG_DDRPFB0_CTL0 &= ~BITM_DDRPFB_CTL0_DATA_INVALIDATION;
+      pmmw 0x31076000 0x00000010 0
+      pmmw 0x31076000 0 0x00000010
    }
 
 }
