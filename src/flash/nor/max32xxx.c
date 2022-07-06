@@ -417,10 +417,6 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 	}
 
-	/* plus a buffer big enough for this data */
-	if (len < buffer_size)
-		buffer_size = len;
-
 	/* memory buffer */
 	while (target_alloc_working_area_try(target, buffer_size, &source) != ERROR_OK) {
 		buffer_size /= 2;
