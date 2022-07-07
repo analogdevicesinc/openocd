@@ -155,6 +155,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define HOST_READ_EEPROM               	0x0B	/* read the target's EEPROM */
 #define HOST_WRITE_EEPROM              	0x0C	/* write to the target's EEPROM */
 #define HOST_SET_JTAG_FREQUENCY			0x0D	/* set JTAG frequency */
+#define HOST_DISCONNECT					0x0E	/* disconnect from debug mode */
 
 
 /* Ice USB controls */
@@ -513,6 +514,9 @@ static int ice1500_init(void)
 
 static int ice1500_quit(void)
 {
+	// indicate to the emulator that we are shutting down
+	do_host_cmd(HOST_DISCONNECT, 0, 0);
+	
 	if (cable_params.usb_handle != NULL)
 	{
 		libusb_release_interface(cable_params.usb_handle, 0);
@@ -527,7 +531,7 @@ static int ice1500_quit(void)
 #endif
 
 	free(cable_params.tap_info.dat);
-
+	
 	return ERROR_OK;
 }
 
