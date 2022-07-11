@@ -154,8 +154,9 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define HOST_PREP_FIRMWARE_UPDATE      	0x0A	/* prepare to update the firmware */
 #define HOST_READ_EEPROM               	0x0B	/* read the target's EEPROM */
 #define HOST_WRITE_EEPROM              	0x0C	/* write to the target's EEPROM */
-#define HOST_SET_JTAG_FREQUENCY			0x0D	/* set JTAG frequency */
+#define HOST_CONNECT					0x0D	/* make a debug connection */
 #define HOST_DISCONNECT					0x0E	/* disconnect from debug mode */
+#define HOST_SET_JTAG_FREQUENCY			0x0F	/* set JTAG frequency */
 
 
 /* Ice USB controls */
@@ -387,6 +388,9 @@ if (cable_params.use_usbmux)
 	cable_params.wr_buf_sz			= WRITE_BUFFER_SIZE;
 	cable_params.r_buf_sz			= READ_BUFFER_SIZE;
 
+	// indicate to the emulator that we are making a debug connection
+	do_host_cmd(HOST_CONNECT, 0, 0);
+	
 	cable_params.version = do_host_cmd(HOST_GET_FW_VERSION, 0, 1);
 
 	LOG_INFO("%s firmware version is %d.%d.%d",
@@ -500,6 +504,7 @@ static int ice1500_init(void)
 	const uint16_t pids[] = { 0x2500, 0 };
 
 	int retval;
+
 	retval = adi_connect(vids, pids);
 	if (retval != ERROR_OK)
 	{
