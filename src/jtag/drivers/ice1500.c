@@ -170,7 +170,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define MAX_DIF_SIZE			(27 * 1024)     /* 0x7008 is the max but leave some room */
 
 /* Latest firmware version for ICE-1500 */
-#define CURRENT_ICE1500_FW_VERSION	0x0100
+#define CURRENT_ICE1500_FW_VERSION	0x0102
 
 /* frequency settings for ICE-1500 */
 #define MAX_FREQ_1500	2
