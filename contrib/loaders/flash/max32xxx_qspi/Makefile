@@ -21,7 +21,7 @@ dump: $(TARGET).o
 	arm-none-eabi-objdump -d -s ${<}
 
 $(TARGET).elf: $(TARGET).o
-	arm-none-eabi-ld -nostdlib -nostartfiles -Ttext $(OFFSET) --entry $(ENTRY) ${<} -o ${@}
+	arm-none-eabi-ld -nostdlib -Ttext $(OFFSET) --entry $(ENTRY) ${<} -o ${@}
 	arm-none-eabi-size ${@}
 
 clean:
