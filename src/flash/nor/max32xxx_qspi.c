@@ -109,7 +109,7 @@
 #define OPTIONS_QSPI							0x80 /* Use quad SPI */
 
 #define SPIX_ALGO_STACK_SIZE					256
-#define SPIX_ALGO_ENTRY_OFFSET 					0x3cc
+#define SPIX_ALGO_ENTRY_OFFSET 					0x42c
 
 static const uint8_t write_code[] = {
 #include "contrib/loaders/flash/max32xxx_qspi/max32xxx_qspi.inc"
@@ -194,6 +194,10 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	} else {
 		/* Set the read command */
 		temp32 = max32xxx_qspi_info->dev.read_cmd;
+		/* Enable 4 byte addresses if using read command 0x13 */
+		if(max32xxx_qspi_info->dev.read_cmd == 0x13){
+		    temp32 |= 0x1 << 16;
+		}
 		target_write_u32(target, SPIXF_FETCH_CTRL, temp32);
 
 		/* Set mode control */
@@ -492,7 +496,7 @@ static int max32xxx_qspi_erase(struct flash_bank *bank, unsigned int first, unsi
 	struct target *target = bank->target;
 	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
 	int retval;
-	uint8_t cmdData[4];
+	uint8_t cmdData[5];
 	uint32_t addr;
 
 	LOG_DEBUG("%s: first = %d last = %d\n", __func__, first, last);
@@ -520,11 +524,21 @@ static int max32xxx_qspi_erase(struct flash_bank *bank, unsigned int first, unsi
 		cmdData[0] = max32xxx_qspi_info->dev.erase_cmd;
 		/* Address is MSB first */
 		addr = first++ * max32xxx_qspi_info->dev.sectorsize;
-		cmdData[3] = (addr & 0x0000FF) >> 0;
-		cmdData[2] = (addr & 0x00FF00) >> 8;
-		cmdData[1] = (addr & 0xFF0000) >> 16;
-
-		retval = max32xxx_qspi_write_bytes(target, cmdData, 4, true);
+		
+		if(max32xxx_qspi_info->dev.erase_cmd == 0xdc){
+		    cmdData[4] = (addr & 0x000000FF) >> 0;
+		    cmdData[3] = (addr & 0x0000FF00) >> 8;
+		    cmdData[2] = (addr & 0x00FF0000) >> 16;
+		    cmdData[1] = (addr & 0xFF000000) >> 24;
+		    retval = max32xxx_qspi_write_bytes(target, cmdData, 5, true);
+		}else{
+		
+		    cmdData[3] = (addr & 0x0000FF) >> 0;
+		    cmdData[2] = (addr & 0x00FF00) >> 8;
+		    cmdData[1] = (addr & 0xFF0000) >> 16;
+		    retval = max32xxx_qspi_write_bytes(target, cmdData, 4, true);
+		}
+		
 		if (retval != ERROR_OK)
 			goto exit;
 
@@ -634,9 +648,9 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 	struct target *target = bank->target;
 	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
 	int retval;
-	uint8_t cmdData[4];
+	uint8_t cmdData[5];
 	unsigned writeLen, bufferIndex;
-
+    
 	LOG_DEBUG("%s: offset=0x%08" PRIx32 " count=0x%08" PRIx32,
 		__func__, offset, count);
 
@@ -712,13 +726,22 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 		if (writeLen > count)
 			writeLen = count;
 
-		/* Address is MSB first */
-		cmdData[3] = (offset & 0x0000FF) >> 0;
-		cmdData[2] = (offset & 0x00FF00) >> 8;
-		cmdData[1] = (offset & 0xFF0000) >> 16;
+        if(max32xxx_qspi_info->dev.pprog_cmd == 0x12){
+        	cmdData[4] = (offset & 0x000000FF) >> 0;
+		    cmdData[3] = (offset & 0x0000FF00) >> 8;
+		    cmdData[2] = (offset & 0x00FF0000) >> 16;
+		    cmdData[1] = (offset & 0xFF000000) >> 24;
+		    /* Write the command */
+		    retval = max32xxx_qspi_write_bytes(target, cmdData, 5, false);
+        }else{
+            /* Address is MSB first */
+            cmdData[3] = (offset & 0x0000FF) >> 0;
+            cmdData[2] = (offset & 0x00FF00) >> 8;
+            cmdData[1] = (offset & 0xFF0000) >> 16;
+            /* Write the command */
+		    retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
+        }
 
-		/* Write the command */
-		retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
 		if (retval != ERROR_OK)
 			goto exit;
 
@@ -745,13 +768,22 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 		if (writeLen > (count - bufferIndex))
 			writeLen = (count - bufferIndex);
 
-		/* Address is MSB first */
-		cmdData[3] = (offset & 0x0000FF) >> 0;
-		cmdData[2] = (offset & 0x00FF00) >> 8;
-		cmdData[1] = (offset & 0xFF0000) >> 16;
-
-		/* Write the command */
-		retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
+        if(max32xxx_qspi_info->dev.pprog_cmd == 0x12){
+        	cmdData[4] = (offset & 0x000000FF) >> 0;
+		    cmdData[3] = (offset & 0x0000FF00) >> 8;
+		    cmdData[2] = (offset & 0x00FF0000) >> 16;
+		    cmdData[1] = (offset & 0xFF000000) >> 24;
+		    /* Write the command */
+		    retval = max32xxx_qspi_write_bytes(target, cmdData, 5, false);
+        }else{
+            /* Address is MSB first */
+            cmdData[3] = (offset & 0x0000FF) >> 0;
+            cmdData[2] = (offset & 0x00FF00) >> 8;
+            cmdData[1] = (offset & 0xFF0000) >> 16;
+            /* Write the command */
+		    retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
+        }
+        
 		if (retval != ERROR_OK)
 			goto exit;
 
