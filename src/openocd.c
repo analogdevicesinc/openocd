@@ -201,6 +201,16 @@ COMMAND_HANDLER(handle_firmware_command)
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(handle_extended_remote_command)
+{
+	if (CMD_ARGC != 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	
+	LOG_INFO("extended remote: %s\n", CMD_ARGV[0]);
+
+	return ERROR_OK;
+}
+
 static const struct command_registration openocd_command_handlers[] = {
 	{
 		.name = "version",
@@ -238,6 +248,13 @@ static const struct command_registration openocd_command_handlers[] = {
 		.mode = COMMAND_CONFIG,
 		.help = "Set the firmware to be loaded.",
 		.usage = "filename"
+	},
+	{
+		.name = "extended_remote",
+		.handler = &handle_extended_remote_command,
+		.mode = COMMAND_CONFIG,
+		.help = "enable/disable extended remote debugging for GDB",
+		.usage = "r1: enable  r0: disable"
 	},
 	COMMAND_REGISTRATION_DONE
 };

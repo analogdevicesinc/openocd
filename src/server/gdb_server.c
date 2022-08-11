@@ -44,6 +44,7 @@
 #include <target/target.h>
 #include <target/target_type.h>
 #include <target/semihosting_common.h>
+#include <helper/command.h>
 #include "server.h"
 #include <flash/nor/core.h>
 #include "gdb_server.h"
@@ -3306,7 +3307,7 @@ static int gdb_input_inner(struct connection *connection)
 				case '?':
 					gdb_last_signal_packet(connection, packet, packet_size);
 					/* '?' is sent after the eventual '!' */
-					if (!warn_use_ext && !gdb_con->extended_protocol) {
+					if (!warn_use_ext && !gdb_con->extended_protocol && CMD_ARGV[0] == "r0") {
 						warn_use_ext = true;
 						LOG_WARNING("Prefer GDB command \"target extended-remote %s\" instead of \"target remote %s\"",
 									connection->service->port, connection->service->port);
