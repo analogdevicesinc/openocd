@@ -96,7 +96,7 @@
 
 /* Set this to 1 to enable dual (1-2-2) reads if available from SFDP */
 #ifndef SPI_DUAL_MODE
-#define SPI_DUAL_MODE 							1
+#define SPI_DUAL_MODE 							0
 #endif
 
 #define OPTIONS_128								0x01 /* Perform 128 bit flash writes */
