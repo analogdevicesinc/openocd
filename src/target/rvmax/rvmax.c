@@ -192,8 +192,7 @@ static int rvmax_save_context(struct target *target)
 	int retval;
 
 	for (int i = 0; i < RVMAXNUMCOREREGS; i++) {
-		if (!rvmax->core_cache->reg_list[i].valid)
-{
+		if (!rvmax->core_cache->reg_list[i].valid) {
 			if (i == RVMAX_REG_NPC) {
 				retval = du_core->rvmax_jtag_read_cpu(&rvmax->jtag,
 						rvmax->arch_info[i].spr_num, 1,
@@ -1490,7 +1489,7 @@ static int rvmax_profiling(struct target *target, uint32_t *samples,
 	for (;;) {
 		uint32_t reg_value;
 		retval = du_core->rvmax_jtag_read_cpu(&rvmax->jtag, GROUP0 + RVMAX_REG_NPC, 1, &reg_value);
-LOG_DEBUG("PC CPU: %08x",reg_value);
+		LOG_DEBUG("PC CPU: %08x", reg_value);
 
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Error while reading PC");

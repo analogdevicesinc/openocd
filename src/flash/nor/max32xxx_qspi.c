@@ -33,83 +33,86 @@
 #include "sfdp.h"
 #include "helper/binarybuffer.h"
 
-#define SPIXFC_BASE								0x40027000
-#define SPIXFC_CFG								(SPIXFC_BASE | 0x00)
-#define SPIXFC_SS_POL							(SPIXFC_BASE | 0x04)
-#define SPIXFC_GEN_CTRL							(SPIXFC_BASE | 0x08)
-#define SPIXFC_FIFO_CTRL						(SPIXFC_BASE | 0x0C)
+#define SPIXFC_BASE                             0x40027000
+#define SPIXFC_CFG                              (SPIXFC_BASE | 0x00)
+#define SPIXFC_SS_POL                           (SPIXFC_BASE | 0x04)
+#define SPIXFC_GEN_CTRL                         (SPIXFC_BASE | 0x08)
+#define SPIXFC_FIFO_CTRL                        (SPIXFC_BASE | 0x0C)
 
-#define SPIXFC_CONFIG_PAGE_SIZE_POS				6
-#define SPIXFC_CONFIG_PAGE_SIZE					(0x3 << SPIXFC_CONFIG_PAGE_SIZE_POS)
-#define SPIXFC_CONFIG_PAGE_SIZE_4_BYTES			(0x0 << SPIXFC_CONFIG_PAGE_SIZE_POS)
-#define SPIXFC_CONFIG_PAGE_SIZE_8_BYTES			(0x1 << SPIXFC_CONFIG_PAGE_SIZE_POS)
-#define SPIXFC_CONFIG_PAGE_SIZE_16_BYTES		(0x2 << SPIXFC_CONFIG_PAGE_SIZE_POS)
-#define SPIXFC_CONFIG_PAGE_SIZE_32_BYTES		(0x3 << SPIXFC_CONFIG_PAGE_SIZE_POS)
+#define SPIXFC_CONFIG_PAGE_SIZE_POS             6
+#define SPIXFC_CONFIG_PAGE_SIZE                 (0x3 << SPIXFC_CONFIG_PAGE_SIZE_POS)
+#define SPIXFC_CONFIG_PAGE_SIZE_4_BYTES         (0x0 << SPIXFC_CONFIG_PAGE_SIZE_POS)
+#define SPIXFC_CONFIG_PAGE_SIZE_8_BYTES         (0x1 << SPIXFC_CONFIG_PAGE_SIZE_POS)
+#define SPIXFC_CONFIG_PAGE_SIZE_16_BYTES        (0x2 << SPIXFC_CONFIG_PAGE_SIZE_POS)
+#define SPIXFC_CONFIG_PAGE_SIZE_32_BYTES        (0x3 << SPIXFC_CONFIG_PAGE_SIZE_POS)
 
-#define SPIXFC_FIFO_CTRL_TX_FIFO_CNT_POS		8
-#define SPIXFC_FIFO_CTRL_TX_FIFO_CNT			(0x1FUL << SPIXFC_FIFO_CTRL_TX_FIFO_CNT_POS)
+#define SPIXFC_FIFO_CTRL_TX_FIFO_CNT_POS        8
+#define SPIXFC_FIFO_CTRL_TX_FIFO_CNT            (0x1FUL << SPIXFC_FIFO_CTRL_TX_FIFO_CNT_POS)
 
-#define SPIXFC_FIFO_CTRL_RX_FIFO_CNT_POS		24
-#define SPIXFC_FIFO_CTRL_RX_FIFO_CNT			(0x3FUL << SPIXFC_FIFO_CTRL_RX_FIFO_CNT_POS)
+#define SPIXFC_FIFO_CTRL_RX_FIFO_CNT_POS        24
+#define SPIXFC_FIFO_CTRL_RX_FIFO_CNT            (0x3FUL << SPIXFC_FIFO_CTRL_RX_FIFO_CNT_POS)
 
-#define SPIXFC_FIFO_TX							0x400BC000
-#define SPIXFC_FIFO_RX							0x400BC004
+#define SPIXFC_FIFO_TX                          0x400BC000
+#define SPIXFC_FIFO_RX                          0x400BC004
 
-#define SPIXFC_FIFO_DEPTH						(16)
-#define SPIXFC_HEADER_TX						0x1
-#define SPIXFC_HEADER_RX						0x2
-#define SPIXFC_HEADER_BIT						(0x0 << 2)
-#define SPIXFC_HEADER_BYTE						(0x1 << 2)
-#define SPIXFC_HEADER_PAGE						(0x2 << 2)
-#define SPIXFC_HEADER_SIZE_POS					4
-#define SPIXFC_HEADER_WIDTH_POS					9
-#define SPIXFC_HEADER_SS_DEASS					(0x1 << 13)
-#define SPIXFC_HEADER_NULL						0xF000	/* 16-bit filler magic word indicating this isn't a header */
+#define SPIXFC_FIFO_DEPTH                       (16)
+#define SPIXFC_HEADER_TX                        0x1
+#define SPIXFC_HEADER_RX                        0x2
+#define SPIXFC_HEADER_BIT                       (0x0 << 2)
+#define SPIXFC_HEADER_BYTE                      (0x1 << 2)
+#define SPIXFC_HEADER_PAGE                      (0x2 << 2)
+#define SPIXFC_HEADER_SIZE_POS                  4
+#define SPIXFC_HEADER_WIDTH_POS                 9
+#define SPIXFC_HEADER_SS_DEASS                  (0x1 << 13)
+#define SPIXFC_HEADER_NULL                      0xF000	/* 16-bit filler magic word indicating this
+							 * isn't a header */
 
-#define SPIXF_BASE								0x40026000
-#define SPIXF_CFG								(SPIXF_BASE | 0x00)
-#define SPIXF_FETCH_CTRL						(SPIXF_BASE | 0x04)
-#define SPIXF_MODE_CTRL							(SPIXF_BASE | 0x08)
-#define SPIXF_MODE_DATA							(SPIXF_BASE | 0x0C)
-#define SPIXF_SCLK_FB_CTRL						(SPIXF_BASE | 0x10)
-#define SPIXF_IO_CTRL							(SPIXF_BASE | 0x1C)
-#define SPIXF_MEMSECCN							(SPIXF_BASE | 0x20)
-#define SPIXF_BUS_IDLE							(SPIXF_BASE | 0x24)
+#define SPIXF_BASE                              0x40026000
+#define SPIXF_CFG                               (SPIXF_BASE | 0x00)
+#define SPIXF_FETCH_CTRL                        (SPIXF_BASE | 0x04)
+#define SPIXF_MODE_CTRL                         (SPIXF_BASE | 0x08)
+#define SPIXF_MODE_DATA                         (SPIXF_BASE | 0x0C)
+#define SPIXF_SCLK_FB_CTRL                      (SPIXF_BASE | 0x10)
+#define SPIXF_IO_CTRL                           (SPIXF_BASE | 0x1C)
+#define SPIXF_MEMSECCN                          (SPIXF_BASE | 0x20)
+#define SPIXF_BUS_IDLE                          (SPIXF_BASE | 0x24)
 
-#define SPIXF_MEMSECCN_ENC_ENABLE 				(0x1)
-#define SPIXF_MEMSECCN_AUTH_DISABLE				(0x2)
+#define SPIXF_MEMSECCN_ENC_ENABLE               (0x1)
+#define SPIXF_MEMSECCN_AUTH_DISABLE             (0x2)
 
-#define SPI_ICC_BASE							0x4002F000
-#define SPI_ICC_CTRL							(SPI_ICC_BASE | 0x100)
+#define SPI_ICC_BASE                            0x4002F000
+#define SPI_ICC_CTRL                            (SPI_ICC_BASE | 0x100)
 
-#define SPI_ICC_CTRL_EN_POS						0
-#define SPI_ICC_CTRL_EN							(0x1UL << SPI_ICC_CTRL_EN_POS)
+#define SPI_ICC_CTRL_EN_POS                     0
+#define SPI_ICC_CTRL_EN                         (0x1UL << SPI_ICC_CTRL_EN_POS)
 
-#define GCR_BASE 								0x40000000
-#define GCR_SCON 								(GCR_BASE | 0x00)
+#define GCR_BASE                                0x40000000
+#define GCR_SCON                                (GCR_BASE | 0x00)
 
 /* Set the number of system clocks per low/high period of the SPI clock */
-#define SPI_CLOCK_PERIOD						2
+#define SPI_CLOCK_PERIOD                        2
 
 /* Address boundary for writes */
-#define SPI_WRITE_BOUNDARY						256
+#define SPI_WRITE_BOUNDARY                      256
 
 /* Set this to 1 to enable dual (1-2-2) reads if available from SFDP */
 #ifndef SPI_DUAL_MODE
-#define SPI_DUAL_MODE 							0
+#define SPI_DUAL_MODE                           0
 #endif
 
-#define OPTIONS_128								0x01 /* Perform 128 bit flash writes */
-#define OPTIONS_ENC								0x02 /* Encrypt the flash contents */
-#define OPTIONS_AUTH							0x04 /* Authenticate the flash contents */
-#define OPTIONS_COUNT							0x08 /* Add counter values to authentication */
-#define OPTIONS_INTER							0x10 /* Interleave the authentication and count values*/
-#define OPTIONS_RELATIVE_XOR					0x20 /* Only XOR the offset of the address when encrypting */
-#define OPTIONS_KEYSIZE							0x40 /* Use a 256 bit KEY */
-#define OPTIONS_QSPI							0x80 /* Use quad SPI */
+#define OPTIONS_128                             0x01	/* Perform 128 bit flash writes */
+#define OPTIONS_ENC                             0x02	/* Encrypt the flash contents */
+#define OPTIONS_AUTH                            0x04	/* Authenticate the flash contents */
+#define OPTIONS_COUNT                           0x08	/* Add counter values to authentication */
+#define OPTIONS_INTER                           0x10	/* Interleave the authentication and count
+							 * values*/
+#define OPTIONS_RELATIVE_XOR                    0x20	/* Only XOR the offset of the address when
+							 * encrypting */
+#define OPTIONS_KEYSIZE                         0x40	/* Use a 256 bit KEY */
+#define OPTIONS_QSPI                            0x80	/* Use quad SPI */
 
-#define SPIX_ALGO_STACK_SIZE					256
-#define SPIX_ALGO_ENTRY_OFFSET 					0x42c
+#define SPIX_ALGO_STACK_SIZE                    256
+#define SPIX_ALGO_ENTRY_OFFSET                  0x42c
 
 static const uint8_t write_code[] = {
 #include "contrib/loaders/flash/max32xxx_qspi/max32xxx_qspi.inc"
@@ -129,7 +132,8 @@ FLASH_BANK_COMMAND_HANDLER(max32xxx_qspi_flash_bank_command)
 	LOG_DEBUG("%s", __func__);
 
 	if ((CMD_ARGC < 7) || (CMD_ARGC > 7)) {
-		LOG_ERROR("incorrect flash bank max32xxx_qspi configuration: <flash_addr_base> <flash_addr_size> 0 0 <target> <opitons>");
+		LOG_ERROR(
+			"incorrect flash bank max32xxx_qspi configuration: <flash_addr_base> <flash_addr_size> 0 0 <target> <opitons>");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
@@ -181,7 +185,7 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 
 
 	/* Enter 1-2-2 mode */
-	if(SPI_DUAL_MODE && (max32xxx_qspi_info->dev.dread_cmd != 0x0)) {
+	if (SPI_DUAL_MODE && (max32xxx_qspi_info->dev.dread_cmd != 0x0)) {
 		LOG_DEBUG("Entering 1-2-2 read mode");
 
 		/* Set the read command */
@@ -195,9 +199,8 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 		/* Set the read command */
 		temp32 = max32xxx_qspi_info->dev.read_cmd;
 		/* Enable 4 byte addresses if using read command 0x13 */
-		if(max32xxx_qspi_info->dev.read_cmd == 0x13){
-		    temp32 |= 0x1 << 16;
-		}
+		if (max32xxx_qspi_info->dev.read_cmd == 0x13)
+			temp32 |= 0x1 << 16;
 		target_write_u32(target, SPIXF_FETCH_CTRL, temp32);
 
 		/* Set mode control */
@@ -206,12 +209,11 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	}
 
 	/* Setup the encryption options */
-	if(max32xxx_qspi_info->options & OPTIONS_ENC) {
+	if (max32xxx_qspi_info->options & OPTIONS_ENC) {
 		temp32 = SPIXF_MEMSECCN_ENC_ENABLE;
 
-		if(!(max32xxx_qspi_info->options & OPTIONS_AUTH)) {
+		if (!(max32xxx_qspi_info->options & OPTIONS_AUTH))
 			temp32 |= SPIXF_MEMSECCN_AUTH_DISABLE;
-		}
 		target_write_u32(target, SPIXF_MEMSECCN, temp32);
 	} else {
 		temp32 = 0;
@@ -232,7 +234,7 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	temp32 = SPI_ICC_CTRL_EN;
 	target_write_u32(target, SPI_ICC_CTRL, temp32);
 
-    /* Clear the code cache */
+	/* Clear the code cache */
 	target_read_u32(target, GCR_SCON, &temp32);
 	temp32 |= (0x1 << 6);
 	target_write_u32(target, GCR_SCON, temp32);
@@ -240,7 +242,7 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-static int max32xxx_qspi_write_txfifo(struct target *target, const uint8_t* data, unsigned len)
+static int max32xxx_qspi_write_txfifo(struct target *target, const uint8_t *data, unsigned len)
 {
 	uint32_t temp32;
 	unsigned txFifoAvailable;
@@ -261,12 +263,12 @@ static int max32xxx_qspi_write_txfifo(struct target *target, const uint8_t* data
 		unsigned retryCount = 10000;
 		do {
 			target_read_u32(target, SPIXFC_FIFO_CTRL, &temp32);
-			txFifoAvailable = SPIXFC_FIFO_DEPTH - ((temp32 & SPIXFC_FIFO_CTRL_TX_FIFO_CNT)
+			txFifoAvailable = SPIXFC_FIFO_DEPTH -
+				((temp32 & SPIXFC_FIFO_CTRL_TX_FIFO_CNT)
 				>> SPIXFC_FIFO_CTRL_TX_FIFO_CNT_POS);
 
-			if(--retryCount == 0) {
+			if (--retryCount == 0)
 				return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
-			}
 
 		} while (txFifoAvailable < writeLen);
 
@@ -287,7 +289,7 @@ static int max32xxx_qspi_write_txfifo(struct target *target, const uint8_t* data
 	return ERROR_OK;
 }
 
-static int max32xxx_qspi_read_rxfifo(struct target *target, uint8_t* data, unsigned len)
+static int max32xxx_qspi_read_rxfifo(struct target *target, uint8_t *data, unsigned len)
 {
 	uint32_t temp32;
 	unsigned rxFifoAvailable;
@@ -305,9 +307,8 @@ static int max32xxx_qspi_read_rxfifo(struct target *target, uint8_t* data, unsig
 			rxFifoAvailable = (temp32 & SPIXFC_FIFO_CTRL_RX_FIFO_CNT)
 				>> SPIXFC_FIFO_CTRL_RX_FIFO_CNT_POS;
 
-			if(--retryCount == 0) {
+			if (--retryCount == 0)
 				return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
-			}
 
 		} while (!rxFifoAvailable);
 
@@ -326,7 +327,10 @@ static int max32xxx_qspi_read_rxfifo(struct target *target, uint8_t* data, unsig
 	return ERROR_OK;
 }
 
-static int max32xxx_qspi_write_bytes(struct target *target, const uint8_t* data, unsigned len, bool deass)
+static int max32xxx_qspi_write_bytes(struct target *target,
+	const uint8_t *data,
+	unsigned len,
+	bool deass)
 {
 	int retval;
 	uint16_t header;
@@ -368,7 +372,7 @@ static int max32xxx_qspi_write_bytes(struct target *target, const uint8_t* data,
 	return ERROR_OK;
 }
 
-static int max32xxx_qspi_read_bytes(struct target *target, uint8_t* data, unsigned len, bool deass)
+static int max32xxx_qspi_read_bytes(struct target *target, uint8_t *data, unsigned len, bool deass)
 {
 	int retval;
 	uint16_t header;
@@ -410,7 +414,7 @@ static int max32xxx_qspi_read_bytes(struct target *target, uint8_t* data, unsign
 	return ERROR_OK;
 }
 
-static int max32xxx_qspi_read_words(struct target *target, uint32_t* data, unsigned len, bool deass)
+static int max32xxx_qspi_read_words(struct target *target, uint32_t *data, unsigned len, bool deass)
 {
 	int retval;
 	uint16_t header;
@@ -448,7 +452,9 @@ static int max32xxx_qspi_read_words(struct target *target, uint32_t* data, unsig
 			return retval;
 
 		/* Read the data to the TX FIFO, convert to number of bytes */
-		retval = max32xxx_qspi_read_rxfifo(target, (uint8_t *)&data[dataIndex * 4], chunkLen * 4);
+		retval = max32xxx_qspi_read_rxfifo(target,
+				(uint8_t *)&data[dataIndex * 4],
+				chunkLen * 4);
 		if (retval != ERROR_OK)
 			return retval;
 		dataIndex += chunkLen;
@@ -523,22 +529,22 @@ static int max32xxx_qspi_erase(struct flash_bank *bank, unsigned int first, unsi
 		/* Send the erase command */
 		cmdData[0] = max32xxx_qspi_info->dev.erase_cmd;
 		/* Address is MSB first */
-		addr = first++ * max32xxx_qspi_info->dev.sectorsize;
-		
-		if(max32xxx_qspi_info->dev.erase_cmd == 0xdc){
-		    cmdData[4] = (addr & 0x000000FF) >> 0;
-		    cmdData[3] = (addr & 0x0000FF00) >> 8;
-		    cmdData[2] = (addr & 0x00FF0000) >> 16;
-		    cmdData[1] = (addr & 0xFF000000) >> 24;
-		    retval = max32xxx_qspi_write_bytes(target, cmdData, 5, true);
-		}else{
-		
-		    cmdData[3] = (addr & 0x0000FF) >> 0;
-		    cmdData[2] = (addr & 0x00FF00) >> 8;
-		    cmdData[1] = (addr & 0xFF0000) >> 16;
-		    retval = max32xxx_qspi_write_bytes(target, cmdData, 4, true);
+		addr = (first++)*((max32xxx_qspi_info)->dev.sectorsize);
+
+		if (max32xxx_qspi_info->dev.erase_cmd == 0xdc) {
+			cmdData[4] = (addr & 0x000000FF) >> 0;
+			cmdData[3] = (addr & 0x0000FF00) >> 8;
+			cmdData[2] = (addr & 0x00FF0000) >> 16;
+			cmdData[1] = (addr & 0xFF000000) >> 24;
+			retval = max32xxx_qspi_write_bytes(target, cmdData, 5, true);
+		} else {
+
+			cmdData[3] = (addr & 0x0000FF) >> 0;
+			cmdData[2] = (addr & 0x00FF00) >> 8;
+			cmdData[1] = (addr & 0xFF0000) >> 16;
+			retval = max32xxx_qspi_write_bytes(target, cmdData, 4, true);
 		}
-		
+
 		if (retval != ERROR_OK)
 			goto exit;
 
@@ -553,7 +559,7 @@ exit:
 }
 
 static int max32xxx_qspi_write_block(struct flash_bank *bank, const uint8_t *buffer,
-                                uint32_t offset, uint32_t len)
+	uint32_t offset, uint32_t len)
 {
 	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
 	struct target *target = bank->target;
@@ -568,7 +574,7 @@ static int max32xxx_qspi_write_block(struct flash_bank *bank, const uint8_t *buf
 	static const unsigned buf_min = 512;
 
 	LOG_DEBUG("max32xxx_write_block bank=%p buffer=%p offset=%08" PRIx32 " len=%08" PRIx32 "",
-	          bank, buffer, offset, len);
+		bank, buffer, offset, len);
 
 	/* flash write code */
 	if (target_alloc_working_area(target, sizeof(write_code), &write_algorithm) != ERROR_OK) {
@@ -586,11 +592,11 @@ static int max32xxx_qspi_write_block(struct flash_bank *bank, const uint8_t *buf
 		}
 
 		LOG_DEBUG("retry target_alloc_working_area(%s, size=%u)",
-		          target_name(target), (unsigned) buffer_size);
+			target_name(target), (unsigned) buffer_size);
 	}
 
 	target_write_buffer(target, write_algorithm->address, sizeof(write_code),
-	                    write_code);
+		write_code);
 
 	armv7m_info.common_magic = ARMV7M_COMMON_MAGIC;
 	armv7m_info.core_mode = ARM_MODE_THREAD;
@@ -607,26 +613,27 @@ static int max32xxx_qspi_write_block(struct flash_bank *bank, const uint8_t *buf
 	buf_set_u32(reg_params[3].value, 0, 32, offset);
 	buf_set_u32(reg_params[4].value, 0, 32, source->address + source->size);
 
-	/* mem_params for options */
-	/* leave room for stack, 32-bit options, 32-bit SPI write command */
-	init_mem_param(&mem_param[0], source->address + (source->size - 4  - 
+	/* mem_params for options
+	 * leave room for stack, 32-bit options, 32-bit SPI write command*/
+	init_mem_param(&mem_param[0], source->address + (source->size - 4  -
 		SPIX_ALGO_STACK_SIZE), 4, PARAM_OUT);
-	init_mem_param(&mem_param[1], source->address + (source->size - 8  - 
+	init_mem_param(&mem_param[1], source->address + (source->size - 8  -
 		SPIX_ALGO_STACK_SIZE), 4, PARAM_OUT);
 	buf_set_u32(mem_param[0].value, 0, 32, max32xxx_qspi_info->options);
 	buf_set_u32(mem_param[1].value, 0, 32, max32xxx_qspi_info->dev.pprog_cmd);
 
-	LOG_DEBUG("max32xxx_write_block source->address=%08" PRIx32 " source->size=%08" PRIx32 "", (unsigned int)source->address, (unsigned int)source->size);
+	LOG_DEBUG("max32xxx_write_block source->address=%08" PRIx32 " source->size=%08" PRIx32 "",
+		(unsigned int)source->address, (unsigned int)source->size);
 
-	/* leave room for stack, 32-bit options, 32-bit SPI write command */
-	/* Algorithm entry point is inside the code block, not at the beginning */
-	retval = target_run_flash_async_algorithm(target, 
-			buffer, len, 1, 
+	/* leave room for stack, 32-bit options, 32-bit SPI write command
+	 * Algorithm entry point is inside the code block, not at the beginning*/
+	retval = target_run_flash_async_algorithm(target,
+			buffer, len, 1,
 			2, mem_param,
-	        5, reg_params, 
-	        source->address, (source->size - 4 - 4 - SPIX_ALGO_STACK_SIZE), 
-	        (write_algorithm->address + SPIX_ALGO_ENTRY_OFFSET), 0, 
-	        &armv7m_info);
+			5, reg_params,
+			source->address, (source->size - 4 - 4 - SPIX_ALGO_STACK_SIZE),
+			(write_algorithm->address + SPIX_ALGO_ENTRY_OFFSET), 0,
+			&armv7m_info);
 
 	if (retval == ERROR_FLASH_OPERATION_FAILED)
 		LOG_ERROR("error %d executing max32xxx qspi write algorithm", retval);
@@ -650,7 +657,7 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 	int retval;
 	uint8_t cmdData[5];
 	unsigned writeLen, bufferIndex;
-    
+
 	LOG_DEBUG("%s: offset=0x%08" PRIx32 " count=0x%08" PRIx32,
 		__func__, offset, count);
 
@@ -670,18 +677,21 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 
 	/* Determine if we want to use the on-chip algorithm */
-	if((max32xxx_qspi_info->options & OPTIONS_ENC) || (count > 16)) {
+	if ((max32xxx_qspi_info->options & OPTIONS_ENC) || (count > 16)) {
 
-		if(max32xxx_qspi_info->options & OPTIONS_AUTH) {
+		if (max32xxx_qspi_info->options & OPTIONS_AUTH) {
 			/* Need to erase extra length if we're writing authentication data */
-			uint32_t max_sector_plain = (offset + count) / max32xxx_qspi_info->dev.sectorsize;
-			uint32_t max_sector_auth = (offset + (count * 10 / 8)) / max32xxx_qspi_info->dev.sectorsize;
-			if(max_sector_auth > max_sector_plain) {
+			uint32_t max_sector_plain = (offset + count) /
+				max32xxx_qspi_info->dev.sectorsize;
+			uint32_t max_sector_auth = (offset + (count * 10 / 8)) /
+				max32xxx_qspi_info->dev.sectorsize;
+			if (max_sector_auth > max_sector_plain) {
 				LOG_WARNING("Erasing extra flash for authentication data");
-				retval = max32xxx_qspi_erase(bank, max_sector_plain, max_sector_auth);
-				if(retval != ERROR_OK) {
+				retval =
+					max32xxx_qspi_erase(bank, max_sector_plain,
+						max_sector_auth);
+				if (retval != ERROR_OK)
 					return retval;
-				}
 			}
 		}
 
@@ -691,8 +701,9 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 
 		if (retval != ERROR_OK) {
 			if (retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE) {
-				if(max32xxx_qspi_info->options & OPTIONS_ENC) {
-					LOG_ERROR("Must use algorithm in working area for encryption");
+				if (max32xxx_qspi_info->options & OPTIONS_ENC) {
+					LOG_ERROR(
+						"Must use algorithm in working area for encryption");
 					goto exit;
 
 				}
@@ -701,12 +712,10 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 				LOG_ERROR("Error with flash algorithm");
 				goto exit;
 			}
-		} else {
+		} else
 			goto exit;
-		}
-	} else {
+	} else
 		max32xxx_qspi_pre_op(bank);
-	}
 
 	/* Send the page program command */
 	cmdData[0] = max32xxx_qspi_info->dev.pprog_cmd;
@@ -726,21 +735,21 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 		if (writeLen > count)
 			writeLen = count;
 
-        if(max32xxx_qspi_info->dev.pprog_cmd == 0x12){
-        	cmdData[4] = (offset & 0x000000FF) >> 0;
-		    cmdData[3] = (offset & 0x0000FF00) >> 8;
-		    cmdData[2] = (offset & 0x00FF0000) >> 16;
-		    cmdData[1] = (offset & 0xFF000000) >> 24;
-		    /* Write the command */
-		    retval = max32xxx_qspi_write_bytes(target, cmdData, 5, false);
-        }else{
-            /* Address is MSB first */
-            cmdData[3] = (offset & 0x0000FF) >> 0;
-            cmdData[2] = (offset & 0x00FF00) >> 8;
-            cmdData[1] = (offset & 0xFF0000) >> 16;
-            /* Write the command */
-		    retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
-        }
+		if (max32xxx_qspi_info->dev.pprog_cmd == 0x12) {
+			cmdData[4] = (offset & 0x000000FF) >> 0;
+			cmdData[3] = (offset & 0x0000FF00) >> 8;
+			cmdData[2] = (offset & 0x00FF0000) >> 16;
+			cmdData[1] = (offset & 0xFF000000) >> 24;
+			/* Write the command */
+			retval = max32xxx_qspi_write_bytes(target, cmdData, 5, false);
+		} else {
+			/* Address is MSB first */
+			cmdData[3] = (offset & 0x0000FF) >> 0;
+			cmdData[2] = (offset & 0x00FF00) >> 8;
+			cmdData[1] = (offset & 0xFF0000) >> 16;
+			/* Write the command */
+			retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
+		}
 
 		if (retval != ERROR_OK)
 			goto exit;
@@ -768,22 +777,22 @@ static int max32xxx_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 		if (writeLen > (count - bufferIndex))
 			writeLen = (count - bufferIndex);
 
-        if(max32xxx_qspi_info->dev.pprog_cmd == 0x12){
-        	cmdData[4] = (offset & 0x000000FF) >> 0;
-		    cmdData[3] = (offset & 0x0000FF00) >> 8;
-		    cmdData[2] = (offset & 0x00FF0000) >> 16;
-		    cmdData[1] = (offset & 0xFF000000) >> 24;
-		    /* Write the command */
-		    retval = max32xxx_qspi_write_bytes(target, cmdData, 5, false);
-        }else{
-            /* Address is MSB first */
-            cmdData[3] = (offset & 0x0000FF) >> 0;
-            cmdData[2] = (offset & 0x00FF00) >> 8;
-            cmdData[1] = (offset & 0xFF0000) >> 16;
-            /* Write the command */
-		    retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
-        }
-        
+		if (max32xxx_qspi_info->dev.pprog_cmd == 0x12) {
+			cmdData[4] = (offset & 0x000000FF) >> 0;
+			cmdData[3] = (offset & 0x0000FF00) >> 8;
+			cmdData[2] = (offset & 0x00FF0000) >> 16;
+			cmdData[1] = (offset & 0xFF000000) >> 24;
+			/* Write the command */
+			retval = max32xxx_qspi_write_bytes(target, cmdData, 5, false);
+		} else {
+			/* Address is MSB first */
+			cmdData[3] = (offset & 0x0000FF) >> 0;
+			cmdData[2] = (offset & 0x00FF00) >> 8;
+			cmdData[1] = (offset & 0xFF0000) >> 16;
+			/* Write the command */
+			retval = max32xxx_qspi_write_bytes(target, cmdData, 4, false);
+		}
+
 		if (retval != ERROR_OK)
 			goto exit;
 
@@ -878,7 +887,10 @@ static int max32xxx_qspi_probe(struct flash_bank *bank)
 	if (retval != ERROR_OK)
 		goto exit;
 
-	retval = max32xxx_qspi_read_bytes(target, (uint8_t *) &(max32xxx_qspi_info->dev.device_id), 3, true);
+	retval = max32xxx_qspi_read_bytes(target,
+			(uint8_t *) &(max32xxx_qspi_info->dev.device_id),
+			3,
+			true);
 	if (retval != ERROR_OK)
 		goto exit;
 
@@ -888,7 +900,8 @@ static int max32xxx_qspi_probe(struct flash_bank *bank)
 	/* TODO: Get more than 1 erase command */
 
 	/* Create and fill sectors array */
-	bank->num_sectors = max32xxx_qspi_info->dev.size_in_bytes / max32xxx_qspi_info->dev.sectorsize;
+	bank->num_sectors = max32xxx_qspi_info->dev.size_in_bytes /
+		max32xxx_qspi_info->dev.sectorsize;
 	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
 	if (!sectors) {
 		LOG_ERROR("not enough memory");
@@ -906,7 +919,7 @@ static int max32xxx_qspi_probe(struct flash_bank *bank)
 	bank->sectors = sectors;
 
 	max32xxx_qspi_info->probed = true;
-	
+
 	/* Setup memory mapped mode */
 	max32xxx_qspi_post_op(bank);
 
@@ -1038,18 +1051,42 @@ static int get_max32xxx_qspi_info(struct flash_bank *bank, struct command_invoca
 	command_print_sameline(cmd, "\nQSPI flash:\n");
 
 	command_print_sameline(cmd, "  name          : \'%s\'\n", max32xxx_qspi_info->dev.name);
-	command_print_sameline(cmd, "  ID            : 0x%06" PRIx32 "\n", max32xxx_qspi_info->dev.device_id);
-	command_print_sameline(cmd, "  size          : 0x%08" PRIx32 " B\n", max32xxx_qspi_info->dev.size_in_bytes);
-	command_print_sameline(cmd, "  page size     : 0x%08" PRIx32 " B\n", max32xxx_qspi_info->dev.pagesize);
-	command_print_sameline(cmd, "  sector size   : 0x%08" PRIx32 " B\n", max32xxx_qspi_info->dev.sectorsize);
-	command_print_sameline(cmd, "  read cmd      : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.read_cmd);
-	command_print_sameline(cmd, "  dread cmd     : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.dread_cmd);
-	command_print_sameline(cmd, "  dread mode    : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.dread_mode);
-	command_print_sameline(cmd, "  dread dclk    : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.dread_dclk);
-	command_print_sameline(cmd, "  qread cmd     : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.qread_cmd);
-	command_print_sameline(cmd, "  pprog cmd     : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.pprog_cmd);
-	command_print_sameline(cmd, "  erase cmd     : 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.erase_cmd);
-	command_print_sameline(cmd, "  chip_erase cmd: 0x%02" PRIx32 "\n", max32xxx_qspi_info->dev.chip_erase_cmd);
+	command_print_sameline(cmd,
+		"  ID            : 0x%06" PRIx32 "\n",
+		max32xxx_qspi_info->dev.device_id);
+	command_print_sameline(cmd,
+		"  size          : 0x%08" PRIx32 " B\n",
+		max32xxx_qspi_info->dev.size_in_bytes);
+	command_print_sameline(cmd,
+		"  page size     : 0x%08" PRIx32 " B\n",
+		max32xxx_qspi_info->dev.pagesize);
+	command_print_sameline(cmd,
+		"  sector size   : 0x%08" PRIx32 " B\n",
+		max32xxx_qspi_info->dev.sectorsize);
+	command_print_sameline(cmd,
+		"  read cmd      : 0x%02" PRIx32 "\n",
+		max32xxx_qspi_info->dev.read_cmd);
+	command_print_sameline(cmd,
+		"  dread cmd     : 0x%02" PRIx32 "\n",
+		max32xxx_qspi_info->dev.dread_cmd);
+	command_print_sameline(cmd,
+		"  dread mode    : 0x%02" PRIx32 "\n",
+		max32xxx_qspi_info->dev.dread_mode);
+	command_print_sameline(cmd,
+		"  dread dclk    : 0x%02" PRIx32 "\n",
+		max32xxx_qspi_info->dev.dread_dclk);
+	command_print_sameline(cmd,
+		"  qread cmd     : 0x%02" PRIx32 "\n",
+		max32xxx_qspi_info->dev.qread_cmd);
+	command_print_sameline(cmd,
+		"  pprog cmd     : 0x%02" PRIx32 "\n",
+		max32xxx_qspi_info->dev.pprog_cmd);
+	command_print_sameline(cmd,
+		"  erase cmd     : 0x%02" PRIx32 "\n",
+		max32xxx_qspi_info->dev.erase_cmd);
+	command_print_sameline(cmd,
+		"  chip_erase cmd: 0x%02" PRIx32 "\n",
+		max32xxx_qspi_info->dev.chip_erase_cmd);
 
 	return ERROR_OK;
 }

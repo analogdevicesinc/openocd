@@ -46,12 +46,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
- 
-#if defined (__ICCARM__)
+
+#if defined(__ICCARM__)
   #pragma system_include
 #endif
 
-/// @cond
+/*/ @cond */
 /*
     If types are not defined elsewhere (CMSIS) define them here
 */
@@ -67,7 +67,7 @@ extern "C" {
 #ifndef __R
 #define __R  volatile const
 #endif
-/// @endcond
+/*/ @endcond */
 
 /* **** Definitions **** */
 
@@ -83,53 +83,53 @@ extern "C" {
  * Structure type to access the TPU Registers.
  */
 typedef struct {
-    __IO uint32_t ctrl;                 /**< <tt>\b 0x00:<\tt> TPU CTRL Register */
-    __IO uint32_t cipher_ctrl;          /**< <tt>\b 0x04:<\tt> TPU CIPHER_CTRL Register */
-    __IO uint32_t hash_ctrl;            /**< <tt>\b 0x08:<\tt> TPU HASH_CTRL Register */
-    __IO uint32_t crc_ctrl;             /**< <tt>\b 0x0C:<\tt> TPU CRC_CTRL Register */
-    __IO uint32_t dma_src;              /**< <tt>\b 0x10:<\tt> TPU DMA_SRC Register */
-    __IO uint32_t dma_dest;             /**< <tt>\b 0x14:<\tt> TPU DMA_DEST Register */
-    __IO uint32_t dma_cnt;              /**< <tt>\b 0x18:<\tt> TPU DMA_CNT Register */
-    __IO uint32_t maa_ctrl;             /**< <tt>\b 0x1C:<\tt> TPU MAA_CTRL Register */
-    __O  uint32_t din[4];               /**< <tt>\b 0x20:<\tt> TPU DIN Register */
-    __I  uint32_t dout[4];              /**< <tt>\b 0x30:<\tt> TPU DOUT Register */
-    __IO uint32_t crc_poly;             /**< <tt>\b 0x40:<\tt> TPU CRC_POLY Register */
-    __IO uint32_t crc_val;              /**< <tt>\b 0x44:<\tt> TPU CRC_VAL Register */
-    __I  uint32_t crc_prng;             /**< <tt>\b 0x48:<\tt> TPU CRC_PRNG Register */
-    __IO uint32_t ham_ecc;              /**< <tt>\b 0x4C:<\tt> TPU HAM_ECC Register */
-    __IO uint32_t cipher_init[4];       /**< <tt>\b 0x50:<\tt> TPU CIPHER_INIT Register */
-    __O  uint32_t cipher_key[8];        /**< <tt>\b 0x60:<\tt> TPU CIPHER_KEY Register */
-    __IO uint32_t hash_digest[16];      /**< <tt>\b 0x80:<\tt> TPU HASH_DIGEST Register */
-    __IO uint32_t hash_msg_sz[4];       /**< <tt>\b 0xC0:<\tt> TPU HASH_MSG_SZ Register */
-    __IO uint32_t maa_maws;             /**< <tt>\b 0xD0:<\tt> TPU MAA_MAWS Register */
+__IO uint32_t ctrl;                 /**< <tt>\b 0x00:<\tt> TPU CTRL Register */
+__IO uint32_t cipher_ctrl;          /**< <tt>\b 0x04:<\tt> TPU CIPHER_CTRL Register */
+__IO uint32_t hash_ctrl;            /**< <tt>\b 0x08:<\tt> TPU HASH_CTRL Register */
+__IO uint32_t crc_ctrl;             /**< <tt>\b 0x0C:<\tt> TPU CRC_CTRL Register */
+__IO uint32_t dma_src;              /**< <tt>\b 0x10:<\tt> TPU DMA_SRC Register */
+__IO uint32_t dma_dest;             /**< <tt>\b 0x14:<\tt> TPU DMA_DEST Register */
+__IO uint32_t dma_cnt;              /**< <tt>\b 0x18:<\tt> TPU DMA_CNT Register */
+__IO uint32_t maa_ctrl;             /**< <tt>\b 0x1C:<\tt> TPU MAA_CTRL Register */
+__O  uint32_t din[4];               /**< <tt>\b 0x20:<\tt> TPU DIN Register */
+__I  uint32_t dout[4];              /**< <tt>\b 0x30:<\tt> TPU DOUT Register */
+__IO uint32_t crc_poly;             /**< <tt>\b 0x40:<\tt> TPU CRC_POLY Register */
+__IO uint32_t crc_val;              /**< <tt>\b 0x44:<\tt> TPU CRC_VAL Register */
+__I  uint32_t crc_prng;             /**< <tt>\b 0x48:<\tt> TPU CRC_PRNG Register */
+__IO uint32_t ham_ecc;              /**< <tt>\b 0x4C:<\tt> TPU HAM_ECC Register */
+__IO uint32_t cipher_init[4];       /**< <tt>\b 0x50:<\tt> TPU CIPHER_INIT Register */
+__O  uint32_t cipher_key[8];        /**< <tt>\b 0x60:<\tt> TPU CIPHER_KEY Register */
+__IO uint32_t hash_digest[16];      /**< <tt>\b 0x80:<\tt> TPU HASH_DIGEST Register */
+__IO uint32_t hash_msg_sz[4];       /**< <tt>\b 0xC0:<\tt> TPU HASH_MSG_SZ Register */
+__IO uint32_t maa_maws;             /**< <tt>\b 0xD0:<\tt> TPU MAA_MAWS Register */
 } mxc_tpu_regs_t;
 
 /* Register offsets for module TPU */
 /**
  * @ingroup    tpu_registers
  * @defgroup   TPU_Register_Offsets Register Offsets
- * @brief      TPU Peripheral Register Offsets from the TPU Base Peripheral Address. 
+ * @brief      TPU Peripheral Register Offsets from the TPU Base Peripheral Address.
  * @{
  */
- #define MXC_R_TPU_CTRL                     ((uint32_t)0x00000000UL) /**< Offset from TPU Base Address: <tt> 0x0x000 */ 
- #define MXC_R_TPU_CIPHER_CTRL              ((uint32_t)0x00000004UL) /**< Offset from TPU Base Address: <tt> 0x0x004 */ 
- #define MXC_R_TPU_HASH_CTRL                ((uint32_t)0x00000008UL) /**< Offset from TPU Base Address: <tt> 0x0x008 */ 
- #define MXC_R_TPU_CRC_CTRL                 ((uint32_t)0x0000000CUL) /**< Offset from TPU Base Address: <tt> 0x0x00C */ 
- #define MXC_R_TPU_DMA_SRC                  ((uint32_t)0x00000010UL) /**< Offset from TPU Base Address: <tt> 0x0x010 */ 
- #define MXC_R_TPU_DMA_DEST                 ((uint32_t)0x00000014UL) /**< Offset from TPU Base Address: <tt> 0x0x014 */ 
- #define MXC_R_TPU_DMA_CNT                  ((uint32_t)0x00000018UL) /**< Offset from TPU Base Address: <tt> 0x0x018 */ 
- #define MXC_R_TPU_MAA_CTRL                 ((uint32_t)0x0000001CUL) /**< Offset from TPU Base Address: <tt> 0x0x01C */ 
- #define MXC_R_TPU_DIN                      ((uint32_t)0x00000020UL) /**< Offset from TPU Base Address: <tt> 0x0x020 */ 
- #define MXC_R_TPU_DOUT                     ((uint32_t)0x00000030UL) /**< Offset from TPU Base Address: <tt> 0x0x030 */ 
- #define MXC_R_TPU_CRC_POLY                 ((uint32_t)0x00000040UL) /**< Offset from TPU Base Address: <tt> 0x0x040 */ 
- #define MXC_R_TPU_CRC_VAL                  ((uint32_t)0x00000044UL) /**< Offset from TPU Base Address: <tt> 0x0x044 */ 
- #define MXC_R_TPU_CRC_PRNG                 ((uint32_t)0x00000048UL) /**< Offset from TPU Base Address: <tt> 0x0x048 */ 
- #define MXC_R_TPU_HAM_ECC                  ((uint32_t)0x0000004CUL) /**< Offset from TPU Base Address: <tt> 0x0x04C */ 
- #define MXC_R_TPU_CIPHER_INIT              ((uint32_t)0x00000050UL) /**< Offset from TPU Base Address: <tt> 0x0x050 */ 
- #define MXC_R_TPU_CIPHER_KEY               ((uint32_t)0x00000060UL) /**< Offset from TPU Base Address: <tt> 0x0x060 */ 
- #define MXC_R_TPU_HASH_DIGEST              ((uint32_t)0x00000080UL) /**< Offset from TPU Base Address: <tt> 0x0x080 */ 
- #define MXC_R_TPU_HASH_MSG_SZ              ((uint32_t)0x000000C0UL) /**< Offset from TPU Base Address: <tt> 0x0x0C0 */ 
- #define MXC_R_TPU_MAA_MAWS                 ((uint32_t)0x000000D0UL) /**< Offset from TPU Base Address: <tt> 0x0x0D0 */ 
+ #define MXC_R_TPU_CTRL                     ((uint32_t)0x00000000UL) /**< Offset from TPU Base Address: <tt> 0x0x000 */
+ #define MXC_R_TPU_CIPHER_CTRL              ((uint32_t)0x00000004UL) /**< Offset from TPU Base Address: <tt> 0x0x004 */
+ #define MXC_R_TPU_HASH_CTRL                ((uint32_t)0x00000008UL) /**< Offset from TPU Base Address: <tt> 0x0x008 */
+ #define MXC_R_TPU_CRC_CTRL                 ((uint32_t)0x0000000CUL) /**< Offset from TPU Base Address: <tt> 0x0x00C */
+ #define MXC_R_TPU_DMA_SRC                  ((uint32_t)0x00000010UL) /**< Offset from TPU Base Address: <tt> 0x0x010 */
+ #define MXC_R_TPU_DMA_DEST                 ((uint32_t)0x00000014UL) /**< Offset from TPU Base Address: <tt> 0x0x014 */
+ #define MXC_R_TPU_DMA_CNT                  ((uint32_t)0x00000018UL) /**< Offset from TPU Base Address: <tt> 0x0x018 */
+ #define MXC_R_TPU_MAA_CTRL                 ((uint32_t)0x0000001CUL) /**< Offset from TPU Base Address: <tt> 0x0x01C */
+ #define MXC_R_TPU_DIN                      ((uint32_t)0x00000020UL) /**< Offset from TPU Base Address: <tt> 0x0x020 */
+ #define MXC_R_TPU_DOUT                     ((uint32_t)0x00000030UL) /**< Offset from TPU Base Address: <tt> 0x0x030 */
+ #define MXC_R_TPU_CRC_POLY                 ((uint32_t)0x00000040UL) /**< Offset from TPU Base Address: <tt> 0x0x040 */
+ #define MXC_R_TPU_CRC_VAL                  ((uint32_t)0x00000044UL) /**< Offset from TPU Base Address: <tt> 0x0x044 */
+ #define MXC_R_TPU_CRC_PRNG                 ((uint32_t)0x00000048UL) /**< Offset from TPU Base Address: <tt> 0x0x048 */
+ #define MXC_R_TPU_HAM_ECC                  ((uint32_t)0x0000004CUL) /**< Offset from TPU Base Address: <tt> 0x0x04C */
+ #define MXC_R_TPU_CIPHER_INIT              ((uint32_t)0x00000050UL) /**< Offset from TPU Base Address: <tt> 0x0x050 */
+ #define MXC_R_TPU_CIPHER_KEY               ((uint32_t)0x00000060UL) /**< Offset from TPU Base Address: <tt> 0x0x060 */
+ #define MXC_R_TPU_HASH_DIGEST              ((uint32_t)0x00000080UL) /**< Offset from TPU Base Address: <tt> 0x0x080 */
+ #define MXC_R_TPU_HASH_MSG_SZ              ((uint32_t)0x000000C0UL) /**< Offset from TPU Base Address: <tt> 0x0x0C0 */
+ #define MXC_R_TPU_MAA_MAWS                 ((uint32_t)0x000000D0UL) /**< Offset from TPU Base Address: <tt> 0x0x0D0 */
 /**@} end of group tpu_registers */
 
 /**

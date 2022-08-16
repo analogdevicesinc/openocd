@@ -53,9 +53,9 @@
 
 /***** Definitions *****/
 #define MXC_BASE_CTB                            ((uint32_t)0x40001000UL)
-#define MXC_CTB                                 ((mxc_ctb_regs_t*)MXC_BASE_CTB)
+#define MXC_CTB                                 ((mxc_ctb_regs_t *)MXC_BASE_CTB)
 #define MXC_BASE_GCR                            ((uint32_t)0x40000000UL)
-#define MXC_GCR                                 ((mxc_gcr_regs_t*)MXC_BASE_GCR)
+#define MXC_GCR                                 ((mxc_gcr_regs_t *)MXC_BASE_GCR)
 
 #define ERROR_OK                                0
 
@@ -82,7 +82,8 @@
 #define SPIXFC_HEADER_SIZE_POS                  4
 #define SPIXFC_HEADER_WIDTH_POS                 9
 #define SPIXFC_HEADER_SS_DEASS                  (0x1 << 13)
-#define SPIXFC_HEADER_NULL                      0xF000  /* 16-bit filler magic word indicating this isn't a header */
+#define SPIXFC_HEADER_NULL                      0xF000	/* 16-bit filler magic word indicating this
+							 * isn't a header */
 
 #define SPIXFC_CONFIG_PAGE_SIZE_POS             6
 #define SPIXFC_CONFIG_PAGE_SIZE                 (0x3 << SPIXFC_CONFIG_PAGE_SIZE_POS)
@@ -104,22 +105,21 @@
 
 /******************************************************************************/
 #define getbyte(temp8)                                                          \
-    /* Wait for the Read FIFO to not equal the Write FIFO */                    \
-    while (*read_ptr == *write_ptr);                                            \
-    temp8 = **read_ptr;                                                         \
-                                                                                \
-    /* Increment and wrap around the read pointer */                            \
-    if ((*read_ptr + 1) >= (uint8_t*)(work_end)) {                              \
-        *read_ptr = (uint8_t *)(work_start + 8);                                \
-    } else {                                                                    \
-        (*read_ptr)++;                                                          \
-    }                                                                           \
-    len--;                                                                      \
-    addr++;
+	/* Wait for the Read FIFO to not equal the Write FIFO */                    \
+	do {while (*read_ptr == *write_ptr);                                        \
+	temp8 = **read_ptr;                                                         \
+	/* Increment and wrap around the read pointer */                            \
+	if ((*read_ptr + 1) >= (uint8_t *)(work_end)) {                             \
+		*read_ptr = (uint8_t *)(work_start + 8);                                \
+	} else {                                                                    \
+		(*read_ptr)++;                                                          \
+	}                                                                           \
+	len--;                                                                      \
+	addr++; } while (0);
 
 /******************************************************************************/
 
-static void memcpy32(uint32_t * dst, const uint32_t * src, unsigned int len)
+static void memcpy32(uint32_t *dst, const uint32_t *src, unsigned int len)
 {
 	while (len) {
 		*dst = *src;
@@ -129,28 +129,28 @@ static void memcpy32(uint32_t * dst, const uint32_t * src, unsigned int len)
 	}
 }
 
-void target_read_u32(uint32_t addr, uint32_t* data)
+void target_read_u32(uint32_t addr, uint32_t *data)
 {
-	volatile uint32_t* dataPtr = (uint32_t*)addr;
+	volatile uint32_t *dataPtr = (uint32_t *)addr;
 
 	*data = *dataPtr;
 }
 
-void target_read_u8(uint32_t addr, uint8_t* data)
+void target_read_u8(uint32_t addr, uint8_t *data)
 {
-	volatile uint8_t* dataPtr = (uint8_t*)addr;
+	volatile uint8_t *dataPtr = (uint8_t *)addr;
 
 	*data = *dataPtr;
 }
 
 void target_write_u16(uint32_t addr, uint16_t data)
 {
-	volatile uint16_t* dataPtr = (uint16_t*)addr;
+	volatile uint16_t *dataPtr = (uint16_t *)addr;
 
 	*dataPtr = data;
 }
 
-int max32xxx_qspi_write_txfifo(const uint8_t* data, unsigned len)
+int max32xxx_qspi_write_txfifo(const uint8_t *data, unsigned len)
 {
 	uint32_t temp32;
 	unsigned txFifoAvailable;
@@ -170,11 +170,12 @@ int max32xxx_qspi_write_txfifo(const uint8_t* data, unsigned len)
 		do {
 			temp32 = 0;
 			target_read_u32(SPIXFC_FIFO_CTRL, &temp32);
-			txFifoAvailable = SPIXFC_FIFO_DEPTH - ((temp32 & SPIXFC_FIFO_CTRL_TX_FIFO_CNT)
-			                                       >> SPIXFC_FIFO_CTRL_TX_FIFO_CNT_POS);
+			txFifoAvailable = SPIXFC_FIFO_DEPTH -
+				((temp32 & SPIXFC_FIFO_CTRL_TX_FIFO_CNT)
+				>> SPIXFC_FIFO_CTRL_TX_FIFO_CNT_POS);
 
-			/* TODO: Timeout */
-			/* ERROR_TARGET_RESOURCE_NOT_AVAILABLE */
+			/* TODO: Timeout
+			 * ERROR_TARGET_RESOURCE_NOT_AVAILABLE*/
 
 		} while (txFifoAvailable < writeLen);
 
@@ -195,7 +196,7 @@ int max32xxx_qspi_write_txfifo(const uint8_t* data, unsigned len)
 	return ERROR_OK;
 }
 
-int max32xxx_qspi_read_rxfifo(uint8_t* data, unsigned len)
+int max32xxx_qspi_read_rxfifo(uint8_t *data, unsigned len)
 {
 	uint32_t temp32;
 	unsigned rxFifoAvailable;
@@ -208,10 +209,10 @@ int max32xxx_qspi_read_rxfifo(uint8_t* data, unsigned len)
 		do {
 			target_read_u32(SPIXFC_FIFO_CTRL, &temp32);
 			rxFifoAvailable = (temp32 & SPIXFC_FIFO_CTRL_RX_FIFO_CNT)
-			                  >> SPIXFC_FIFO_CTRL_RX_FIFO_CNT_POS;
+				>> SPIXFC_FIFO_CTRL_RX_FIFO_CNT_POS;
 
-			/* TODO: Timeout */
-			/* ERROR_TARGET_RESOURCE_NOT_AVAILABLE */
+			/* TODO: Timeout
+			 * ERROR_TARGET_RESOURCE_NOT_AVAILABLE*/
 
 		} while (!rxFifoAvailable);
 
@@ -230,7 +231,7 @@ int max32xxx_qspi_read_rxfifo(uint8_t* data, unsigned len)
 	return ERROR_OK;
 }
 
-int max32xxx_qspi_write_bytes(const uint8_t* data, unsigned len, int deass)
+int max32xxx_qspi_write_bytes(const uint8_t *data, unsigned len, int deass)
 {
 	int retval;
 	uint16_t header;
@@ -272,7 +273,7 @@ int max32xxx_qspi_write_bytes(const uint8_t* data, unsigned len, int deass)
 	return ERROR_OK;
 }
 
-int max32xxx_qspi_read_bytes(uint8_t* data, unsigned len, int deass)
+int max32xxx_qspi_read_bytes(uint8_t *data, unsigned len, int deass)
 {
 	int retval;
 	uint16_t header;
@@ -370,22 +371,22 @@ int max32xxx_qspi_write(const uint8_t *buffer, uint32_t offset, uint32_t count, 
 
 		if (writeLen > count)
 			writeLen = count;
-        if(spi_cmd == 0x12){
-            cmdData[4] = (offset & 0x000000FF) >> 0;
-            cmdData[3] = (offset & 0x0000FF00) >> 8;
-            cmdData[2] = (offset & 0x00FF0000) >> 16;
-            cmdData[1] = (offset & 0xFF000000) >> 24;
-            /* Write the command */
-            retval = max32xxx_qspi_write_bytes(cmdData, 5, 0);
-        }else{
-            /* Address is MSB first */
-            cmdData[3] = (offset & 0x0000FF) >> 0;
-            cmdData[2] = (offset & 0x00FF00) >> 8;
-            cmdData[1] = (offset & 0xFF0000) >> 16;
-            /* Write the command */
-            retval = max32xxx_qspi_write_bytes(cmdData, 4, 0);
-        }
-		
+		if (spi_cmd == 0x12) {
+			cmdData[4] = (offset & 0x000000FF) >> 0;
+			cmdData[3] = (offset & 0x0000FF00) >> 8;
+			cmdData[2] = (offset & 0x00FF0000) >> 16;
+			cmdData[1] = (offset & 0xFF000000) >> 24;
+			/* Write the command */
+			retval = max32xxx_qspi_write_bytes(cmdData, 5, 0);
+		} else {
+			/* Address is MSB first */
+			cmdData[3] = (offset & 0x0000FF) >> 0;
+			cmdData[2] = (offset & 0x00FF00) >> 8;
+			cmdData[1] = (offset & 0xFF0000) >> 16;
+			/* Write the command */
+			retval = max32xxx_qspi_write_bytes(cmdData, 4, 0);
+		}
+
 		if (retval != ERROR_OK)
 			goto exit;
 
@@ -414,22 +415,22 @@ int max32xxx_qspi_write(const uint8_t *buffer, uint32_t offset, uint32_t count, 
 		if (writeLen > (count - bufferIndex))
 			writeLen = (count - bufferIndex);
 
-        if(spi_cmd == 0x12){
-        	cmdData[4] = (offset & 0x000000FF) >> 0;
-		    cmdData[3] = (offset & 0x0000FF00) >> 8;
-		    cmdData[2] = (offset & 0x00FF0000) >> 16;
-		    cmdData[1] = (offset & 0xFF000000) >> 24;
-		    /* Write the command */
-		    retval = max32xxx_qspi_write_bytes(cmdData, 5, 0);
-        }else{
-            /* Address is MSB first */
-            cmdData[3] = (offset & 0x0000FF) >> 0;
-            cmdData[2] = (offset & 0x00FF00) >> 8;
-            cmdData[1] = (offset & 0xFF0000) >> 16;
-            /* Write the command */
-		    retval = max32xxx_qspi_write_bytes(cmdData, 4, 0);
-        }
-        
+		if (spi_cmd == 0x12) {
+			cmdData[4] = (offset & 0x000000FF) >> 0;
+			cmdData[3] = (offset & 0x0000FF00) >> 8;
+			cmdData[2] = (offset & 0x00FF0000) >> 16;
+			cmdData[1] = (offset & 0xFF000000) >> 24;
+			/* Write the command */
+			retval = max32xxx_qspi_write_bytes(cmdData, 5, 0);
+		} else {
+			/* Address is MSB first */
+			cmdData[3] = (offset & 0x0000FF) >> 0;
+			cmdData[2] = (offset & 0x00FF00) >> 8;
+			cmdData[1] = (offset & 0xFF0000) >> 16;
+			/* Write the command */
+			retval = max32xxx_qspi_write_bytes(cmdData, 4, 0);
+		}
+
 		if (retval != ERROR_OK)
 			goto exit;
 
@@ -447,7 +448,7 @@ exit:
 	return retval;
 }
 
-void aes_gcm(uint32_t* plain, uint32_t* cipher, uint32_t addr, uint8_t* auth_buffer)
+void aes_gcm(uint32_t *plain, uint32_t *cipher, uint32_t addr, uint8_t *auth_buffer)
 {
 	uint16_t counterValue;
 
@@ -483,18 +484,19 @@ void aes_gcm(uint32_t* plain, uint32_t* cipher, uint32_t addr, uint8_t* auth_buf
 	iv[5] = (addr & 0xFF000000) >> 24;
 
 	/* Copy in the IV */
-	memcpy32((uint32_t*)MXC_CTB->cipher_init, (uint32_t*)iv, sizeof(iv));
+	memcpy32((uint32_t *)MXC_CTB->cipher_init, (uint32_t *)iv, sizeof(iv));
 
 	/* Computer H */
 	MXC_CTB->cipher_ctrl |= MXC_F_CTB_CIPHER_CTRL_HVC;
 
 	/* Wait for and clear the done flag */
-	while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE));
+	do {} while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE));
+
 	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_CPH_DONE;
 
 	/* Setup the CT calculation */
 	MXC_CTB->cipher_ctrl |= MXC_S_CTB_CIPHER_CTRL_MODE_GCM |
-	                        MXC_S_CTB_CIPHER_CTRL_CIPHER_AES128 | MXC_F_CTB_CIPHER_CTRL_DTYPE;
+		MXC_S_CTB_CIPHER_CTRL_CIPHER_AES128 | MXC_F_CTB_CIPHER_CTRL_DTYPE;
 
 	/* Clear the aad and setup the payload length */
 	MXC_CTB->aad_length_0 = 0;
@@ -503,21 +505,22 @@ void aes_gcm(uint32_t* plain, uint32_t* cipher, uint32_t addr, uint8_t* auth_buf
 	MXC_CTB->pld_length_1 = 0;
 
 	/* Copy in the data */
-	memcpy32((uint32_t*)MXC_CTB->crypto_din, (uint32_t*)plain, 16);
+	memcpy32((uint32_t *)MXC_CTB->crypto_din, (uint32_t *)plain, 16);
 
 	/* Wait for and clear the done flag */
-	while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE));
+	do {} while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE));
+
 	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_CPH_DONE;
 
 	/* Copy out the CT */
-	memcpy32(cipher, (uint32_t*)MXC_CTB->crypto_dout, 16);
+	memcpy32(cipher, (uint32_t *)MXC_CTB->crypto_dout, 16);
 
 	/* Copy out the auth data */
 	auth_buffer[2 * ((addr % 0x80) >> 4) + 0] = (MXC_CTB->tagmic[3] & 0x00FF) >> 0;
 	auth_buffer[2 * ((addr % 0x80) >> 4) + 1] = (MXC_CTB->tagmic[3] & 0xFF00) >> 8;
 }
 
-void aes_ecb(uint32_t* plain, uint32_t* cipher)
+void aes_ecb(uint32_t *plain, uint32_t *cipher)
 {
 	/* Reset the CTB */
 	MXC_CTB->crypto_ctrl = MXC_F_CTB_CRYPTO_CTRL_RST;
@@ -539,14 +542,15 @@ void aes_ecb(uint32_t* plain, uint32_t* cipher)
 	MXC_CTB->cipher_ctrl |= MXC_S_CTB_CIPHER_CTRL_CIPHER_AES128;
 
 	/* Copy data to start the operation */
-	memcpy32((uint32_t*)MXC_CTB->crypto_din, (uint32_t*)plain, 16);
+	memcpy32((uint32_t *)MXC_CTB->crypto_din, (uint32_t *)plain, 16);
 
 	/* Wait for and clear the done flag */
-	while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE));
+	do {} while (!(MXC_CTB->crypto_ctrl & MXC_F_CTB_CRYPTO_CTRL_CPH_DONE)) ;
+
 	MXC_CTB->crypto_ctrl |= MXC_F_CTB_CRYPTO_CTRL_CPH_DONE;
 
 	/* Copy the data out */
-	memcpy32(cipher, (uint32_t*)MXC_CTB->crypto_dout, 16);
+	memcpy32(cipher, (uint32_t *)MXC_CTB->crypto_dout, 16);
 }
 
 #ifndef ALGO_TEST
@@ -558,8 +562,8 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 	printf(" > algo_write() starting\n");
 
 	/* Setup the pointers */
-	uint8_t * volatile *write_ptr = (uint8_t **)work_start;
-	uint8_t * volatile *read_ptr = (uint8_t **)(work_start + 4);
+	uint8_t *volatile *write_ptr = (uint8_t **)work_start;
+	uint8_t *volatile *read_ptr = (uint8_t **)(work_start + 4);
 	uint32_t *spi_write_cmd = (uint32_t *)(work_end - STACK_SIZE - 8);
 	uint32_t *options = (uint32_t *)(work_end - STACK_SIZE - 4);
 	uint32_t pt_buffer[4];
@@ -573,8 +577,8 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 	work_end = (uint8_t *)(work_end - STACK_SIZE - 8);
 
 	printf(" > w:%08x r:%08x o:%08x enc:%08x s:%08x e:%08x spi:%08x\n",
-	       (uint32_t)write_ptr, (uint32_t)read_ptr, (uint32_t)*options, (uint32_t)pt_buffer,
-	       (uint32_t)work_start, (uint32_t)work_end, (uint32_t)*spi_write_cmd);
+		(uint32_t)write_ptr, (uint32_t)read_ptr, (uint32_t)*options, (uint32_t)pt_buffer,
+		(uint32_t)work_start, (uint32_t)work_end, (uint32_t)*spi_write_cmd);
 
 	if (*options & OPTIONS_ENC) {
 		/* Setup the AES */
@@ -593,12 +597,11 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 	addr_high = addr + len;
 
 	/* Make sure we're on a 128-bit boundary */
-	if(addr & 0xF) {
+	if (addr & 0xF) {
 		len += addr & 0xF;
 		addr_logic = addr - (addr & 0xF);
-	} else {
+	} else
 		addr_logic = addr;
-	}
 
 	/* Initialize the physical address pointer */
 	addr_physic = addr_logic;
@@ -636,46 +639,42 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 		for (i = 0; i < 4; i++) {
 			/* Get data from the working area, pad with 0xFF */
 			pt_buffer[i] = 0;
-			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high))
 				getbyte(temp8);
-			} else {
+			else {
 				temp8 = 0xFF;
-				if(len) {
+				if (len)
 					len--;
-				}
 			}
 			pt_buffer[i] |= (temp8 << (0));
 			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high))
 				getbyte(temp8);
-			} else {
+			else {
 				temp8 = 0xFF;
-				if(len) {
+				if (len)
 					len--;
-				}
 			}
 			pt_buffer[i] |= (temp8 << (8));
 			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high))
 				getbyte(temp8);
-			} else {
+			else {
 				temp8 = 0xFF;
-				if(len) {
+				if (len)
 					len--;
-				}
 			}
 			pt_buffer[i] |= (temp8 << (16));
 			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high))
 				getbyte(temp8);
-			} else {
+			else {
 				temp8 = 0xFF;
-				if(len) {
+				if (len)
 					len--;
-				}
 			}
 			pt_buffer[i] |= (temp8 << (24));
 			addr_byte++;
@@ -700,17 +699,19 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 						pt_buffer[i] ^= ((addr_logic & 0x00FFFFF0) + i * 4);
 
 					else
-						pt_buffer[i] ^= (((addr_logic & 0xFFFFFFF0) | 0x08000000)  + i * 4);
+						pt_buffer[i] ^=
+							(((addr_logic & 0xFFFFFFF0) | 0x08000000)  +
+							i * 4);
 				}
 
 				aes_ecb(pt_buffer, ct_buffer);
 			}
-		} else {
+		} else
 			memcpy(ct_buffer, pt_buffer, 16);
-		}
 
 		/* Write the data to the flash */
-		if (max32xxx_qspi_write((const uint8_t*)ct_buffer, addr_physic, 16, *spi_write_cmd) != ERROR_OK) {
+		if (max32xxx_qspi_write((const uint8_t *)ct_buffer, addr_physic, 16,
+				*spi_write_cmd) != ERROR_OK) {
 			#ifndef ALGO_TEST
 			__asm("bkpt\n");
 			#else
@@ -721,9 +722,11 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 		/* Increment the physical address */
 		addr_physic += 16;
 
-		if ((*options & OPTIONS_AUTH) && (*options & OPTIONS_ENC) && ((addr_logic % 0x80) == 0x70)) {
+		if ((*options & OPTIONS_AUTH) && (*options & OPTIONS_ENC) &&
+			((addr_logic % 0x80) == 0x70)) {
 			/* Write the authentication information to the flash */
-			if (max32xxx_qspi_write((const uint8_t*)auth_buffer, addr_physic, 16, *spi_write_cmd) != ERROR_OK) {
+			if (max32xxx_qspi_write((const uint8_t *)auth_buffer, addr_physic, 16,
+					*spi_write_cmd) != ERROR_OK) {
 				#ifndef ALGO_TEST
 				__asm("bkpt\n");
 				#else
@@ -731,7 +734,8 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 				return;
 				#endif
 			}
-			/* Only increment the physical addresses since this was authentication data */
+			/* Only increment the physical addresses since this was authentication data
+			 * */
 			addr_physic += 16;
 
 			/* Write the counter values to the flash */
@@ -744,7 +748,8 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 				counterBase = ((addr_logic & 0xFFFFFF0) >> 4) - 0x7;
 			for (i = 0; i < 8; i++)
 				counters[i] = counterBase + i;
-			if (max32xxx_qspi_write((const uint8_t*)counters, addr_physic, 16, *spi_write_cmd) != ERROR_OK) {
+			if (max32xxx_qspi_write((const uint8_t *)counters, addr_physic, 16,
+					*spi_write_cmd) != ERROR_OK) {
 				#ifndef ALGO_TEST
 				__asm("bkpt\n");
 				#else
@@ -752,7 +757,8 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 				return;
 				#endif
 			}
-			/* Only increment the physical addresses since this was authentication data */
+			/* Only increment the physical addresses since this was authentication data
+			 * */
 			addr_physic += 16;
 		}
 
