@@ -129,9 +129,9 @@ struct rvmax_core_reg_init {
 #define AUTH_LEN 8
 
 /* ORBIS32 Trap instruction */
-// ebreak
+/* ebreak */
 #define RVMAX_TRAP_INSTR  0x00100073
-// c.ebreak
+/* c.ebreak */
 #define RVMAX_TRAP_INSTRC  (uint16_t)0x9002
 
 #define RVMAX_RAM_START   0x20000000

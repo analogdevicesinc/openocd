@@ -14,7 +14,7 @@ BIN2C = ../../../../src/helper/bin2char.sh
 
 %.inc: %.bin
 	$(BIN2C) < $< > $@
-	
+
 all: $(TARGET).inc
 
 dump: $(TARGET).o

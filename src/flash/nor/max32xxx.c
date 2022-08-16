@@ -121,7 +121,8 @@ FLASH_BANK_COMMAND_HANDLER(max32xxx_flash_bank_command)
 	struct max32xxx_flash_bank *info;
 
 	if ((CMD_ARGC < 10) || (CMD_ARGC > 10)) {
-		LOG_ERROR("incorrect flash bank max32xxx configuration: <base> <size> 0 0 <target> <FLC base> <sector size> <clkdiv> <options>");
+		LOG_ERROR(
+			"incorrect flash bank max32xxx configuration: <base> <size> 0 0 <target> <FLC base> <sector size> <clkdiv> <options>");
 		return ERROR_FLASH_BANK_INVALID;
 	}
 
@@ -175,7 +176,8 @@ static int max32xxx_flash_op_pre(struct flash_bank *bank)
 	target_read_u32(target, info->flc_base + FLC_INT, &info->int_state);
 	target_write_u32(target, info->flc_base + FLC_INT, 0);
 
-	/* Clear the lower bit in the bootloader configuration register in case flash page 0 has been replaced */
+	/* Clear the lower bit in the bootloader configuration register in case flash page 0 has
+	 * been replaced */
 	if (target_read_u32(target, info->flc_base + FLC_BL_CTRL, &bootloader) != ERROR_OK) {
 		LOG_ERROR("Read failure on FLC_BL_CTRL");
 		return ERROR_FAIL;
@@ -183,18 +185,22 @@ static int max32xxx_flash_op_pre(struct flash_bank *bank)
 	if (bootloader & FLC_BL_CTRL_23) {
 		LOG_WARNING("FLC_BL_CTRL indicates BL mode 2 or mode 3.");
 		if (bootloader & FLC_BL_CTRL_IFREN) {
-			LOG_WARNING("Flash page 0 swapped out, attempting to swap back in for programming");
+			LOG_WARNING(
+				"Flash page 0 swapped out, attempting to swap back in for programming");
 			bootloader &= ~(FLC_BL_CTRL_IFREN);
-			if (target_write_u32(target, info->flc_base + FLC_BL_CTRL, bootloader) != ERROR_OK) {
+			if (target_write_u32(target, info->flc_base + FLC_BL_CTRL,
+					bootloader) != ERROR_OK) {
 				LOG_ERROR("Write failure on FLC_BL_CTRL");
 				return ERROR_FAIL;
 			}
-			if (target_read_u32(target, info->flc_base + FLC_BL_CTRL, &bootloader) != ERROR_OK) {
+			if (target_read_u32(target, info->flc_base + FLC_BL_CTRL,
+					&bootloader) != ERROR_OK) {
 				LOG_ERROR("Read failure on FLC_BL_CTRL");
 				return ERROR_FAIL;
 			}
 			if (bootloader & FLC_BL_CTRL_IFREN)
-				LOG_ERROR("Unable to swap flash page 0 back in. Writes to page 0 will fail.");
+				LOG_ERROR(
+					"Unable to swap flash page 0 back in. Writes to page 0 will fail.");
 		}
 	}
 
@@ -257,7 +263,7 @@ static int max32xxx_protect_check(struct flash_bank *bank)
 }
 
 static int max32xxx_erase(struct flash_bank *bank, unsigned int first,
-		unsigned int last)
+	unsigned int last)
 {
 	uint32_t flash_cn, flash_int;
 	struct max32xxx_flash_bank *info = bank->driver_priv;
@@ -342,7 +348,7 @@ static int max32xxx_erase(struct flash_bank *bank, unsigned int first,
 }
 
 static int max32xxx_protect(struct flash_bank *bank, int set,
-		unsigned int first, unsigned int last)
+	unsigned int first, unsigned int last)
 {
 	struct max32xxx_flash_bank *info = bank->driver_priv;
 	struct target *target = bank->target;
@@ -383,11 +389,11 @@ static int max32xxx_protect(struct flash_bank *bank, int set,
 }
 
 static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
-                                uint32_t offset, uint32_t len)
+	uint32_t offset, uint32_t len)
 {
 	struct max32xxx_flash_bank *info = bank->driver_priv;
 	struct target *target = bank->target;
-	const char* target_type_name = (const char*)target->type->name;
+	const char *target_type_name = (const char *)target->type->name;
 	uint32_t buffer_size = 16384;
 	struct working_area *source;
 	struct working_area *write_algorithm;
@@ -397,19 +403,18 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 	int retval = ERROR_OK;
 	/* power of two, and multiple of word size */
 	static const unsigned buf_min = 128;
-	uint8_t* write_code;
+	uint8_t *write_code;
 	int write_code_size;
 
 
-	if(strcmp(target_type_name, "cortex_m") == 0) {
-		write_code = (uint8_t*)write_code_arm;
+	if (strcmp(target_type_name, "cortex_m") == 0) {
+		write_code = (uint8_t *)write_code_arm;
 		write_code_size = sizeof(write_code_arm);
-	} else {
+	} else
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
-	}
 
 	LOG_DEBUG("max32xxx_write_block bank=%p buffer=%p offset=%08" PRIx32 " len=%08" PRIx32 "",
-	          bank, buffer, offset, len);
+		bank, buffer, offset, len);
 
 	/* flash write code */
 	if (target_alloc_working_area(target, write_code_size, &write_algorithm) != ERROR_OK) {
@@ -427,18 +432,18 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 		}
 
 		LOG_DEBUG("retry target_alloc_working_area(%s, size=%u)",
-		          target_name(target), (unsigned) buffer_size);
+			target_name(target), (unsigned) buffer_size);
 	}
 
 	target_write_buffer(target, write_algorithm->address, write_code_size,
-	                    write_code);
+		write_code);
 
 	armv7m_info.common_magic = ARMV7M_COMMON_MAGIC;
 	armv7m_info.core_mode = ARM_MODE_THREAD;
 
 	/* TODO: a0-a3 for RISCV */
 
-	if(strcmp(target_type_name, "cortex_m") == 0) {
+	if (strcmp(target_type_name, "cortex_m") == 0) {
 		init_reg_param(&reg_params[0], "r0", 32, PARAM_OUT);
 		init_reg_param(&reg_params[1], "r1", 32, PARAM_OUT);
 		init_reg_param(&reg_params[2], "r2", 32, PARAM_OUT);
@@ -464,8 +469,19 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 	buf_set_u32(mem_param[1].value, 0, 32, info->flc_base);
 
 	/* leave room for stack, 32-bit options and encryption buffer */
-	retval = target_run_flash_async_algorithm(target, buffer, len, 1, 2, mem_param,
-	         5, reg_params, source->address, (source->size - 8 - 256), write_algorithm->address, 0, &armv7m_info);
+	retval = target_run_flash_async_algorithm(target,
+			buffer,
+			len,
+			1,
+			2,
+			mem_param,
+			5,
+			reg_params,
+			source->address,
+			(source->size - 8 - 256),
+			write_algorithm->address,
+			0,
+			&armv7m_info);
 
 	if (retval == ERROR_FLASH_OPERATION_FAILED)
 		LOG_ERROR("error %d executing max32xxx flash write algorithm", retval);
@@ -481,7 +497,7 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 }
 
 static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
-                          uint32_t offset, uint32_t count)
+	uint32_t offset, uint32_t count)
 {
 	struct max32xxx_flash_bank *info = bank->driver_priv;
 	struct target *target = bank->target;
@@ -497,7 +513,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 
 	LOG_DEBUG("max32xxx_write bank=%p buffer=%p offset=%08" PRIx32 " count=%08" PRIx32 "",
-	          bank, buffer, offset, count);
+		bank, buffer, offset, count);
 
 	if (!info->probed)
 		return ERROR_FLASH_BANK_NOT_PROBED;
@@ -531,8 +547,9 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		retval = max32xxx_write_block(bank, buffer, offset, remaining);
 		if (retval != ERROR_OK) {
 			if (retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE) {
-				if(info->options & OPTIONS_ENC) {
-					LOG_ERROR("Must use algorithm in working area for encryption");
+				if (info->options & OPTIONS_ENC) {
+					LOG_ERROR(
+						"Must use algorithm in working area for encryption");
 					return ERROR_FLASH_OPERATION_FAILED;
 				}
 				LOG_DEBUG("writing flash word-at-a-time");
@@ -567,7 +584,8 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 			} while ((--retry > 0) && max32xxx_flash_busy(flash_cn));
 
 			if (retry <= 0) {
-				LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32, address);
+				LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32,
+					address);
 				max32xxx_flash_op_post(bank);
 				return ERROR_FLASH_OPERATION_FAILED;
 			}
@@ -602,7 +620,8 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 
 			if (retry <= 0) {
 
-				LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32, address);
+				LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32,
+					address);
 				max32xxx_flash_op_post(bank);
 				return ERROR_FLASH_OPERATION_FAILED;
 			}
@@ -659,10 +678,9 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		target_write_u32(target, info->flc_base + FLC_CN, flash_cn);
 
 		uint8_t last_words[16] = {0xFF, 0xFF, 0xFF, 0xFF,
-		                          0xFF, 0xFF, 0xFF, 0xFF,
-		                          0xFF, 0xFF, 0xFF, 0xFF,
-		                          0xFF, 0xFF, 0xFF, 0xFF
-		                         };
+					  0xFF, 0xFF, 0xFF, 0xFF,
+					  0xFF, 0xFF, 0xFF, 0xFF,
+					  0xFF, 0xFF, 0xFF, 0xFF};
 
 		int i = 0;
 
@@ -683,7 +701,8 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		/* Wait until flash operation is complete */
 		retry = 10;
 		do {
-			if (target_read_u32(target, info->flc_base + FLC_CN, &flash_cn) != ERROR_OK) {
+			if (target_read_u32(target, info->flc_base + FLC_CN,
+					&flash_cn) != ERROR_OK) {
 				max32xxx_flash_op_post(bank);
 				return ERROR_FAIL;
 			}
@@ -866,7 +885,7 @@ COMMAND_HANDLER(max32xxx_handle_protection_set_command)
 	info = bank->driver_priv;
 
 	/* Convert the range to the page numbers */
-	if (sscanf(CMD_ARGV[1], "0x%"SCNx32, &addr) != 1) {
+	if (sscanf(CMD_ARGV[1], "0x%" SCNx32, &addr) != 1) {
 		LOG_WARNING("Error parsing address");
 		command_print(CMD, "max32xxx protection_set <bank> <addr> <size>");
 		return ERROR_FAIL;
@@ -874,7 +893,7 @@ COMMAND_HANDLER(max32xxx_handle_protection_set_command)
 	/* Mask off the top portion on the address */
 	addr = (addr & 0x0FFFFFFF);
 
-	if (sscanf(CMD_ARGV[2], "0x%"SCNx32, &len) != 1) {
+	if (sscanf(CMD_ARGV[2], "0x%" SCNx32, &len) != 1) {
 		LOG_WARNING("Error parsing length");
 		command_print(CMD, "max32xxx protection_set <bank> <addr> <size>");
 		return ERROR_FAIL;
@@ -922,7 +941,7 @@ COMMAND_HANDLER(max32xxx_handle_protection_clr_command)
 	info = bank->driver_priv;
 
 	/* Convert the range to the page numbers */
-	if (sscanf(CMD_ARGV[1], "0x%"SCNx32, &addr) != 1) {
+	if (sscanf(CMD_ARGV[1], "0x%" SCNx32, &addr) != 1) {
 		LOG_WARNING("Error parsing address");
 		command_print(CMD, "max32xxx protection_clr <bank> <addr> <size>");
 		return ERROR_FAIL;
@@ -930,7 +949,7 @@ COMMAND_HANDLER(max32xxx_handle_protection_clr_command)
 	/* Mask off the top portion on the address */
 	addr = (addr & 0x0FFFFFFF);
 
-	if (sscanf(CMD_ARGV[2], "0x%"SCNx32, &len) != 1) {
+	if (sscanf(CMD_ARGV[2], "0x%" SCNx32, &len) != 1) {
 		LOG_WARNING("Error parsing length");
 		command_print(CMD, "max32xxx protection_clr <bank> <addr> <size>");
 		return ERROR_FAIL;
@@ -985,11 +1004,20 @@ COMMAND_HANDLER(max32xxx_handle_protection_check_command)
 
 	LOG_WARNING("s:<sector number> a:<address> p:<protection bit>");
 	for (unsigned i = 0; i < bank->num_sectors; i += 4) {
-		LOG_WARNING("s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d",
-		            (i+0), (i+0)*info->sector_size, bank->sectors[(i+0)].is_protected,
-		            (i+1), (i+1)*info->sector_size, bank->sectors[(i+1)].is_protected,
-		            (i+2), (i+2)*info->sector_size, bank->sectors[(i+2)].is_protected,
-		            (i+3), (i+3)*info->sector_size, bank->sectors[(i+3)].is_protected);
+		LOG_WARNING(
+			"s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d",
+			(i+0),
+			(i+0)*info->sector_size,
+			bank->sectors[(i+0)].is_protected,
+			(i+1),
+			(i+1)*info->sector_size,
+			bank->sectors[(i+1)].is_protected,
+			(i+2),
+			(i+2)*info->sector_size,
+			bank->sectors[(i+2)].is_protected,
+			(i+3),
+			(i+3)*info->sector_size,
+			bank->sectors[(i+3)].is_protected);
 	}
 
 	return ERROR_OK;

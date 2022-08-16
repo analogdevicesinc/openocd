@@ -5,4 +5,4 @@ noinst_LTLIBRARIES += %D%/librvmax.la
 	%D%/rvmax_tap_mohor.c \
 	%D%/rvmax.h \
 	%D%/rvmax_du.h \
-	%D%/rvmax_tap.h 
+	%D%/rvmax_tap.h
