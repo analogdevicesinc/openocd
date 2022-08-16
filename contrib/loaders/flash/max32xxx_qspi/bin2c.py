@@ -1,17 +1,17 @@
 # Convert binary file to a hex encoded array for inclusion in C projects
- 
+
 import os
 import struct
- 
+
 import logging
- 
+
 class BinToArray:
     def __init__(self):
         pass
- 
+
     def ConvertFileToArray(self, strInFile, strOutFile, strArrayName, integerSize, ignoreBytes, endianNess):
         """ Reads binary file at location strInFile and writes out a C array of hex values
-            Parameters - 
+            Parameters -
                 strInFile - Path and filename of binary file to convert
                 strOutFile - Path and filename of output. Suggested extension is .c or .cpp
                 integerSize - Size in bytes of output array elements. Array generated is always
@@ -111,7 +111,7 @@ class BinToArray:
         fileOut.write("};\n")
         fileIn.close()
         fileOut.close()
- 
+
 
 if __name__ == '__main__':
     import getopt

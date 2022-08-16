@@ -46,15 +46,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
- 
-#if defined (__ICCARM__)
+
+#if defined(__ICCARM__)
   #pragma system_include
 #endif
- 
-#if defined (__CC_ARM)
+
+#if defined(__CC_ARM)
   #pragma anon_unions
 #endif
-/// @cond
+/*/ @cond */
 /*
     If types are not defined elsewhere (CMSIS) define them here
 */
@@ -70,7 +70,7 @@ extern "C" {
 #ifndef __R
 #define __R  volatile const
 #endif
-/// @endcond
+/*/ @endcond */
 
 /* **** Definitions **** */
 
@@ -86,86 +86,86 @@ extern "C" {
  * Structure type to access the CTB Registers.
  */
 typedef struct {
-    __IO uint32_t crypto_ctrl;          /**< <tt>\b 0x00:</tt> CTB CRYPTO_CTRL Register */
-    __IO uint32_t cipher_ctrl;          /**< <tt>\b 0x04:</tt> CTB CIPHER_CTRL Register */
-    __IO uint32_t hash_ctrl;            /**< <tt>\b 0x08:</tt> CTB HASH_CTRL Register */
-    __IO uint32_t crc_ctrl;             /**< <tt>\b 0x0C:</tt> CTB CRC_CTRL Register */
-    __IO uint32_t dma_src;              /**< <tt>\b 0x10:</tt> CTB DMA_SRC Register */
-    __IO uint32_t dma_dest;             /**< <tt>\b 0x14:</tt> CTB DMA_DEST Register */
-    __IO uint32_t dma_cnt;              /**< <tt>\b 0x18:</tt> CTB DMA_CNT Register */
-    __R  uint32_t rsv_0x1c;
-    __O  uint32_t crypto_din[4];        /**< <tt>\b 0x20:</tt> CTB CRYPTO_DIN Register */
-    __I  uint32_t crypto_dout[4];       /**< <tt>\b 0x30:</tt> CTB CRYPTO_DOUT Register */
-    __IO uint32_t crc_poly;             /**< <tt>\b 0x40:</tt> CTB CRC_POLY Register */
-    __IO uint32_t crc_val;              /**< <tt>\b 0x44:</tt> CTB CRC_VAL Register */
-    __R  uint32_t rsv_0x48;
-    __IO uint32_t ham_ecc;              /**< <tt>\b 0x4C:</tt> CTB HAM_ECC Register */
-    __IO uint32_t cipher_init[4];       /**< <tt>\b 0x50:</tt> CTB CIPHER_INIT Register */
-    __O  uint32_t cipher_key[8];        /**< <tt>\b 0x60:</tt> CTB CIPHER_KEY Register */
-    __IO uint32_t hash_digest[16];      /**< <tt>\b 0x80:</tt> CTB HASH_DIGEST Register */
-    __IO uint32_t hash_msg_sz[4];       /**< <tt>\b 0xC0:</tt> CTB HASH_MSG_SZ Register */
-    __IO uint32_t aad_length_0;         /**< <tt>\b 0xD0:</tt> CTB AAD_LENGTH_0 Register */
-    __IO uint32_t aad_length_1;         /**< <tt>\b 0xD4:</tt> CTB AAD_LENGTH_1 Register */
-    __IO uint32_t pld_length_0;         /**< <tt>\b 0xD8:</tt> CTB PLD_LENGTH_0 Register */
-    __IO uint32_t pld_length_1;         /**< <tt>\b 0xDC:</tt> CTB PLD_LENGTH_1 Register */
-    __IO uint32_t tagmic[4];            /**< <tt>\b 0xE0:</tt> CTB TAGMIC Register */
-    __R  uint32_t rsv_0xf0_0xff[4];
-    __IO uint32_t sca_ctrl0;            /**< <tt>\b 0x100:</tt> CTB SCA_CTRL0 Register */
-    __IO uint32_t sca_ctrl1;            /**< <tt>\b 0x104:</tt> CTB SCA_CTRL1 Register */
-    __IO uint32_t sca_stat;             /**< <tt>\b 0x108:</tt> CTB SCA_STAT Register */
-    __IO uint32_t sca_ppx_addr;         /**< <tt>\b 0x10C:</tt> CTB SCA_PPX_ADDR Register */
-    __IO uint32_t sca_ppy_addr;         /**< <tt>\b 0x110:</tt> CTB SCA_PPY_ADDR Register */
-    __IO uint32_t sca_ppz_addr;         /**< <tt>\b 0x114:</tt> CTB SCA_PPZ_ADDR Register */
-    __IO uint32_t sca_pqx_addr;         /**< <tt>\b 0x118:</tt> CTB SCA_PQX_ADDR Register */
-    __IO uint32_t sca_pqy_addr;         /**< <tt>\b 0x11C:</tt> CTB SCA_PQY_ADDR Register */
-    __IO uint32_t sca_pqz_addr;         /**< <tt>\b 0x120:</tt> CTB SCA_PQZ_ADDR Register */
-    __IO uint32_t sca_rdsa_addr;        /**< <tt>\b 0x124:</tt> CTB SCA_RDSA_ADDR Register */
-    __IO uint32_t sca_res_addr;         /**< <tt>\b 0x128:</tt> CTB SCA_RES_ADDR Register */
-    __IO uint32_t sca_op_buff_addr;     /**< <tt>\b 0x12C:</tt> CTB SCA_OP_BUFF_ADDR Register */
-    __IO uint32_t sca_moddata;          /**< <tt>\b 0x130:</tt> CTB SCA_MODDATA Register */
+__IO uint32_t crypto_ctrl;          /**< <tt>\b 0x00:</tt> CTB CRYPTO_CTRL Register */
+__IO uint32_t cipher_ctrl;          /**< <tt>\b 0x04:</tt> CTB CIPHER_CTRL Register */
+__IO uint32_t hash_ctrl;            /**< <tt>\b 0x08:</tt> CTB HASH_CTRL Register */
+__IO uint32_t crc_ctrl;             /**< <tt>\b 0x0C:</tt> CTB CRC_CTRL Register */
+__IO uint32_t dma_src;              /**< <tt>\b 0x10:</tt> CTB DMA_SRC Register */
+__IO uint32_t dma_dest;             /**< <tt>\b 0x14:</tt> CTB DMA_DEST Register */
+__IO uint32_t dma_cnt;              /**< <tt>\b 0x18:</tt> CTB DMA_CNT Register */
+__R  uint32_t rsv_0x1c;
+__O  uint32_t crypto_din[4];        /**< <tt>\b 0x20:</tt> CTB CRYPTO_DIN Register */
+__I  uint32_t crypto_dout[4];       /**< <tt>\b 0x30:</tt> CTB CRYPTO_DOUT Register */
+__IO uint32_t crc_poly;             /**< <tt>\b 0x40:</tt> CTB CRC_POLY Register */
+__IO uint32_t crc_val;              /**< <tt>\b 0x44:</tt> CTB CRC_VAL Register */
+__R  uint32_t rsv_0x48;
+__IO uint32_t ham_ecc;              /**< <tt>\b 0x4C:</tt> CTB HAM_ECC Register */
+__IO uint32_t cipher_init[4];       /**< <tt>\b 0x50:</tt> CTB CIPHER_INIT Register */
+__O  uint32_t cipher_key[8];        /**< <tt>\b 0x60:</tt> CTB CIPHER_KEY Register */
+__IO uint32_t hash_digest[16];      /**< <tt>\b 0x80:</tt> CTB HASH_DIGEST Register */
+__IO uint32_t hash_msg_sz[4];       /**< <tt>\b 0xC0:</tt> CTB HASH_MSG_SZ Register */
+__IO uint32_t aad_length_0;         /**< <tt>\b 0xD0:</tt> CTB AAD_LENGTH_0 Register */
+__IO uint32_t aad_length_1;         /**< <tt>\b 0xD4:</tt> CTB AAD_LENGTH_1 Register */
+__IO uint32_t pld_length_0;         /**< <tt>\b 0xD8:</tt> CTB PLD_LENGTH_0 Register */
+__IO uint32_t pld_length_1;         /**< <tt>\b 0xDC:</tt> CTB PLD_LENGTH_1 Register */
+__IO uint32_t tagmic[4];            /**< <tt>\b 0xE0:</tt> CTB TAGMIC Register */
+__R  uint32_t rsv_0xf0_0xff[4];
+__IO uint32_t sca_ctrl0;            /**< <tt>\b 0x100:</tt> CTB SCA_CTRL0 Register */
+__IO uint32_t sca_ctrl1;            /**< <tt>\b 0x104:</tt> CTB SCA_CTRL1 Register */
+__IO uint32_t sca_stat;             /**< <tt>\b 0x108:</tt> CTB SCA_STAT Register */
+__IO uint32_t sca_ppx_addr;         /**< <tt>\b 0x10C:</tt> CTB SCA_PPX_ADDR Register */
+__IO uint32_t sca_ppy_addr;         /**< <tt>\b 0x110:</tt> CTB SCA_PPY_ADDR Register */
+__IO uint32_t sca_ppz_addr;         /**< <tt>\b 0x114:</tt> CTB SCA_PPZ_ADDR Register */
+__IO uint32_t sca_pqx_addr;         /**< <tt>\b 0x118:</tt> CTB SCA_PQX_ADDR Register */
+__IO uint32_t sca_pqy_addr;         /**< <tt>\b 0x11C:</tt> CTB SCA_PQY_ADDR Register */
+__IO uint32_t sca_pqz_addr;         /**< <tt>\b 0x120:</tt> CTB SCA_PQZ_ADDR Register */
+__IO uint32_t sca_rdsa_addr;        /**< <tt>\b 0x124:</tt> CTB SCA_RDSA_ADDR Register */
+__IO uint32_t sca_res_addr;         /**< <tt>\b 0x128:</tt> CTB SCA_RES_ADDR Register */
+__IO uint32_t sca_op_buff_addr;     /**< <tt>\b 0x12C:</tt> CTB SCA_OP_BUFF_ADDR Register */
+__IO uint32_t sca_moddata;          /**< <tt>\b 0x130:</tt> CTB SCA_MODDATA Register */
 } mxc_ctb_regs_t;
 
 /* Register offsets for module CTB */
 /**
  * @ingroup    ctb_registers
  * @defgroup   CTB_Register_Offsets Register Offsets
- * @brief      CTB Peripheral Register Offsets from the CTB Base Peripheral Address. 
+ * @brief      CTB Peripheral Register Offsets from the CTB Base Peripheral Address.
  * @{
  */
- #define MXC_R_CTB_CRYPTO_CTRL              ((uint32_t)0x00000000UL) /**< Offset from CTB Base Address: <tt> 0x0000</tt> */ 
- #define MXC_R_CTB_CIPHER_CTRL              ((uint32_t)0x00000004UL) /**< Offset from CTB Base Address: <tt> 0x0004</tt> */ 
- #define MXC_R_CTB_HASH_CTRL                ((uint32_t)0x00000008UL) /**< Offset from CTB Base Address: <tt> 0x0008</tt> */ 
- #define MXC_R_CTB_CRC_CTRL                 ((uint32_t)0x0000000CUL) /**< Offset from CTB Base Address: <tt> 0x000C</tt> */ 
- #define MXC_R_CTB_DMA_SRC                  ((uint32_t)0x00000010UL) /**< Offset from CTB Base Address: <tt> 0x0010</tt> */ 
- #define MXC_R_CTB_DMA_DEST                 ((uint32_t)0x00000014UL) /**< Offset from CTB Base Address: <tt> 0x0014</tt> */ 
- #define MXC_R_CTB_DMA_CNT                  ((uint32_t)0x00000018UL) /**< Offset from CTB Base Address: <tt> 0x0018</tt> */ 
- #define MXC_R_CTB_CRYPTO_DIN               ((uint32_t)0x00000020UL) /**< Offset from CTB Base Address: <tt> 0x0020</tt> */ 
- #define MXC_R_CTB_CRYPTO_DOUT              ((uint32_t)0x00000030UL) /**< Offset from CTB Base Address: <tt> 0x0030</tt> */ 
- #define MXC_R_CTB_CRC_POLY                 ((uint32_t)0x00000040UL) /**< Offset from CTB Base Address: <tt> 0x0040</tt> */ 
- #define MXC_R_CTB_CRC_VAL                  ((uint32_t)0x00000044UL) /**< Offset from CTB Base Address: <tt> 0x0044</tt> */ 
- #define MXC_R_CTB_HAM_ECC                  ((uint32_t)0x0000004CUL) /**< Offset from CTB Base Address: <tt> 0x004C</tt> */ 
- #define MXC_R_CTB_CIPHER_INIT              ((uint32_t)0x00000050UL) /**< Offset from CTB Base Address: <tt> 0x0050</tt> */ 
- #define MXC_R_CTB_CIPHER_KEY               ((uint32_t)0x00000060UL) /**< Offset from CTB Base Address: <tt> 0x0060</tt> */ 
- #define MXC_R_CTB_HASH_DIGEST              ((uint32_t)0x00000080UL) /**< Offset from CTB Base Address: <tt> 0x0080</tt> */ 
- #define MXC_R_CTB_HASH_MSG_SZ              ((uint32_t)0x000000C0UL) /**< Offset from CTB Base Address: <tt> 0x00C0</tt> */ 
- #define MXC_R_CTB_AAD_LENGTH_0             ((uint32_t)0x000000D0UL) /**< Offset from CTB Base Address: <tt> 0x00D0</tt> */ 
- #define MXC_R_CTB_AAD_LENGTH_1             ((uint32_t)0x000000D4UL) /**< Offset from CTB Base Address: <tt> 0x00D4</tt> */ 
- #define MXC_R_CTB_PLD_LENGTH_0             ((uint32_t)0x000000D8UL) /**< Offset from CTB Base Address: <tt> 0x00D8</tt> */ 
- #define MXC_R_CTB_PLD_LENGTH_1             ((uint32_t)0x000000DCUL) /**< Offset from CTB Base Address: <tt> 0x00DC</tt> */ 
- #define MXC_R_CTB_TAGMIC                   ((uint32_t)0x000000E0UL) /**< Offset from CTB Base Address: <tt> 0x00E0</tt> */ 
- #define MXC_R_CTB_SCA_CTRL0                ((uint32_t)0x00000100UL) /**< Offset from CTB Base Address: <tt> 0x0100</tt> */ 
- #define MXC_R_CTB_SCA_CTRL1                ((uint32_t)0x00000104UL) /**< Offset from CTB Base Address: <tt> 0x0104</tt> */ 
- #define MXC_R_CTB_SCA_STAT                 ((uint32_t)0x00000108UL) /**< Offset from CTB Base Address: <tt> 0x0108</tt> */ 
- #define MXC_R_CTB_SCA_PPX_ADDR             ((uint32_t)0x0000010CUL) /**< Offset from CTB Base Address: <tt> 0x010C</tt> */ 
- #define MXC_R_CTB_SCA_PPY_ADDR             ((uint32_t)0x00000110UL) /**< Offset from CTB Base Address: <tt> 0x0110</tt> */ 
- #define MXC_R_CTB_SCA_PPZ_ADDR             ((uint32_t)0x00000114UL) /**< Offset from CTB Base Address: <tt> 0x0114</tt> */ 
- #define MXC_R_CTB_SCA_PQX_ADDR             ((uint32_t)0x00000118UL) /**< Offset from CTB Base Address: <tt> 0x0118</tt> */ 
- #define MXC_R_CTB_SCA_PQY_ADDR             ((uint32_t)0x0000011CUL) /**< Offset from CTB Base Address: <tt> 0x011C</tt> */ 
- #define MXC_R_CTB_SCA_PQZ_ADDR             ((uint32_t)0x00000120UL) /**< Offset from CTB Base Address: <tt> 0x0120</tt> */ 
- #define MXC_R_CTB_SCA_RDSA_ADDR            ((uint32_t)0x00000124UL) /**< Offset from CTB Base Address: <tt> 0x0124</tt> */ 
- #define MXC_R_CTB_SCA_RES_ADDR             ((uint32_t)0x00000128UL) /**< Offset from CTB Base Address: <tt> 0x0128</tt> */ 
- #define MXC_R_CTB_SCA_OP_BUFF_ADDR         ((uint32_t)0x0000012CUL) /**< Offset from CTB Base Address: <tt> 0x012C</tt> */ 
- #define MXC_R_CTB_SCA_MODDATA              ((uint32_t)0x00000130UL) /**< Offset from CTB Base Address: <tt> 0x0130</tt> */ 
+ #define MXC_R_CTB_CRYPTO_CTRL        ((uint32_t)0x00000000UL) /**< Offset from CTB Base Address: 0x0000 */
+ #define MXC_R_CTB_CIPHER_CTRL        ((uint32_t)0x00000004UL) /**< Offset from CTB Base Address: 0x0004 */
+ #define MXC_R_CTB_HASH_CTRL          ((uint32_t)0x00000008UL) /**< Offset from CTB Base Address: 0x0008 */
+ #define MXC_R_CTB_CRC_CTRL           ((uint32_t)0x0000000CUL) /**< Offset from CTB Base Address: 0x000C */
+ #define MXC_R_CTB_DMA_SRC            ((uint32_t)0x00000010UL) /**< Offset from CTB Base Address: 0x0010 */
+ #define MXC_R_CTB_DMA_DEST           ((uint32_t)0x00000014UL) /**< Offset from CTB Base Address: 0x0014 */
+ #define MXC_R_CTB_DMA_CNT            ((uint32_t)0x00000018UL) /**< Offset from CTB Base Address: 0x0018 */
+ #define MXC_R_CTB_CRYPTO_DIN         ((uint32_t)0x00000020UL) /**< Offset from CTB Base Address: 0x0020 */
+ #define MXC_R_CTB_CRYPTO_DOUT        ((uint32_t)0x00000030UL) /**< Offset from CTB Base Address: 0x0030 */
+ #define MXC_R_CTB_CRC_POLY           ((uint32_t)0x00000040UL) /**< Offset from CTB Base Address: 0x0040 */
+ #define MXC_R_CTB_CRC_VAL            ((uint32_t)0x00000044UL) /**< Offset from CTB Base Address: 0x0044 */
+ #define MXC_R_CTB_HAM_ECC            ((uint32_t)0x0000004CUL) /**< Offset from CTB Base Address: 0x004C */
+ #define MXC_R_CTB_CIPHER_INIT        ((uint32_t)0x00000050UL) /**< Offset from CTB Base Address: 0x0050 */
+ #define MXC_R_CTB_CIPHER_KEY         ((uint32_t)0x00000060UL) /**< Offset from CTB Base Address: 0x0060 */
+ #define MXC_R_CTB_HASH_DIGEST        ((uint32_t)0x00000080UL) /**< Offset from CTB Base Address: 0x0080 */
+ #define MXC_R_CTB_HASH_MSG_SZ        ((uint32_t)0x000000C0UL) /**< Offset from CTB Base Address: 0x00C0 */
+ #define MXC_R_CTB_AAD_LENGTH_0       ((uint32_t)0x000000D0UL) /**< Offset from CTB Base Address: 0x00D0 */
+ #define MXC_R_CTB_AAD_LENGTH_1       ((uint32_t)0x000000D4UL) /**< Offset from CTB Base Address: 0x00D4 */
+ #define MXC_R_CTB_PLD_LENGTH_0       ((uint32_t)0x000000D8UL) /**< Offset from CTB Base Address: 0x00D8 */
+ #define MXC_R_CTB_PLD_LENGTH_1       ((uint32_t)0x000000DCUL) /**< Offset from CTB Base Address: 0x00DC */
+ #define MXC_R_CTB_TAGMIC             ((uint32_t)0x000000E0UL) /**< Offset from CTB Base Address: 0x00E0 */
+ #define MXC_R_CTB_SCA_CTRL0          ((uint32_t)0x00000100UL) /**< Offset from CTB Base Address: 0x0100 */
+ #define MXC_R_CTB_SCA_CTRL1          ((uint32_t)0x00000104UL) /**< Offset from CTB Base Address: 0x0104 */
+ #define MXC_R_CTB_SCA_STAT           ((uint32_t)0x00000108UL) /**< Offset from CTB Base Address: 0x0108 */
+ #define MXC_R_CTB_SCA_PPX_ADDR       ((uint32_t)0x0000010CUL) /**< Offset from CTB Base Address: 0x010C */
+ #define MXC_R_CTB_SCA_PPY_ADDR       ((uint32_t)0x00000110UL) /**< Offset from CTB Base Address: 0x0110 */
+ #define MXC_R_CTB_SCA_PPZ_ADDR       ((uint32_t)0x00000114UL) /**< Offset from CTB Base Address: 0x0114 */
+ #define MXC_R_CTB_SCA_PQX_ADDR       ((uint32_t)0x00000118UL) /**< Offset from CTB Base Address: 0x0118 */
+ #define MXC_R_CTB_SCA_PQY_ADDR       ((uint32_t)0x0000011CUL) /**< Offset from CTB Base Address: 0x011C */
+ #define MXC_R_CTB_SCA_PQZ_ADDR       ((uint32_t)0x00000120UL) /**< Offset from CTB Base Address: 0x0120 */
+ #define MXC_R_CTB_SCA_RDSA_ADDR      ((uint32_t)0x00000124UL) /**< Offset from CTB Base Address: 0x0124 */
+ #define MXC_R_CTB_SCA_RES_ADDR       ((uint32_t)0x00000128UL) /**< Offset from CTB Base Address: 0x0128 */
+ #define MXC_R_CTB_SCA_OP_BUFF_ADDR   ((uint32_t)0x0000012CUL) /**< Offset from CTB Base Address: 0x012C */
+ #define MXC_R_CTB_SCA_MODDATA        ((uint32_t)0x00000130UL) /**< Offset from CTB Base Address: 0x0130 */
 /**@} end of group ctb_registers */
 
 /**
