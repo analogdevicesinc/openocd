@@ -339,7 +339,6 @@ static int openocd_thread(int argc, char *argv[], struct command_context *cmd_ct
 	}
 
 	ret = server_init(cmd_ctx);
-
 	if (ERROR_OK != ret)
 		return ERROR_FAIL;
 
