@@ -76,7 +76,7 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 		return retval;
 	LOG_DEBUG("header 0x%08" PRIx32 " 0x%08" PRIx32, header.signature, header.revision);
 	if (header.signature != SFDP_MAGIC) {
-		LOG_INFO("no SDFP found");
+		LOG_INFO("no SFDP found");
 		return ERROR_FLASH_BANK_NOT_PROBED;
 	}
 	if (((header.revision >> 24) & 0xFF) != SFDP_ACCESS_PROT) {

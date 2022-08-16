@@ -639,9 +639,9 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 		for (i = 0; i < 4; i++) {
 			/* Get data from the working area, pad with 0xFF */
 			pt_buffer[i] = 0;
-			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high))
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
 				getbyte(temp8);
-			else {
+			} else {
 				temp8 = 0xFF;
 				if (len)
 					len--;
@@ -649,9 +649,9 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			pt_buffer[i] |= (temp8 << (0));
 			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high))
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
 				getbyte(temp8);
-			else {
+			} else {
 				temp8 = 0xFF;
 				if (len)
 					len--;
@@ -659,9 +659,9 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			pt_buffer[i] |= (temp8 << (8));
 			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high))
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
 				getbyte(temp8);
-			else {
+			} else {
 				temp8 = 0xFF;
 				if (len)
 					len--;
@@ -669,9 +669,9 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			pt_buffer[i] |= (temp8 << (16));
 			addr_byte++;
 			/* Get data from the working area, pad with 0xFF */
-			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high))
+			if (len && (addr_byte >= addr_low) && (addr_byte < addr_high)) {
 				getbyte(temp8);
-			else {
+			} else {
 				temp8 = 0xFF;
 				if (len)
 					len--;
