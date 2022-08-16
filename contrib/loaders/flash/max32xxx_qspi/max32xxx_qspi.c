@@ -348,7 +348,7 @@ int max32xxx_qspi_set_we(void)
 int max32xxx_qspi_write(const uint8_t *buffer, uint32_t offset, uint32_t count, uint32_t spi_cmd)
 {
 	int retval;
-	uint8_t cmdData[4];
+	uint8_t cmdData[5];
 	unsigned writeLen, bufferIndex;
 
 	/* Send the page program command */
@@ -370,14 +370,22 @@ int max32xxx_qspi_write(const uint8_t *buffer, uint32_t offset, uint32_t count, 
 
 		if (writeLen > count)
 			writeLen = count;
-
-		/* Address is MSB first */
-		cmdData[3] = (offset & 0x0000FF) >> 0;
-		cmdData[2] = (offset & 0x00FF00) >> 8;
-		cmdData[1] = (offset & 0xFF0000) >> 16;
-
-		/* Write the command */
-		retval = max32xxx_qspi_write_bytes(cmdData, 4, 0);
+        if(spi_cmd == 0x12){
+            cmdData[4] = (offset & 0x000000FF) >> 0;
+            cmdData[3] = (offset & 0x0000FF00) >> 8;
+            cmdData[2] = (offset & 0x00FF0000) >> 16;
+            cmdData[1] = (offset & 0xFF000000) >> 24;
+            /* Write the command */
+            retval = max32xxx_qspi_write_bytes(cmdData, 5, 0);
+        }else{
+            /* Address is MSB first */
+            cmdData[3] = (offset & 0x0000FF) >> 0;
+            cmdData[2] = (offset & 0x00FF00) >> 8;
+            cmdData[1] = (offset & 0xFF0000) >> 16;
+            /* Write the command */
+            retval = max32xxx_qspi_write_bytes(cmdData, 4, 0);
+        }
+		
 		if (retval != ERROR_OK)
 			goto exit;
 
@@ -406,13 +414,22 @@ int max32xxx_qspi_write(const uint8_t *buffer, uint32_t offset, uint32_t count, 
 		if (writeLen > (count - bufferIndex))
 			writeLen = (count - bufferIndex);
 
-		/* Address is MSB first */
-		cmdData[3] = (offset & 0x0000FF) >> 0;
-		cmdData[2] = (offset & 0x00FF00) >> 8;
-		cmdData[1] = (offset & 0xFF0000) >> 16;
-
-		/* Write the command */
-		retval = max32xxx_qspi_write_bytes(cmdData, 4, 0);
+        if(spi_cmd == 0x12){
+        	cmdData[4] = (offset & 0x000000FF) >> 0;
+		    cmdData[3] = (offset & 0x0000FF00) >> 8;
+		    cmdData[2] = (offset & 0x00FF0000) >> 16;
+		    cmdData[1] = (offset & 0xFF000000) >> 24;
+		    /* Write the command */
+		    retval = max32xxx_qspi_write_bytes(cmdData, 5, 0);
+        }else{
+            /* Address is MSB first */
+            cmdData[3] = (offset & 0x0000FF) >> 0;
+            cmdData[2] = (offset & 0x00FF00) >> 8;
+            cmdData[1] = (offset & 0xFF0000) >> 16;
+            /* Write the command */
+		    retval = max32xxx_qspi_write_bytes(cmdData, 4, 0);
+        }
+        
 		if (retval != ERROR_OK)
 			goto exit;
 
