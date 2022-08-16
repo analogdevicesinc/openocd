@@ -51,7 +51,6 @@
 #include <jtag/jtag.h>
 #include "rtos/rtos.h"
 #include "target/smp.h"
-#include "command.h"
 
 /**
  * @file
@@ -146,7 +145,7 @@ static int gdb_use_target_description = 1;
 /* current processing free-run type, used by file-I/O */
 static char gdb_running_type;
 
-int argval = 0;
+int isextendedremote= 0;
 
 static int gdb_last_signal(struct target *target)
 {
@@ -3309,10 +3308,12 @@ static int gdb_input_inner(struct connection *connection)
 				case '?':
 					gdb_last_signal_packet(connection, packet, packet_size);
 					/* '?' is sent after the eventual '!' */
-					if ( !warn_use_ext && !gdb_con->extended_protocol && argval ) {
-						warn_use_ext = true;
-						LOG_WARNING("Prefer GDB command \"target extended-remote %s\" instead of \"target remote %s\"",
-									connection->service->port, connection->service->port);
+					if ( !warn_use_ext && !gdb_con->extended_protocol) {
+						if (!isextendedremote) {
+							warn_use_ext = true;
+							LOG_WARNING("Prefer GDB command \"target extended-remote %s\" instead of \"target remote %s\"",
+										connection->service->port, connection->service->port);
+						}
 					}
 					break;
 				case 'c':
@@ -3733,19 +3734,19 @@ out:
 	return retval;
 }
 
-COMMAND_HANDLER(handle_extended_remote_command)
+COMMAND_HANDLER(handle_gdb_extended_remote_command)
 {
 	if (CMD_ARGC != 1)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	
-	if(strcmp(CMD_ARGV[0], "r0") == 0)
+	if(strcmp(CMD_ARGV[0], "disable") == 0)
 	{
-		argval = 0;
+		isextendedremote = 0;
 	}
 
-	if(strcmp(CMD_ARGV[0], "r1") == 0)
+	if(strcmp(CMD_ARGV[0], "enable") == 0)
 	{
-		argval = 1;
+		isextendedremote = 1;
 	}
 
 	return ERROR_OK;
@@ -3825,11 +3826,11 @@ static const struct command_registration gdb_command_handlers[] = {
 		.usage = "",
 	},
 	{
-		.name = "extended_remote",
-		.handler = handle_extended_remote_command,
+		.name = "gdb_extended_remote",
+		.handler = handle_gdb_extended_remote_command,
 		.mode = COMMAND_CONFIG,
-		.help = "enable/disable extended remote debugging for GDB",
-		.usage = "r1: enable  r0: disable"
+		.help = "enable or disable extended remote debugging for GDB",
+		.usage = "('enable'|'disable')"
 	},
 	COMMAND_REGISTRATION_DONE
 };
