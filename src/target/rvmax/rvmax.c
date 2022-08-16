@@ -731,9 +731,9 @@ static int rvmax_add_breakpoint(struct target *target,
 	uint32_t reg_value;
 	int i;
 
-	LOG_DEBUG("Adding breakpoint: addr 0x%08" TARGET_PRIxADDR ", len %d, type %d, set: %d, id: %" PRId32,
+	LOG_DEBUG("Adding breakpoint: addr 0x%08" TARGET_PRIxADDR ", len %d, type %d, is_set: %d, id: %" PRId32,
 			breakpoint->address, breakpoint->length, breakpoint->type,
-			breakpoint->set, breakpoint->unique_id);
+			breakpoint->is_set, breakpoint->unique_id);
 
 	/* Only support SW breakpoints for now. */
 	/*  if (breakpoint->type == BKPT_HARD)  */
@@ -762,7 +762,7 @@ static int rvmax_add_breakpoint(struct target *target,
 				retval = du_core->rvmax_jtag_write_cpu(&rvmax->jtag,
 					DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET+i*8, 1, &reg_value);
 				breakpoint->type = BKPT_HARD;
-				breakpoint->set = true;
+				breakpoint->is_set = true;
 				return retval;
 			}
 		}
@@ -824,7 +824,7 @@ LOG_DEBUG("BKPT_SOFT");
 		return retval;
 	}
 
-	breakpoint->set = true;
+	breakpoint->is_set = true;
 	return ERROR_OK;
 }
 
@@ -837,9 +837,9 @@ static int rvmax_remove_breakpoint(struct target *target,
 	uint32_t reg_value;
 	int i;
 
-	LOG_DEBUG("Removing breakpoint: addr 0x%08" TARGET_PRIxADDR ", len %d, type %d, set: %d, id: %" PRId32,
+	LOG_DEBUG("Removing breakpoint: addr 0x%08" TARGET_PRIxADDR ", len %d, type %d, is_set: %d, id: %" PRId32,
 			breakpoint->address, breakpoint->length, breakpoint->type,
-			breakpoint->set, breakpoint->unique_id);
+			breakpoint->is_set, breakpoint->unique_id);
 
 	/* Only support SW breakpoints for now. */
 	if (breakpoint->type == BKPT_HARD) {
@@ -867,7 +867,7 @@ static int rvmax_remove_breakpoint(struct target *target,
 						return retval;
 
 					LOG_DEBUG("Removed hwbreakpoint at %08" TARGET_PRIxADDR, breakpoint->address);
-					breakpoint->set = false;
+					breakpoint->is_set = false;
 					return ERROR_OK;
 				}
 			}
@@ -903,7 +903,7 @@ LOG_DEBUG("R BKPT_SOFT");
 		return retval;
 	}
 
-	breakpoint->set = false;
+	breakpoint->is_set = false;
 	return ERROR_OK;
 }
 

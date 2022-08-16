@@ -1,18 +1,4 @@
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
- ***************************************************************************/
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -23,6 +9,7 @@
 #include "target/target.h"
 #include "target/target_type.h"
 #include "target/register.h"
+#include <target/smp.h>
 #include "rtos.h"
 #include "helper/log.h"
 #include "helper/types.h"
@@ -107,7 +94,7 @@ static int hwthread_update_threads(struct rtos *rtos)
 
 	/* determine the number of "threads" */
 	if (target->smp) {
-		for (head = target->head; head; head = head->next) {
+		foreach_smp_target(head, target->smp_targets) {
 			struct target *curr = head->target;
 
 			if (!target_was_examined(curr))
@@ -123,7 +110,7 @@ static int hwthread_update_threads(struct rtos *rtos)
 
 	if (target->smp) {
 		/* loop over all threads */
-		for (head = target->head; head; head = head->next) {
+		foreach_smp_target(head, target->smp_targets) {
 			struct target *curr = head->target;
 
 			if (!target_was_examined(curr))
@@ -218,7 +205,8 @@ static struct target *hwthread_find_thread(struct target *target, int64_t thread
 	if (!target)
 		return NULL;
 	if (target->smp) {
-		for (struct target_list *head = target->head; head; head = head->next) {
+		struct target_list *head;
+		foreach_smp_target(head, target->smp_targets) {
 			if (thread_id == threadid_from_target(head->target))
 				return head->target;
 		}

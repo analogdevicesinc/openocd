@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2007 by Juergen Stuber <juergen@jstuber.net>            *
  *   based on Dominic Rath's and Benedikt Sauter's usbprog.c               *
@@ -13,19 +15,6 @@
  *                                                                         *
  *   Copyright (C) 2015 by Paul Fertser                                    *
  *   fercerpav@gmail.com                                                   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -114,8 +103,6 @@ static int jlink_flush(void);
  * @param in A pointer to store TDO data to, if NULL the data will be discarded.
  * @param in_offset A bit offset for TDO data.
  * @param length Amount of bits to transfer out and in.
- *
- * @retval This function doesn't return any value.
  */
 static void jlink_clock_data(const uint8_t *out, unsigned out_offset,
 			     const uint8_t *tms_out, unsigned tms_offset,
