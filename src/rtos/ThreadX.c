@@ -1,19 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2011 by Broadcom Corporation                            *
  *   Evan Hunter - ehunter@broadcom.com                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -174,6 +163,18 @@ static const struct threadx_params threadx_params_list[] = {
 	2,									/* stacking_info_nb */
 	get_stacking_info_arm926ejs,		/* fn_get_stacking_info */
 	is_thread_id_valid_arm926ejs,		/* fn_is_thread_id_valid */
+	},
+	{
+	"hla_target",				/* target_name */
+	4,							/* pointer_width; */
+	8,							/* thread_stack_offset; */
+	40,							/* thread_name_offset; */
+	48,							/* thread_state_offset; */
+	136,						/* thread_next_offset */
+	&rtos_standard_cortex_m3_stacking,	/* stacking_info */
+	1,							/* stacking_info_nb */
+	NULL,						/* fn_get_stacking_info */
+	NULL,						/* fn_is_thread_id_valid */
 	},
 };
 
