@@ -151,7 +151,7 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 			dev->chip_erase_cmd = SPIFLASH_MASS_ERASE;
 
 			/* Get the dual read command and parameters */
-			if(table->fast_addr & (0x1 << 20)) {
+			if (table->fast_addr & (0x1 << 20)) {
 				dev->dread_cmd = (table->fast_1x2 >> 24) & 0xFF;
 				dev->dread_mode = (table->fast_1x2 >> 21) & 0x07;
 				dev->dread_dclk = (table->fast_1x2 >> 16) & 0x1F;

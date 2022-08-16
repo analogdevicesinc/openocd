@@ -12026,25 +12026,25 @@ MyForCommand( void *interp,
        return ERROR;
    @}
 
-   // argv[0] = the ascii string just like C
+   /* argv[0] = the ascii string just like C */
 
-   // Execute the start statement.
+   /* Execute the start statement. */
    Execute_AsciiString( interp, argv[1] );
 
-   // Top of loop test
+   /* Top of loop test */
    for(;;)@{
         i = Evaluate_AsciiExpression(interp, argv[2]);
         if( i == 0 )
             break;
 
-        // Execute the body
+        /* Execute the body */
         Execute_AsciiString( interp, argv[3] );
 
-        // Execute the LOOP part
+        /* Execute the LOOP part */
         Execute_AsciiString( interp, argv[4] );
     @}
 
-    // Return no error
+    /* Return no error */
     SetResult( interp, "" );
     return SUCCESS;
 @}

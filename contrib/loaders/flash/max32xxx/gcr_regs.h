@@ -46,15 +46,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
- 
-#if defined (__ICCARM__)
+
+#if defined(__ICCARM__)
   #pragma system_include
 #endif
- 
-#if defined (__CC_ARM)
+
+#if defined(__CC_ARM)
   #pragma anon_unions
 #endif
-/// @cond
+/*/ @cond */
 /*
     If types are not defined elsewhere (CMSIS) define them here
 */
@@ -70,7 +70,7 @@ extern "C" {
 #ifndef __R
 #define __R  volatile const
 #endif
-/// @endcond
+/*/ @endcond */
 
 /* **** Definitions **** */
 
@@ -86,55 +86,55 @@ extern "C" {
  * Structure type to access the GCR Registers.
  */
 typedef struct {
-    __IO uint32_t scon;                 /**< <tt>\b 0x00:</tt> GCR SCON Register */
-    __IO uint32_t rstr0;                /**< <tt>\b 0x04:</tt> GCR RSTR0 Register */
-    __IO uint32_t clkcn;                /**< <tt>\b 0x08:</tt> GCR CLKCN Register */
-    __IO uint32_t pm;                   /**< <tt>\b 0x0C:</tt> GCR PM Register */
-    __R  uint32_t rsv_0x10_0x17[2];
-    __IO uint32_t pckdiv;               /**< <tt>\b 0x18:</tt> GCR PCKDIV Register */
-    __R  uint32_t rsv_0x1c_0x23[2];
-    __IO uint32_t perckcn0;             /**< <tt>\b 0x24:</tt> GCR PERCKCN0 Register */
-    __IO uint32_t memckcn;              /**< <tt>\b 0x28:</tt> GCR MEMCKCN Register */
-    __IO uint32_t memzcn;               /**< <tt>\b 0x2C:</tt> GCR MEMZCN Register */
-    __R  uint32_t rsv_0x30_0x3f[4];
-    __IO uint32_t sysst;                /**< <tt>\b 0x40:</tt> GCR SYSST Register */
-    __IO uint32_t rstr1;                /**< <tt>\b 0x44:</tt> GCR RSTR1 Register */
-    __IO uint32_t perckcn1;             /**< <tt>\b 0x48:</tt> GCR PERCKCN1 Register */
-    __IO uint32_t evten;                /**< <tt>\b 0x4C:</tt> GCR EVTEN Register */
-    __I  uint32_t revision;             /**< <tt>\b 0x50:</tt> GCR REVISION Register */
-    __IO uint32_t syssie;               /**< <tt>\b 0x54:</tt> GCR SYSSIE Register */
-    __R  uint32_t rsv_0x58_0x63[3];
-    __IO uint32_t eccerr;               /**< <tt>\b 0x64:</tt> GCR ECCERR Register */
-    __IO uint32_t eccnded;              /**< <tt>\b 0x68:</tt> GCR ECCNDED Register */
-    __IO uint32_t eccirqen;             /**< <tt>\b 0x6C:</tt> GCR ECCIRQEN Register */
-    __IO uint32_t eccerrad;             /**< <tt>\b 0x70:</tt> GCR ECCERRAD Register */
+__IO uint32_t scon;                 /**< <tt>\b 0x00:</tt> GCR SCON Register */
+__IO uint32_t rstr0;                /**< <tt>\b 0x04:</tt> GCR RSTR0 Register */
+__IO uint32_t clkcn;                /**< <tt>\b 0x08:</tt> GCR CLKCN Register */
+__IO uint32_t pm;                   /**< <tt>\b 0x0C:</tt> GCR PM Register */
+__R  uint32_t rsv_0x10_0x17[2];
+__IO uint32_t pckdiv;               /**< <tt>\b 0x18:</tt> GCR PCKDIV Register */
+__R  uint32_t rsv_0x1c_0x23[2];
+__IO uint32_t perckcn0;             /**< <tt>\b 0x24:</tt> GCR PERCKCN0 Register */
+__IO uint32_t memckcn;              /**< <tt>\b 0x28:</tt> GCR MEMCKCN Register */
+__IO uint32_t memzcn;               /**< <tt>\b 0x2C:</tt> GCR MEMZCN Register */
+__R  uint32_t rsv_0x30_0x3f[4];
+__IO uint32_t sysst;                /**< <tt>\b 0x40:</tt> GCR SYSST Register */
+__IO uint32_t rstr1;                /**< <tt>\b 0x44:</tt> GCR RSTR1 Register */
+__IO uint32_t perckcn1;             /**< <tt>\b 0x48:</tt> GCR PERCKCN1 Register */
+__IO uint32_t evten;                /**< <tt>\b 0x4C:</tt> GCR EVTEN Register */
+__I  uint32_t revision;             /**< <tt>\b 0x50:</tt> GCR REVISION Register */
+__IO uint32_t syssie;               /**< <tt>\b 0x54:</tt> GCR SYSSIE Register */
+__R  uint32_t rsv_0x58_0x63[3];
+__IO uint32_t eccerr;               /**< <tt>\b 0x64:</tt> GCR ECCERR Register */
+__IO uint32_t eccnded;              /**< <tt>\b 0x68:</tt> GCR ECCNDED Register */
+__IO uint32_t eccirqen;             /**< <tt>\b 0x6C:</tt> GCR ECCIRQEN Register */
+__IO uint32_t eccerrad;             /**< <tt>\b 0x70:</tt> GCR ECCERRAD Register */
 } mxc_gcr_regs_t;
 
 /* Register offsets for module GCR */
 /**
  * @ingroup    gcr_registers
  * @defgroup   GCR_Register_Offsets Register Offsets
- * @brief      GCR Peripheral Register Offsets from the GCR Base Peripheral Address. 
+ * @brief      GCR Peripheral Register Offsets from the GCR Base Peripheral Address.
  * @{
  */
- #define MXC_R_GCR_SCON                     ((uint32_t)0x00000000UL) /**< Offset from GCR Base Address: <tt> 0x0000</tt> */ 
- #define MXC_R_GCR_RSTR0                    ((uint32_t)0x00000004UL) /**< Offset from GCR Base Address: <tt> 0x0004</tt> */ 
- #define MXC_R_GCR_CLKCN                    ((uint32_t)0x00000008UL) /**< Offset from GCR Base Address: <tt> 0x0008</tt> */ 
- #define MXC_R_GCR_PM                       ((uint32_t)0x0000000CUL) /**< Offset from GCR Base Address: <tt> 0x000C</tt> */ 
- #define MXC_R_GCR_PCKDIV                   ((uint32_t)0x00000018UL) /**< Offset from GCR Base Address: <tt> 0x0018</tt> */ 
- #define MXC_R_GCR_PERCKCN0                 ((uint32_t)0x00000024UL) /**< Offset from GCR Base Address: <tt> 0x0024</tt> */ 
- #define MXC_R_GCR_MEMCKCN                  ((uint32_t)0x00000028UL) /**< Offset from GCR Base Address: <tt> 0x0028</tt> */ 
- #define MXC_R_GCR_MEMZCN                   ((uint32_t)0x0000002CUL) /**< Offset from GCR Base Address: <tt> 0x002C</tt> */ 
- #define MXC_R_GCR_SYSST                    ((uint32_t)0x00000040UL) /**< Offset from GCR Base Address: <tt> 0x0040</tt> */ 
- #define MXC_R_GCR_RSTR1                    ((uint32_t)0x00000044UL) /**< Offset from GCR Base Address: <tt> 0x0044</tt> */ 
- #define MXC_R_GCR_PERCKCN1                 ((uint32_t)0x00000048UL) /**< Offset from GCR Base Address: <tt> 0x0048</tt> */ 
- #define MXC_R_GCR_EVTEN                    ((uint32_t)0x0000004CUL) /**< Offset from GCR Base Address: <tt> 0x004C</tt> */ 
- #define MXC_R_GCR_REVISION                 ((uint32_t)0x00000050UL) /**< Offset from GCR Base Address: <tt> 0x0050</tt> */ 
- #define MXC_R_GCR_SYSSIE                   ((uint32_t)0x00000054UL) /**< Offset from GCR Base Address: <tt> 0x0054</tt> */ 
- #define MXC_R_GCR_ECCERR                   ((uint32_t)0x00000064UL) /**< Offset from GCR Base Address: <tt> 0x0064</tt> */ 
- #define MXC_R_GCR_ECCNDED                  ((uint32_t)0x00000068UL) /**< Offset from GCR Base Address: <tt> 0x0068</tt> */ 
- #define MXC_R_GCR_ECCIRQEN                 ((uint32_t)0x0000006CUL) /**< Offset from GCR Base Address: <tt> 0x006C</tt> */ 
- #define MXC_R_GCR_ECCERRAD                 ((uint32_t)0x00000070UL) /**< Offset from GCR Base Address: <tt> 0x0070</tt> */ 
+ #define MXC_R_GCR_SCON       ((uint32_t)0x00000000UL) /**< Offset from GCR Base Address: 0x0000 */
+ #define MXC_R_GCR_RSTR0      ((uint32_t)0x00000004UL) /**< Offset from GCR Base Address: 0x0004 */
+ #define MXC_R_GCR_CLKCN      ((uint32_t)0x00000008UL) /**< Offset from GCR Base Address: 0x0008 */
+ #define MXC_R_GCR_PM         ((uint32_t)0x0000000CUL) /**< Offset from GCR Base Address: 0x000C */
+ #define MXC_R_GCR_PCKDIV     ((uint32_t)0x00000018UL) /**< Offset from GCR Base Address: 0x0018 */
+ #define MXC_R_GCR_PERCKCN0   ((uint32_t)0x00000024UL) /**< Offset from GCR Base Address: 0x0024 */
+ #define MXC_R_GCR_MEMCKCN    ((uint32_t)0x00000028UL) /**< Offset from GCR Base Address: 0x0028 */
+ #define MXC_R_GCR_MEMZCN     ((uint32_t)0x0000002CUL) /**< Offset from GCR Base Address: 0x002C */
+ #define MXC_R_GCR_SYSST      ((uint32_t)0x00000040UL) /**< Offset from GCR Base Address: 0x0040 */
+ #define MXC_R_GCR_RSTR1      ((uint32_t)0x00000044UL) /**< Offset from GCR Base Address: 0x0044 */
+ #define MXC_R_GCR_PERCKCN1   ((uint32_t)0x00000048UL) /**< Offset from GCR Base Address: 0x0048 */
+ #define MXC_R_GCR_EVTEN      ((uint32_t)0x0000004CUL) /**< Offset from GCR Base Address: 0x004C */
+ #define MXC_R_GCR_REVISION   ((uint32_t)0x00000050UL) /**< Offset from GCR Base Address: 0x0050 */
+ #define MXC_R_GCR_SYSSIE     ((uint32_t)0x00000054UL) /**< Offset from GCR Base Address: 0x0054 */
+ #define MXC_R_GCR_ECCERR     ((uint32_t)0x00000064UL) /**< Offset from GCR Base Address: 0x0064 */
+ #define MXC_R_GCR_ECCNDED    ((uint32_t)0x00000068UL) /**< Offset from GCR Base Address: 0x0068 */
+ #define MXC_R_GCR_ECCIRQEN   ((uint32_t)0x0000006CUL) /**< Offset from GCR Base Address: 0x006C */
+ #define MXC_R_GCR_ECCERRAD   ((uint32_t)0x00000070UL) /**< Offset from GCR Base Address: 0x0070 */
 /**@} end of group gcr_registers */
 
 /**

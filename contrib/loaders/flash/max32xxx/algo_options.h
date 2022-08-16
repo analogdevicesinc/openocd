@@ -3,5 +3,5 @@
 #define OPTIONS_AUTH                    0x04 /* Authenticate the flash contents */
 #define OPTIONS_COUNT                   0x08 /* Add counter values to authentication */
 #define OPTIONS_INTER                   0x10 /* Interleave the authentication and count values*/
-#define OPTIONS_RELATIVE_XOR            0x20 /* Only XOR the offset of the address when encrypting */    
-#define OPTIONS_KEYSIZE                 0x40 /* Use a 256 bit KEY */    
+#define OPTIONS_RELATIVE_XOR            0x20 /* Only XOR the offset of the address when encrypting */
+#define OPTIONS_KEYSIZE                 0x40 /* Use a 256 bit KEY */
