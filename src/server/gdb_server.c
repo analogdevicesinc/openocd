@@ -3732,7 +3732,7 @@ out:
 	return retval;
 }
 
-COMMAND_HANDLER(handle_gdb_extended_remote_command)
+COMMAND_HANDLER(handle_gdb_warn_target_extended_remote_command)
 {
 	if (CMD_ARGC != 1)
 		return ERROR_COMMAND_SYNTAX_ERROR;
@@ -3816,8 +3816,8 @@ static const struct command_registration gdb_command_handlers[] = {
 		.usage = "",
 	},
 	{
-		.name = "gdb_extended_remote",
-		.handler = handle_gdb_extended_remote_command,
+		.name = "gdb_warn_target_extended_remote",
+		.handler = handle_gdb_warn_target_extended_remote_command,
 		.mode = COMMAND_CONFIG,
 		.help = "enable or disable GDB 'Prefer target extended-remote' warning",
 		.usage = "('enable'|'disable')"
