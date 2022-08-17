@@ -145,7 +145,7 @@ static int gdb_use_target_description = 1;
 /* current processing free-run type, used by file-I/O */
 static char gdb_running_type;
 
-static int gdb_warn_target_extended_remote;
+static int gdb_warn_target_extended_remote = 1;
 
 static int gdb_last_signal(struct target *target)
 {
@@ -3308,12 +3308,10 @@ static int gdb_input_inner(struct connection *connection)
 				case '?':
 					gdb_last_signal_packet(connection, packet, packet_size);
 					/* '?' is sent after the eventual '!' */
-					if ( !warn_use_ext && !gdb_con->extended_protocol) {
-						if (!gdb_warn_target_extended_remote) {
-							warn_use_ext = true;
-							LOG_WARNING("Prefer GDB command \"target extended-remote %s\" instead of \"target remote %s\"",
-										connection->service->port, connection->service->port);
-						}
+					if (!warn_use_ext && !gdb_con->extended_protocol && gdb_warn_target_extended_remote) {
+						warn_use_ext = true;
+						LOG_WARNING("Prefer GDB command \"target extended-remote %s\" instead of \"target remote %s\"",
+							connection->service->port, connection->service->port);
 					}
 					break;
 				case 'c':
