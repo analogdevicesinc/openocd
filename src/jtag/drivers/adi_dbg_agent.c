@@ -499,7 +499,7 @@ static int dbgagent_init(void)
 		if (retval == -ENODEV)
 			LOG_ERROR("Debug agent not found");
 
-		LOG_ERROR("cannot connect to the degug agent");
+		LOG_ERROR("cannot connect to the debug agent");
 	}
 
 	return retval;
