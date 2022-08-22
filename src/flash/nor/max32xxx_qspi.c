@@ -419,7 +419,7 @@ static int max32xxx_qspi_read_words(struct target *target, uint32_t *data, unsig
 	int retval;
 	uint16_t header;
 	uint32_t temp32;
-	uint8_t* data8 = (uint8_t*)data;
+	uint8_t* data8 = (uint8_t *)data;
 	unsigned chunkLen;
 	unsigned dataIndex = 0;
 
