@@ -419,6 +419,7 @@ static int max32xxx_qspi_read_words(struct target *target, uint32_t *data, unsig
 	int retval;
 	uint16_t header;
 	uint32_t temp32;
+	uint8_t* data8 = (uint8_t*)data;
 	unsigned chunkLen;
 	unsigned dataIndex = 0;
 
@@ -453,7 +454,7 @@ static int max32xxx_qspi_read_words(struct target *target, uint32_t *data, unsig
 
 		/* Read the data to the TX FIFO, convert to number of bytes */
 		retval = max32xxx_qspi_read_rxfifo(target,
-				(uint8_t *)&data[dataIndex * 4],
+				(uint8_t *)&data8[dataIndex * 4],
 				chunkLen * 4);
 		if (retval != ERROR_OK)
 			return retval;
@@ -876,7 +877,7 @@ static int max32xxx_qspi_probe(struct flash_bank *bank)
 	retval = spi_sfdp(bank, &temp_flash_device, &read_sfdp_block);
 	if (retval != ERROR_OK)
 		goto exit;
-	LOG_INFO("max32xxx flash \'%s\' size = %" PRIu32 "kbytes",
+	LOG_INFO("max32xxx flash \'%s\' size = %" PRIu32 " kbytes",
 		temp_flash_device.name, temp_flash_device.size_in_bytes / 1024);
 
 	max32xxx_qspi_info->dev = temp_flash_device;
