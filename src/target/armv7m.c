@@ -898,8 +898,9 @@ int armv7m_checksum_memory(struct target *target,
 
 	int timeout = 20000 * (1 + (count / (1024 * 1024)));
 
-	retval = target_run_algorithm(target, 0, NULL, 2, reg_params, crc_algorithm->address,
-			crc_algorithm->address + (sizeof(cortex_m_crc_code) - 6),
+	retval = target_run_algorithm(target, 0, NULL, 2, reg_params,
+			crc_algorithm->address, /* Algorithm starts at the base address of armv7m_crc.inc */
+			crc_algorithm->address + 0x34, /* Exit_point BKPT at offset 0x34 */
 			timeout, &armv7m_info);
 
 	if (retval == ERROR_OK)

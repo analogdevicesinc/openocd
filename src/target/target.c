@@ -2532,9 +2532,7 @@ static int target_read_buffer_default(struct target *target, target_addr_t addre
 
 int target_checksum_memory(struct target *target, target_addr_t address, uint32_t size, uint32_t *crc)
 {
-	uint8_t *buffer;
 	int retval;
-	uint32_t i;
 	uint32_t checksum = 0;
 	if (!target_was_examined(target)) {
 		LOG_ERROR("Target not examined yet");
@@ -2546,30 +2544,9 @@ int target_checksum_memory(struct target *target, target_addr_t address, uint32_
 	}
 
 	retval = target->type->checksum_memory(target, address, size, &checksum);
-	if (retval != ERROR_OK) {
-		buffer = malloc(size);
-		if (!buffer) {
-			LOG_ERROR("error allocating buffer for section (%" PRIu32 " bytes)", size);
-			return ERROR_COMMAND_SYNTAX_ERROR;
-		}
-		retval = target_read_buffer(target, address, size, buffer);
-		if (retval != ERROR_OK) {
-			free(buffer);
-			return retval;
-		}
-
-		/* convert to target endianness */
-		for (i = 0; i < (size/sizeof(uint32_t)); i++) {
-			uint32_t target_data;
-			target_data = target_buffer_get_u32(target, &buffer[i*sizeof(uint32_t)]);
-			target_buffer_set_u32(target, &buffer[i*sizeof(uint32_t)], target_data);
-		}
-
-		retval = image_calculate_checksum(buffer, size, &checksum);
-		free(buffer);
-	}
-
 	*crc = checksum;
+
+	/* Binary compare fallback removed due to catastrophic failures with QSPI driver */
 
 	return retval;
 }
