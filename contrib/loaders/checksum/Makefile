@@ -3,6 +3,7 @@ BIN2C = ../../../src/helper/bin2char.sh
 ARM_CROSS_COMPILE ?= arm-none-eabi-
 ARM_AS      ?= $(ARM_CROSS_COMPILE)as
 ARM_OBJCOPY ?= $(ARM_CROSS_COMPILE)objcopy
+ARM_NM      ?= $(ARM_CROSS_COMPILE)nm
 
 ARM_AFLAGS = -EL
 
@@ -26,6 +27,8 @@ armv4_5_%.bin: armv4_5_%.elf
 
 armv7m_%.elf: armv7m_%.s
 	$(ARM_AS) $(ARM_AFLAGS) $< -o $@
+	@echo "exit_point offset needs to be set in armv7m.c"
+	$(ARM_NM) -n -g $@
 
 armv7m_%.bin: armv7m_%.elf
 	$(ARM_OBJCOPY) -Obinary $< $@
