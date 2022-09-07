@@ -3818,7 +3818,7 @@ static const struct command_registration gdb_command_handlers[] = {
 	{
 		.name = "gdb_warn_target_extended_remote",
 		.handler = handle_gdb_warn_target_extended_remote_command,
-		.mode = COMMAND_CONFIG,
+		.mode = COMMAND_ANY,
 		.help = "enable or disable GDB 'Prefer target extended-remote' warning",
 		.usage = "('enable'|'disable')"
 	},
