@@ -88,6 +88,9 @@
 
 #define GCR_BASE                                0x40000000
 #define GCR_SCON                                (GCR_BASE | 0x00)
+#define GCR_RST1                                (GCR_BASE | 0x44)
+#define GCR_RST1_XSPIM                          (0x1 << 4)
+#define GCR_RST1_SPIXIP                         (0x1 << 5)
 
 /* Set the number of system clocks per low/high period of the SPI clock */
 #define SPI_CLOCK_PERIOD                        2
@@ -178,9 +181,12 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	temp32 = 0;
 	target_write_u32(target, SPIXFC_GEN_CTRL, temp32);
 
+	/* Reset SPI peripherals */
+	temp32 = (GCR_RST1_XSPIM | GCR_RST1_SPIXIP);
+	target_write_u32(target, GCR_RST1, temp32);
+
 	/* Set the number of system clocks for the SPI clock low and high period */
 	temp32 = (SPI_CLOCK_PERIOD << 8) | (SPI_CLOCK_PERIOD << 12) | (0x1 << 2);
-
 	target_write_u32(target, SPIXF_CFG, temp32);
 
 
