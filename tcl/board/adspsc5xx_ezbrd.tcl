@@ -38,12 +38,17 @@ proc canfd_config { canfd_base } {
    global _CHIPNAME
 
    set canfd_cfg $canfd_base
-   set canfd_rx_mb_gmsk   [expr {$canfd_cfg + 0x10}]
-   set canfd_rx_14_msk    [expr {$canfd_cfg + 0x14}]
-   set canfd_rx_15_msk    [expr {$canfd_cfg + 0x18}]
-   set canfd_rx_fifo_gmsk [expr {$canfd_cfg + 0x48}]
-   set canfd_ram          [expr {$canfd_cfg + 0x80}]
-   set canfd_rx_imsk0     [expr {$canfd_cfg + 0x880}]
+   set canfd_rx_mb_gmsk    [expr {$canfd_cfg + 0x10}]
+   set canfd_rx_14_msk     [expr {$canfd_cfg + 0x14}]
+   set canfd_rx_15_msk     [expr {$canfd_cfg + 0x18}]
+   set canfd_rx_fifo_gmsk  [expr {$canfd_cfg + 0x48}]
+   set canfd_ctl2          [expr {$canfd_cfg + 0x34}]
+   set canfd_ram           [expr {$canfd_cfg + 0x80}]
+   set canfd_rx_imsk0      [expr {$canfd_cfg + 0x880}]
+   set canfd_fd_ctl        [expr {$canfd_cfg + 0xc00}]
+   set canfd_ram_rxfir     [expr {$canfd_cfg + 0xa80}]
+   set canfd_ram_norm_mode [expr {$canfd_cfg + 0xab0}]
+   set canfd_ram_fd_mode   [expr {$canfd_cfg + 0xf58}]
 
    if { $_CHIPNAME == "adspsc598" } {
       # use axi-ap
@@ -66,6 +71,10 @@ proc canfd_config { canfd_base } {
    while { ![expr {$data & 0x1000000}] } {
       set data [memread32_phys $canfd_cfg]
    }
+
+   # Enable unrestricted write access to CANFD memory in Freeze mode
+   # pCANFDRegs->CTL2 |= BITM_CANFD_CTL2_WRMFRZEN;
+   pmmw $canfd_ctl2 0x10000000 0x0
 
    # /* Initialize the RAM area occupied by message buffers. */
    # for (i=0u; i<(RAM_SIZE/sizeof(uint32_t)); i++)
@@ -92,6 +101,59 @@ proc canfd_config { canfd_base } {
    for {set i 0} {$i < 64} {incr i} {
       $_CHIPNAME.dap writemem $ap_num [expr {$canfd_rx_imsk0 + ($i * 4)}] 0x0
    }
+
+   # Initialize additional memory used for internal Serial Tx and Rx MB buffer structures for FD mode
+   # pMbRamAddress = (uint32_t*)((uint8_t *)pMbAddressBase + CAN_SMB_FD_ADDR_OFFSET);
+   # pMbRamLastAddress = (uint32_t*)((uint8_t *)pMbAddressBase + CAN_SMB_FD_ADDR_OFFSET + CAN_SMB_FD_SIZE);
+   # while((uintptr_t)pMbRamAddress < (uintptr_t)pMbRamLastAddress)
+   # {
+   # *pMbRamAddress++ = 0U;
+   # }
+   for {set i 0} {$i < (168/4)} {incr i} {
+      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_ram_fd_mode + ($i * 4)}] 0x0
+   }
+
+
+   # Initialize additional memory used for internal Serial Tx and Rx MB buffer structures for Normal CAN mode
+   # pMbRamAddress = (uint32_t*)((uint8_t *)pMbAddressBase + CAN_SMB_ADDR_OFFSET);
+   # pMbRamLastAddress = (uint32_t*)((uint8_t *)pMbAddressBase + CAN_SMB_ADDR_OFFSET + CAN_SMB_SIZE);
+   # while((uintptr_t)pMbRamAddress < (uintptr_t)pMbRamLastAddress)
+   # {
+   # *pMbRamAddress++ = 0U;
+   # }
+   for {set i 0} {$i < (48/4)} {incr i} {
+      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_ram_norm_mode + ($i * 4)}] 0x0
+   }
+
+   # Initialize additional memory used for internal RAM space used for storing RXFIR contents and some reserved space */
+   # pMbRamAddress = (uint32_t*)((uint8_t *)pMbAddressBase + CAN_RXFIR_ADDR_OFFSET);
+   # pMbRamLastAddress = (uint32_t*)((uint8_t *)pMbAddressBase + CAN_RXFIR_ADDR_OFFSET + CAN_RXFIR_SIZE);
+   # while((uintptr_t)pMbRamAddress < (uintptr_t)pMbRamLastAddress)
+   # {
+   #  *pMbRamAddress++ = 0U;
+   # }
+   for {set i 0} {$i < (32/4)} {incr i} {
+      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_ram_rxfir + ($i * 4)}] 0x0
+   }
+
+    # Disable the unrestricted write access to CANFD memory in Freeze mode */
+    # pCANFDRegs->CTL2 &= ~BITM_CANFD_CTL2_WRMFRZEN;
+    pmmw $canfd_ctl2 0x0 0x10000000
+
+   # Reset the CANFD registers through module soft reset
+   # pCANFDRegs->CFG |= BITM_CANFD_CFG_SOFTRST;
+   # while (pCANFDRegs->CFG  & BITM_CANFD_CFG_SOFTRST) {}
+   pmmw $canfd_cfg 0x02000000 0x0
+   set data [memread32_phys $canfd_cfg]
+   while { [expr {$data & 0x02000000}] } {
+      set data [memread32_phys $canfd_cfg]
+   }
+
+   # Zero initialize the registers
+   # pCANFDRegs->CFG &= ~BITM_CANFD_CFG_MAXMB;
+   # pCANFDRegs->FD_CTL = 0x0U;
+   pmmw $canfd_cfg 0x0 0x0000007F
+   mww phys $canfd_fd_ctl 0
 
    # /* Clear the Freeze and Halt bit to exit the freeze mode. */
    # pCANFDRegs->CFG &= ~(BITM_CANFD_CFG_FRZ|BITM_CANFD_CFG_HALT);
@@ -1122,7 +1184,7 @@ proc adspsc59x_init_ddr3 { dmc } {
 
    if { $_CHIPNAME == "adspsc598" } {
       # 800 MHz
-      set ulDDR_DLLCTLCFG 0x0cf70622
+      set ulDDR_DLLCTLCFG 0x0cf00622
       set ulDDR_EMR2EMR3  0x00180004
       set ulDDR_CTL       0x08004a05
       set ulDDR_MREMR1    0x0d7000c0
@@ -1132,7 +1194,7 @@ proc adspsc59x_init_ddr3 { dmc } {
       set ulDDR_ZQCTL0    0x00785a64
    } else {
       # 800 MHz
-      set ulDDR_DLLCTLCFG 0x0cf70722
+      set ulDDR_DLLCTLCFG 0x0cf00722
       set ulDDR_EMR2EMR3  0x00180004
       set ulDDR_CTL       0x08000a05
       set ulDDR_MREMR1    0x0d7000c0
@@ -1324,6 +1386,16 @@ proc adspsc59x_init_ddr3 { dmc } {
       pmmw $dmc_ddr_lane1_ctl1 $data 0
       after 1
    }
+
+   if { $_CHIPNAME == "adspsc598" } {
+      # Invalidate the DDR prefetch buffer after DMC initialization. The
+      # invalidation bit must be cleared manually.
+      # *pREG_DDRPFB0_CTL0 |= BITM_DDRPFB_CTL0_DATA_INVALIDATION;
+      # *pREG_DDRPFB0_CTL0 &= ~BITM_DDRPFB_CTL0_DATA_INVALIDATION;
+      pmmw 0x31076000 0x00000010 0
+      pmmw 0x31076000 0 0x00000010
+   }
+
 }
 
 proc adspsc59x_init_emac { } {

@@ -1,7 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2022 by Analog Devices, Inc.                     *
-*   Based on ice100.c of UrJTAG                                           *
-*   Jie Zhang  <jie.zhang@analog.com>                                     *
+*   Copyright (C) 2022 by Analog Devices, Inc.                     			*
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
 *   it under the terms of the GNU General Public License as published by  *
@@ -112,17 +110,15 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 static int add_scan_data(int32_t, uint8_t *, bool, struct scan_command *);
 static uint8_t *get_recv_data(int32_t, int32_t, uint8_t *);
 static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
-static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data,
-									int32_t wr_data, uint32_t data);
 
 /*
  * Debug Macros
  */
 
-#if 0    /* set to 1 to output debug info about scans */
+#if 1    /* set to 1 to output debug info about scans */
 
 //#define DSP_SCAN_DATA
-#define DUMP_EACH_RCV_DATA
+//#define DUMP_EACH_RCV_DATA
 //#define DSP_SCAN_CAUSE
 #define DEBUG(...)    printf(__VA_ARGS__)
 
@@ -139,107 +135,103 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data,
 #define ICE_DEFAULT_SCAN_LEN			0x7FF0	/* Max DIF is 0x2AAA8, but DMA is only 16 bits. */
 #define ICE_TRIGGER_SCAN_LEN			0x7FD8	/* Start checking for RTI/TLR for xmit */
 
-#define SELECTIVE_RAW_SCAN_HDR_SZ		12
+#define RAW_SCAN_HDR_SZ					8
 
-#define DAT_SZ							0x8000	/* size allocated for reading data */
+#define DAT_SZ							0x4000	/* size allocated for reading data */
 #define DAT_SZ_INC						0x40	/* size to increase if data full */
 
 /* USB Emulator Commands */
 #define HOST_GET_FW_VERSION				0x01	/* get the firmware version */
 #define HOST_REQUEST_RX_DATA			0x02	/* host request to transmit data */
+#define HOST_RX_DATA                   	0x03	/* host has requested to receive data */
 #define HOST_REQUEST_TX_DATA			0x04	/* host request to transmit data */
-#define HOST_GET_SINGLE_REG				0x08	/* set a JTAG register */
-#define HOST_SET_SINGLE_REG				0x09	/* set a JTAG register */
-#define HOST_PROGRAM_FLASH				0x0C	/* program flash */
-#define HOST_HARD_RESET_JTAG_CTRLR		0x0E	/* do a hard reset on JTAG controller */
-#define HOST_SET_TRST					0x1F	/* changes TRST Line state */
-#define HOST_GET_TRST					0x20	/* gets TRST Line state */
-#define HOST_DO_SELECTIVE_RAW_SCAN		0x21	/* Return only data needed */
-#define HOST_SET_2000_VOLTAGE			0x24
-#define HOST_SET_INTERFACE_MODE			0x25
-#define HOST_DISCONNECT					0x27
+#define HOST_TX_DATA                   	0x05	/* host has requested to transmit data */
+#define HOST_DO_RAW_SCAN               	0x06	/* do a raw scan */
+#define HOST_DO_LOOPBACK				0x07	/* usb loopback testing */
+#define HOST_HARD_RESET_KIT				0x08
+#define HOST_SET_TRST                  	0x09	/* changes TRST Line state  */
 
-/* Registers */
-#define REG_AUX							0x00
-#define REG_SCR							0x04
-#define REG_FREQ						0x40
+#define HOST_PREP_FIRMWARE_UPDATE      	0x0A	/* prepare to update the firmware */
+#define HOST_READ_EEPROM               	0x0B	/* read the target's EEPROM */
+#define HOST_WRITE_EEPROM              	0x0C	/* write to the target's EEPROM */
+#define HOST_CONNECT					0x0D	/* make a debug connection */
+#define HOST_DISCONNECT					0x0E	/* disconnect from debug mode */
+#define HOST_SET_JTAG_FREQUENCY			0x0F	/* set JTAG frequency */
 
-#define SCR_DEFAULT						0x30A0461
-#define SCR_TRST_BIT					0x0000040
 
 /* Ice USB controls */
-#define ICE_1000_WRITE_ENDPOINT			0x06
-#define ICE_1000_READ_ENDPOINT			0x05
-#define ICE_1000_USB_CONNECTION_TIMEOUT	10000
-#define ICE_1000_USB_WRITE_TIMEOUT		10000
-#define ICE_1000_USB_READ_TIMEOUT		30000
-#define ICE_1000_WRITE_BUFFER_SIZE		0x9800
-#define ICE_1000_READ_BUFFER_SIZE		0x8000
+#define WRITE_ENDPOINT			0x02
+#define READ_ENDPOINT			0x01
+#define USB_WRITE_TIMEOUT		10000
+#define USB_CONNECTION_TIMEOUT	10000
+#define USB_READ_TIMEOUT		30000
+#define WRITE_BUFFER_SIZE		0x4800
+#define READ_BUFFER_SIZE		0x4000
+#define MAX_DIF_SIZE			(27 * 1024)     /* 0x7008 is the max but leave some room */
 
+/* Latest firmware version for ICE-1500 */
+#define CURRENT_ICE1500_FW_VERSION	0x0103
 
-/* frequency settings for ICE-1000 */
-#define MAX_FREQ_1000	3
-static const uint8_t freq_set_1000[MAX_FREQ_1000] = { 45, 22, 8  };
-static const uint32_t avail_freqs_1000[MAX_FREQ_1000] = { 1000000, 2000000, 5000000 };
-/* frequency settings for ICE-2000 */
-#define MAX_FREQ_2000	7
-static const uint8_t freq_set_2000[MAX_FREQ_2000] = { 45, 22, 8, 4, 2, 1, 0 };
-static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000000, 9000000, 15000000, 23000000, 46000000 };
+/* frequency settings for ICE-1500 */
+#define MAX_FREQ_1500	2
+static const int valid_freq_set[MAX_FREQ_1500] = { 1000, 5000 };
 
 /*
  * Internal Macros
  */
 
 #ifdef _WIN32
-#define adi_usb_read_or_ret(buf, len)									\
-	do {																\
-		if (cable_params.use_usbmux)									\
-		{																\
-			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, \
+#define adi_usb_read_or_ret(buf, len)										\
+	do {																	\
+		if (cable_params.use_usbmux)										\
+		{																	\
+			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, 	\
 				buf, len, cable_params.r_ep | LIBUSB_ENDPOINT_IN, cable_params.r_timeout);	\
-			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;				\
-		}																\
-		else															\
-		{																\
-			int __ret, __actual, __size = (len);						\
-			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
+			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;					\
+		}																	\
+		else																\
+		{																	\
+			int __ret, __actual, __size = (len);							\
+			__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
 									cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
-									(unsigned char *)(buf), __size,		\
-									&__actual, cable_params.r_timeout);	\
-			if (__ret || __actual != __size)							\
-			{															\
-				LOG_ERROR("unable to read from usb to " #buf ": "		\
-						"wanted %i bytes but only received %i bytes",	\
-						__size, __actual);								\
-				return ERROR_FAIL;										\
-			}															\
-		}																\
+									(unsigned char *)(buf), __size,			\
+									&__actual, cable_params.r_timeout);		\
+			if (__ret || __actual != __size)								\
+			{																\
+				LOG_ERROR("unable to read from usb to " #buf ": "			\
+						"wanted %i bytes but only received %i bytes",		\
+						__size, __actual);									\
+				LOG_ERROR("return %d",__ret);								\
+				return ERROR_FAIL;											\
+			}																\
+		}																	\
 	} while (0)
 
-#define adi_usb_write_or_ret(buf, len)									\
-	do {																\
-		if (cable_params.use_usbmux)									\
-		{																\
+#define adi_usb_write_or_ret(buf, len)										\
+	do {																	\
+	if (cable_params.use_usbmux)											\
+		{																	\
 			USB_MUX_ERROR mux_ret = usbmux_write(cable_params.mux_handle,	\
 				buf, len, cable_params.wr_ep | LIBUSB_ENDPOINT_OUT,			\
 				cable_params.wr_timeout);									\
-			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;				\
-		}																\
-		else															\
-		{																\
-			int __ret, __actual, __size = (len);						\
-			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
+			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;					\
+		}																	\
+		else																\
+		{																	\
+			int __ret, __actual, __size = (len);							\
+			__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
 									cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
-									(unsigned char *)(buf), __size,		\
-									&__actual, cable_params.wr_timeout);\
-			if (__ret || __actual != __size)							\
-			{															\
-				LOG_ERROR("unable to write from " #buf " to usb: "		\
-						"wanted %i bytes but only wrote %i bytes",		\
-						__size, __actual);								\
-				return ERROR_FAIL;										\
-			}															\
-		}																\
+									(unsigned char *)(buf), __size,			\
+									&__actual, cable_params.wr_timeout);	\
+			if (__ret || __actual != __size)								\
+			{																\
+				LOG_ERROR("unable to write from " #buf " to usb: "			\
+						"wanted %i bytes but only wrote %i bytes",			\
+						__size, __actual);									\
+				LOG_ERROR("return %d",__ret);								\
+				return ERROR_FAIL;											\
+			}																\
+		}																	\
 	} while (0)
 
 #else
@@ -289,423 +281,15 @@ static const char *adi_cable_name(void)
 {
 	if (adapter_driver == NULL)
 		return "";
-
-	if (strcmp(adapter_driver->name, "ice1000") == 0)
-		return "ICE-1000";
-	else if (strcmp(adapter_driver->name, "ice2000") == 0)
-		return "ICE-2000";
+	
+	if (strcmp(adapter_driver->name, "ice1500") == 0)
+		return "ICE-1500";
 	else
 		return "unknown";
 }
 
-/*
- * Gets available Frequency index.
- */
-static int adi_get_freq(uint32_t freq, int arr_sz, const uint32_t *freq_arr)
-{
-	int i;
-
-	/* Verify Frequency is valid */
-	for (i = 0; i < arr_sz; i++)
-	{
-		if (freq == freq_arr[i])
-		{
-			/* spot on */
-			break;
-		}
-		else if (freq < freq_arr[i])
-		{
-			/* an in between frequency */
-			if (i > 0)
-				i--;
-			break;
-		}
-	}
-
-	if (i == arr_sz)
-	{
-		/* must of entered something above the max! */
-		i--;
-	}
-
-	return i;
-}
-
-/*
- * Sets ICE-1000 Frequency
- */
-static void ice1000_set_freq(uint32_t freq)
-{
-	params_t *params = &cable_params;
-
-	/* Verify Frequency is valid */
-	if (freq != params->cur_freq)
-	{
-		/* only change if different from current settings */
-		int idx = adi_get_freq(freq, MAX_FREQ_1000, &avail_freqs_1000[0]);
-
-		if (avail_freqs_1000[idx] != params->cur_freq)
-		{
-			/* only change if different from current settings
-			 * this call's frequency may have been not one of
-			 * the defined settings, but ends up there */
-			params->cur_freq = freq;
-			do_single_reg_value(REG_FREQ, 1, 1, freq_set_1000[idx]);
-		}
-	}
-}
-
-static int ice2000_validate_ircapture(int test_data_length, int total_ir_length,
-									  const uint8_t *ir_test_in, uint8_t *ir_test_out)
-{
-	int retval, i;
-
-	if (test_data_length % 64)
-		return ERROR_FAIL;
-
-	jtag_add_plain_ir_scan(test_data_length + total_ir_length,
-						   ir_test_in, ir_test_out, TAP_IDLE);
-
-	LOG_DEBUG("IR capture validation scan");
-	retval = jtag_execute_queue();
-	if (retval != ERROR_OK)
-		return retval;
-
-	for (i = 0; i < test_data_length / 64; i++)
-	{
-		uint64_t val_in, val_out;
-		val_in = buf_get_u64(ir_test_in, i * 64, 64);
-		val_out = buf_get_u64(ir_test_out, total_ir_length + i * 64, 64);
-		if (val_in != val_out)
-			return ERROR_FAIL;
-	}
-
-	return ERROR_OK;
-}
-
-static void ice2000_set_voltage_freq_delay(uint32_t voltage, uint32_t freq, uint32_t delay)
-{
-	uint32_t value = freq | (delay << 8) | (voltage << 16);
-
-	do_single_reg_value(REG_FREQ, 1, 1, value);
-}
-
 /* TEST_DATA_LENGTH % 64 should be 0 */
 #define TEST_DATA_LENGTH 0x8000
-
-static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
-{
-	struct jtag_tap *tap;
-	int total_ir_length, test_data_length, ir_test_length;
-	uint8_t *ir_test_in, *ir_test_out;
-	params_t *params = &cable_params;
-	int delay, delay_window_size;
-	int first_good_delay = -1, last_good_delay = -1;
-	int retval;
-	int i;
-	int idx;
-
-	total_ir_length = 0;
-	tap = jtag_tap_next_enabled(NULL);
-	for (; tap != NULL; tap = jtag_tap_next_enabled(tap))
-		total_ir_length += tap->ir_length;
-
-	test_data_length = TEST_DATA_LENGTH;
-	ir_test_length = DIV_ROUND_UP(test_data_length + total_ir_length, 8);
-
-	ir_test_in = malloc(ir_test_length);
-	if (ir_test_in == NULL)
-		return ERROR_FAIL;
-	ir_test_out = malloc(ir_test_length);
-	if (ir_test_out == NULL)
-	{
-		free(ir_test_in);
-		return ERROR_FAIL;
-	}
-
-	/* fill random test data */
-	for (i = 0; i < test_data_length / 8; i++)
-		ir_test_in[i] = rand();
-
-	/* after this scan, all TAPs will capture BYPASS instructions */
-	buf_set_ones(ir_test_in + test_data_length / 8, total_ir_length);
-
-	/* the good delay window size is roughly one cycle. the delay chip
-	   is 0.25ns. */
-	idx = adi_get_freq(freq, MAX_FREQ_2000, &avail_freqs_2000[0]);
-	delay_window_size = 1000000000 / avail_freqs_2000[idx] * 4;
-
-	jtag_add_reset(0, 0);
-	jtag_add_tlr();
-	retval = jtag_execute_queue();
-	if (retval != ERROR_OK)
-		goto done;
-
-	for (delay = 0; delay <= 0xff; delay++)
-	{
-		ice2000_set_voltage_freq_delay(voltage, freq_set_2000[idx], delay);
-
-		if (ice2000_validate_ircapture(test_data_length, total_ir_length,
-									   ir_test_in, ir_test_out) == ERROR_OK)
-		{
-			if (first_good_delay < 0)
-				first_good_delay = delay;
-
-			last_good_delay = delay;
-		}
-		else
-		{
-			if (last_good_delay > 0)
-				break;
-		}
-	}
-
-	/* if we cannot find a good delay */
-	if (first_good_delay < 0)
-		retval = ERROR_FAIL;
-
-	/* if we find a whole window of good delays */
-	else if (first_good_delay > 0 && last_good_delay < 0xff)
-		params->cur_delay = (first_good_delay + last_good_delay) / 2;
-
-	/* all delays are valid, just pick the middle one */
-	else if (first_good_delay == 0 && last_good_delay == 0xff)
-		params->cur_delay = (first_good_delay + last_good_delay) / 2;
-
-	/* we only find a partial window */
-	else if (first_good_delay == 0 && last_good_delay < 0xff)
-	{
-		/* we still can get the best value */
-		if (last_good_delay - delay_window_size / 2 >= 0)
-			params->cur_delay = last_good_delay - delay_window_size / 2;
-		/* or make sure the margin is big enough (10 is just a guess) */
-		else if (last_good_delay >= 10)
-			params->cur_delay = 0;
-		/* otherwise we just fail */
-		else
-			retval = ERROR_FAIL;
-	}
-
-	/* we only find a partial window */
-	else /* first_good_delay > 0 && last_good_delay == 0xff */
-	{
-		/* we still can get the best value */
-		if (first_good_delay + delay_window_size / 2 <= 0xff)
-			params->cur_delay = first_good_delay + delay_window_size / 2;
-		/* or make sure the margin is big enough (10 is just a guess) */
-		else if (0xff - first_good_delay >= 10)
-			params->cur_delay = first_good_delay;
-		/* otherwise we just fail */
-		else
-			retval = ERROR_FAIL;
-	}
-
-	/* restore the original settings */
-	idx = adi_get_freq(params->cur_freq, MAX_FREQ_2000, &avail_freqs_2000[0]);
-	ice2000_set_voltage_freq_delay(params->cur_voltage, freq_set_2000[idx], params->cur_delay);
-
-done:
-	free(ir_test_in);
-	free(ir_test_out);
-
-	if (retval == ERROR_OK)
-		LOG_INFO("%s delay %d", adi_cable_name(), params->cur_delay);
-	else
-		LOG_ERROR("%s cannot find a good delay", adi_cable_name());
-
-	return retval;
-}
-
-/*
- * Sets ICE-2000 Frequency
- */
-static int ice2000_set_freq(uint32_t freq)
-{
-	params_t *params = &cable_params;
-	int idx = adi_get_freq(freq, MAX_FREQ_2000, &avail_freqs_2000[0]);
-
-	/* only change if different from current settings */
-	if (avail_freqs_2000[idx] != params->cur_freq)
-	{
-		if (ice2000_find_delay(params->cur_voltage, avail_freqs_2000[idx]) != ERROR_OK)
-			return ERROR_FAIL;
-		params->cur_freq = freq;
-		ice2000_set_voltage_freq_delay(params->cur_voltage, freq_set_2000[idx], params->cur_delay);
-	}
-
-	return ERROR_OK;
-}
-
-static int ice1000_firmware_crc(uint16_t *p)
-{
-	usb_command_block usb_cmd_blk;
-
-	usb_cmd_blk.command = HOST_REQUEST_RX_DATA;
-	usb_cmd_blk.count = 2;
-	usb_cmd_blk.buffer = 0;
-
-	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
-
-	adi_usb_read_or_ret(p, sizeof (*p));
-
-	return ERROR_OK;
-}
-
-static uint16_t crc16_ccitt(const uint8_t *data, int length, uint16_t crc)
-{
-	int i;
-
-	for (i = 0; i < length; i++)
-	{
-		uint8_t b = data[i];
-		int j;
-
-		for (j = 0; j < 8; j++)
-		{
-			bool add = ((crc >> 15) != (b >> 7));
-			crc <<= 1;
-			b <<= 1;
-			if (add)
-				crc ^= 0x1021;
-		}
-	}
-
-	return crc;
-}
-
-static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
-{
-/* Flash programming is much slower than jtag operation. So we have
-   to use a much smaller buffer size to avoid USB transfer timeout.  */
-#define ICE_1000_FLASH_DATA_BUFFER_SIZE 0x400
-
-	uint8_t buffer[ICE_1000_FLASH_DATA_BUFFER_SIZE];
-	uint8_t first = 1, last = 0;
-	int i;
-	uint16_t crc = 0xffff;
-	size_t total_size = 0, total_written = 0;
-
-	for (i = 0; i < firmware->num_sections; i++)
-		total_size += firmware->sections[i].size;
-
-	LOG_OUTPUT("updating ... 0%%");
-
-	for (i = 0; i < firmware->num_sections; i++)
-	{
-		size_t section_size;
-		uint8_t *section_buffer;
-		int remaining;
-		uint32_t address;
-		size_t size_read;
-		int ret;
-
-		section_size = firmware->sections[i].size;
-		section_buffer = malloc(section_size);
-		if (section_buffer == NULL)
-		{
-			LOG_ERROR("error allocating buffer for section (%d bytes)",
-					  firmware->sections[i].size);
-			return ERROR_FAIL;
-		}
-
-		ret = image_read_section(firmware, i, 0, section_size, section_buffer, &size_read);
-		if (ret != ERROR_OK || size_read != section_size)
-		{
-			free(section_buffer);
-			return ret;
-		}
-
-		crc = crc16_ccitt(section_buffer, section_size, crc);
-
-		remaining = section_size;
-		address = firmware->sections[i].base_address;
-
-		while (remaining)
-		{
-			usb_command_block usb_cmd_blk;
-			uint32_t count;
-			int percentage;
-
-
-			if (remaining < ICE_1000_FLASH_DATA_BUFFER_SIZE - 16)
-				count = remaining;
-			else
-				count = ICE_1000_FLASH_DATA_BUFFER_SIZE - 16;
-			remaining -= count;
-			if (remaining == 0)
-				last = 1;
-
-			buffer[0] = first;
-			buffer[1] = last;
-			buffer[2] = HOST_PROGRAM_FLASH;
-			buffer[3] = 0;
-			memcpy(buffer + 4, &address, 4);
-			memcpy(buffer + 8, &count, 4);
-			memcpy(buffer + 12, &crc, 2);
-			memcpy(buffer + 16, section_buffer + section_size - remaining - count, count);
-
-			usb_cmd_blk.command = HOST_REQUEST_TX_DATA;
-			usb_cmd_blk.count = count + 16;
-			usb_cmd_blk.buffer = 0;
-			adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_cmd_blk));
-
-			adi_usb_write_or_ret(buffer, usb_cmd_blk.count);
-
-			first = 0;
-
-			address += count;
-
-			total_written += count;
-
-			if (total_written == total_size)
-				percentage = 100;
-			else
-				percentage = (int) (total_written * 100.0 / total_size);
-			LOG_OUTPUT("\rupdating ... %d%%", percentage);
-		}
-
-		free(section_buffer);
-	}
-
-	*crcp = crc;
-
-	LOG_OUTPUT("\r\n");
-
-	return ERROR_OK;
-}
-
-static int ice1000_update_firmware(const char *filename)
-{
-	struct image ice1000_firmware_image;
-	unsigned short crc1, crc2;
-	int ret;
-
-	LOG_INFO("Updating to firmware %s", filename);
-
-	ice1000_firmware_image.base_address = 0;
-	ice1000_firmware_image.base_address_set = 0;
-
-	ret = image_open(&ice1000_firmware_image, filename, "ihex");
-	if (ret != ERROR_OK)
-		return ret;
-
-	ret = ice1000_send_flash_data(&ice1000_firmware_image, &crc1);
-	if (ret != ERROR_OK)
-		return ret;
-
-	if ((ret = ice1000_firmware_crc(&crc2)) != ERROR_OK)
-		return ret;
-
-	image_close(&ice1000_firmware_image);
-
-	if (crc1 == crc2)
-		return ERROR_OK;
-	else
-	{
-		LOG_ERROR("CRCs do NOT match");
-		return ERROR_FAIL;
-	}
-}
 
 /*
  * This function sets us up the cable and data
@@ -717,7 +301,6 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	libusb_device *udev;
 	struct libusb_config_descriptor *config;
 	uint8_t configuration;
-	char *firmware_filename	= get_firmware_filename();
 	int i, ret;
 
 	dev = NULL;
@@ -725,10 +308,10 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	cable_params.mux_handle = NULL;
 #endif
 
-	if (cable_params.use_usbmux)
+if (cable_params.use_usbmux)
 	{
 #ifdef _WIN32
-		ret = usbmux_open(&cable_params.mux_handle, ICE_1000_USB_CONNECTION_TIMEOUT);
+		ret = usbmux_open(&cable_params.mux_handle, USB_CONNECTION_TIMEOUT);
 		if (ret)
 		{
 			LOG_ERROR("failed to open USB MUX.");
@@ -759,10 +342,6 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		}
 
 		LOG_DEBUG("usb interface claimed!");
-
-		/* For an unknown reason, this is needed for using ICE-1000/2000
-		with xHCI controller on Linux. */
-		libusb_set_interface_alt_setting (dev, 0, 0);
 	}
 
 	cable_params.tap_info.dat = malloc(sizeof(dat_dat) * DAT_SZ);
@@ -786,6 +365,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		return ERROR_FAIL;
 	}
 
+
 	/* Initialize receive data array to unused */
 	for (i = 0; i < DAT_SZ; ++i)
 	{
@@ -801,13 +381,16 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 
 	cable_params.default_scanlen	= ICE_DEFAULT_SCAN_LEN;
 	cable_params.trigger_scanlen	= ICE_TRIGGER_SCAN_LEN;
-	cable_params.wr_ep				= ICE_1000_WRITE_ENDPOINT;
-	cable_params.r_ep				= ICE_1000_READ_ENDPOINT;
-	cable_params.wr_timeout			= ICE_1000_USB_WRITE_TIMEOUT;
-	cable_params.r_timeout			= ICE_1000_USB_READ_TIMEOUT;
-	cable_params.wr_buf_sz			= ICE_1000_WRITE_BUFFER_SIZE;
-	cable_params.r_buf_sz			= ICE_1000_READ_BUFFER_SIZE;
+	cable_params.wr_ep				= WRITE_ENDPOINT;
+	cable_params.r_ep				= READ_ENDPOINT;
+	cable_params.wr_timeout			= USB_WRITE_TIMEOUT;
+	cable_params.r_timeout			= USB_READ_TIMEOUT;
+	cable_params.wr_buf_sz			= WRITE_BUFFER_SIZE;
+	cable_params.r_buf_sz			= READ_BUFFER_SIZE;
 
+	// indicate to the emulator that we are making a debug connection
+	do_host_cmd(HOST_CONNECT, 0, 0);
+	
 	cable_params.version = do_host_cmd(HOST_GET_FW_VERSION, 0, 1);
 
 	LOG_INFO("%s firmware version is %d.%d.%d",
@@ -816,79 +399,16 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 			 ((cable_params.version >> 4) & 0x0F),
 			 ((cable_params.version)	  & 0x0F));
 
-	if (cable_params.version <= 0x0101)
+	if (cable_params.version < CURRENT_ICE1500_FW_VERSION)
 		LOG_WARNING("This firmware version is obsolete. Please update to the latest version.");
 
-	if (firmware_filename)
-	{
-		ret = ice1000_update_firmware(firmware_filename);
-		if (ret == ERROR_OK)
-			LOG_INFO("The firmware has been updated successfully. "
-					 "Please unplug the %s cable and reconnect it to finish the update process.", cable_name);
-		else
-			LOG_ERROR("The firmware failed to update.");
-		return ERROR_JTAG_INIT_FAILED;
-	}
-	
-	/* Set frequency to lowest value */
-	if (strcmp (cable_name, "ICE-2000") == 0)
-	{
-		/* Turn on the voltage regulators */
-		do_host_cmd(HOST_SET_2000_VOLTAGE, 1, 0);
+	do_host_cmd(HOST_SET_TRST, 1, 0);
+	usleep(4);
+	do_host_cmd(HOST_SET_TRST, 0, 0);
 
-		/* set interface mode to JTAG */
-		do_host_cmd(HOST_SET_INTERFACE_MODE, 0, 0);
-
-		/* If user has not set the voltage, default it to 3.3V. */
-		if (cable_params.cur_voltage == 0)
-			cable_params.cur_voltage = 3;
-
-		if (cable_params.cur_voltage == 1)
-			LOG_INFO("%s voltage 1.8V", cable_name);
-		else if (cable_params.cur_voltage == 2)
-			LOG_INFO("%s voltage 2.5V", cable_name);
-		else /* cable_params.cur_voltage == 3 */
-			LOG_INFO("%s voltage 3.3V", cable_name);
-
-		/* Set the frequency to the lowest. */
-		cable_params.cur_freq = avail_freqs_2000[0];
-
-		/* Set the delay to 0. */
-		ice2000_set_voltage_freq_delay(cable_params.cur_voltage, freq_set_2000[0], 0);
-	}
-	else if (strcmp (cable_name, "ICE-1000") == 0)
-	{
-		/* set interface mode to JTAG */
-		do_host_cmd(HOST_SET_INTERFACE_MODE, 0, 0);
-
-		ice1000_set_freq(avail_freqs_1000[0]);
-	}
-
-	/* HOST_HARD_RESET_JTAG_CTRLR will toggle TRST. This command has to be
-	   sent after voltage regulators are turned on for ICE-2000. */
-	do_host_cmd(HOST_HARD_RESET_JTAG_CTRLR, 0, 0);
-
-	/* There is a bug in implementation of HOST_HARD_RESET_JTAG_CTRLR command
-	   in 1.0.1 or earlier version firmware which does not hold TRST for enough
-	   time. The processors, which ICE-1000/2000 usually work with, like legacy
-	   Blackfin and ADSP-SC589 requires at least 4 JTAG CLKs. As a workaround,
-	   we hold TRST low for 4 us, which should be enough even for the lowest
-	   frequecy we can set, 1 MHz. */
-	if (cable_params.version <= 0x0101)
-	{
-		do_host_cmd(HOST_SET_TRST, 1, 0);
-		usleep(4);
-		do_host_cmd(HOST_SET_TRST, 0, 0);
-	}
-
-	uint32_t value = 1;
-	do_single_reg_value(REG_AUX, 1, 1, value);
-	value = 0;
-	do_single_reg_value(REG_AUX, 1, 1, value);
-
-	cable_params.tap_pair_start_idx = SELECTIVE_RAW_SCAN_HDR_SZ;
+	cable_params.tap_pair_start_idx = RAW_SCAN_HDR_SZ;
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
-	cable_params.num_rcv_hdr_bytes = cable_params.tap_pair_start_idx;
+	cable_params.num_rcv_hdr_bytes = 3;  // this is where our TDO actually starts
 
 	return ERROR_OK;
 }
@@ -978,10 +498,10 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 	}
 }
 
-static int ice1000_init(void)
+static int ice1500_init(void)
 {
 	const uint16_t vids[] = { 0x064b, 0 };
-	const uint16_t pids[] = { 0x0617, 0 };
+	const uint16_t pids[] = { 0x2500, 0 };
 
 	int retval;
 
@@ -989,38 +509,20 @@ static int ice1000_init(void)
 	if (retval != ERROR_OK)
 	{
 		if (retval == -ENODEV)
-			LOG_ERROR("ICE-1000 emulator not found");
+			LOG_ERROR("ICE-1500 emulator not found");
 
-		LOG_ERROR("cannot connect to ICE-1000 emulator");
+		LOG_ERROR("cannot connect to ICE-1500 emulator");
 	}
 
 	return retval;
 }
 
-static int ice2000_init(void)
+static int ice1500_quit(void)
 {
-	const uint16_t vids[] = { 0x064b, 0 };
-	const uint16_t pids[] = { 0x0283, 0 };
-
-	int retval;
-
-	retval = adi_connect(vids, pids);
-	if (retval != ERROR_OK)
-	{
-		if (retval == -ENODEV)
-			LOG_ERROR("ICE-2000 emulator not found");
-
-		LOG_ERROR("cannot connect to ICE-2000 emulator");
-	}
-
-	return retval;
-}
-
-static int ice1000_quit(void)
-{
+	// indicate to the emulator that we are shutting down
 	do_host_cmd(HOST_DISCONNECT, 0, 0);
-
-	if (cable_params.usb_handle)
+	
+	if (cable_params.usb_handle != NULL)
 	{
 		libusb_release_interface(cable_params.usb_handle, 0);
 		libusb_close(cable_params.usb_handle);
@@ -1034,88 +536,38 @@ static int ice1000_quit(void)
 #endif
 
 	free(cable_params.tap_info.dat);
-
+	
 	return ERROR_OK;
 }
 
-static int ice2000_quit(void)
+static int ice1500_speed(int speed)
 {
-	/* Turn off the voltage regulators */
-	do_host_cmd(HOST_SET_2000_VOLTAGE, 0, 0);
+	return ERROR_OK;
+}
 
-	do_host_cmd(HOST_DISCONNECT, 0, 0);
+static int ice1500_khz(int khz, int *speed)
+{
+	*speed = 0;
+	return ERROR_OK;
+}
 
-	if (cable_params.usb_handle)
+static int ice1500_speed_div(int speed, int *khz)
+{
+	// check if the given frequency is valid
+	for (int i=0; i<MAX_FREQ_1500; i++)
 	{
-		libusb_release_interface(cable_params.usb_handle, 0);
-		libusb_close(cable_params.usb_handle);
+		if (valid_freq_set[i] == *khz)
+		{
+			do_host_cmd(HOST_SET_JTAG_FREQUENCY,(*khz/1000),0);
+			return ERROR_OK;
+		}
 	}
-
-#ifdef _WIN32
-	if (cable_params.mux_handle)
-	{
-		usbmux_close(cable_params.mux_handle);
-	}
-#endif
-
-	free(cable_params.tap_info.dat);
-
-	return ERROR_OK;
+	LOG_ERROR("\nInvalid frequency %d\n\tValid frequencies(kHz) are: %d, %d\n", *khz, valid_freq_set[0], valid_freq_set[1]);
+	return ERROR_FAIL;
 }
-
-static int ice1000_speed(int speed)
-{
-	if (speed >= MAX_FREQ_1000 && speed < 0)
-	{
-		LOG_ERROR("bad speed %d, should between %d and %d.",
-				  speed, 0, MAX_FREQ_1000 - 1);
-		return ERROR_FAIL;
-	}
-
-	ice1000_set_freq(avail_freqs_1000[speed]);
-
-	return ERROR_OK;
-}
-
-static int ice1000_speed_div(int speed, int *khz)
-{
-	*khz = avail_freqs_1000[speed] / 1000;
-	return ERROR_OK;
-}
-
-static int ice1000_khz(int khz, int *speed)
-{
-	*speed = adi_get_freq(khz * 1000, MAX_FREQ_1000, &avail_freqs_1000[0]);
-	return ERROR_OK;
-}
-
-static int ice2000_speed(int speed)
-{
-	if (speed >= MAX_FREQ_2000 && speed < 0)
-	{
-		LOG_ERROR("bad speed %d, should between %d and %d.",
-				  speed, 0, MAX_FREQ_2000 - 1);
-		return ERROR_FAIL;
-	}
-
-	return ice2000_set_freq(avail_freqs_2000[speed]);
-}
-
-static int ice2000_speed_div(int speed, int *khz)
-{
-	*khz = avail_freqs_2000[speed] / 1000;
-	return ERROR_OK;
-}
-
-static int ice2000_khz(int khz, int *speed)
-{
-	*speed = adi_get_freq(khz * 1000, MAX_FREQ_2000, &avail_freqs_2000[0]);
-	return ERROR_OK;
-}
-
 /*
  * Takes Data received (rcv_dataptr) and puts it in
- * todo date out transfer
+ * todo data out transfer
  */
 static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 {
@@ -1125,7 +577,6 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 	uint8_t *rcvBuf = rcv_data + cable_params.num_rcv_hdr_bytes + dat_idx;
 	int32_t bit_set = tap_info->dat[idx_dat].pos;
 	int32_t i;
-
 #ifdef DUMP_EACH_RCV_DATA
 	DEBUG("Idx = %d; Read len = %d\n", dat_idx, len);
 #endif
@@ -1147,7 +598,7 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 
 #ifdef DUMP_EACH_RCV_DATA
 		if (i % 8 == 0 && i != 0)
-			DEBUG("%d", buf[i/8 - 1]);
+			DEBUG("%x", buf[i/8 - 1]);
 		if (((i + 1) % 64) == 0)
 			putchar('\n');
 		else if (((i + 1) % 8) == 0)
@@ -1170,7 +621,7 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 	return buf;
 }
 
-static int ice1000_tap_execute(void)
+static int ice1500_tap_execute(void)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t *buf;
@@ -1214,11 +665,11 @@ static int ice1000_tap_execute(void)
 	return retval;
 }
 
-static int ice1000_execute_reset(struct jtag_command *cmd)
+static int ice1500_execute_reset(struct jtag_command *cmd)
 {
 	int retval;
 
-	retval = ice1000_tap_execute();
+	retval = ice1500_tap_execute();
 	if (retval != ERROR_OK)
 		return retval;
 
@@ -1233,10 +684,11 @@ static int ice1000_execute_reset(struct jtag_command *cmd)
 	}
 
 	do_host_cmd(HOST_SET_TRST, cmd->cmd.reset->trst ? 0 : 1, 0);
+
 	return ERROR_OK;
 }
 
-static void ice1000_end_state(tap_state_t state)
+static void ice1500_end_state(tap_state_t state)
 {
 	if (tap_is_state_stable(state))
 	{
@@ -1249,24 +701,24 @@ static void ice1000_end_state(tap_state_t state)
 	}
 }
 
-static int ice1000_tap_ensure_space(unsigned int bits)
+static int ice1500_tap_ensure_space(unsigned int bits)
 {
 	int retval = ERROR_OK;
 
 	if (cable_params.tap_info.cur_idx + DIV_ROUND_UP(bits, 8) >= cable_params.trigger_scanlen)
-		retval = ice1000_tap_execute();
+		retval = ice1500_tap_execute();
 
 	return retval;
 }
 
-static int ice1000_tap_append_step(int tms, int tdi)
+static int ice1500_tap_append_step(int tms, int tdi)
 {
 	int retval;
 	retval = adi_clock(tms, tdi, 1);
 	return retval;
 }
 
-static void ice1000_state_move(void)
+static void ice1500_state_move(void)
 {
 	int i;
 	int tms = 0;
@@ -1276,13 +728,13 @@ static void ice1000_state_move(void)
 	for (i = 0; i < tms_scan_bits; i++)
 	{
 		tms = (tms_scan >> i) & 1;
-		ice1000_tap_append_step(tms, 0);
+		ice1500_tap_append_step(tms, 0);
 	}
 
 	tap_set_state(tap_get_end_state());
 }
 
-static void ice1000_path_move(int num_states, tap_state_t *path)
+static void ice1500_path_move(int num_states, tap_state_t *path)
 {
 	int i;
 
@@ -1290,11 +742,11 @@ static void ice1000_path_move(int num_states, tap_state_t *path)
 	{
 		if (path[i] == tap_state_transition(tap_get_state(), false))
 		{
-			ice1000_tap_append_step(0, 0);
+			ice1500_tap_append_step(0, 0);
 		}
 		else if (path[i] == tap_state_transition(tap_get_state(), true))
 		{
-			ice1000_tap_append_step(1, 0);
+			ice1500_tap_append_step(1, 0);
 		}
 		else
 		{
@@ -1309,68 +761,68 @@ static void ice1000_path_move(int num_states, tap_state_t *path)
 	tap_set_end_state(tap_get_state());
 }
 
-static int ice1000_runtest(int num_cycles)
+static int ice1500_runtest(int num_cycles)
 {
 	int retval, i;
 	tap_state_t saved_end_state = tap_get_end_state();
 
-	retval = ice1000_tap_ensure_space(num_cycles + 16);
+	retval = ice1500_tap_ensure_space(num_cycles + 16);
 	if (retval != ERROR_OK)
 		return retval;
 
 	if (tap_get_state() != TAP_IDLE)
 	{
-		ice1000_end_state(TAP_IDLE);
-		ice1000_state_move();
+		ice1500_end_state(TAP_IDLE);
+		ice1500_state_move();
 	}
 
 	for (i = 0; i < num_cycles; i++)
-		ice1000_tap_append_step(0, 0);
+		ice1500_tap_append_step(0, 0);
 
 	/* finish in end_state */
-	ice1000_end_state(saved_end_state);
+	ice1500_end_state(saved_end_state);
 	if (tap_get_state() != tap_get_end_state())
 	{
-		ice1000_state_move();
+		ice1500_state_move();
 	}
 
 	return ERROR_OK;
 }
 
-static int ice1000_execute_runtest(struct jtag_command *cmd)
+static int ice1500_execute_runtest(struct jtag_command *cmd)
 {
 	LOG_DEBUG_IO("runtest %i cycles, end in %i",
 			cmd->cmd.runtest->num_cycles,
 			cmd->cmd.runtest->end_state);
 
-	ice1000_end_state(cmd->cmd.runtest->end_state);
+	ice1500_end_state(cmd->cmd.runtest->end_state);
 
-	ice1000_runtest(cmd->cmd.runtest->num_cycles);
+	ice1500_runtest(cmd->cmd.runtest->num_cycles);
 
 	return ERROR_OK;
 }
 
-static int ice1000_execute_tlr_reset(struct jtag_command *cmd)
+static int ice1500_execute_tlr_reset(struct jtag_command *cmd)
 {
 	LOG_DEBUG_IO("statemove end in %i", cmd->cmd.statemove->end_state);
 
-	ice1000_end_state(cmd->cmd.statemove->end_state);
-	ice1000_state_move();
+	ice1500_end_state(cmd->cmd.statemove->end_state);
+	ice1500_state_move();
 
 	/* Move to Run-Test/Idle */
-	ice1000_tap_append_step(0, 0);
+	ice1500_tap_append_step(0, 0);
 	tap_set_state(TAP_IDLE);
 
 	return ERROR_OK;
 }
 
-static int ice1000_execute_pathmove(struct jtag_command *cmd)
+static int ice1500_execute_pathmove(struct jtag_command *cmd)
 {
 	LOG_DEBUG_IO("pathmove: %i states, end in %i",
 		cmd->cmd.pathmove->num_states,
 		cmd->cmd.pathmove->path[cmd->cmd.pathmove->num_states - 1]);
 
-	ice1000_path_move(cmd->cmd.pathmove->num_states,
+	ice1500_path_move(cmd->cmd.pathmove->num_states,
 			cmd->cmd.pathmove->path);
 
 	return ERROR_OK;
@@ -1505,51 +957,50 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 			tap_scan->tms = 0;
 		}
 	}
-
 	tap_info->cur_idx = idx;
 	tap_info->bit_pos = bit_set;
 
 	return ERROR_OK;
 }
 
-static int ice1000_scan(bool ir_scan, enum scan_type type, uint8_t *buffer,
+static int ice1500_scan(bool ir_scan, enum scan_type type, uint8_t *buffer,
 		int scan_size, struct scan_command *command)
 {
 	tap_state_t saved_end_state;
 	int retval;
 
-	retval = ice1000_tap_ensure_space(scan_size + 16);
+	retval = ice1500_tap_ensure_space(scan_size + 16);
 	if (retval != ERROR_OK)
 		return retval;
 
 	saved_end_state = tap_get_end_state();
 
 	/* Move to appropriate scan state */
-	ice1000_end_state(ir_scan ? TAP_IRSHIFT : TAP_DRSHIFT);
+	ice1500_end_state(ir_scan ? TAP_IRSHIFT : TAP_DRSHIFT);
 
 	/* Only move if we're not already there */
 	if (tap_get_state() != tap_get_end_state())
-		ice1000_state_move();
+		ice1500_state_move();
 
-	ice1000_end_state(saved_end_state);
+	ice1500_end_state(saved_end_state);
 
 	/* Scan */
 	add_scan_data(scan_size, buffer, type != SCAN_OUT, command);
 
 	/* We are in Exit1, go to Pause */
-	ice1000_tap_append_step(0, 0);
+	ice1500_tap_append_step(0, 0);
 
 	tap_set_state(ir_scan ? TAP_IRPAUSE : TAP_DRPAUSE);
 
 	if (tap_get_state() != tap_get_end_state())
 	{
-		ice1000_state_move();
+		ice1500_state_move();
 	}
 
 	return ERROR_OK;
 }
 
-static int ice1000_execute_scan(struct jtag_command *cmd)
+static int ice1500_execute_scan(struct jtag_command *cmd)
 {
 	int scan_size;
 	enum scan_type type;
@@ -1557,13 +1008,13 @@ static int ice1000_execute_scan(struct jtag_command *cmd)
 
 	LOG_DEBUG_IO("scan end in %s", tap_state_name(cmd->cmd.scan->end_state));
 
-	ice1000_end_state(cmd->cmd.scan->end_state);
+	ice1500_end_state(cmd->cmd.scan->end_state);
 
 	scan_size = jtag_build_buffer(cmd->cmd.scan, &buffer);
 	LOG_DEBUG_IO("scan input, length = %d", scan_size);
 
 	type = jtag_scan_type(cmd->cmd.scan);
-	ice1000_scan(cmd->cmd.scan->ir_scan,
+	ice1500_scan(cmd->cmd.scan->ir_scan,
 			type, buffer, scan_size, cmd->cmd.scan);
 
 	free(buffer);
@@ -1571,11 +1022,11 @@ static int ice1000_execute_scan(struct jtag_command *cmd)
 	return ERROR_OK;
 }
 
-static int ice1000_execute_sleep(struct jtag_command *cmd)
+static int ice1500_execute_sleep(struct jtag_command *cmd)
 {
 	int retval;
 
-	retval = ice1000_tap_execute();
+	retval = ice1500_tap_execute();
 	if (retval != ERROR_OK)
 		return retval;
 
@@ -1585,7 +1036,7 @@ static int ice1000_execute_sleep(struct jtag_command *cmd)
 	return ERROR_OK;
 }
 
-static int ice1000_execute_stableclocks(struct jtag_command *cmd)
+static int ice1500_execute_stableclocks(struct jtag_command *cmd)
 {
 	int tms;
 
@@ -1613,14 +1064,14 @@ static int ice1000_execute_stableclocks(struct jtag_command *cmd)
 	return ERROR_OK;
 }
 
-static int ice1000_execute_tms(struct jtag_command *cmd)
+static int ice1500_execute_tms(struct jtag_command *cmd)
 {
 	int num_bits = cmd->cmd.tms->num_bits;
 	uint8_t *bits = (uint8_t *)cmd->cmd.tms->bits;
 	int count = DIV_ROUND_UP(num_bits, 8);
 	int retval;
 
-	retval = ice1000_tap_ensure_space(count);
+	retval = ice1500_tap_ensure_space(count);
 	if (retval != ERROR_OK)
 		return retval;
 
@@ -1629,38 +1080,35 @@ static int ice1000_execute_tms(struct jtag_command *cmd)
 	return retval;
 }
 
-static int ice1000_execute_command(struct jtag_command *cmd)
+static int ice1500_execute_command(struct jtag_command *cmd)
 {
 	int retval;
 
 	switch (cmd->type)
 	{
 	case JTAG_RESET:
-		retval = ice1000_execute_reset(cmd);
+		retval = ice1500_execute_reset(cmd);
 		break;
 	case JTAG_RUNTEST:
-		retval = ice1000_execute_runtest(cmd);
+		retval = ice1500_execute_runtest(cmd);
 		break;
 	case JTAG_TLR_RESET:
-		retval = ice1000_execute_tlr_reset(cmd);
+		retval = ice1500_execute_tlr_reset(cmd);
 		break;
 	case JTAG_PATHMOVE:
-		retval = ice1000_execute_pathmove(cmd);
+		retval = ice1500_execute_pathmove(cmd);
 		break;
 	case JTAG_SCAN:
-		retval = ice1000_execute_scan(cmd);
-		if (cable_params.cur_freq == 1000000 || cable_params.cur_freq == 2000000){
-			keep_alive();
-		}
+		retval = ice1500_execute_scan(cmd);
 		break;
 	case JTAG_SLEEP:
-		retval = ice1000_execute_sleep(cmd);
+		retval = ice1500_execute_sleep(cmd);
 		break;
 	case JTAG_STABLECLOCKS:
-		retval = ice1000_execute_stableclocks(cmd);
+		retval = ice1500_execute_stableclocks(cmd);
 		break;
 	case JTAG_TMS:
-		retval = ice1000_execute_tms(cmd);
+		retval = ice1500_execute_tms(cmd);
 		break;
 	default:
 		LOG_ERROR("BUG: unknown JTAG command type encountered");
@@ -1670,14 +1118,14 @@ static int ice1000_execute_command(struct jtag_command *cmd)
 	return retval;
 }
 
-static int ice1000_execute_queue(void)
+static int ice1500_execute_queue(void)
 {
 	struct jtag_command *cmd = jtag_command_queue;
 	int retval = ERROR_OK;
 
 #ifdef _WIN32
 #define USB_MUX_MAX_LOCK_ATTEMPTS 50
-	if (cable_params.mux_handle)
+if (cable_params.mux_handle)
 	{
 		int attempt = 0;
 		do {
@@ -1716,7 +1164,7 @@ static int ice1000_execute_queue(void)
 	/* TODO add blink */
 	while (cmd != NULL)
 	{
-		if (ice1000_execute_command(cmd) != ERROR_OK)
+		if (ice1500_execute_command(cmd) != ERROR_OK)
 			retval = ERROR_JTAG_QUEUE_FAILED;
 		cmd = cmd->next;
 	}
@@ -1733,7 +1181,7 @@ static int ice1000_execute_queue(void)
 		return retval;
 	}
 
-	retval = ice1000_tap_execute();
+	retval = ice1500_tap_execute();
 
 #ifdef _WIN32
 	if (cable_params.mux_handle)
@@ -1744,48 +1192,6 @@ static int ice1000_execute_queue(void)
 #endif
 
 	return retval;
-}
-
-/*
- * Read & Write Registers
- *
- * XXX: error handling doesn't quite work with this return
- * XXX: probably needs converting from memory arrays to byte shifts
- *      so we work regardless of host endian
- */
-static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data, uint32_t data)
-{
-	usb_command_block usb_cmd_blk;
-	union {
-		uint8_t b[24];
-		uint32_t l[6];
-	} cmd_buffer;
-	uint32_t count = 0;
-	int32_t i, size = wr_data ? 8 : 4;
-
-	usb_cmd_blk.command = HOST_REQUEST_TX_DATA;
-	usb_cmd_blk.count = size;
-	usb_cmd_blk.buffer = 0;
-
-	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof(usb_cmd_blk));
-	i = 0;
-
-	/* send HOST_SET_SINGLE_REG command */
-	cmd_buffer.b[i++] = 1;
-	cmd_buffer.b[i++] = 0;
-	cmd_buffer.b[i++] = wr_data ? HOST_SET_SINGLE_REG : HOST_GET_SINGLE_REG;
-	cmd_buffer.b[i++] = reg;
-	if (wr_data)
-	{
-		cmd_buffer.l[i / 4] = data;
-	}
-
-	adi_usb_write_or_ret(cmd_buffer.b, size);
-
-	if (r_data)
-		adi_usb_read_or_ret((uint8_t*)&count, sizeof (count));
-
-	return count;
 }
 
 /*
@@ -1833,7 +1239,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 
 		adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
 
-		adi_usb_read_or_ret ((uint8_t*)&results, sizeof (results));
+		adi_usb_read_or_ret((uint8_t*)&results, sizeof (results));
 	}
 
 	return results;
@@ -1847,11 +1253,13 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 static int perform_scan(uint8_t **rdata)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
-	uint8_t firstpkt = 1, lastpkt = 0, *in = NULL, *out = NULL;
-	int32_t idx, collect_data = 0;
+	uint8_t firstpkt = 1, lastpkt = 1, *in = NULL, *out = NULL;
+	int32_t idx_in, idx_out, collect_data = 0;
 	uint32_t cur_len = tap_info->cur_idx;
 	uint32_t rem_len;
-
+	uint32_t scan_status_bytes = 3;		/* number of bytes letting us know if the scan was successful */
+	uint32_t out_inc = 0;
+		
 	/* Data is scan as 32 bit words, so boundaries are adjusted here */
 	if (tap_info->bit_pos != 0x80) /* meaning no dangling bits? */
 	{	/* yes, so straighten out! */
@@ -1871,16 +1279,9 @@ static int perform_scan(uint8_t **rdata)
 		tap_info->pairs[cur_len].tms = 0;
 		tap_info->pairs[cur_len].tdi = 0;
 	}
-
+	
 	tap_info->cur_idx = cur_len;
 	rem_len = cur_len * sizeof (tap_pairs);
-
-	if (cur_len > cable_params.default_scanlen)
-	{
-		LOG_ERROR("TAP Scan length %d is greater than DIF Memory",
-			tap_info->cur_idx);
-		return ERROR_FAIL;
-	}
 
 	if (tap_info->cur_dat != -1)
 	{	/* yes we have data, so allocate for data plus header */
@@ -1911,22 +1312,34 @@ static int perform_scan(uint8_t **rdata)
 	}
 
 	in = (uint8_t *)tap_info->pairs;
-	idx = 0;
+	idx_in = 0;
+	idx_out = 0;
 
 	/* Here if data is too large, we break it up into manageable chunks */
 	do
 	{
-		cur_len = (rem_len >= cable_params.max_raw_data_tx_items) ? cable_params.max_raw_data_tx_items : rem_len;
+		cur_len = (rem_len > MAX_DIF_SIZE) ? MAX_DIF_SIZE : rem_len;
 
-		if (cur_len == rem_len)
-			lastpkt = 1;
-
-		do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx] - cable_params.tap_pair_start_idx, out);
+		do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx_in] - cable_params.tap_pair_start_idx, &out[idx_out]);
+		if(idx_in != 0)
+		{
+			// each scan gives us scan status, remove it from our buffer
+			// if it is not the first scan
+			uint8_t *pData = &out[idx_out + scan_status_bytes];
+			for(size_t i = 0; i < cur_len/2 + scan_status_bytes; i++)
+			{
+				out[idx_out+i] = pData[i];
+			}
+			out_inc = (cur_len/2);	
+		}
+		else
+		{
+			out_inc = (cur_len/2) + scan_status_bytes;	
+		}
 
 		rem_len -= cur_len;
-		idx += cur_len;
-		firstpkt = 0;
-
+		idx_in += cur_len;
+		idx_out += out_inc;
 	} while (rem_len);
 
 	if (tap_info->cur_dat == -1)
@@ -1970,19 +1383,21 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	int32_t i, dof_start = 0;
 	uint32_t data;
 	uint32_t size = cable_params.tap_pair_start_idx + dif_cnt;
+	int32_t num_scan_pairs = (dif_cnt >= 2) ? dif_cnt / 2 : 2;
+	int32_t scan_pairs_in_longs = (num_scan_pairs >= 4) ? num_scan_pairs / 4 : 1;
 
 	usb_cmd_blk.command = HOST_REQUEST_TX_DATA;
 	usb_cmd_blk.count = size;
 	usb_cmd_blk.buffer = 0;
 
 	/* first send Xmit request with the count of what will be sent */
-	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t *)&usb_cmd_blk, sizeof (usb_command_block));
 	i = 0;
 
-	/* send HOST_DO_SELECTIVE_RAW_SCAN command */
+	/* send HOST_DO_RAW_SCAN command */
 	raw_buf[i++] = firstpkt;
 	raw_buf[i++] = lastpkt;
-	raw_buf[i++] = HOST_DO_SELECTIVE_RAW_SCAN;
+	raw_buf[i++] = HOST_DO_RAW_SCAN;
 	if ((collect_dof && lastpkt) && (tap_info->dat[0].idx > 12))
 	{
 		int32_t j, offset;
@@ -1999,64 +1414,40 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	}
 
 	raw_buf[i++] = collect_dof ? 1 : 0;
-	data = dif_cnt / 4;			/* dif count in longs */
+	data = (dif_cnt >= 4) ? dif_cnt / 4 : 1;			/* dif count in longs */
 	memcpy(raw_buf + i, &data, 4);
-	data = tap_info->cur_idx / 4;  /* count in longs */
-	memcpy(raw_buf + i + 2, &data, 4);
-
-	{	/* only Ice emulators use this */
-		memcpy(raw_buf + i + 4, &dof_start, 4);
-	}
+	memcpy(raw_buf + i + 2, &scan_pairs_in_longs, 2);
 
 	adi_usb_write_or_ret(raw_buf, size);
 
 	if (lastpkt)
 	{
 		int32_t cur_rd_bytes = 0, tot_bytes_rd = 0, rd_bytes_left;
+		int32_t buf_index = 0;
 
-		rd_bytes_left = cable_params.num_rcv_hdr_bytes + ((collect_dof) ? (tap_info->cur_idx - dof_start) : 0);
+		rd_bytes_left = RAW_SCAN_HDR_SZ + ((collect_dof) ? ((scan_pairs_in_longs * 4) - dof_start) : 0);
 
 		while (tot_bytes_rd < rd_bytes_left)
 		{
 			cur_rd_bytes = ((rd_bytes_left - tot_bytes_rd) > cable_params.r_buf_sz) ?
 				cable_params.r_buf_sz : (rd_bytes_left - tot_bytes_rd);
 
-			adi_usb_read_or_ret((uint8_t*)(out + tot_bytes_rd), cur_rd_bytes);
+			adi_usb_read_or_ret(out + buf_index, cur_rd_bytes);
+			if ((out + buf_index)[0] != 2)
+			{
+				LOG_ERROR("Scan Error!");
+				return ERROR_FAIL;
+			}
 			tot_bytes_rd += cur_rd_bytes;
-		}
-
-		if (out[0] != 2)
-		{
-			LOG_ERROR("Scan Error!");
-			return ERROR_FAIL;
+			buf_index += (cur_rd_bytes - 8);
 		}
 	}
 
 	return ERROR_OK;
 }
 
-COMMAND_HANDLER(ice2000_handle_voltage_command)
-{
-	uint32_t voltage;
 
-	if (CMD_ARGC != 1)
-		return ERROR_COMMAND_SYNTAX_ERROR;
-
-	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[0], voltage);
-
-	if (voltage == 0 || voltage > 3)
-		return ERROR_COMMAND_SYNTAX_ERROR;
-
-	/* This command can only be used before adi_connect */
-	if (cable_params.usb_handle)
-		return ERROR_FAIL;
-
-	cable_params.cur_voltage = voltage;
-
-	return ERROR_OK;
-}
-
-COMMAND_HANDLER(ice1000_use_usbmux)
+COMMAND_HANDLER(ice1500_use_usbmux)
 {
 	bool use_usbmux;
 
@@ -2074,15 +1465,10 @@ COMMAND_HANDLER(ice1000_use_usbmux)
 	return ERROR_OK;
 }
 
-static struct jtag_interface ice1000_interface = {
-	.supported = DEBUG_CAP_TMS_SEQ,
-	.execute_queue = ice1000_execute_queue,
-};
-
-static const struct command_registration ice1000_command_handlers[] = {
+static const struct command_registration ice1500_command_handlers[] = {
 	{
 		.name = "use_usbmux",
-		.handler = &ice1000_use_usbmux,
+		.handler = &ice1500_use_usbmux,
 		.mode = COMMAND_CONFIG,
 		.usage = "use_usbmux ['true'|'false']",
 	},
@@ -2090,53 +1476,21 @@ static const struct command_registration ice1000_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-struct adapter_driver ice1000_adapter_driver = {
-	.name = "ice1000",
-	.transports = jtag_only,
-	.commands = ice1000_command_handlers,
-
-	.init = ice1000_init,
-	.quit = ice1000_quit,
-	.speed = ice1000_speed,
-	.khz = ice1000_khz,
-	.speed_div = ice1000_speed_div,
-
-	.jtag_ops = &ice1000_interface,	
-};
-
-static const struct command_registration ice2000_command_handlers[] = {
-	{
-		.name = "ice2000_voltage",
-		.handler = &ice2000_handle_voltage_command,
-		.mode = COMMAND_CONFIG,
-		.usage = "voltage ['1'|'2'|'3']",
-	},
-
-	{
-		.name = "use_usbmux",
-		.handler = &ice1000_use_usbmux,
-		.mode = COMMAND_CONFIG,
-		.usage = "use_usbmux ['true'|'false']",
-	},
-
-	COMMAND_REGISTRATION_DONE
-};
-
-static struct jtag_interface ice2000_interface = {
+static struct jtag_interface ice1500_interface = {
 	.supported = DEBUG_CAP_TMS_SEQ,
-	.execute_queue = ice1000_execute_queue,
+	.execute_queue = ice1500_execute_queue,
 };
 
-struct adapter_driver ice2000_adapter_driver = {
-	.name = "ice2000",
+struct adapter_driver ice1500_adapter_driver = {
+	.name = "ice1500",
 	.transports = jtag_only,
-	.commands = ice2000_command_handlers,
+	.commands = ice1500_command_handlers,
 
-	.init = ice2000_init,
-	.quit = ice2000_quit,
-	.speed = ice2000_speed,
-	.khz = ice2000_khz,
-	.speed_div = ice2000_speed_div,
+	.init = ice1500_init,
+	.quit = ice1500_quit,
+	.speed = ice1500_speed,
+	.khz = ice1500_khz,
+	.speed_div = ice1500_speed_div,
 
-	.jtag_ops = &ice2000_interface,	
+	.jtag_ops = &ice1500_interface,	
 };

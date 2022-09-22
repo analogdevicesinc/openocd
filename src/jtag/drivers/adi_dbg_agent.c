@@ -1,7 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2022 by Analog Devices, Inc.                     *
-*   Based on ice1000.c of UrJTAG                                          *
-*   Chad Wentworth  <chad.wentworth@analog.com>                           *
+*   Copyright (C) 2021 - 2022 by Analog Devices, Inc.                     *
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
 *   it under the terms of the GNU General Public License as published by  *
@@ -501,7 +499,7 @@ static int dbgagent_init(void)
 		if (retval == -ENODEV)
 			LOG_ERROR("Debug agent not found");
 
-		LOG_ERROR("cannot connect to the degug agent");
+		LOG_ERROR("cannot connect to the debug agent");
 	}
 
 	return retval;
