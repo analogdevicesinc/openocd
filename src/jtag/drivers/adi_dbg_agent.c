@@ -154,6 +154,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define HOST_PREP_FIRMWARE_UPDATE      	0x0A	/* prepare to update the firmware */
 #define HOST_READ_EEPROM               	0x0B	/* read the target's EEPROM */
 #define HOST_WRITE_EEPROM              	0x0C	/* write to the target's EEPROM */
+#define HOST_DISCONNECT					0x0E	/* disconnect from debug mode */
 
 /* Ice USB controls */
 #define WRITE_ENDPOINT			0x02
