@@ -510,6 +510,11 @@ static int dbgagent_init(void)
 
 static int dbgagent_quit(void)
 {
+	do_host_cmd(HOST_SET_TRST, 0, 0);
+
+	// indicate to the debug agent that we are shutting down
+	do_host_cmd(HOST_DISCONNECT, 0, 0);
+
 	if (cable_params.usb_handle != NULL)
 	{
 		libusb_release_interface(cable_params.usb_handle, 0);

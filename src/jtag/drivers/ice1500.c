@@ -519,6 +519,8 @@ static int ice1500_init(void)
 
 static int ice1500_quit(void)
 {
+	do_host_cmd(HOST_SET_TRST, 0, 0);
+	
 	// indicate to the emulator that we are shutting down
 	do_host_cmd(HOST_DISCONNECT, 0, 0);
 	
