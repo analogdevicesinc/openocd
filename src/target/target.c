@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
@@ -77,6 +77,7 @@ extern struct target_type fa526_target;
 extern struct target_type feroceon_target;
 extern struct target_type dragonite_target;
 extern struct target_type xscale_target;
+extern struct target_type xtensa_chip_target;
 extern struct target_type cortexm_target;
 extern struct target_type cortexa_target;
 extern struct target_type aarch64_target;
@@ -119,6 +120,7 @@ static struct target_type *target_types[] = {
 	&feroceon_target,
 	&dragonite_target,
 	&xscale_target,
+	&xtensa_chip_target,
 	&cortexm_target,
 	&cortexa_target,
 	&cortexr4_target,
@@ -236,14 +238,14 @@ static const struct jim_nvp nvp_target_event[] = {
 
 	{ .value = TARGET_EVENT_TRACE_CONFIG, .name = "trace-config" },
 
-	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0x100, .name = "semihosting-user-cmd-0x100" },
-	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0x101, .name = "semihosting-user-cmd-0x101" },
-	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0x102, .name = "semihosting-user-cmd-0x102" },
-	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0x103, .name = "semihosting-user-cmd-0x103" },
-	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0x104, .name = "semihosting-user-cmd-0x104" },
-	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0x105, .name = "semihosting-user-cmd-0x105" },
-	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0x106, .name = "semihosting-user-cmd-0x106" },
-	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0x107, .name = "semihosting-user-cmd-0x107" },
+	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0X100, .name = "semihosting-user-cmd-0x100" },
+	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0X101, .name = "semihosting-user-cmd-0x101" },
+	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0X102, .name = "semihosting-user-cmd-0x102" },
+	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0X103, .name = "semihosting-user-cmd-0x103" },
+	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0X104, .name = "semihosting-user-cmd-0x104" },
+	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0X105, .name = "semihosting-user-cmd-0x105" },
+	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0X106, .name = "semihosting-user-cmd-0x106" },
+	{ .value = TARGET_EVENT_SEMIHOSTING_USER_CMD_0X107, .name = "semihosting-user-cmd-0x107" },
 
 	{ .name = NULL, .value = -1 }
 };
@@ -4694,7 +4696,7 @@ static int target_jim_read_memory(Jim_Interp *interp, int argc,
 				break;
 			}
 
-			char value_buf[11];
+			char value_buf[19];
 			snprintf(value_buf, sizeof(value_buf), "0x%" PRIx64, v);
 
 			Jim_ListAppendElement(interp, result_list,
@@ -6410,16 +6412,52 @@ static int jim_target_names(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 	return JIM_OK;
 }
 
+static struct target_list *
+__attribute__((warn_unused_result))
+create_target_list_node(Jim_Obj *const name) {
+	int len;
+	const char *targetname = Jim_GetString(name, &len);
+	struct target *target = get_target(targetname);
+	LOG_DEBUG("%s ", targetname);
+	if (!target)
+		return NULL;
+
+	struct target_list *new = malloc(sizeof(struct target_list));
+	if (!new) {
+		LOG_ERROR("Out of memory");
+		return new;
+	}
+
+	new->target = target;
+	return new;
+}
+
+static int get_target_with_common_rtos_type(struct list_head *lh, struct target **result)
+{
+	struct target *target = NULL;
+	struct target_list *curr;
+	foreach_smp_target(curr, lh) {
+		struct rtos *curr_rtos = curr->target->rtos;
+		if (curr_rtos) {
+			if (target && target->rtos && target->rtos->type != curr_rtos->type) {
+				LOG_ERROR("Different rtos types in members of one smp target!");
+				return JIM_ERR;
+			}
+			target = curr->target;
+		}
+	}
+	*result = target;
+	return JIM_OK;
+}
+
 static int jim_target_smp(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 {
-	int i;
-	const char *targetname;
-	int retval, len;
 	static int smp_group = 1;
-	struct target *target = NULL;
-	struct target_list *head, *new;
 
-	retval = 0;
+	if (argc == 1) {
+		LOG_DEBUG("Empty SMP target");
+		return JIM_OK;
+	}
 	LOG_DEBUG("%d", argc);
 	/* argv[1] = target to associate in smp
 	 * argv[2] = target to associate in smp
@@ -6433,27 +6471,24 @@ static int jim_target_smp(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 	}
 	INIT_LIST_HEAD(lh);
 
-	for (i = 1; i < argc; i++) {
-
-		targetname = Jim_GetString(argv[i], &len);
-		target = get_target(targetname);
-		LOG_DEBUG("%s ", targetname);
-		if (target) {
-			new = malloc(sizeof(struct target_list));
-			new->target = target;
+	for (int i = 1; i < argc; i++) {
+		struct target_list *new = create_target_list_node(argv[i]);
+		if (new)
 			list_add_tail(&new->lh, lh);
-		}
 	}
 	/*  now parse the list of cpu and put the target in smp mode*/
-	foreach_smp_target(head, lh) {
-		target = head->target;
+	struct target_list *curr;
+	foreach_smp_target(curr, lh) {
+		struct target *target = curr->target;
 		target->smp = smp_group;
 		target->smp_targets = lh;
 	}
 	smp_group++;
 
-	if (target && target->rtos)
-		retval = rtos_smp_init(target);
+	struct target *rtos_target;
+	int retval = get_target_with_common_rtos_type(lh, &rtos_target);
+	if (retval == JIM_OK && rtos_target)
+		retval = rtos_smp_init(rtos_target);
 
 	return retval;
 }

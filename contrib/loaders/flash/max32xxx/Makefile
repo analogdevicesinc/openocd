@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 TARGET=max32xxx_write
 ENTRY=algo_write
 

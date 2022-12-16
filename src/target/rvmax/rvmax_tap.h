@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2012 by Franck Jullien                                  *
  *   elec4fun@gmail.com                                                    *
@@ -16,6 +18,8 @@
  *                                                                         *
  *   You should have received a copy of the GNU General Public License     *
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *   Copyright (C) 2016 by Maxim Integrated                                *
+ *   Kevin Gillespie <kevin.gillespie@maximintegrated.com                  *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_OPENRISC_RVMAX_TAP_H
