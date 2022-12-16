@@ -32,4 +32,5 @@ jobs:
 
       - name: checkpatch
         run: |
-          bash -ex tools/checkpatch.sh
+          git diff remotes/origin/master >> diff.patch
+          tools/scripts/checkpatch.pl --no-signoff diff.patch
