@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /***************************************************************************
  *   Copyright (C) 2011 by Mathias Kuester                                 *
@@ -948,7 +948,7 @@ static int kinetis_create_missing_banks(struct kinetis_chip *k_chip)
 	unsigned num_blocks;
 	struct kinetis_flash_bank *k_bank;
 	struct flash_bank *bank;
-	char base_name[69], name[80], num[4];
+	char base_name[69], name[87], num[11];
 	char *class, *p;
 
 	num_blocks = k_chip->num_pflash_blocks + k_chip->num_nvm_blocks;
@@ -2662,12 +2662,12 @@ static int kinetis_probe_chip(struct kinetis_chip *k_chip)
 
 	snprintf(k_chip->name, sizeof(k_chip->name), name, flash_marking);
 	LOG_INFO("Kinetis %s detected: %u flash blocks", k_chip->name, num_blocks);
-	LOG_INFO("%u PFlash banks: %" PRIu32 "k total", k_chip->num_pflash_blocks, pflash_size_k);
+	LOG_INFO("%u PFlash banks: %" PRIu32 " KiB total", k_chip->num_pflash_blocks, pflash_size_k);
 	if (k_chip->num_nvm_blocks) {
 		nvm_size_k = k_chip->nvm_size / 1024;
 		dflash_size_k = k_chip->dflash_size / 1024;
-		LOG_INFO("%u FlexNVM banks: %" PRIu32 "k total, %" PRIu32 "k available as data flash, %" PRIu32 "bytes FlexRAM",
-			 k_chip->num_nvm_blocks, nvm_size_k, dflash_size_k, ee_size);
+		LOG_INFO("%u FlexNVM banks: %" PRIu32 " KiB total, %" PRIu32 " KiB available as data flash, %"
+			 PRIu32 " bytes FlexRAM", k_chip->num_nvm_blocks, nvm_size_k, dflash_size_k, ee_size);
 	}
 
 	k_chip->probed = true;

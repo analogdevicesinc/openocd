@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * Copyright (C) 2005 by Dominic Rath <Dominic.Rath@gmx.de>
  * Copyright (C) 2007-2010 Øyvind Harboe <oyvind.harboe@zylin.com>
@@ -844,7 +844,7 @@ static int get_gpio_index(const char *signal_name)
 	return -1;
 }
 
-COMMAND_HELPER(helper_adapter_gpio_print_config, enum adapter_gpio_config_index gpio_idx)
+static COMMAND_HELPER(helper_adapter_gpio_print_config, enum adapter_gpio_config_index gpio_idx)
 {
 	struct adapter_gpio_config *gpio_config = &adapter_config.gpios[gpio_idx];
 	const char *active_state = gpio_config->active_low ? "low" : "high";

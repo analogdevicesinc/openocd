@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * Bitbang driver for Linux GPIO descriptors through libgpiod
  * Copyright (C) 2020 Antonio Borneo <borneo.antonio@gmail.com>
@@ -275,7 +275,7 @@ static int linuxgpiod_quit(void)
 	return ERROR_OK;
 }
 
-int helper_get_line(enum adapter_gpio_config_index idx)
+static int helper_get_line(enum adapter_gpio_config_index idx)
 {
 	if (!is_gpio_config_valid(idx))
 		return ERROR_OK;

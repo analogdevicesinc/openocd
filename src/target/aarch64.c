@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /***************************************************************************
  *   Copyright (C) 2015 by David Ung                                       *
@@ -1837,7 +1837,7 @@ static int aarch64_remove_watchpoint(struct target *target,
  * find out which watchpoint hits
  * get exception address and compare the address to watchpoints
  */
-int aarch64_hit_watchpoint(struct target *target,
+static int aarch64_hit_watchpoint(struct target *target,
 	struct watchpoint **hit_watchpoint)
 {
 	if (target->debug_reason != DBG_REASON_WATCHPOINT)
