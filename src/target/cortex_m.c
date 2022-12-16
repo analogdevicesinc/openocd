@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
@@ -100,6 +100,12 @@ static const struct cortex_m_part_info cortex_m_parts[] = {
 	{
 		.partno = CORTEX_M55_PARTNO,
 		.name = "Cortex-M55",
+		.arch = ARM_ARCH_V8M,
+		.flags = CORTEX_M_F_HAS_FPV5,
+	},
+	{
+		.partno = STAR_MC1_PARTNO,
+		.name = "STAR-MC1",
 		.arch = ARM_ARCH_V8M,
 		.flags = CORTEX_M_F_HAS_FPV5,
 	},
@@ -769,7 +775,7 @@ static int cortex_m_examine_exception_reason(struct target *target)
 
 static int cortex_m_debug_entry(struct target *target)
 {
-	uint32_t xPSR;
+	uint32_t xpsr;
 	int retval;
 	struct cortex_m_common *cortex_m = target_to_cm(target);
 	struct armv7m_common *armv7m = &cortex_m->armv7m;
@@ -820,11 +826,11 @@ static int cortex_m_debug_entry(struct target *target)
 		return retval;
 
 	r = arm->cpsr;
-	xPSR = buf_get_u32(r->value, 0, 32);
+	xpsr = buf_get_u32(r->value, 0, 32);
 
 	/* Are we in an exception handler */
-	if (xPSR & 0x1FF) {
-		armv7m->exception_number = (xPSR & 0x1FF);
+	if (xpsr & 0x1FF) {
+		armv7m->exception_number = (xpsr & 0x1FF);
 
 		arm->core_mode = ARM_MODE_HANDLER;
 		arm->map = armv7m_msp_reg_map;
@@ -1402,8 +1408,9 @@ static int cortex_m_assert_reset(struct target *target)
 	struct armv7m_common *armv7m = &cortex_m->armv7m;
 	enum cortex_m_soft_reset_config reset_config = cortex_m->soft_reset_config;
 
-	LOG_TARGET_DEBUG(target, "target->state: %s",
-		target_state_name(target));
+	LOG_TARGET_DEBUG(target, "target->state: %s,%s examined",
+		target_state_name(target),
+		target_was_examined(target) ? "" : " not");
 
 	enum reset_types jtag_reset_config = jtag_get_reset_config();
 
@@ -1422,22 +1429,38 @@ static int cortex_m_assert_reset(struct target *target)
 
 	bool srst_asserted = false;
 
-	if (!target_was_examined(target)) {
-		if (jtag_reset_config & RESET_HAS_SRST) {
-			adapter_assert_reset();
-			if (target->reset_halt)
-				LOG_TARGET_ERROR(target, "Target not examined, will not halt after reset!");
-			return ERROR_OK;
-		} else {
-			LOG_TARGET_ERROR(target, "Target not examined, reset NOT asserted!");
-			return ERROR_FAIL;
-		}
-	}
-
 	if ((jtag_reset_config & RESET_HAS_SRST) &&
-	    (jtag_reset_config & RESET_SRST_NO_GATING)) {
+		((jtag_reset_config & RESET_SRST_NO_GATING) || !armv7m->debug_ap)) {
+		/* If we have no debug_ap, asserting SRST is the only thing
+		 * we can do now */
 		adapter_assert_reset();
 		srst_asserted = true;
+	}
+
+	/* TODO: replace the hack calling target_examine_one()
+	 * as soon as a better reset framework is available */
+	if (!target_was_examined(target) && !target->defer_examine
+		&& srst_asserted && (jtag_reset_config & RESET_SRST_NO_GATING)) {
+		LOG_TARGET_DEBUG(target, "Trying to re-examine under reset");
+		target_examine_one(target);
+	}
+
+	/* We need at least debug_ap to go further.
+	 * Inform user and bail out if we don't have one. */
+	if (!armv7m->debug_ap) {
+		if (srst_asserted) {
+			if (target->reset_halt)
+				LOG_TARGET_ERROR(target, "Debug AP not available, will not halt after reset!");
+
+			/* Do not propagate error: reset was asserted, proceed to deassert! */
+			target->state = TARGET_RESET;
+			register_cache_invalidate(cortex_m->armv7m.arm.core_cache);
+			return ERROR_OK;
+
+		} else {
+			LOG_TARGET_ERROR(target, "Debug AP not available, reset NOT asserted!");
+			return ERROR_FAIL;
+		}
 	}
 
 	/* Enable debug requests */
@@ -1540,7 +1563,7 @@ static int cortex_m_assert_reset(struct target *target)
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (target->reset_halt) {
+	if (target->reset_halt && target_was_examined(target)) {
 		retval = target_halt(target);
 		if (retval != ERROR_OK)
 			return retval;
@@ -1553,8 +1576,9 @@ static int cortex_m_deassert_reset(struct target *target)
 {
 	struct armv7m_common *armv7m = &target_to_cm(target)->armv7m;
 
-	LOG_TARGET_DEBUG(target, "target->state: %s",
-		target_state_name(target));
+	LOG_TARGET_DEBUG(target, "target->state: %s,%s examined",
+		target_state_name(target),
+		target_was_examined(target) ? "" : " not");
 
 	/* deassert reset lines */
 	adapter_deassert_reset();
@@ -1562,8 +1586,8 @@ static int cortex_m_deassert_reset(struct target *target)
 	enum reset_types jtag_reset_config = jtag_get_reset_config();
 
 	if ((jtag_reset_config & RESET_HAS_SRST) &&
-	    !(jtag_reset_config & RESET_SRST_NO_GATING) &&
-		target_was_examined(target)) {
+		!(jtag_reset_config & RESET_SRST_NO_GATING) &&
+		armv7m->debug_ap) {
 
 		int retval = dap_dp_init_or_reconnect(armv7m->debug_ap->dap);
 		if (retval != ERROR_OK) {
@@ -1908,7 +1932,7 @@ int cortex_m_remove_watchpoint(struct target *target, struct watchpoint *watchpo
 	return ERROR_OK;
 }
 
-int cortex_m_hit_watchpoint(struct target *target, struct watchpoint **hit_watchpoint)
+static int cortex_m_hit_watchpoint(struct target *target, struct watchpoint **hit_watchpoint)
 {
 	if (target->debug_reason != DBG_REASON_WATCHPOINT)
 		return ERROR_FAIL;
