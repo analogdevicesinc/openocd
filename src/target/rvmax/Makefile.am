@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 noinst_LTLIBRARIES += %D%/librvmax.la
 %C%_librvmax_la_SOURCES = \
 	%D%/rvmax.c \

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 TARGET=max32570
 TARGET_CFG=${TARGET}.cfg
 

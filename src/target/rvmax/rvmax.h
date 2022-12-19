@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 /***************************************************************************
  *   Copyright (C) 2011 by Julius Baxter                                   *
  *   julius@opencores.org                                                  *
@@ -36,7 +37,7 @@
 
 /* SPR groups start address */
 #define GROUP0		(0  << 11)
-#define GROUP1		(1  << 11)
+#define GROUP1		(0x1  << 11)
 #define GROUP2		(2  << 11)
 #define GROUP3		(3  << 11)
 #define GROUP4		(4  << 11)

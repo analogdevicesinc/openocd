@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 #include "encoding.h"
 
 #define ZERO	0
@@ -7,7 +9,7 @@
 
 static uint32_t bits(uint32_t value, unsigned int hi, unsigned int lo)
 {
-	return (value >> lo) & ((1 << (hi+1-lo)) - 1);
+	return (value >> lo) & ((1 << (hi + 1 - lo)) - 1);
 }
 
 static uint32_t bit(uint32_t value, unsigned int b)
@@ -181,32 +183,32 @@ static uint32_t fld(unsigned int dest, unsigned int base, uint16_t offset)
 		MATCH_FLD;
 }
 
-static uint32_t fmv_x_w(unsigned dest, unsigned src) __attribute__ ((unused));
-static uint32_t fmv_x_w(unsigned dest, unsigned src)
+static uint32_t fmv_x_w(unsigned int dest, unsigned int src) __attribute__ ((unused));
+static uint32_t fmv_x_w(unsigned int dest, unsigned int src)
 {
 	return src << 15 |
 		dest << 7 |
 		MATCH_FMV_X_W;
 }
 
-static uint32_t fmv_x_d(unsigned dest, unsigned src) __attribute__ ((unused));
-static uint32_t fmv_x_d(unsigned dest, unsigned src)
+static uint32_t fmv_x_d(unsigned int dest, unsigned int src) __attribute__ ((unused));
+static uint32_t fmv_x_d(unsigned int dest, unsigned int src)
 {
 	return src << 15 |
 		dest << 7 |
 		MATCH_FMV_X_D;
 }
 
-static uint32_t fmv_w_x(unsigned dest, unsigned src) __attribute__ ((unused));
-static uint32_t fmv_w_x(unsigned dest, unsigned src)
+static uint32_t fmv_w_x(unsigned int dest, unsigned int src) __attribute__ ((unused));
+static uint32_t fmv_w_x(unsigned int dest, unsigned int src)
 {
 	return src << 15 |
 		dest << 7 |
 		MATCH_FMV_W_X;
 }
 
-static uint32_t fmv_d_x(unsigned dest, unsigned src) __attribute__ ((unused));
-static uint32_t fmv_d_x(unsigned dest, unsigned src)
+static uint32_t fmv_d_x(unsigned int dest, unsigned int src) __attribute__ ((unused));
+static uint32_t fmv_d_x(unsigned int dest, unsigned int src)
 {
 	return src << 15 |
 		dest << 7 |

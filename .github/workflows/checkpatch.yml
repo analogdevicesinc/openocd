@@ -33,4 +33,4 @@ jobs:
       - name: checkpatch
         run: |
           git diff remotes/origin/master >> diff.patch
-          tools/scripts/checkpatch.pl --no-signoff diff.patch
+          tools/scripts/checkpatch.pl --max-line-length=200 --no-signoff --mailback -v --ignore MACRO_ARG_REUSE --ignore UNNECESSARY_PARENTHESES diff.patch

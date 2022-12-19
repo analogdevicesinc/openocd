@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 /* See LICENSE for license details. */
 
 #ifndef RISCV_CSR_ENCODING_H
@@ -40,20 +41,20 @@
 #define SSTATUS_UXL         0x0000000300000000
 #define SSTATUS64_SD        0x8000000000000000
 
-#define DCSR_XDEBUGVER      (3U<<30)
-#define DCSR_NDRESET        (1<<29)
-#define DCSR_FULLRESET      (1<<28)
-#define DCSR_EBREAKM        (1<<15)
-#define DCSR_EBREAKH        (1<<14)
-#define DCSR_EBREAKS        (1<<13)
-#define DCSR_EBREAKU        (1<<12)
-#define DCSR_STOPCYCLE      (1<<10)
-#define DCSR_STOPTIME       (1<<9)
-#define DCSR_CAUSE          (7<<6)
-#define DCSR_DEBUGINT       (1<<5)
-#define DCSR_HALT           (1<<3)
-#define DCSR_STEP           (1<<2)
-#define DCSR_PRV            (3<<0)
+#define DCSR_XDEBUGVER      (3U << 30)
+#define DCSR_NDRESET        (0x1 << 29)
+#define DCSR_FULLRESET      (0x1 << 28)
+#define DCSR_EBREAKM        (0x1 << 15)
+#define DCSR_EBREAKH        (0x1 << 14)
+#define DCSR_EBREAKS        (0x1 << 13)
+#define DCSR_EBREAKU        (0x1 << 12)
+#define DCSR_STOPCYCLE      (0x1 << 10)
+#define DCSR_STOPTIME       (0x1 << 9)
+#define DCSR_CAUSE          (7 << 6)
+#define DCSR_DEBUGINT       (0x1 << 5)
+#define DCSR_HALT           (0x1 << 3)
+#define DCSR_STEP           (0x1 << 2)
+#define DCSR_PRV            (3 << 0)
 
 #define DCSR_CAUSE_NONE     0
 #define DCSR_CAUSE_SWBP     1
@@ -62,22 +63,22 @@
 #define DCSR_CAUSE_STEP     4
 #define DCSR_CAUSE_HALT     5
 
-#define MCONTROL_TYPE(xlen)    (0xfULL<<((xlen)-4))
-#define MCONTROL_DMODE(xlen)   (1ULL<<((xlen)-5))
-#define MCONTROL_MASKMAX(xlen) (0x3fULL<<((xlen)-11))
+#define MCONTROL_TYPE(xlen)    (0xfULL << ((xlen) - 4))
+#define MCONTROL_DMODE(xlen)   (1ULL << ((xlen) - 5))
+#define MCONTROL_MASKMAX(xlen) (0x3fULL << ((xlen) - 11))
 
-#define MCONTROL_SELECT     (1<<19)
-#define MCONTROL_TIMING     (1<<18)
-#define MCONTROL_ACTION     (0x3f<<12)
-#define MCONTROL_CHAIN      (1<<11)
-#define MCONTROL_MATCH      (0xf<<7)
-#define MCONTROL_M          (1<<6)
-#define MCONTROL_H          (1<<5)
-#define MCONTROL_S          (1<<4)
-#define MCONTROL_U          (1<<3)
-#define MCONTROL_EXECUTE    (1<<2)
-#define MCONTROL_STORE      (1<<1)
-#define MCONTROL_LOAD       (1<<0)
+#define MCONTROL_SELECT     (0x1 << 19)
+#define MCONTROL_TIMING     (0x1 << 18)
+#define MCONTROL_ACTION     (0x3f << 12)
+#define MCONTROL_CHAIN      (0x1 << 11)
+#define MCONTROL_MATCH      (0xf << 7)
+#define MCONTROL_M          (0x1 << 6)
+#define MCONTROL_H          (0x1 << 5)
+#define MCONTROL_S          (0x1 << 4)
+#define MCONTROL_U          (0x1 << 3)
+#define MCONTROL_EXECUTE    (0x1 << 2)
+#define MCONTROL_STORE      (0x1 << 1)
+#define MCONTROL_LOAD       (0x1 << 0)
 
 #define MCONTROL_TYPE_NONE      0
 #define MCONTROL_TYPE_MATCH     2
@@ -95,15 +96,15 @@
 #define MCONTROL_MATCH_MASK_LOW  4
 #define MCONTROL_MATCH_MASK_HIGH 5
 
-#define MIP_SSIP            (1 << IRQ_S_SOFT)
-#define MIP_HSIP            (1 << IRQ_H_SOFT)
-#define MIP_MSIP            (1 << IRQ_M_SOFT)
-#define MIP_STIP            (1 << IRQ_S_TIMER)
-#define MIP_HTIP            (1 << IRQ_H_TIMER)
-#define MIP_MTIP            (1 << IRQ_M_TIMER)
-#define MIP_SEIP            (1 << IRQ_S_EXT)
-#define MIP_HEIP            (1 << IRQ_H_EXT)
-#define MIP_MEIP            (1 << IRQ_M_EXT)
+#define MIP_SSIP            (0x1 << IRQ_S_SOFT)
+#define MIP_HSIP            (0x1 << IRQ_H_SOFT)
+#define MIP_MSIP            (0x1 << IRQ_M_SOFT)
+#define MIP_STIP            (0x1 << IRQ_S_TIMER)
+#define MIP_HTIP            (0x1 << IRQ_H_TIMER)
+#define MIP_MTIP            (0x1 << IRQ_M_TIMER)
+#define MIP_SEIP            (0x1 << IRQ_S_EXT)
+#define MIP_HEIP            (0x1 << IRQ_H_EXT)
+#define MIP_MEIP            (0x1 << IRQ_M_EXT)
 
 #define SIP_SSIP MIP_SSIP
 #define SIP_STIP MIP_STIP
@@ -185,7 +186,7 @@
 # define SATP_MODE SATP32_MODE
 #endif
 #define RISCV_PGSHIFT 12
-#define RISCV_PGSIZE (1 << RISCV_PGSHIFT)
+#define RISCV_PGSIZE (0x1 << RISCV_PGSHIFT)
 
 #ifndef __ASSEMBLER__
 

@@ -19,7 +19,7 @@ all: $(TARGET).inc
 	$(PREFIX)-gcc $(CFLAGS) -Os -Wall -c ${<} -o ${@}
 
 %.elf: %.o
-	$(PREFIX)-ld -nostdlib -nostartfiles --entry $(ENTRY) ${<} -o ${@}
+	$(PREFIX)-ld -nostdlib --entry $(ENTRY) ${<} -o ${@}
 	$(PREFIX)-size ${@}
 
 %.bin: %.elf

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /***************************************************************************
  *   Copyright (C) 2013-2014 by Franck Jullien                             *
  *   elec4fun@gmail.com                                                    *
@@ -129,7 +130,7 @@
 #define MAX_BUS_ERRORS          2
 
 /*#define MAX_BURST_SIZE      (1) */
-#define MAX_BURST_SIZE          (4*1024)
+#define MAX_BURST_SIZE          (4 * 1024)
 
 #define STATUS_BYTES            4
 #define CRC_LEN                 4
@@ -233,12 +234,12 @@ static int rvmax_adv_jtag_init(struct rvmax_jtag *jtag_info)
 
 		/*rvmax_auth_data_init = 1; */
 		LOG_DEBUG("Auth data sent");
-	} else
+	} else {
 		LOG_DEBUG(" auth info already sent");
+	}
 	/*LOG_DEBUG("Init done"); */
 
 	return ERROR_OK;
-
 }
 
 /* Selects one of the modules in the debug unit
@@ -273,7 +274,6 @@ static int adbg_select_module(struct rvmax_jtag *jtag_info, int chain)
 static int adbg_ctrl_write(struct rvmax_jtag *jtag_info, uint8_t regidx,
 	uint32_t *cmd_data, int length_bits)
 {
-
 	uint32_t value;
 	int retval = 0;
 
@@ -326,27 +326,26 @@ static int adbg_wb_burst_read(struct rvmax_jtag *jtag_info, int size,
 	int retval;
 	uint8_t opcode;
 
-	if ((start_address & DEBUGGER_OFFSET) != DEBUGGER_OFFSET)
-		LOG_DEBUG(
-			"Doing burst read (%d), word size %d, word count %d, start address 0x%08" PRIx32,
+	if ((start_address & DEBUGGER_OFFSET) != DEBUGGER_OFFSET) {
+		LOG_DEBUG("Doing burst read (%d), word size %d, word count %d, start address 0x%08" PRIx32,
 			jtag_info->rvmax_jtag_module_selected,
 			size,
 			count,
 			start_address);
-	else {
+	} else {
 		/*LOG_DEBUG("+%d,%d",size,jtag_info->rvmax_jtag_module_selected); */
 	}
 	/* Select the appropriate opcode */
 	switch (jtag_info->rvmax_jtag_module_selected) {
 		case DC_WISHBONE:
 /*LOG_DEBUG("DC_WISHBONE"); */
-			if (size == 1)
+			if (size == 1) {
 				opcode = DBG_WB_CMD_BREAD8;
-			else if (size == 2)
+			} else if (size == 2) {
 				opcode = DBG_WB_CMD_BREAD16;
-			else if (size == 4)
+			} else if (size == 4) {
 				opcode = DBG_WB_CMD_BREAD32;
-			else {
+			} else {
 				LOG_WARNING("Tried burst read with invalid word size (%d),"
 					"defaulting to 4-byte words", size);
 				opcode = DBG_WB_CMD_BREAD32;
@@ -354,9 +353,9 @@ static int adbg_wb_burst_read(struct rvmax_jtag *jtag_info, int size,
 			break;
 		case DC_CPU0:
 /*LOG_DEBUG("DC_CPU0"); */
-			if (size == 4)
+			if (size == 4) {
 				opcode = DBG_CPU0_CMD_BREAD32;
-			else {
+			} else {
 				LOG_WARNING("Tried burst read with invalid word size (%d),"
 					"defaulting to 4-byte words", size);
 				opcode = DBG_CPU0_CMD_BREAD32;
@@ -364,9 +363,9 @@ static int adbg_wb_burst_read(struct rvmax_jtag *jtag_info, int size,
 			break;
 		case DC_CPU1:
 /*LOG_DEBUG("DC_CPU1"); */
-			if (size == 4)
+			if (size == 4) {
 				opcode = DBG_CPU1_CMD_BREAD32;
-			else {
+			} else {
 				LOG_WARNING("Tried burst read with invalid word size (%d),"
 					"defaulting to 4-byte words", size);
 				opcode = DBG_CPU0_CMD_BREAD32;
@@ -397,13 +396,13 @@ retry_read_full:
 	field[0].out_value = NULL;
 	field[0].in_value = in_buffer;
 
-	field[1].num_bits = CRC_LEN*8;
+	field[1].num_bits = CRC_LEN * 8;
 	field[1].out_value = NULL;
-	field[1].in_value = in_buffer+8;
+	field[1].in_value = in_buffer + 8;
 
 	field[2].num_bits = (total_size_bytes + CRC_LEN + STATUS_BYTES) * 8;
 	field[2].out_value = NULL;
-	field[2].in_value = in_buffer+8;
+	field[2].in_value = in_buffer + 8;
 	jtag_add_dr_scan(jtag_info->tap, 1, &field[0], TAP_IDLE);
 
 	retval = jtag_execute_queue();
@@ -440,9 +439,9 @@ retry_read_full:
 		LOG_WARNING("CRC ERROR! Computed 0x%08" PRIx32 ", read CRC 0x%08" PRIx32,
 			crc_calc,
 			crc_read);
-		if (retry_full_crc++ < MAX_READ_CRC_RETRY)
+		if (retry_full_crc++ < MAX_READ_CRC_RETRY) {
 			goto retry_read_full;
-		else {
+		} else {
 			LOG_ERROR("Burst read failed");
 			retval = ERROR_FAIL;
 			goto out;
@@ -454,7 +453,6 @@ retry_read_full:
 	/* Now, read the error register, and retry/recompute as necessary */
 	if (jtag_info->rvmax_jtag_module_selected == DC_WISHBONE &&
 		!(rvmax_du_adv.options & ADBG_USE_HISPEED)) {
-
 		uint32_t err_data[2] = {0, 0};
 		uint32_t addr;
 		int bus_error_retries = 0;
@@ -467,14 +465,12 @@ retry_read_full:
 
 		/* Then we have a problem */
 		if (err_data[0] & 0x1) {
-
 			retval = adbg_ctrl_read(jtag_info, DBG_WB_REG_ERROR, err_data, 33);
 			if (retval != ERROR_OK)
 				goto out;
 
 			addr = (err_data[0] >> 1) | (err_data[1] << 31);
-			LOG_WARNING(
-				"WB bus error during burst read, address 0x%08" PRIx32 ", retrying!",
+			LOG_WARNING("WB bus error during burst read, address 0x%08" PRIx32 ", retrying!",
 				addr);
 
 			bus_error_retries++;
@@ -500,7 +496,7 @@ retry_read_full:
 out:
 	free(in_buffer);
 	if ((start_address & DEBUGGER_OFFSET) != DEBUGGER_OFFSET)
-		LOG_DEBUG("\nData32: 0x%08x", data[0]|(data[1]<<8)|(data[2]<<16)|(data[3]<<24));
+		LOG_DEBUG("\nData32: 0x%08x", data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24));
 	return retval;
 }
 
@@ -523,31 +519,31 @@ static int adbg_wb_burst_write(struct rvmax_jtag *jtag_info,
 	 * Select the appropriate opcode*/
 	switch (jtag_info->rvmax_jtag_module_selected) {
 		case DC_WISHBONE:
-			if (size == 1)
+			if (size == 1) {
 				opcode = DBG_WB_CMD_BWRITE8;
-			else if (size == 2)
+			} else if (size == 2) {
 				opcode = DBG_WB_CMD_BWRITE16;
-			else if (size == 4)
+			} else if (size == 4) {
 				opcode = DBG_WB_CMD_BWRITE32;
-			else {
+			} else {
 				/*LOG_DEBUG("Tried WB burst write with invalid word size (%d),"
 				 *  "defaulting to 4-byte words", size); */
 				opcode = DBG_WB_CMD_BWRITE32;
 			}
 			break;
 		case DC_CPU0:
-			if (size == 4)
+			if (size == 4) {
 				opcode = DBG_CPU0_CMD_BWRITE32;
-			else {
+			} else {
 				/*LOG_DEBUG("Tried CPU0 burst write with invalid word size (%d),"
 				 *  "defaulting to 4-byte words", size); */
 				opcode = DBG_CPU0_CMD_BWRITE32;
 			}
 			break;
 		case DC_CPU1:
-			if (size == 4)
+			if (size == 4) {
 				opcode = DBG_CPU1_CMD_BWRITE32;
-			else {
+			} else {
 				/*LOG_DEBUG("Tried CPU1 burst write with invalid word size (%d),"
 				 *  "defaulting to 4-byte words", size); */
 				opcode = DBG_CPU0_CMD_BWRITE32;
@@ -602,15 +598,13 @@ retry_full_write:
 		return retval;
 
 	if (!value) {
-		LOG_WARNING(
-			"CRC ERROR! match bit after write is %" PRIi8 " (computed CRC 0x%08" PRIx32 ")",
+		LOG_WARNING("CRC ERROR! match bit after write is %" PRIi8 " (computed CRC 0x%08" PRIx32 ")",
 			value,
 			crc_calc);
-		if (retry_full_crc++ < MAX_WRITE_CRC_RETRY)
+		if (retry_full_crc++ < MAX_WRITE_CRC_RETRY) {
 			goto retry_full_write;
-		else {
-			LOG_ERROR(
-				"CRC ERROR!!!!! match bit after write is %" PRIi8 " (computed CRC 0x%08" PRIx32 ")",
+		} else {
+			LOG_ERROR("CRC ERROR!!!!! match bit after write is %" PRIi8 " (computed CRC 0x%08" PRIx32 ")",
 				value,
 				crc_calc);
 			/*FIXME   return ERROR_FAIL; */
@@ -636,7 +630,6 @@ retry_full_write:
 
 		/* Then we have a problem */
 		if (err_data[0] & 0x1) {
-
 			retval = adbg_ctrl_read(jtag_info, DBG_WB_REG_ERROR, err_data, 33);
 
 			if (retval != ERROR_OK) {
@@ -645,8 +638,7 @@ retry_full_write:
 			}
 
 			addr = (err_data[0] >> 1) | (err_data[1] << 31);
-			LOG_WARNING(
-				"WB bus error during burst write, address 0x%08" PRIx32 ", retrying!",
+			LOG_WARNING("WB bus error during burst write, address 0x%08" PRIx32 ", retrying!",
 				addr);
 
 			bus_error_retries++;
@@ -757,11 +749,11 @@ static int rvmax_adv_cpu_stall(struct rvmax_jtag *jtag_info, int action)
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (action == CPU_STALL)
+	if (action == CPU_STALL) {
 		cpu_cr = DBG_CPU_CR_STALL;
-	else if (action == CPU_STEP)
+	} else if (action == CPU_STEP) {
 		cpu_cr = DBG_CPU_CR_STEP;
-	else if (action == CPU_UNSTALL) {
+	} else if (action == CPU_UNSTALL) {
 		adbg_wb_burst_read(jtag_info, 4, 1, DEBUGGER_BREAK_OFFSET, (uint8_t *)&value);
 
 		if (value & DBG_BREAK_ENABLE)
@@ -799,13 +791,13 @@ static int rvmax_adv_cpu_stall(struct rvmax_jtag *jtag_info, int action)
 		adbg_wb_burst_read(jtag_info, 4, 1, DEBUGGER_OFFSET, (uint8_t *)&rcpu_cr);
 		LOG_DEBUG("+e %x", rcpu_cr);
 		rcpu_cr = 0;
-		adbg_wb_burst_read(jtag_info, 4, 1, DEBUGGER_OFFSET+4, (uint8_t *)&rcpu_cr);
+		adbg_wb_burst_read(jtag_info, 4, 1, DEBUGGER_OFFSET + 4, (uint8_t *)&rcpu_cr);
 		LOG_DEBUG("+f %x", rcpu_cr);
 		rcpu_cr = 0;
-		adbg_wb_burst_read(jtag_info, 4, 1, DEBUGGER_OFFSET+8, (uint8_t *)&rcpu_cr);
+		adbg_wb_burst_read(jtag_info, 4, 1, DEBUGGER_OFFSET + 8, (uint8_t *)&rcpu_cr);
 		LOG_DEBUG("+g %x", rcpu_cr);
 		rcpu_cr = 0;
-		adbg_wb_burst_read(jtag_info, 4, 1, DEBUGGER_OFFSET+0x0c, (uint8_t *)&rcpu_cr);
+		adbg_wb_burst_read(jtag_info, 4, 1, DEBUGGER_OFFSET + 0x0c, (uint8_t *)&rcpu_cr);
 		LOG_DEBUG("+h %x", rcpu_cr);
 	}
 	return retval;
@@ -905,7 +897,6 @@ static int rvmax_adv_jtag_read_memory(struct rvmax_jtag *jtag_info,
 	uint8_t *block_count_buffer = buffer;
 
 	while (block_count_left) {
-
 		int blocks_this_round = (block_count_left > MAX_BURST_SIZE) ?
 			MAX_BURST_SIZE : block_count_left;
 
@@ -926,7 +917,7 @@ static int rvmax_adv_jtag_read_memory(struct rvmax_jtag *jtag_info,
 	 */
 
 	struct target *target = jtag_info->target;
-	if ((target->endianness == TARGET_BIG_ENDIAN) && (size != 1)) {
+	if (target->endianness == TARGET_BIG_ENDIAN && size != 1) {
 		switch (size) {
 			case 4:
 				buf_bswap32(buffer, buffer, size * count);
@@ -970,9 +961,9 @@ static int rvmax_adv_jtag_write_memory(struct rvmax_jtag *jtag_info,
 
 	void *t = NULL;
 	struct target *target = jtag_info->target;
-	if ((target->endianness == TARGET_BIG_ENDIAN) && (size != 1)) {
+	if (target->endianness == TARGET_BIG_ENDIAN && size != 1) {
 		t = malloc(count * size * sizeof(uint8_t));
-		if (t == NULL) {
+		if (!t) {
 			LOG_ERROR("Out of memory");
 			return ERROR_FAIL;
 		}
@@ -992,7 +983,6 @@ static int rvmax_adv_jtag_write_memory(struct rvmax_jtag *jtag_info,
 	uint32_t block_count_address = addr;
 	uint8_t *block_count_buffer = (uint8_t *)buffer;
 	while (block_count_left) {
-
 		int blocks_this_round = (block_count_left > MAX_BURST_SIZE) ?
 			MAX_BURST_SIZE : block_count_left;
 
@@ -1001,7 +991,7 @@ static int rvmax_adv_jtag_write_memory(struct rvmax_jtag *jtag_info,
 				block_count_address);
 
 		if (retval != ERROR_OK) {
-			if (t != NULL)
+			if (t)
 				free(t);
 			LOG_DEBUG("NOT ERROR_OK3");
 			LOG_DEBUG("Writing WB%" PRId32 " at 0x%08" PRIx32,
@@ -1015,7 +1005,7 @@ static int rvmax_adv_jtag_write_memory(struct rvmax_jtag *jtag_info,
 		block_count_buffer += size * MAX_BURST_SIZE;
 	}
 
-	if (t != NULL)
+	if (t)
 		free(t);
 
 	LOG_DEBUG("ERROR_OK");
