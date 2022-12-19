@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*******************************************************************************
  * Copyright (C) 2015 Maxim Integrated Products, Inc., All Rights Reserved.
  *
@@ -55,19 +56,18 @@
 #define MXC_GCR                         ((mxc_gcr_regs_t *)MXC_BASE_GCR)
 
 /******************************************************************************/
-#define getbyte(temp8)                                                   \
-/* Wait for the Read FIFO to not equal the Write FIFO */                 \
-	do { while (*read_ptr == *write_ptr);                                \
+#define getbyte(temp8)                                                  \
+/* Wait for the Read FIFO to not equal the Write FIFO */                \
+	do { while (*read_ptr == *write_ptr);                               \
 		temp8 = **read_ptr;                                             \
-/* Increment and wrap around the read pointer */                         \
+/* Increment and wrap around the read pointer */                        \
 		if ((*read_ptr + 1) >= (uint8_t *)(work_end - 8 - 256)) {       \
 			*read_ptr = (uint8_t *)(work_start + 8);                    \
 		} else {                                                        \
 			(*read_ptr)++;                                              \
 		}                                                               \
 		len--;                                                          \
-		addr++;                                                         \
-	 } while (0);
+		addr++; } while (0)
 
 /******************************************************************************/
 #ifndef ALGO_TEST
@@ -75,11 +75,10 @@ __attribute__ ((naked, section(".algo")))
 #endif
 void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t addr)
 {
+	printf(" > %s starting\n", __func__);
 
-	printf(" > algo_write() starting\n");
-
-	uint8_t *volatile (*write_ptr) = (uint8_t **)work_start;
-	uint8_t *volatile (*read_ptr) = (uint8_t **)(work_start + 4);
+	volatile uint8_t * (*write_ptr) = (volatile uint8_t **)work_start;
+	volatile uint8_t * (*read_ptr) = (volatile uint8_t **)(work_start + 4);
 	uint32_t *flc_base = (uint32_t *)(work_end - 4 - 128);
 	uint32_t *options = (uint32_t *)(work_end - 8 - 128);
 	uint32_t *enc_buffer = (uint32_t *)(work_end - 8 - 256);
@@ -129,9 +128,7 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 	}
 
 	while (len) {
-
 		if ((*options & OPTIONS_128) == 0) {
-
 			/* Save the current address before we read from the working area */
 			addr_save = addr;
 
@@ -141,11 +138,14 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			enc_buffer[0] = 0;
 			for (i = 0; i < 4; i++) {
 				/* Get data from the working area, pad with 0xFF */
-				if (len)
+				if (len) {
 					getbyte(temp8);
-				else
+					__asm("nop\n");
+				} else {
 					temp8 = 0xFF;
-				enc_buffer[0] |= (temp8 << (i*8));
+					__asm("nop\n");
+				}
+				enc_buffer[0] |= (temp8 << (i * 8));
 			}
 
 			/* 32-bit write */
@@ -158,7 +158,7 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			MXC_FLC->cn |= MXC_F_FLC_CN_WR;
 
 			/* Wait for the operation to complete */
-			do {} while (MXC_FLC->cn & MXC_F_FLC_CN_WR) ;
+			do {} while (MXC_FLC->cn & MXC_F_FLC_CN_WR);
 
 			/* Check access violations */
 			if (MXC_FLC->intr & MXC_F_FLC_INTR_AF) {
@@ -175,7 +175,6 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 				#endif
 			}
 		} else {
-
 			/* Save the current address before we read from the working area */
 			addr_save = addr;
 
@@ -183,39 +182,50 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			for (i = 0; i < 4; i++) {
 				/* Get data from the working area, pad with 0xFF */
 				enc_buffer[i] = 0;
-				if (len)
+				if (len) {
 					getbyte(temp8);
-				else
+					__asm("nop\n");
+				} else {
 					temp8 = 0xFF;
+					__asm("nop\n");
+				}
 				enc_buffer[i] |= (temp8 << (0));
 				/* Get data from the working area, pad with 0xFF */
-				if (len)
+				if (len) {
 					getbyte(temp8);
-				else
+					__asm("nop\n");
+				} else {
 					temp8 = 0xFF;
+					__asm("nop\n");
+				}
 				enc_buffer[i] |= (temp8 << (8));
 				/* Get data from the working area, pad with 0xFF */
-				if (len)
+				if (len) {
 					getbyte(temp8);
-				else
+					__asm("nop\n");
+				} else {
 					temp8 = 0xFF;
+					__asm("nop\n");
+				}
 				enc_buffer[i] |= (temp8 << (16));
 				/* Get data from the working area, pad with 0xFF */
-				if (len)
+				if (len) {
 					getbyte(temp8);
-				else
+					__asm("nop\n");
+				} else {
 					temp8 = 0xFF;
+					__asm("nop\n");
+				}
 				enc_buffer[i] |= (temp8 << (24));
 			}
 
 			if (*options & OPTIONS_ENC) {
-
 				/* XOR data with the address */
 				for (i = 0; i < 4; i++) {
 					if (*options & OPTIONS_RELATIVE_XOR)
-						enc_buffer[i] ^= ((addr_save & 0x00FFFFFF) + i*4);
+						enc_buffer[i] ^= ((addr_save & 0x00FFFFFF) + i * 4);
 					else
-						enc_buffer[i] ^= (addr_save + i*4);
+						enc_buffer[i] ^= (addr_save + i * 4);
 				}
 
 				/* Encrypt the plain text
@@ -247,7 +257,7 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 				MXC_TPU->din[3] = enc_buffer[3];
 
 				/* Wait until operation is complete */
-				do {} while (!(MXC_TPU->ctrl & MXC_F_TPU_CTRL_CPH_DONE)) ;
+				do {} while (!(MXC_TPU->ctrl & MXC_F_TPU_CTRL_CPH_DONE));
 
 				/* Copy the data out */
 				enc_buffer[0] = MXC_TPU->dout[0];
@@ -269,7 +279,7 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 			MXC_FLC->cn |= MXC_F_FLC_CN_WR;
 
 			/* Wait for the operation to complete */
-			do {} while (MXC_FLC->cn & MXC_F_FLC_CN_WR) ;
+			do {} while (MXC_FLC->cn & MXC_F_FLC_CN_WR);
 
 			/* Check access violations */
 			if (MXC_FLC->intr & MXC_F_FLC_INTR_AF) {
@@ -294,7 +304,7 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 	__asm("bkpt\n");
 	#endif
 	#else
-	printf(" > algo_write returning\n");
+	printf(" > %s returning\n", __func__);
 	return;
 	#endif
 }

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 /**
  * @file    flc_regs.h
  * @brief   Registers, Bit Masks and Bit Positions for the FLC Peripheral Module.

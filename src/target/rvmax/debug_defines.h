@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #define DTM_IDCODE                          0x01
 /*
 * Identifies the release version of this part.
@@ -99,7 +100,7 @@
  */
 #define DTM_DMI_ADDRESS_OFFSET              34
 #define DTM_DMI_ADDRESS_LENGTH              abits
-#define DTM_DMI_ADDRESS                     (((1L<<abits)-1) << DTM_DMI_ADDRESS_OFFSET)
+#define DTM_DMI_ADDRESS                     (((1L << abits) - 1) << DTM_DMI_ADDRESS_OFFSET)
 /*
 * The data to send to the DM over the DMI during Update-DR, and
 * the data returned from the DM as a result of the previous operation.
@@ -290,13 +291,13 @@
 #define CSR_DPC                             0x7b1
 #define CSR_DPC_DPC_OFFSET                  0
 #define CSR_DPC_DPC_LENGTH                  MXLEN
-#define CSR_DPC_DPC                         (((1L<<MXLEN)-1) << CSR_DPC_DPC_OFFSET)
+#define CSR_DPC_DPC                         (((1L << MXLEN) - 1) << CSR_DPC_DPC_OFFSET)
 #define CSR_DSCRATCH0                       0x7b2
 #define CSR_DSCRATCH1                       0x7b3
 #define CSR_TSELECT                         0x7a0
 #define CSR_TSELECT_INDEX_OFFSET            0
 #define CSR_TSELECT_INDEX_LENGTH            MXLEN
-#define CSR_TSELECT_INDEX                   (((1L<<MXLEN)-1) << CSR_TSELECT_INDEX_OFFSET)
+#define CSR_TSELECT_INDEX                   (((1L << MXLEN) - 1) << CSR_TSELECT_INDEX_OFFSET)
 #define CSR_TDATA1                          0x7a1
 /*
 * 0: There is no trigger at this \Rtselect.
@@ -325,7 +326,7 @@
 * reset value instead. The reset value is any one of the types
 * supported by the trigger selected by \Rtselect.
  */
-#define CSR_TDATA1_TYPE_OFFSET              (MXLEN-4)
+#define CSR_TDATA1_TYPE_OFFSET              (MXLEN - 4)
 #define CSR_TDATA1_TYPE_LENGTH              4
 #define CSR_TDATA1_TYPE                     (0xfULL << CSR_TDATA1_TYPE_OFFSET)
 /*
@@ -337,7 +338,7 @@
 *
 * This bit is only writable from Debug Mode.
  */
-#define CSR_TDATA1_DMODE_OFFSET             (MXLEN-5)
+#define CSR_TDATA1_DMODE_OFFSET             (MXLEN - 5)
 #define CSR_TDATA1_DMODE_LENGTH             1
 #define CSR_TDATA1_DMODE                    (0x1ULL << CSR_TDATA1_DMODE_OFFSET)
 /*
@@ -345,15 +346,15 @@
  */
 #define CSR_TDATA1_DATA_OFFSET              0
 #define CSR_TDATA1_DATA_LENGTH              (MXLEN - 5)
-#define CSR_TDATA1_DATA                     (((1L<<MXLEN - 5)-1) << CSR_TDATA1_DATA_OFFSET)
+#define CSR_TDATA1_DATA                     (((1L << MXLEN - 5) - 1) << CSR_TDATA1_DATA_OFFSET)
 #define CSR_TDATA2                          0x7a2
 #define CSR_TDATA2_DATA_OFFSET              0
 #define CSR_TDATA2_DATA_LENGTH              MXLEN
-#define CSR_TDATA2_DATA                     (((1L<<MXLEN)-1) << CSR_TDATA2_DATA_OFFSET)
+#define CSR_TDATA2_DATA                     (((1L << MXLEN) - 1) << CSR_TDATA2_DATA_OFFSET)
 #define CSR_TDATA3                          0x7a3
 #define CSR_TDATA3_DATA_OFFSET              0
 #define CSR_TDATA3_DATA_LENGTH              MXLEN
-#define CSR_TDATA3_DATA                     (((1L<<MXLEN)-1) << CSR_TDATA3_DATA_OFFSET)
+#define CSR_TDATA3_DATA                     (((1L << MXLEN) - 1) << CSR_TDATA3_DATA_OFFSET)
 #define CSR_TINFO                           0x7a4
 /*
 * One bit for each possible \Ftype enumerated in \Rtdataone. Bit N
@@ -372,10 +373,10 @@
 #define CSR_TINFO_INFO_LENGTH               16
 #define CSR_TINFO_INFO                      (0xffffULL << CSR_TINFO_INFO_OFFSET)
 #define CSR_MCONTROL                        0x7a1
-#define CSR_MCONTROL_TYPE_OFFSET            (MXLEN-4)
+#define CSR_MCONTROL_TYPE_OFFSET            (MXLEN - 4)
 #define CSR_MCONTROL_TYPE_LENGTH            4
 #define CSR_MCONTROL_TYPE                   (0xfULL << CSR_MCONTROL_TYPE_OFFSET)
-#define CSR_MCONTROL_DMODE_OFFSET           (MXLEN-5)
+#define CSR_MCONTROL_DMODE_OFFSET           (MXLEN - 5)
 #define CSR_MCONTROL_DMODE_LENGTH           1
 #define CSR_MCONTROL_DMODE                  (0x1ULL << CSR_MCONTROL_DMODE_OFFSET)
 /*
@@ -387,7 +388,7 @@
 * corresponds to the maximum NAPOT range, which is $2^{63}$ bytes in
 * size.
  */
-#define CSR_MCONTROL_MASKMAX_OFFSET         (MXLEN-11)
+#define CSR_MCONTROL_MASKMAX_OFFSET         (MXLEN - 11)
 #define CSR_MCONTROL_MASKMAX_LENGTH         6
 #define CSR_MCONTROL_MASKMAX                (0x3fULL << CSR_MCONTROL_MASKMAX_OFFSET)
 /*
@@ -466,24 +467,24 @@
 #define CSR_MCONTROL_CHAIN_LENGTH           1
 #define CSR_MCONTROL_CHAIN                  (0x1ULL << CSR_MCONTROL_CHAIN_OFFSET)
 /*
-* 0: Matches when the value equals \Rtdatatwo.
+* 0: Matches when the value equals \R tdatatwo.
 *
 * 1: Matches when the top M bits of the value match the top M bits of
-* \Rtdatatwo. M is MXLEN-1 minus the index of the least-significant
-* bit containing 0 in \Rtdatatwo.
+* \R tdatatwo. M is MXLEN - 1 minus the index of the least - significant
+* bit containing 0 in \R tdatatwo.
 *
 * 2: Matches when the value is greater than (unsigned) or equal to
-* \Rtdatatwo.
+* \R tdatatwo.
 *
-* 3: Matches when the value is less than (unsigned) \Rtdatatwo.
+* 3: Matches when the value is less than (unsigned) \R tdatatwo.
 *
 * 4: Matches when the lower half of the value equals the lower half
-* of \Rtdatatwo after the lower half of the value is ANDed with the
-* upper half of \Rtdatatwo.
+* of \R tdatatwo after the lower half of the value is ANDed with the
+* upper half of \R tdatatwo.
 *
 * 5: Matches when the upper half of the value equals the lower half
-* of \Rtdatatwo after the upper half of the value is ANDed with the
-* upper half of \Rtdatatwo.
+* of \R tdatatwo after the upper half of the value is ANDed with the
+* upper half of \R tdatatwo.
 *
 * Other values are reserved for future use.
  */
@@ -528,10 +529,10 @@
 #define CSR_MCONTROL_LOAD_LENGTH            1
 #define CSR_MCONTROL_LOAD                   (0x1ULL << CSR_MCONTROL_LOAD_OFFSET)
 #define CSR_ICOUNT                          0x7a1
-#define CSR_ICOUNT_TYPE_OFFSET              (MXLEN-4)
+#define CSR_ICOUNT_TYPE_OFFSET              (MXLEN - 4)
 #define CSR_ICOUNT_TYPE_LENGTH              4
 #define CSR_ICOUNT_TYPE                     (0xfULL << CSR_ICOUNT_TYPE_OFFSET)
-#define CSR_ICOUNT_DMODE_OFFSET             (MXLEN-5)
+#define CSR_ICOUNT_DMODE_OFFSET             (MXLEN - 5)
 #define CSR_ICOUNT_DMODE_LENGTH             1
 #define CSR_ICOUNT_DMODE                    (0x1ULL << CSR_ICOUNT_DMODE_OFFSET)
 /*
@@ -582,10 +583,10 @@
 #define CSR_ICOUNT_ACTION_LENGTH            6
 #define CSR_ICOUNT_ACTION                   (0x3fULL << CSR_ICOUNT_ACTION_OFFSET)
 #define CSR_ITRIGGER                        0x7a1
-#define CSR_ITRIGGER_TYPE_OFFSET            (MXLEN-4)
+#define CSR_ITRIGGER_TYPE_OFFSET            (MXLEN - 4)
 #define CSR_ITRIGGER_TYPE_LENGTH            4
 #define CSR_ITRIGGER_TYPE                   (0xfULL << CSR_ITRIGGER_TYPE_OFFSET)
-#define CSR_ITRIGGER_DMODE_OFFSET           (MXLEN-5)
+#define CSR_ITRIGGER_DMODE_OFFSET           (MXLEN - 5)
 #define CSR_ITRIGGER_DMODE_LENGTH           1
 #define CSR_ITRIGGER_DMODE                  (0x1ULL << CSR_ITRIGGER_DMODE_OFFSET)
 /*
@@ -595,7 +596,7 @@
 * trigger(s) matched.  If the bit is not implemented, it is always 0
 * and writing it has no effect.
  */
-#define CSR_ITRIGGER_HIT_OFFSET             (MXLEN-6)
+#define CSR_ITRIGGER_HIT_OFFSET             (MXLEN - 6)
 #define CSR_ITRIGGER_HIT_LENGTH             1
 #define CSR_ITRIGGER_HIT                    (0x1ULL << CSR_ITRIGGER_HIT_OFFSET)
 /*
@@ -627,10 +628,10 @@
 #define CSR_ITRIGGER_ACTION_LENGTH          6
 #define CSR_ITRIGGER_ACTION                 (0x3fULL << CSR_ITRIGGER_ACTION_OFFSET)
 #define CSR_ETRIGGER                        0x7a1
-#define CSR_ETRIGGER_TYPE_OFFSET            (MXLEN-4)
+#define CSR_ETRIGGER_TYPE_OFFSET            (MXLEN - 4)
 #define CSR_ETRIGGER_TYPE_LENGTH            4
 #define CSR_ETRIGGER_TYPE                   (0xfULL << CSR_ETRIGGER_TYPE_OFFSET)
-#define CSR_ETRIGGER_DMODE_OFFSET           (MXLEN-5)
+#define CSR_ETRIGGER_DMODE_OFFSET           (MXLEN - 5)
 #define CSR_ETRIGGER_DMODE_LENGTH           1
 #define CSR_ETRIGGER_DMODE                  (0x1ULL << CSR_ETRIGGER_DMODE_OFFSET)
 /*
@@ -640,7 +641,7 @@
 * trigger(s) matched.  If the bit is not implemented, it is always 0
 * and writing it has no effect.
  */
-#define CSR_ETRIGGER_HIT_OFFSET             (MXLEN-6)
+#define CSR_ETRIGGER_HIT_OFFSET             (MXLEN - 6)
 #define CSR_ETRIGGER_HIT_LENGTH             1
 #define CSR_ETRIGGER_HIT                    (0x1ULL << CSR_ETRIGGER_HIT_OFFSET)
 /*
@@ -1332,7 +1333,7 @@
 #define SHORTNAME_FIELD_OFFSET              0
 #define SHORTNAME_FIELD_LENGTH              8
 #define SHORTNAME_FIELD                     (0xffU << SHORTNAME_FIELD_OFFSET)
-#define AC_ACCESS_REGISTER                  None
+// #define AC_ACCESS_REGISTER                  NONE
 /*
 * This is 0 to indicate Access Register Command.
  */
@@ -1394,7 +1395,7 @@
 #define AC_ACCESS_REGISTER_REGNO_OFFSET     0
 #define AC_ACCESS_REGISTER_REGNO_LENGTH     16
 #define AC_ACCESS_REGISTER_REGNO            (0xffffU << AC_ACCESS_REGISTER_REGNO_OFFSET)
-#define AC_QUICK_ACCESS                     None
+// #define AC_QUICK_ACCESS                     NONE
 /*
 * This is 1 to indicate Quick Access command.
  */

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 #define OPTIONS_128                     0x01 /* Perform 128 bit flash writes */
 #define OPTIONS_ENC                     0x02 /* Encrypt the flash contents */
 #define OPTIONS_AUTH                    0x04 /* Authenticate the flash contents */
