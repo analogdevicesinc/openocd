@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Convert binary file to a hex encoded array for inclusion in C projects
 
 import os

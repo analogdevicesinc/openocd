@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /***************************************************************************
  *   Copyright (C) 2011 by Julius Baxter                                   *
  *   julius@opencores.org                                                  *
@@ -45,8 +46,6 @@
 #define RVMAX_VERSION_MAX 0
 #define RVMAX_VERSION_MIN 10
 
-#define set_field(reg, mask, val) (((reg) & ~(mask)) | (((val) * ((mask) & ~((mask) << 1))) & (mask)))
-
 LIST_HEAD(rm_tap_list);
 LIST_HEAD(rm_du_list);
 extern uint32_t rvmax_auth_data[];
@@ -61,40 +60,45 @@ static struct rvmax_core_reg *rvmax_core_reg_list_arch_info;
 
 /* core register set based on RISC-V spec */
 static const struct rvmax_core_reg_init rvmax_init_reg_list[] = {
-	{"zero"     , GROUP0 + 1024, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "ra"      , GROUP0 + 1025, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "sp"      , GROUP0 + 1026, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "gp"      , GROUP0 + 1027, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "tp"      , GROUP0 + 1028, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "t0"      , GROUP0 + 1029, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "t1"      , GROUP0 + 1030, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "t2"      , GROUP0 + 1031, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "fp"      , GROUP0 + 1032, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s1"      , GROUP0 + 1033, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "a0"      , GROUP0 + 1034, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "a1"      , GROUP0 + 1035, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "a2"      , GROUP0 + 1036, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "a3"      , GROUP0 + 1037, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "a4"      , GROUP0 + 1038, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "a5"      , GROUP0 + 1039, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "a6"      , GROUP0 + 1040, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "a7"      , GROUP0 + 1041, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s2"      , GROUP0 + 1042, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s3"      , GROUP0 + 1043, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s4"      , GROUP0 + 1044, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s5"      , GROUP0 + 1045, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s6"      , GROUP0 + 1046, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s7"      , GROUP0 + 1047, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s8"      , GROUP0 + 1048, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s9"      , GROUP0 + 1049, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s10"     , GROUP0 + 1050, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "s11"     , GROUP0 + 1051, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "t3"      , GROUP0 + 1052, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "t4"      , GROUP0 + 1053, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "t5"      , GROUP0 + 1054, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "t6"      , GROUP0 + 1055, "org.gnu.gdb.riscv.cpu", NULL},
-	{ "pc"      , GROUP0 + 0x2000, "org.gnu.gdb.riscv.cpu", NULL},
+	{"zero", GROUP0 + 1024, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "ra", GROUP0 + 1025, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "sp", GROUP0 + 1026, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "gp", GROUP0 + 1027, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "tp", GROUP0 + 1028, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "t0", GROUP0 + 1029, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "t1", GROUP0 + 1030, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "t2", GROUP0 + 1031, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "fp", GROUP0 + 1032, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s1", GROUP0 + 1033, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "a0", GROUP0 + 1034, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "a1", GROUP0 + 1035, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "a2", GROUP0 + 1036, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "a3", GROUP0 + 1037, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "a4", GROUP0 + 1038, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "a5", GROUP0 + 1039, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "a6", GROUP0 + 1040, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "a7", GROUP0 + 1041, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s2", GROUP0 + 1042, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s3", GROUP0 + 1043, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s4", GROUP0 + 1044, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s5", GROUP0 + 1045, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s6", GROUP0 + 1046, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s7", GROUP0 + 1047, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s8", GROUP0 + 1048, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s9", GROUP0 + 1049, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s10", GROUP0 + 1050, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "s11", GROUP0 + 1051, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "t3", GROUP0 + 1052, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "t4", GROUP0 + 1053, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "t5", GROUP0 + 1054, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "t6", GROUP0 + 1055, "org.gnu.gdb.riscv.cpu", NULL},
+	{ "pc", GROUP0 + 0x2000, "org.gnu.gdb.riscv.cpu", NULL},
 };
+
+static uint64_t set_field(uint64_t reg, uint64_t mask, uint64_t val)
+{
+	return (((reg) & ~(mask)) | (((val) * ((mask) & ~((mask) << 1))) & (mask)));
+}
 
 static int rvmax_add_reg(struct target *target, struct rvmax_core_reg *new_reg)
 {
@@ -150,17 +154,17 @@ static int rvmax_jtag_read_regs(struct rvmax_common *rvmax, uint32_t *regs)
 	if (debugger_breakpoint_count < 0) {
 		for (i = 0; i < DBG_MAX_HWBREAKPOINTS; i++) {
 			/* retval =  */
-			du_core->rvmax_jtag_read_cpu(&rvmax->jtag, DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET+i*8, 1, &reg_value);
+			du_core->rvmax_jtag_read_cpu(&rvmax->jtag, DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET + i * 8, 1, &reg_value);
 			/*LOG_DEBUG("testing debug reg %d: %x",i,reg_value); */
 
 			if (!(reg_value & DBG_HWBREAKPOINT_AVAIL))
 				break;
 
 			reg_value &= ~DBG_HWBREAKPOINT_ENABLED;
-			du_core->rvmax_jtag_write_cpu(&rvmax->jtag, DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET+i*8, 1, &reg_value);
+			du_core->rvmax_jtag_write_cpu(&rvmax->jtag, DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET + i * 8, 1, &reg_value);
 			/*reg_value = 0xBA; */
 			reg_value = 0x0;
-			du_core->rvmax_jtag_write_cpu(&rvmax->jtag, DEBUGGER_HWBREAKPOINT_DATA_OFFSET+i*8, 1, &reg_value);
+			du_core->rvmax_jtag_write_cpu(&rvmax->jtag, DEBUGGER_HWBREAKPOINT_DATA_OFFSET + i * 8, 1, &reg_value);
 /*LOG_DEBUG("clearing debug reg %d: %x",i,reg_value); */
 		}
 
@@ -240,8 +244,9 @@ static int rvmax_restore_context(struct target *target)
 					LOG_ERROR("Error while restoring context");
 					return retval;
 				}
-			} else
+			} else {
 				reg_write = 1;
+			}
 		}
 	}
 
@@ -266,10 +271,10 @@ static int rvmax_read_core_reg(struct target *target, int num)
 
 	LOG_DEBUG("- %d", num);
 
-	if ((num < 0) || (num >= rvmax->nb_regs))
+	if (num < 0 || num >= rvmax->nb_regs)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
-	if ((num >= 0) && (num < RVMAXNUMCOREREGS)) {
+	if (num >= 0 && num < RVMAXNUMCOREREGS) {
 		reg_value = rvmax->core_regs[num];
 		buf_set_u32(rvmax->core_cache->reg_list[num].value, 0, 32, reg_value);
 		/*LOG_DEBUG("Read core reg %i value 0x%08" PRIx32, num , reg_value); */
@@ -286,7 +291,7 @@ static int rvmax_read_core_reg(struct target *target, int num)
 		}
 
 		buf_set_u32(rvmax->core_cache->reg_list[num].value, 0, 32, reg_value);
-		LOG_DEBUG("Read spr reg %i value 0x%08" PRIx32, num , reg_value);
+		LOG_DEBUG("Read spr reg %i value 0x%08" PRIx32, num, reg_value);
 	}
 
 	return ERROR_OK;
@@ -298,12 +303,12 @@ static int rvmax_write_core_reg(struct target *target, int num)
 
 	LOG_DEBUG("-");
 
-	if ((num < 0) || (num >= RVMAXNUMCOREREGS))
+	if (num < 0 || num >= RVMAXNUMCOREREGS)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	uint32_t reg_value = buf_get_u32(rvmax->core_cache->reg_list[num].value, 0, 32);
 	rvmax->core_regs[num] = reg_value;
-	LOG_DEBUG("Write core reg %i value 0x%08" PRIx32, num , reg_value);
+	LOG_DEBUG("Write core reg %i value 0x%08" PRIx32, num, reg_value);
 	rvmax->core_cache->reg_list[num].valid = 1;
 	rvmax->core_cache->reg_list[num].dirty = 0;
 
@@ -459,10 +464,10 @@ LOG_DEBUG("-");
 				jtag_get_srst()) {
 			LOG_ERROR("Can't request a halt while in reset if nSRST pulls nTRST");
 			return ERROR_TARGET_FAILURE;
-		} else {
-			target->debug_reason = DBG_REASON_DBGRQ;
-			return ERROR_OK;
 		}
+
+		target->debug_reason = DBG_REASON_DBGRQ;
+		return ERROR_OK;
 	}
 
 	int retval = du_core->rvmax_cpu_stall(&rvmax->jtag, CPU_STALL);
@@ -514,8 +519,9 @@ static int rvmax_is_cpu_running(struct target *target, int *running)
 			alive_sleep(2);
 
 			continue;
-		} else
+		} else {
 			return ERROR_OK;
+		}
 	}
 
 	LOG_ERROR("Could not re-establish communication with target");
@@ -537,9 +543,8 @@ static int rvmax_poll(struct target *target)
 	/* check for processor halted */
 	if (!running) {
 		/* It's actually stalled, so update our software's state */
-		if ((target->state == TARGET_RUNNING) ||
-				(target->state == TARGET_RESET)) {
-
+		if (target->state == TARGET_RUNNING ||
+				target->state == TARGET_RESET) {
 			target->state = TARGET_HALTED;
 
 			retval = rvmax_debug_entry(target);
@@ -565,10 +570,8 @@ static int rvmax_poll(struct target *target)
 								TARGET_EVENT_DEBUG_HALTED);
 		}
 	} else { /* ... target is running */
-
 		/* If target was supposed to be stalled, stall it again */
 		if  (target->state == TARGET_HALTED) {
-
 			target->state = TARGET_RUNNING;
 
 			retval = rvmax_halt(target);
@@ -674,7 +677,7 @@ static int rvmax_resume(struct target *target, int current,
 	retval = du_core->rvmax_cpu_stall(&rvmax->jtag, CPU_UNSTALL);
 
 	if (retval != ERROR_OK)
-			LOG_ERROR("Error while unstalling the CPU");
+		LOG_ERROR("Error while unstalling the CPU");
 
 	/* Registers are now invalid */
 	register_cache_invalidate(rvmax->core_cache);
@@ -742,7 +745,7 @@ static int rvmax_add_breakpoint(struct target *target,
 		if (debugger_breakpoint_count > 0) {
 			for (i = 0; i < debugger_breakpoint_count; i++) {
 				retval = du_core->rvmax_jtag_read_cpu(&rvmax->jtag,
-					DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET+i*8, 1, &reg_value);
+					DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET + i * 8, 1, &reg_value);
 				LOG_DEBUG("testing debug reg %d: %x", i, reg_value);
 				if (retval != ERROR_OK)
 					return retval;
@@ -753,14 +756,14 @@ static int rvmax_add_breakpoint(struct target *target,
 				/* TODO: add check for duplicate breakpoints... investigate if openocd/gdb do this for me */
 				reg_value = breakpoint->address;
 				retval = du_core->rvmax_jtag_write_cpu(&rvmax->jtag,
-					DEBUGGER_HWBREAKPOINT_DATA_OFFSET+i*8, 1, &reg_value);
+					DEBUGGER_HWBREAKPOINT_DATA_OFFSET + i * 8, 1, &reg_value);
 
 				if (retval != ERROR_OK)
 					return retval;
 
 				reg_value |= DBG_HWBREAKPOINT_ENABLED;
 				retval = du_core->rvmax_jtag_write_cpu(&rvmax->jtag,
-					DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET+i*8, 1, &reg_value);
+					DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET + i * 8, 1, &reg_value);
 				breakpoint->type = BKPT_HARD;
 				breakpoint->is_set = true;
 				return retval;
@@ -787,7 +790,7 @@ LOG_DEBUG("BKPT_SOFT");
 		return retval;
 	}
 
-	if (breakpoint->orig_instr != NULL)
+	if (breakpoint->orig_instr)
 		free(breakpoint->orig_instr);
 
 	breakpoint->orig_instr = malloc(breakpoint->length);
@@ -846,14 +849,14 @@ static int rvmax_remove_breakpoint(struct target *target,
 		LOG_DEBUG("R BKPT_HARD");
 		for (i = 0; i < debugger_breakpoint_count; i++) {
 			retval = du_core->rvmax_jtag_read_cpu(&rvmax->jtag,
-				DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET+i*8, 1, &reg_value);
+				DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET + i * 8, 1, &reg_value);
 			/*LOG_DEBUG("testing debug reg %d: %x",i,reg_value); */
 			if (retval != ERROR_OK)
 				return retval;
 
 			if (reg_value & DBG_HWBREAKPOINT_ENABLED) {/* breakpoint in use */
 				retval = du_core->rvmax_jtag_read_cpu(&rvmax->jtag,
-					DEBUGGER_HWBREAKPOINT_DATA_OFFSET+i*8, 1, &reg_value);
+					DEBUGGER_HWBREAKPOINT_DATA_OFFSET + i * 8, 1, &reg_value);
 
 				if (retval != ERROR_OK)
 					return retval;
@@ -861,7 +864,7 @@ static int rvmax_remove_breakpoint(struct target *target,
 				if (reg_value == breakpoint->address) {
 					reg_value &= ~DBG_HWBREAKPOINT_ENABLED;
 					retval = du_core->rvmax_jtag_write_cpu(&rvmax->jtag,
-						DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET+i*8, 1, &reg_value);
+						DEBUGGER_HWBREAKPOINT_CONTROL_OFFSET + i * 8, 1, &reg_value);
 
 					if (retval != ERROR_OK)
 						return retval;
@@ -939,12 +942,12 @@ static int rvmax_read_memory(struct target *target, target_addr_t address,
 	}
 
 	/* Sanitize arguments */
-	if (((size != 4) && (size != 2) && (size != 1)) || (count == 0) || !buffer) {
+	if ((size != 4 && size != 2 && size != 1) || count == 0 || !buffer) {
 		LOG_ERROR("Bad arguments");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	if (((size == 4) && (address & 0x3u)) || ((size == 2) && (address & 0x1u))) {
+	if ((size == 4 && address & 0x3u) || (size == 2 && (address & 0x1u))) {
 		LOG_ERROR("Can't handle unaligned memory access");
 		return ERROR_TARGET_UNALIGNED_ACCESS;
 	}
@@ -977,12 +980,12 @@ static int rvmax_write_memory(struct target *target, target_addr_t address,
 	}
 
 	/* Sanitize arguments */
-	if (((size != 4) && (size != 2) && (size != 1)) || (count == 0) || !buffer) {
+	if ((size != 4 && size != 2 && size != 1) || count == 0 || !buffer) {
 		LOG_ERROR("Bad arguments");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	if (((size == 4) && (address & 0x3u)) || ((size == 2) && (address & 0x1u))) {
+	if ((size == 4 && address & 0x3u) || (size == 2 && address & 0x1u)) {
 		LOG_ERROR("Can't handle unaligned memory access");
 		return ERROR_TARGET_UNALIGNED_ACCESS;
 	}
@@ -1016,7 +1019,7 @@ static int rvmax_init_target(struct command_context *cmd_ctx,
 		}
 	}
 
-	if (rvmax_du == NULL) {
+	if (!rvmax_du) {
 		LOG_ERROR("No debug unit selected");
 		return ERROR_FAIL;
 	}
@@ -1030,7 +1033,7 @@ static int rvmax_init_target(struct command_context *cmd_ctx,
 		}
 	}
 
-	if (jtag->tap_ip == NULL) {
+	if (!jtag->tap_ip) {
 		LOG_ERROR("No tap selected");
 		return ERROR_FAIL;
 	}
@@ -1049,7 +1052,7 @@ static int rvmax_target_create(struct target *target, Jim_Interp *interp)
 {
 	LOG_DEBUG("-");
 
-	if (target->tap == NULL)
+	if (!target->tap)
 		return ERROR_FAIL;
 
 	struct rvmax_common *rvmax = calloc(1, sizeof(struct rvmax_common));
@@ -1082,21 +1085,21 @@ static int rvmax_examine(struct target *target)
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Couldn't read the CPU state");
 			return retval;
+		}
+
+		if (running) {
+			target->state = TARGET_RUNNING;
 		} else {
-			if (running) {
-				target->state = TARGET_RUNNING;
-			} else {
-				LOG_DEBUG("Target is halted");
+			LOG_DEBUG("Target is halted");
 
-				/* This is the first time we examine the target,
-				 * it is stalled and we don't know why. Let's
-				 * assume this is because of a debug reason.
-				 */
-				if (target->state == TARGET_UNKNOWN)
-					target->debug_reason = DBG_REASON_DBGRQ;
+			/* This is the first time we examine the target,
+			 * it is stalled and we don't know why. Let's
+			 * assume this is because of a debug reason.
+			 */
+			if (target->state == TARGET_UNKNOWN)
+				target->debug_reason = DBG_REASON_DBGRQ;
 
-				target->state = TARGET_HALTED;
-			}
+			target->state = TARGET_HALTED;
 		}
 	}
 
@@ -1200,8 +1203,8 @@ static int rvmax_run_algorithm(struct target *target, int num_mem_params,
 		int64_t now = timeval_ms();
 		if (now - start > timeout_ms) {
 			LOG_ERROR("Algorithm timed out after %d ms.", timeout_ms);
-			LOG_ERROR("  now   = 0x%08x", (uint32_t) now);
-			LOG_ERROR("  start = 0x%08x", (uint32_t) start);
+			LOG_ERROR("  now   = 0x%08x", (uint32_t)now);
+			LOG_ERROR("  start = 0x%08x", (uint32_t)start);
 			rvmax_halt(target);
 			rvmax_poll(target);
 			return ERROR_TARGET_TIMEOUT;
@@ -1359,8 +1362,8 @@ static int rvmax_wait_algorithm(struct target *target, int num_mem_params,
 		int64_t now = timeval_ms();
 		if (now - start > timeout_ms) {
 			LOG_ERROR("Algorithm timed out after %d ms.", timeout_ms);
-			LOG_ERROR("  now   = 0x%08x", (uint32_t) now);
-			LOG_ERROR("  start = 0x%08x", (uint32_t) start);
+			LOG_ERROR("  now   = 0x%08x", (uint32_t)now);
+			LOG_ERROR("  start = 0x%08x", (uint32_t)start);
 			rvmax_halt(target);
 			rvmax_poll(target);
 			return ERROR_TARGET_TIMEOUT;
@@ -1391,13 +1394,13 @@ static int rvmax_wait_algorithm(struct target *target, int num_mem_params,
 		}
 	}
 
-	#if 0
-	/* Restore Interrupts */
+	/*
+	// Restore Interrupts
 	LOG_DEBUG("Restoring Interrupts");
 	buf_set_u64(mstatus_bytes, 0, reg_mstatus->size, current_mstatus);
 	reg_mstatus->type->set(reg_mstatus, mstatus_bytes);
 
-	/* Restore registers */
+	// Restore registers
 	uint8_t buf[8];
 	buf_set_u64(buf, 0, reg_pc->size, saved_pc);
 	if (reg_pc->type->set(reg_pc, buf) != ERROR_OK)
@@ -1410,7 +1413,7 @@ static int rvmax_wait_algorithm(struct target *target, int num_mem_params,
 		if (r->type->set(r, buf) != ERROR_OK)
 			return ERROR_FAIL;
 	}
-	#endif
+	*/
 
 	return ERROR_OK;
 }
@@ -1453,9 +1456,8 @@ int rvmax_get_gdb_fileio_info(struct target *target, struct gdb_fileio_info *fil
 	return ERROR_FAIL;
 }
 
-static int rvmax_checksum_memory(struct target *target, target_addr_t address,
-		uint32_t count, uint32_t *checksum) {
-
+static int rvmax_checksum_memory(struct target *target, target_addr_t address, uint32_t count, uint32_t *checksum)
+{
 	LOG_DEBUG("-");
 	return ERROR_FAIL;
 }
@@ -1500,7 +1502,7 @@ static int rvmax_profiling(struct target *target, uint32_t *samples,
 
 		gettimeofday(&now, NULL);
 
-		if ((sample_count >= max_num_samples) || timeval_compare(&now, &timeout) > 0) {
+		if (sample_count >= max_num_samples || timeval_compare(&now, &timeout) > 0) {
 			LOG_INFO("Profiling completed. %" PRIu32 " samples.", sample_count);
 			break;
 		}
@@ -1631,7 +1633,6 @@ COMMAND_HANDLER(rvmax_addreg_command_handler)
 
 COMMAND_HANDLER(rvmax_auth_command_handler)
 {
-
 	LOG_DEBUG("-");
 	if (CMD_ARGC != AUTH_LEN)
 		return ERROR_COMMAND_SYNTAX_ERROR;

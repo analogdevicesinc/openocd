@@ -109,9 +109,8 @@ FLASH_BANK_COMMAND_HANDLER(max32xxx_flash_bank_command)
 {
 	struct max32xxx_flash_bank *info;
 
-	if ((CMD_ARGC < 10) || (CMD_ARGC > 10)) {
-		LOG_ERROR(
-			"incorrect flash bank max32xxx configuration: <base> <size> 0 0 <target> <FLC base> <sector size> <clkdiv> <options>");
+	if (CMD_ARGC < 10 || CMD_ARGC > 10) {
+		LOG_ERROR("incorrect flash bank max32xxx configuration: <base> <size> 0 0 <target> <FLC base> <sector size> <clkdiv> <options>");
 		return ERROR_FLASH_BANK_INVALID;
 	}
 
@@ -174,8 +173,7 @@ static int max32xxx_flash_op_pre(struct flash_bank *bank)
 	if (bootloader & FLC_BL_CTRL_23) {
 		LOG_WARNING("FLC_BL_CTRL indicates BL mode 2 or mode 3.");
 		if (bootloader & FLC_BL_CTRL_IFREN) {
-			LOG_WARNING(
-				"Flash page 0 swapped out, attempting to swap back in for programming");
+			LOG_WARNING("Flash page 0 swapped out, attempting to swap back in for programming");
 			bootloader &= ~(FLC_BL_CTRL_IFREN);
 			if (target_write_u32(target, info->flc_base + FLC_BL_CTRL,
 					bootloader) != ERROR_OK) {
@@ -188,8 +186,7 @@ static int max32xxx_flash_op_pre(struct flash_bank *bank)
 				return ERROR_FAIL;
 			}
 			if (bootloader & FLC_BL_CTRL_IFREN)
-				LOG_ERROR(
-					"Unable to swap flash page 0 back in. Writes to page 0 will fail.");
+				LOG_ERROR("Unable to swap flash page 0 back in. Writes to page 0 will fail.");
 		}
 	}
 
@@ -232,18 +229,18 @@ static int max32xxx_protect_check(struct flash_bank *bank)
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
 	if (!info->max326xx) {
-		for (unsigned i = 0; i < bank->num_sectors; i++)
+		for (unsigned int i = 0; i < bank->num_sectors; i++)
 			bank->sectors[i].is_protected = -1;
 
 		return ERROR_FLASH_OPER_UNSUPPORTED;
 	}
 
 	/* Check the protection */
-	for (unsigned i = 0; i < bank->num_sectors; i++) {
-		if (i%32 == 0)
-			target_read_u32(target, info->flc_base + FLC_PROT + ((i/32)*4), &temp_reg);
+	for (unsigned int i = 0; i < bank->num_sectors; i++) {
+		if (i % 32 == 0)
+			target_read_u32(target, info->flc_base + FLC_PROT + ((i / 32) * 4), &temp_reg);
 
-		if (temp_reg & (0x1 << i%32))
+		if (temp_reg & (0x1 << i % 32))
 			bank->sectors[i].is_protected = 1;
 		else
 			bank->sectors[i].is_protected = 0;
@@ -268,10 +265,10 @@ static int max32xxx_erase(struct flash_bank *bank, unsigned int first,
 	if (!info->probed)
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
-	if ((last < first) || (last >= bank->num_sectors))
+	if (last < first || last >= bank->num_sectors)
 		return ERROR_FLASH_SECTOR_INVALID;
 
-	if ((first == 0) && (last == (bank->num_sectors - 1)))
+	if (first == 0 && last == (bank->num_sectors - 1))
 		return max32xxx_mass_erase(bank);
 
 	/* Prepare to issue flash operation */
@@ -282,13 +279,13 @@ static int max32xxx_erase(struct flash_bank *bank, unsigned int first,
 
 	int erased = 0;
 	for (unsigned int banknr = first; banknr <= last; banknr++) {
-
 		/* Check the protection */
 		if (bank->sectors[banknr].is_protected == 1) {
 			LOG_WARNING("Flash sector %u is protected", banknr);
 			continue;
-		} else
+		} else {
 			erased = 1;
+		}
 
 		/* Address is first word in page */
 		target_write_u32(target, info->flc_base + FLC_ADDR, banknr * info->sector_size);
@@ -354,22 +351,22 @@ static int max32xxx_protect(struct flash_bank *bank, int set,
 	if (!info->max326xx)
 		return ERROR_FLASH_OPER_UNSUPPORTED;
 
-	if ((last < first) || (last >= bank->num_sectors))
+	if (last < first || last >= bank->num_sectors)
 		return ERROR_FLASH_SECTOR_INVALID;
 
 	/* Setup the protection on the pages given */
 	for (unsigned int page = first; page <= last; page++) {
 		if (set) {
 			/* Set the write/erase bit for this page */
-			target_read_u32(target, info->flc_base + FLC_PROT + (page/32), &temp_reg);
-			temp_reg |= (0x1 << page%32);
-			target_write_u32(target, info->flc_base + FLC_PROT + (page/32), temp_reg);
+			target_read_u32(target, info->flc_base + FLC_PROT + (page / 32), &temp_reg);
+			temp_reg |= (0x1 << page % 32);
+			target_write_u32(target, info->flc_base + FLC_PROT + (page / 32), temp_reg);
 			bank->sectors[page].is_protected = 1;
 		} else {
 			/* Clear the write/erase bit for this page */
-			target_read_u32(target, info->flc_base + FLC_PROT + (page/32), &temp_reg);
-			temp_reg &= ~(0x1 << page%32);
-			target_write_u32(target, info->flc_base + FLC_PROT + (page/32), temp_reg);
+			target_read_u32(target, info->flc_base + FLC_PROT + (page / 32), &temp_reg);
+			temp_reg &= ~(0x1 << page % 32);
+			target_write_u32(target, info->flc_base + FLC_PROT + (page / 32), temp_reg);
 			bank->sectors[page].is_protected = 0;
 		}
 	}
@@ -391,7 +388,7 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 	struct armv7m_algorithm armv7m_info;
 	int retval = ERROR_OK;
 	/* power of two, and multiple of word size */
-	static const unsigned buf_min = 128;
+	static const unsigned int buf_min = 128;
 	uint8_t *write_code;
 	int write_code_size;
 
@@ -399,11 +396,12 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 	if (strcmp(target_type_name, "cortex_m") == 0) {
 		write_code = (uint8_t *)write_code_arm;
 		write_code_size = sizeof(write_code_arm);
-	} else
+	} else {
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
+	}
 
-	LOG_DEBUG("max32xxx_write_block bank=%p buffer=%p offset=%08" PRIx32 " len=%08" PRIx32 "",
-		bank, buffer, offset, len);
+	LOG_DEBUG("%s bank=%p buffer=%p offset=%08" PRIx32 " len=%08" PRIx32 "",
+		__func__, bank, buffer, offset, len);
 
 	/* flash write code */
 	if (target_alloc_working_area(target, write_code_size, &write_algorithm) != ERROR_OK) {
@@ -421,7 +419,7 @@ static int max32xxx_write_block(struct flash_bank *bank, const uint8_t *buffer,
 		}
 
 		LOG_DEBUG("retry target_alloc_working_area(%s, size=%u)",
-			target_name(target), (unsigned) buffer_size);
+			target_name(target), (unsigned int)buffer_size);
 	}
 
 	target_write_buffer(target, write_algorithm->address, write_code_size,
@@ -501,8 +499,8 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		return ERROR_TARGET_NOT_HALTED;
 	}
 
-	LOG_DEBUG("max32xxx_write bank=%p buffer=%p offset=%08" PRIx32 " count=%08" PRIx32 "",
-		bank, buffer, offset, count);
+	LOG_DEBUG("%s bank=%p buffer=%p offset=%08" PRIx32 " count=%08" PRIx32 "",
+		__func__, bank, buffer, offset, count);
 
 	if (!info->probed)
 		return ERROR_FLASH_BANK_NOT_PROBED;
@@ -537,8 +535,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		if (retval != ERROR_OK) {
 			if (retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE) {
 				if (info->options & OPTIONS_ENC) {
-					LOG_ERROR(
-						"Must use algorithm in working area for encryption");
+					LOG_ERROR("Must use algorithm in working area for encryption");
 					return ERROR_FLASH_OPERATION_FAILED;
 				}
 				LOG_DEBUG("writing flash word-at-a-time");
@@ -554,7 +551,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		}
 	}
 
-	if (((info->options & OPTIONS_128) == 0) && (remaining >= 4)) {
+	if (((info->options & OPTIONS_128) == 0) && remaining >= 4) {
 		/* write in 32-bit units*/
 		target_read_u32(target, info->flc_base + FLC_CN, &flash_cn);
 		flash_cn |= FLC_CN_32BIT;
@@ -585,7 +582,7 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 		}
 	}
 
-	if ((info->options & OPTIONS_128) && (remaining >= 16)) {
+	if ((info->options & OPTIONS_128) && remaining >= 16) {
 		/* write in 128-bit units */
 		target_read_u32(target, info->flc_base + FLC_CN, &flash_cn);
 		flash_cn &= ~(FLC_CN_32BIT);
@@ -608,7 +605,6 @@ static int max32xxx_write(struct flash_bank *bank, const uint8_t *buffer,
 			} while ((--retry > 0) && max32xxx_flash_busy(flash_cn));
 
 			if (retry <= 0) {
-
 				LOG_ERROR("Timed out waiting for flash write @ 0x%08" PRIx32,
 					address);
 				max32xxx_flash_op_post(bank);
@@ -742,11 +738,11 @@ static int max32xxx_probe(struct flash_bank *bank)
 	/* Probe to determine if this part is in the max326xx family */
 	info->max326xx = 0;
 	target_read_u32(target, ARM_PID_REG, &arm_id[0]);
-	target_read_u32(target, ARM_PID_REG+4, &arm_id[1]);
+	target_read_u32(target, ARM_PID_REG + 4, &arm_id[1]);
 	arm_pid = (arm_id[1] << 8) + arm_id[0];
 	LOG_DEBUG("arm_pid = 0x%x", arm_pid);
 
-	if ((arm_pid == ARM_PID_DEFAULT_CM3) || arm_pid == ARM_PID_DEFAULT_CM4) {
+	if (arm_pid == ARM_PID_DEFAULT_CM3 || arm_pid == ARM_PID_DEFAULT_CM4) {
 		uint32_t max326xx_id;
 		target_read_u32(target, MAX326XX_ID_REG, &max326xx_id);
 		LOG_DEBUG("max326xx_id = 0x%" PRIx32, max326xx_id);
@@ -889,7 +885,7 @@ COMMAND_HANDLER(max32xxx_handle_protection_set_command)
 	}
 
 	/* Check the address is in the range of the flash */
-	if ((addr+len) >= info->flash_size)
+	if ((addr + len) >= info->flash_size)
 		return ERROR_FLASH_SECTOR_INVALID;
 
 	if (len == 0)
@@ -945,7 +941,7 @@ COMMAND_HANDLER(max32xxx_handle_protection_clr_command)
 	}
 
 	/* Check the address is in the range of the flash */
-	if ((addr+len) >= info->flash_size)
+	if ((addr + len) >= info->flash_size)
 		return ERROR_FLASH_SECTOR_INVALID;
 
 	if (len == 0)
@@ -992,21 +988,20 @@ COMMAND_HANDLER(max32xxx_handle_protection_check_command)
 	}
 
 	LOG_WARNING("s:<sector number> a:<address> p:<protection bit>");
-	for (unsigned i = 0; i < bank->num_sectors; i += 4) {
-		LOG_WARNING(
-			"s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d",
-			(i+0),
-			(i+0)*info->sector_size,
-			bank->sectors[(i+0)].is_protected,
-			(i+1),
-			(i+1)*info->sector_size,
-			bank->sectors[(i+1)].is_protected,
-			(i+2),
-			(i+2)*info->sector_size,
-			bank->sectors[(i+2)].is_protected,
-			(i+3),
-			(i+3)*info->sector_size,
-			bank->sectors[(i+3)].is_protected);
+	for (unsigned int i = 0; i < bank->num_sectors; i += 4) {
+		LOG_WARNING("s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d | s:%03d a:0x%06x p:%d",
+			(i + 0),
+			(i + 0) * info->sector_size,
+			bank->sectors[(i + 0)].is_protected,
+			(i + 1),
+			(i + 1) * info->sector_size,
+			bank->sectors[(i + 1)].is_protected,
+			(i + 2),
+			(i + 2) * info->sector_size,
+			bank->sectors[(i + 2)].is_protected,
+			(i + 3),
+			(i + 3) * info->sector_size,
+			bank->sectors[(i + 3)].is_protected);
 	}
 
 	return ERROR_OK;

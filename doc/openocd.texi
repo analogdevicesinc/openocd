@@ -2557,7 +2557,7 @@ interface string or for user class interface.
 Display various device information, like hardware version, firmware version, current bus status.
 @end deffn
 
-@deffn {Command} {cmsis-dap cmd} number number ...
+@deffn {Command} {cmsis-dap cmd} number0 number1 ...
 Execute an arbitrary CMSIS-DAP command. Use for adapter testing or for handling
 of an adapter vendor specific command from a Tcl script.
 
@@ -5044,7 +5044,7 @@ and OpenOCD adopts that same model for targets.
 
 A good Tk example is a on screen button.
 Once a button is created a button
-has a name (a path in Tk terms) and that name is useable as a first
+has a name (a path in Tk terms) and that name is usable as a first
 class command. For example in Tk, one can create a button and later
 configure it like this:
 
