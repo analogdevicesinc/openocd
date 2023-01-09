@@ -84,9 +84,12 @@
 
 #define SPI_ICC_BASE                            0x4002F000
 #define SPI_ICC_CTRL                            (SPI_ICC_BASE | 0x100)
+#define SPI_ICC_INV                             (SPI_ICC_BASE | 0x700)
 
 #define SPI_ICC_CTRL_EN_POS                     0
 #define SPI_ICC_CTRL_EN                         (0x1UL << SPI_ICC_CTRL_EN_POS)
+#define SPI_ICC_CTRL_RDY_POS                    16
+#define SPI_ICC_CTRL_RDY                        (0x1UL << SPI_ICC_CTRL_RDY_POS)
 
 #define GCR_BASE                                0x40000000
 #define GCR_SCON                                (GCR_BASE | 0x00)
@@ -178,6 +181,10 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	struct max32xxx_qspi_flash_bank *max32xxx_qspi_info = bank->driver_priv;
 	uint32_t temp32;
 
+	/* Disable the SPI ICC */
+	temp32 = 0;
+	target_write_u32(target, SPI_ICC_CTRL, temp32);
+
 	/* Disable SPIXFC */
 	temp32 = 0;
 	target_write_u32(target, SPIXFC_GEN_CTRL, temp32);
@@ -185,6 +192,22 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	/* Reset SPI peripherals */
 	temp32 = (GCR_RST1_XSPIM | GCR_RST1_SPIXIP);
 	target_write_u32(target, GCR_RST1, temp32);
+
+	/* Wait for reset to complete */
+	temp32 = 1;
+	while (temp32)
+		target_read_u32(target, GCR_RST1, &temp32);
+
+	/* Invalidate cache */
+	temp32 = 1;
+	target_write_u32(target, SPI_ICC_INV, temp32);
+
+	/* Wait for the ready bit */
+	temp32 = 0;
+	while (!temp32) {
+		target_read_u32(target, SPI_ICC_CTRL, &temp32);
+		temp32 &= SPI_ICC_CTRL_RDY;
+	}
 
 	/* Set the number of system clocks for the SPI clock low and high period */
 	temp32 = (SPI_CLOCK_PERIOD << 8) | (SPI_CLOCK_PERIOD << 12) | (0x1 << 2);
@@ -235,9 +258,7 @@ static int max32xxx_qspi_post_op(struct flash_bank *bank)
 	temp32 = 0x1;
 	target_write_u32(target, SPIXF_BUS_IDLE, temp32);
 
-	/* Enable and flush the SPI ICC */
-	temp32 = 0;
-	target_write_u32(target, SPI_ICC_CTRL, temp32);
+	/* Enable cache */
 	temp32 = SPI_ICC_CTRL_EN;
 	target_write_u32(target, SPI_ICC_CTRL, temp32);
 
