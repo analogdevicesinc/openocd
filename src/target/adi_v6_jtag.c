@@ -769,7 +769,6 @@ static int jtag_ap_q_bankselect(struct adi_ap *ap, unsigned reg)
 	if (dap->select != DP_SELECT_INVALID)
 		sel |= dap->select & 0xf;
 	dap->select = sel;
-	LOG_DEBUG("AP BANKSEL: %x", (uint32_t) sel);
 	retval = jtag_dp_q_write(dap, DP_SELECT, (uint32_t) sel);
 	if (retval != ERROR_OK)
 		return retval;
