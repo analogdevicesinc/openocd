@@ -366,7 +366,6 @@ static int ice2000_validate_ircapture(int test_data_length, int total_ir_length,
 	jtag_add_plain_ir_scan(test_data_length + total_ir_length,
 						   ir_test_in, ir_test_out, TAP_IDLE);
 
-	LOG_DEBUG("IR capture validation scan");
 	retval = jtag_execute_queue();
 	if (retval != ERROR_OK)
 		return retval;
