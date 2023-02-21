@@ -911,9 +911,15 @@ static int cortex_a_internal_restart(struct target *target)
 	if (retval != ERROR_OK)
 		return retval;
 
-	retval = mem_ap_write_atomic_u32(armv7a->debug_ap,
-			armv7a->debug_base + CPUDBG_DRCR, DRCR_RESTART |
-			DRCR_CLEAR_EXCEPTIONS);
+	if (target->restart_use_cti) {
+		/* Send DBGRESTART signal */
+		uint32_t channel = 1 << target->restart_cti_channel;
+		retval = mem_ap_write_atomic_u32(target, target->restart_cti_reg_addr, channel);
+	} else {
+		retval = mem_ap_write_atomic_u32(armv7a->debug_ap,
+				armv7a->debug_base + CPUDBG_DRCR, DRCR_RESTART |
+				DRCR_CLEAR_EXCEPTIONS);
+	}
 	if (retval != ERROR_OK)
 		return retval;
 

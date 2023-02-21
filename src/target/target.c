@@ -4977,7 +4977,7 @@ no_params:
 				e = Jim_GetOpt_Wide(goi, &w);
 				if (e != JIM_OK)
 					return e;
-				target->restart_cti_reg_addr = (uint32_t)w;
+				target->restart_cti_reg_addr = (target_addr_t)w;
 				target->restart_use_cti = true;
 			} else {
 				if (goi->argc != 0)

@@ -216,7 +216,7 @@ struct target {
 
 	/* Some targets use CoreSight CTI to do restart */
 	bool restart_use_cti;
-	uint32_t restart_cti_reg_addr;
+	target_addr_t restart_cti_reg_addr;
 	int restart_cti_channel;
 };
 
