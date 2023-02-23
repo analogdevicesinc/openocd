@@ -14,6 +14,8 @@
  *   Copyright (C) ST-Ericsson SA 2011                                     *
  *   michel.jaouen@stericsson.com : smp minimum support                    *
  *                                                                         *
+ *   Copyright (C) 2023, Analog Devices, Inc.                              *
+ *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *
@@ -216,7 +218,7 @@ struct target {
 
 	/* Some targets use CoreSight CTI to do restart */
 	bool restart_use_cti;
-	uint32_t restart_cti_reg_addr;
+	target_addr_t restart_cti_reg_addr;
 	int restart_cti_channel;
 };
 
