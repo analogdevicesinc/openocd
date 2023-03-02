@@ -38,7 +38,7 @@
 /* ADuCM302x cache flash control registers */
 #define STAT			0x40018000
 #define IEN				0x40018004
-#define CMD				0x40018008
+#define CMD_ADDR		0x40018008
 #define KH_ADDR			0x4001800c
 #define KH_DATA0		0x40018010
 #define KH_DATA1		0x40018014
@@ -122,7 +122,7 @@ struct aducm302x_flash_bank {
 	/* flash geometry */
 	uint32_t pagesize;
 	/* how many pages in one protect block */
-	int pages_per_block;
+	unsigned pages_per_block;
 };
 
 static int aducm302x_probe(struct flash_bank *bank)
@@ -133,7 +133,7 @@ static int aducm302x_probe(struct flash_bank *bank)
 	const char *chipname;
 	uint16_t chipid_expected, adiid, chipid;
 	long value;
-	int retval, i;
+	int retval;
 
 	LOG_DEBUG("bank=%p", bank);
 
@@ -187,7 +187,7 @@ static int aducm302x_probe(struct flash_bank *bank)
 		LOG_ERROR("malloc failed");
 		return ERROR_FAIL;
 	}
-	for (i = 0; i < bank->num_sectors; i++) {
+	for (unsigned i = 0; i < bank->num_sectors; i++) {
 		bank->sectors[i].offset = i * aducm302x_info->pagesize;
 		bank->sectors[i].size = aducm302x_info->pagesize;
 		bank->sectors[i].is_erased = -1;
@@ -233,12 +233,12 @@ static int aducm302x_mass_erase(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
 	uint32_t flash_stat;
-	int retval, i;
+	int retval;
 
 	/* Write user key */
 	target_write_u32(target, KEY, USER_KEY);
 	/* Write massive erase command */
-	target_write_u32(target, CMD, CMD_MASSERASE);
+	target_write_u32(target, CMD_ADDR, CMD_MASSERASE);
 	/* Wait until erase complete */
 	do {
 		target_read_u32(target, STAT, &flash_stat);
@@ -248,18 +248,18 @@ static int aducm302x_mass_erase(struct flash_bank *bank)
 	if (retval != ERROR_OK)
 		return retval;
 
-	for (i = 0; i < bank->num_sectors; i++)
+	for (unsigned i = 0; i < bank->num_sectors; i++)
 		bank->sectors[i].is_erased = 1;
 
 	return ERROR_OK;
 }
 
-static int aducm302x_erase(struct flash_bank *bank, int first, int last)
+static int aducm302x_erase(struct flash_bank *bank, unsigned first, unsigned last)
 {
 	struct aducm302x_flash_bank *aducm302x_info = bank->driver_priv;
 	struct target *target = bank->target;
 	uint32_t flash_stat;
-	int retval, i;
+	int retval;
 
 	LOG_DEBUG("bank=%p first=%d last = %d", bank, first, last);
 
@@ -271,7 +271,7 @@ static int aducm302x_erase(struct flash_bank *bank, int first, int last)
 	if (!aducm302x_info->probed)
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
-	if (first < 0 || last < first || last >= bank->num_sectors)
+	if (last < first || last >= bank->num_sectors)
 		return ERROR_FLASH_SECTOR_INVALID;
 
 	if (first == 0 && last == bank->num_sectors - 1) {
@@ -279,13 +279,13 @@ static int aducm302x_erase(struct flash_bank *bank, int first, int last)
 		return retval;
 	}
 
-	for (i = first; i <= last; i++) {
+	for (unsigned i = first; i <= last; i++) {
 		/* Address is first word in page */
 		target_write_u32(target, PAGE_ADDR0, i * aducm302x_info->pagesize);
 		/* Write user key */
 		target_write_u32(target, KEY, USER_KEY);
 		/* Write page erase command */
-		target_write_u32(target, CMD, CMD_ERASEPAGE);
+		target_write_u32(target, CMD_ADDR, CMD_ERASEPAGE);
 		/* Wait until erase complete */
 		do {
 			target_read_u32(target, STAT, &flash_stat);
@@ -301,13 +301,12 @@ static int aducm302x_erase(struct flash_bank *bank, int first, int last)
 	return ERROR_OK;
 }
 
-static int aducm302x_protect(struct flash_bank *bank, int set, int first, int last)
+static int aducm302x_protect(struct flash_bank *bank, int set, unsigned first, unsigned last)
 {
 	struct aducm302x_flash_bank *aducm302x_info = bank->driver_priv;
 	struct target *target = bank->target;
 	uint32_t wrprot;
-	int n = aducm302x_info->pages_per_block;
-	int i;
+	unsigned n = aducm302x_info->pages_per_block;
 
 	if (target->state != TARGET_HALTED) {
 		LOG_ERROR("Target not halted");
@@ -324,8 +323,8 @@ static int aducm302x_protect(struct flash_bank *bank, int set, int first, int la
 
 	/* One protect block has N pages. So the first should be 0, N, 2 * N, ...
 	   The last should be N - 1, 2 * N - 1, 3 * N - 1, ... */
-	if (first < 0 || (first & (n - 1)) || last <= first || (last & (n - 1)) != n - 1
-		|| last >= n * 32) {
+	if ((first & (n - 1)) || last <= first || (last & (n - 1)) != n - 1
+		|| last >= (n * 32)) {
 		LOG_ERROR("Can't protect unaligned or out-of-range pages.");
 		return ERROR_FLASH_SECTOR_INVALID;
 	}
@@ -336,7 +335,7 @@ static int aducm302x_protect(struct flash_bank *bank, int set, int first, int la
 
 	target_read_u32(target, WRPROT, &wrprot);
 
-	for (i = first; i <= last; i++)
+	for (unsigned i = first; i <= last; i++)
 		wrprot &= ~(1 << i);
 
 	LOG_DEBUG("WRPROT 0x%"PRIx32, wrprot);
@@ -351,8 +350,7 @@ static int aducm302x_protect_check(struct flash_bank *bank)
 	struct aducm302x_flash_bank *aducm302x_info = bank->driver_priv;
 	struct target *target = bank->target;
 	uint32_t wrprot;
-	int n = aducm302x_info->pages_per_block;
-	int i, j;
+	unsigned n = aducm302x_info->pages_per_block;
 
 	if (target->state != TARGET_HALTED) {
 		LOG_ERROR("Target not halted");
@@ -362,13 +360,13 @@ static int aducm302x_protect_check(struct flash_bank *bank)
 	if (!aducm302x_info->probed)
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
-	for (i = 0; i < bank->num_sectors; i++)
+	for (unsigned i = 0; i < bank->num_sectors; i++)
 		bank->sectors[i].is_protected = -1;
 
 	target_read_u32(target, WRPROT, &wrprot);
 
-	for (i = 0; i < 32; i++)
-		for (j = 0; j < n; j++)
+	for (unsigned i = 0; i < 32; i++)
+		for (unsigned j = 0; j < n; j++)
 			bank->sectors[i * n + j].is_protected = !(wrprot & (1 << i));
 
 	return ERROR_OK;
@@ -555,7 +553,7 @@ static int aducm302x_write(struct flash_bank *bank, const uint8_t *buffer,
 		target_write_u32(target, KH_ADDR, address & (~ 0x7));
 		target_write_buffer(target, KH_DATA0, 4, first_dword);
 		target_write_buffer(target, KH_DATA1, 4, first_dword + 4);
-		target_write_u32(target, CMD, CMD_WRITE);
+		target_write_u32(target, CMD_ADDR, CMD_WRITE);
 
 		do {
 			target_read_u32(target, STAT, &flash_stat);
@@ -593,7 +591,7 @@ static int aducm302x_write(struct flash_bank *bank, const uint8_t *buffer,
 		target_write_u32(target, KH_ADDR, address);
 		target_write_buffer(target, KH_DATA0, 4, buffer);
 		target_write_buffer(target, KH_DATA1, 4, buffer + 4);
-		target_write_u32(target, CMD, CMD_WRITE);
+		target_write_u32(target, CMD_ADDR, CMD_WRITE);
 
 		do {
 			target_read_u32(target, STAT, &flash_stat);
@@ -618,7 +616,7 @@ static int aducm302x_write(struct flash_bank *bank, const uint8_t *buffer,
 		target_write_u32(target, KH_ADDR, address);
 		target_write_buffer(target, KH_DATA0, 4, last_dword);
 		target_write_buffer(target, KH_DATA1, 4, last_dword + 4);
-		target_write_u32(target, CMD, CMD_WRITE);
+		target_write_u32(target, CMD_ADDR, CMD_WRITE);
 
 		do {
 			target_read_u32(target, STAT, &flash_stat);
