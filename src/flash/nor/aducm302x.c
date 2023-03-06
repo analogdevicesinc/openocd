@@ -1,6 +1,6 @@
 /***************************************************************************
  *   Flash drivers for Analog Devices ADuCM302x and ADuCM4x50              *
- *   Copyright (C) 2014, 2016 Analog Devices, Inc.                         *
+ *   Copyright (C) 2014, 2016, 2023 Analog Devices, Inc.                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
