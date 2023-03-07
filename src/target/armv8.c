@@ -551,7 +551,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 	case ARMV8_CNTHP_CVAL_EL2:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CNTHP_CVAL_EL2, 0), &value_64, 2);
-		break;	
+		break;
 	case ARMV8_CNTHV_TVAL_EL2:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CNTHV_TVAL_EL2, 0), &value_64, 2);
@@ -564,7 +564,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CNTHV_CVAL_EL2, 0), &value_64, 2);
 		break;
-	
+
 	case ARMV8_CPACR_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_CPACR_EL1, 0), &value_64, 1);
@@ -870,12 +870,12 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_ID_ISAR5_EL1, 0), &value_64, 1);
 		break;
-	
+
 	case ARMV8_LORID_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_LORID_EL1, 0), &value_64, 1);
 		break;
-	
+
 	case ARMV8_ID_MMFR0_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_ID_MMFR0_EL1, 0), &value_64, 1);
@@ -903,7 +903,7 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 	case ARMV8_ID_PFR1_EL1:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_ID_PFR1_EL1, 0), &value_64, 1);
-		break;				
+		break;
 	case ARMV8_ICH_AP0R0_EL2:
 		retval = instr_read_data_r0_64(dpm,
 				ARMV8_MRS(SYSTEM_ICH_AP0R0_EL2, 0), &value_64, 2);
@@ -1641,7 +1641,7 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_CNTHV_CVAL_EL2, 0), value);
 		break;
-	
+
 	case ARMV8_CPACR_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -2063,13 +2063,13 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_ID_ISAR5_EL1, 0), value);
 		break;
-	
+
 	case ARMV8_LORID_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_LORID_EL1, 0), value);
 		break;
-	
+
 	case ARMV8_ID_MMFR0_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -2104,12 +2104,12 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_ID_PFR1_EL1, 0), value);
-		break;		
+		break;
 	case ARMV8_ICV_RPR_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_ICV_RPR_EL1, 0), value);
-		break;	
+		break;
 	case ARMV8_ICH_AP0R0_EL2:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -2214,7 +2214,7 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
 				ARMV8_MSR_GP(SYSTEM_MDCR_EL3, 0), value);
-		break;	
+		break;
 	case ARMV8_OSDLR_EL1:
 		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
@@ -3218,10 +3218,6 @@ int armv8_aarch64_state(struct target *target)
 
 int armv8_arch_state(struct target *target)
 {
-	static const char * const state[] = {
-		"disabled", "enabled"
-	};
-	
 	struct armv8_common *armv8 = target_to_armv8(target);
 	struct arm *arm = &armv8->arm;
 
@@ -3234,13 +3230,6 @@ int armv8_arch_state(struct target *target)
 		armv8_aarch64_state(target);
 	else
 		arm_arch_state(target);
-
-#if 0	
-	LOG_USER("MMU: %s, D-Cache: %s, I-Cache: %s",
-		state[armv8->armv8_mmu.mmu_enabled],
-		state[armv8->armv8_mmu.armv8_cache.d_u_cache_enabled],
-		state[armv8->armv8_mmu.armv8_cache.i_cache_enabled]);
-#endif
 
 	if (arm->core_mode == ARM_MODE_ABT)
 		armv8_show_fault_registers(target);

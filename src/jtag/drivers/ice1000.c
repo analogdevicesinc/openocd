@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2022 by Analog Devices, Inc.                     *
+*   Copyright (C) 2011 - 2023 by Analog Devices, Inc.                     *
 *   Based on ice100.c of UrJTAG                                           *
 *   Jie Zhang  <jie.zhang@analog.com>                                     *
 *                                                                         *
@@ -546,7 +546,7 @@ static int ice1000_firmware_crc(uint16_t *p)
 
 	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
 
-	adi_usb_read_or_ret(p, sizeof (*p));
+	adi_usb_read_or_ret((uint8_t*)p, sizeof (*p));
 
 	return ERROR_OK;
 }
@@ -647,7 +647,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 			usb_cmd_blk.command = HOST_REQUEST_TX_DATA;
 			usb_cmd_blk.count = count + 16;
 			usb_cmd_blk.buffer = 0;
-			adi_usb_write_or_ret(&usb_cmd_blk, sizeof (usb_cmd_blk));
+			adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
 
 			adi_usb_write_or_ret(buffer, usb_cmd_blk.count);
 
@@ -829,7 +829,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 			LOG_ERROR("The firmware failed to update.");
 		return ERROR_JTAG_INIT_FAILED;
 	}
-	
+
 	/* Set frequency to lowest value */
 	if (strcmp (cable_name, "ICE-2000") == 0)
 	{
@@ -2101,7 +2101,7 @@ struct adapter_driver ice1000_adapter_driver = {
 	.khz = ice1000_khz,
 	.speed_div = ice1000_speed_div,
 
-	.jtag_ops = &ice1000_interface,	
+	.jtag_ops = &ice1000_interface,
 };
 
 static const struct command_registration ice2000_command_handlers[] = {
@@ -2138,5 +2138,5 @@ struct adapter_driver ice2000_adapter_driver = {
 	.khz = ice2000_khz,
 	.speed_div = ice2000_speed_div,
 
-	.jtag_ops = &ice2000_interface,	
+	.jtag_ops = &ice2000_interface,
 };
