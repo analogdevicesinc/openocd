@@ -12,6 +12,8 @@
  *
  *   Copyright (C) 2019, Ampere Computing LLC
  *
+ *   Copyright (C) 2023, Analog Devices, Inc.
+ *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
  *   the Free Software Foundation; either version 2 of the License, or
@@ -767,7 +769,6 @@ static int jtag_ap_q_bankselect(struct adi_ap *ap, unsigned reg)
 	if (dap->select != DP_SELECT_INVALID)
 		sel |= dap->select & 0xf;
 	dap->select = sel;
-	LOG_DEBUG("AP BANKSEL: %x", (uint32_t) sel);
 	retval = jtag_dp_q_write(dap, DP_SELECT, (uint32_t) sel);
 	if (retval != ERROR_OK)
 		return retval;
