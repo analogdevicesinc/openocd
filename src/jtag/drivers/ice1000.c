@@ -1675,24 +1675,29 @@ static int ice1000_execute_queue(void)
 #define USB_MUX_MAX_LOCK_ATTEMPTS 50
 	if (cable_params.mux_handle)
 	{
-		int attempt = 0;
+		unsigned int attempt = 0;
 		do {
+			attempt++;
+
 			// attempt to acquire the USB lock
 			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
+
 			if (mux_ret == USB_MUX_OK)
 			{
 				break;
 			}
 			else if (mux_ret == USB_MUX_BUSY)
 			{
-				if (attempt < USB_MUX_MAX_LOCK_ATTEMPTS)
+				/* Send out the message every 5 attempts */
+				if ((attempt % 5) == 0)
 				{
-					LOG_DEBUG("MUX is busy, retrying");
+					LOG_DEBUG("MUX is busy after %u attempts, retrying.", attempt);
 				}
-				else
+
+				if (attempt == USB_MUX_MAX_LOCK_ATTEMPTS)
 				{
 					// Failed to acquire lock (TIMEOUT)
-					LOG_ERROR("Timeout acquiring USB lock.");
+					LOG_ERROR("Timeout acquiring USB lock after %u attempts", attempt);
 					return ERROR_TIMEOUT;
 				}
 			}
@@ -1703,8 +1708,6 @@ static int ice1000_execute_queue(void)
 			}
 			usleep(100000);
 			keep_alive();
-			LOG_DEBUG("keep_alive sent");
-			attempt++;
 		} while (1);
 	}
 #endif
