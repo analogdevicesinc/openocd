@@ -20,7 +20,7 @@
 
 static LIST_HEAD(all_dap);
 
-extern const struct dap_ops swd_dp_ops;
+extern const struct dap_ops swd_dap_ops;
 extern const struct dap_ops jtag_dp_ops;
 extern struct adapter_driver *adapter_driver;
 
@@ -108,7 +108,7 @@ static int dap_init_all(void)
 			continue;
 
 		if (transport_is_swd()) {
-			dap->ops = &swd_dp_ops;
+			dap->ops = &swd_dap_ops;
 			obj->swd = adapter_driver->swd_ops;
 		} else if (transport_is_dapdirect_swd()) {
 			dap->ops = adapter_driver->dap_swd_ops;
