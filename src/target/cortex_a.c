@@ -3400,7 +3400,7 @@ struct target_type cortexa_target = {
 
 	.commands = cortex_a_command_handlers,
 	.target_create = cortex_a_target_create,
-	.target_jim_configure = adi_jim_configure,
+	.target_jim_configure = adiv5_jim_configure,
 	.init_target = cortex_a_init_target,
 	.examine = cortex_a_examine,
 	.deinit_target = cortex_a_deinit_target,
