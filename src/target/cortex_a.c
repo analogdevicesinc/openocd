@@ -25,27 +25,8 @@
  *   Copyright (C) 2013 Kamal Dasu                                         *
  *   kdasu.kdev@gmail.com                                                  *
  *                                                                         *
-<<<<<<< HEAD
- *   Copyright (C) 2019, Ampere Computing LLC                              *
- *                                                                         *
- *   Copyright (C) 2023, Analog Devices, Inc.                              *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
-=======
  *   Copyright (C) 2016 Chengyu Zheng                                      *
  *   chengyu.zheng@polimi.it : watchpoint support                          *
->>>>>>> 9501b263e0ae127b012f5c5e3ba5dffcc7daa8d1
  *                                                                         *
  *   Cortex-A8(tm) TRM, ARM DDI 0344H                                      *
  *   Cortex-A9(tm) TRM, ARM DDI 0407F                                      *
@@ -2929,13 +2910,6 @@ static int cortex_a_examine_first(struct target *target)
 	armv7a->debug_ap->memaccess_tck = 80;
 
 	if (!target->dbgbase_set) {
-<<<<<<< HEAD
-		target_addr_t dbgbase;
-		/* Get ROM Table base */
-		uint32_t apid;
-		int32_t coreidx = target->coreid;
-=======
->>>>>>> 9501b263e0ae127b012f5c5e3ba5dffcc7daa8d1
 		LOG_DEBUG("%s's dbgbase is not set, trying to detect using the ROM table",
 			  target->cmd_name);
 		/* Lookup Processor DAP */
@@ -2946,11 +2920,7 @@ static int cortex_a_examine_first(struct target *target)
 				  target->cmd_name);
 			return retval;
 		}
-<<<<<<< HEAD
-		LOG_DEBUG("Detected core %" PRId32 " dbgbase: %16.16" PRIx64,
-=======
 		LOG_DEBUG("Detected core %" PRId32 " dbgbase: " TARGET_ADDR_FMT,
->>>>>>> 9501b263e0ae127b012f5c5e3ba5dffcc7daa8d1
 			  target->coreid, armv7a->debug_base);
 	} else
 		armv7a->debug_base = target->dbgbase;
@@ -3172,10 +3142,10 @@ static int cortex_a_target_create(struct target *target, Jim_Interp *interp)
 static int cortex_r4_target_create(struct target *target, Jim_Interp *interp)
 {
 	struct cortex_a_common *cortex_a;
-	struct adi_private_config *pc;
+	struct adiv5_private_config *pc;
 
-	pc = (struct adi_private_config *)target->private_config;
-	if (adi_verify_config(pc) != ERROR_OK)
+	pc = (struct adiv5_private_config *)target->private_config;
+	if (adiv5_verify_config(pc) != ERROR_OK)
 		return ERROR_FAIL;
 
 	cortex_a = calloc(1, sizeof(struct cortex_a_common));
