@@ -2618,10 +2618,10 @@ static int cortex_m_init_arch_info(struct target *target,
 
 static int cortex_m_target_create(struct target *target, Jim_Interp *interp)
 {
-	struct adi_private_config *pc;
+	struct adiv5_private_config *pc;
 
-	pc = (struct adi_private_config *)target->private_config;
-	if (adi_verify_config(pc) != ERROR_OK)
+	pc = (struct adiv5_private_config *)target->private_config;
+	if (adiv5_verify_config(pc) != ERROR_OK)
 		return ERROR_FAIL;
 
 	struct cortex_m_common *cortex_m = calloc(1, sizeof(struct cortex_m_common));
@@ -2914,7 +2914,7 @@ struct target_type cortexm_target = {
 
 	.commands = cortex_m_command_handlers,
 	.target_create = cortex_m_target_create,
-	.target_jim_configure = adi_jim_configure,
+	.target_jim_configure = adiv5_jim_configure,
 	.init_target = cortex_m_init_target,
 	.examine = cortex_m_examine,
 	.deinit_target = cortex_m_deinit_target,
