@@ -318,7 +318,7 @@ struct adiv5_ap {
  * signals are available).
  */
 struct adiv5_dap {
-	const struct dp_ops *ops;
+	const struct dap_ops *ops;
 
 	/* dap transaction list for WAIT support */
 	struct list_head cmd_journal;
@@ -405,7 +405,7 @@ struct adiv5_dap {
  * execute transactions as soon as they're submitted, but no status is made
  * available until run().
  */
-struct dp_ops {
+struct dap_ops {
 	/** connect operation for SWD */
 	int (*connect)(struct adiv5_dap *dap);
 
