@@ -108,7 +108,7 @@ static int dap_init_all(void)
 			continue;
 
 		if (transport_is_swd()) {
-			dap->ops = &swd_dap_ops;
+			dap->ops = &swd_dp_ops;
 			obj->swd = adapter_driver->swd_ops;
 		} else if (transport_is_dapdirect_swd()) {
 			dap->ops = adapter_driver->dap_swd_ops;
