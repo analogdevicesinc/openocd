@@ -109,7 +109,6 @@ static int armv7a_read_midr(struct target *target)
 		 armv7a->arch,
 		 armv7a->variant,
 		 armv7a->implementor);
-#endif
 
 done:
 	dpm->finish(dpm);
