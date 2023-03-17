@@ -5165,7 +5165,7 @@ static int stlink_dap_speed_div(int speed, int *khz)
 	return ERROR_OK;
 }
 
-static const struct dp_ops stlink_dap_ops = {
+static const struct dap_ops stlink_dap_ops = {
 	.connect = stlink_dap_op_connect,
 	.send_sequence = stlink_dap_op_send_sequence,
 	.queue_dp_read = stlink_dap_op_queue_dp_read,
