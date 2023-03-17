@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: GPL-2.0-or-later#endif
 
 /*
  * Copyright (C) 2016 by Matthias Welwarsky <matthias.welwarsky@sysgo.com>
@@ -27,7 +27,7 @@ struct mem_ap {
 static int mem_ap_target_create(struct target *target, Jim_Interp *interp)
 {
 	struct mem_ap *mem_ap;
-	struct adi_private_config *pc;
+	struct adiv5_private_config *pc;
 
 	pc = (struct adiv5_private_config *)target->private_config;
 	if (!pc)
@@ -272,7 +272,7 @@ struct target_type mem_ap_target = {
 	.init_target = mem_ap_init_target,
 	.deinit_target = mem_ap_deinit_target,
 	.examine = mem_ap_examine,
-	.target_jim_configure = adi_jim_configure,
+	.target_jim_configure = adiv5_jim_configure,
 
 	.poll = mem_ap_poll,
 	.arch_state = mem_ap_arch_state,
