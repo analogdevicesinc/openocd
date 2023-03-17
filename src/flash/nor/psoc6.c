@@ -1,20 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *                                                                         *
  *   Copyright (C) 2018 by Bohdan Tymkiv                                   *
  *   bohdan.tymkiv@cypress.com bohdan200@gmail.com                         *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -24,11 +13,12 @@
 #include <time.h>
 
 #include "imp.h"
+#include "helper/time_support.h"
+#include "target/arm_adi_v5.h"
 #include "target/target.h"
 #include "target/cortex_m.h"
 #include "target/breakpoints.h"
 #include "target/target_type.h"
-#include "time_support.h"
 #include "target/algorithm.h"
 
 /**************************************************************************************************
@@ -151,12 +141,6 @@ static int sromalgo_prepare(struct target *target)
 	if (hr != ERROR_OK)
 		return hr;
 
-	/* Restore THUMB bit in xPSR register */
-	const struct armv7m_common *cm = target_to_armv7m(target);
-	hr = cm->store_core_reg_u32(target, ARMV7M_xPSR, 0x01000000);
-	if (hr != ERROR_OK)
-		return hr;
-
 	/* Allocate Working Area for Stack and Flash algorithm */
 	hr = target_alloc_working_area(target, RAM_STACK_WA_SIZE, &g_stack_area);
 	if (hr != ERROR_OK)
@@ -187,10 +171,8 @@ destroy_rp_free_wa:
 	/* Something went wrong, do some cleanup */
 	destroy_reg_param(&reg_params);
 
-	if (g_stack_area) {
-		target_free_working_area(target, g_stack_area);
-		g_stack_area = NULL;
-	}
+	target_free_working_area(target, g_stack_area);
+	g_stack_area = NULL;
 
 	return hr;
 }
@@ -325,7 +307,7 @@ static int ipc_acquire(struct target *target, char ipc_id)
  * @brief Invokes SROM API functions which are responsible for Flash operations
  *
  * @param target current target
- * @param req_and_params requect id of the function to invoke
+ * @param req_and_params request id of the function to invoke
  * @param working_area address of memory buffer in target's memory space for SROM API parameters
  * @param data_out pointer to variable which will be populated with execution status
  * @return ERROR_OK in case of success, ERROR_XXX code otherwise
@@ -378,7 +360,7 @@ static int call_sromapi(struct target *target,
 
 	bool is_success = (*data_out & SROMAPI_STATUS_MSK) == SROMAPI_STAT_SUCCESS;
 	if (!is_success) {
-		LOG_ERROR("SROM API execution failed. Status: 0x%08X", (uint32_t)*data_out);
+		LOG_ERROR("SROM API execution failed. Status: 0x%08" PRIX32, *data_out);
 		return ERROR_TARGET_FAILURE;
 	}
 
@@ -475,7 +457,7 @@ static int psoc6_protect(struct flash_bank *bank, int set, unsigned int first,
 /** ***********************************************************************************************
  * @brief Translates Protection status to string
  * @param protection protection value
- * @return pointer to const string describintg protection status
+ * @return pointer to const string describing protection status
  *************************************************************************************************/
 static const char *protection_to_str(uint8_t protection)
 {
@@ -497,11 +479,10 @@ static const char *protection_to_str(uint8_t protection)
 /** ***********************************************************************************************
  * @brief psoc6_get_info Displays human-readable information about acquired device
  * @param bank current flash bank
- * @param buf pointer to buffer for human-readable text
- * @param buf_size size of the buffer
+ * @param cmd pointer to command invocation instance
  * @return ERROR_OK in case of success, ERROR_XXX code otherwise
  *************************************************************************************************/
-static int psoc6_get_info(struct flash_bank *bank, char *buf, int buf_size)
+static int psoc6_get_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct psoc6_target_info *psoc6_info = bank->driver_priv;
 
@@ -512,10 +493,10 @@ static int psoc6_get_info(struct flash_bank *bank, char *buf, int buf_size)
 	if (hr != ERROR_OK)
 		return hr;
 
-	snprintf(buf, buf_size,
-		"PSoC6 Silicon ID: 0x%08X\n"
+	command_print_sameline(cmd,
+		"PSoC6 Silicon ID: 0x%08" PRIX32 "\n"
 		"Protection: %s\n"
-		"Main Flash size: %d kB\n"
+		"Main Flash size: %" PRIu32 " kB\n"
 		"Work Flash size: 32 kB\n",
 		psoc6_info->silicon_id,
 		protection_to_str(psoc6_info->protection),
@@ -574,7 +555,7 @@ static int psoc6_probe(struct flash_bank *bank)
 
 	int hr = ERROR_OK;
 
-	/* Retrieve data from SPCIF_GEOMATRY */
+	/* Retrieve data from SPCIF_GEOMETRY */
 	uint32_t geom;
 	target_read_u32(target, PSOC6_SPCIF_GEOMETRY, &geom);
 	uint32_t row_sz_lg2 = (geom & 0xF0) >> 4;
@@ -585,10 +566,8 @@ static int psoc6_probe(struct flash_bank *bank)
 	/* Calculate size of Main Flash*/
 	uint32_t flash_sz_bytes = bank_cnt * row_cnt * row_sz;
 
-	if (bank->sectors) {
-		free(bank->sectors);
-		bank->sectors = NULL;
-	}
+	free(bank->sectors);
+	bank->sectors = NULL;
 
 	size_t bank_size = 0;
 
@@ -612,8 +591,7 @@ static int psoc6_probe(struct flash_bank *bank)
 
 	unsigned int num_sectors = bank_size / row_sz;
 	bank->size = bank_size;
-	bank->chip_width = 4;
-	bank->bus_width = 4;
+
 	bank->erased_value = 0;
 	bank->default_padded_value = 0;
 
@@ -662,7 +640,7 @@ static int psoc6_erase_sector(struct flash_bank *bank, struct working_area *wa, 
 {
 	struct target *target = bank->target;
 
-	LOG_DEBUG("Erasing SECTOR @%08X", addr);
+	LOG_DEBUG("Erasing SECTOR @%08" PRIX32, addr);
 
 	int hr = target_write_u32(target, wa->address, SROMAPI_ERASESECTOR_REQ);
 	if (hr != ERROR_OK)
@@ -675,7 +653,7 @@ static int psoc6_erase_sector(struct flash_bank *bank, struct working_area *wa, 
 	uint32_t data_out;
 	hr = call_sromapi(target, SROMAPI_ERASESECTOR_REQ, wa->address, &data_out);
 	if (hr != ERROR_OK)
-		LOG_ERROR("SECTOR @%08X not erased!", addr);
+		LOG_ERROR("SECTOR @%08" PRIX32 " not erased!", addr);
 
 	return hr;
 }
@@ -691,7 +669,7 @@ static int psoc6_erase_row(struct flash_bank *bank, struct working_area *wa, uin
 {
 	struct target *target = bank->target;
 
-	LOG_DEBUG("Erasing ROW @%08X", addr);
+	LOG_DEBUG("Erasing ROW @%08" PRIX32, addr);
 
 	int hr = target_write_u32(target, wa->address, SROMAPI_ERASEROW_REQ);
 	if (hr != ERROR_OK)
@@ -704,7 +682,7 @@ static int psoc6_erase_row(struct flash_bank *bank, struct working_area *wa, uin
 	uint32_t data_out;
 	hr = call_sromapi(target, SROMAPI_ERASEROW_REQ, wa->address, &data_out);
 	if (hr != ERROR_OK)
-		LOG_ERROR("ROW @%08X not erased!", addr);
+		LOG_ERROR("ROW @%08" PRIX32 " not erased!", addr);
 
 	return hr;
 }
@@ -752,9 +730,6 @@ static int psoc6_erase(struct flash_bank *bank, unsigned int first,
 			if (hr != ERROR_OK)
 				goto exit_free_wa;
 
-			for (unsigned int i = first; i < first + rows_in_sector; i++)
-				bank->sectors[i].is_erased = 1;
-
 			first += rows_in_sector;
 		} else {
 			/* Perform Row Erase otherwise */
@@ -762,7 +737,6 @@ static int psoc6_erase(struct flash_bank *bank, unsigned int first,
 			if (hr != ERROR_OK)
 				goto exit_free_wa;
 
-			bank->sectors[first].is_erased = 1;
 			first += 1;
 		}
 	}
@@ -794,7 +768,7 @@ static int psoc6_program_row(struct flash_bank *bank,
 	uint32_t data_out;
 	int hr = ERROR_OK;
 
-	LOG_DEBUG("Programming ROW @%08X", addr);
+	LOG_DEBUG("Programming ROW @%08" PRIX32, addr);
 
 	hr = target_alloc_working_area(target, psoc6_info->row_sz + 32, &wa);
 	if (hr != ERROR_OK)
@@ -835,7 +809,7 @@ exit:
  * @brief Performs Program operation
  * @param bank current flash bank
  * @param buffer pointer to the buffer with data
- * @param offset starting offset in falsh bank
+ * @param offset starting offset in flash bank
  * @param count number of bytes in buffer
  * @return ERROR_OK in case of success, ERROR_XXX code otherwise
  *************************************************************************************************/
@@ -865,7 +839,7 @@ static int psoc6_program(struct flash_bank *bank,
 
 		hr = psoc6_program_row(bank, aligned_addr, page_buf, is_sflash);
 		if (hr != ERROR_OK) {
-			LOG_ERROR("Failed to program Flash at address 0x%08X", aligned_addr);
+			LOG_ERROR("Failed to program Flash at address 0x%08" PRIX32, aligned_addr);
 			goto exit;
 		}
 
@@ -881,7 +855,6 @@ exit:
 
 /** ***********************************************************************************************
  * @brief Performs Mass Erase operation
- * @param bank flash bank index to erase
  * @return ERROR_OK in case of success, ERROR_XXX code otherwise
  *************************************************************************************************/
 COMMAND_HANDLER(psoc6_handle_mass_erase_command)
@@ -910,7 +883,7 @@ COMMAND_HANDLER(psoc6_handle_mass_erase_command)
  * @param target current target
  * @return ERROR_OK in case of success, ERROR_XXX code otherwise
  *************************************************************************************************/
-int handle_reset_halt(struct target *target)
+static int handle_reset_halt(struct target *target)
 {
 	int hr;
 	uint32_t reset_addr;
@@ -956,16 +929,16 @@ int handle_reset_halt(struct target *target)
 
 	const struct armv7m_common *cm = target_to_armv7m(target);
 
-	/* PSoC6 reboots immediatelly after issuing SYSRESETREQ / VECTRESET
+	/* PSoC6 reboots immediately after issuing SYSRESETREQ / VECTRESET
 	 * this disables SWD/JTAG pins momentarily and may break communication
 	 * Ignoring return value of mem_ap_write_atomic_u32 seems to be ok here */
 	if (is_cm0) {
 		/* Reset the CM0 by asserting SYSRESETREQ. This will also reset CM4 */
-		LOG_INFO("psoc6.cm0: bkpt @0x%08X, issuing SYSRESETREQ", reset_addr);
+		LOG_INFO("psoc6.cm0: bkpt @0x%08" PRIX32 ", issuing SYSRESETREQ", reset_addr);
 		mem_ap_write_atomic_u32(cm->debug_ap, NVIC_AIRCR,
 			AIRCR_VECTKEY | AIRCR_SYSRESETREQ);
 	} else {
-		LOG_INFO("psoc6.cm4: bkpt @0x%08X, issuing VECTRESET", reset_addr);
+		LOG_INFO("psoc6.cm4: bkpt @0x%08" PRIX32 ", issuing VECTRESET", reset_addr);
 		mem_ap_write_atomic_u32(cm->debug_ap, NVIC_AIRCR,
 			AIRCR_VECTKEY | AIRCR_VECTRESET);
 	}
@@ -1028,7 +1001,7 @@ static const struct command_registration psoc6_exec_command_handlers[] = {
 		.name = "reset_halt",
 		.handler = psoc6_handle_reset_halt,
 		.mode = COMMAND_EXEC,
-		.usage = NULL,
+		.usage = "",
 		.help = "Tries to simulate broken Vector Catch",
 	},
 	COMMAND_REGISTRATION_DONE

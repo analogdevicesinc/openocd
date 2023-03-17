@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2019 Icenowy Zheng <icenowy@aosc.io>                    *
  *   Copyright (C) 2019 Caleb Szalacinski <contact@skiboy.net>             *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -142,7 +131,7 @@ COMMAND_HANDLER(swm050_handle_mass_erase_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	retval = swm050_mass_erase(bank);
@@ -156,10 +145,7 @@ COMMAND_HANDLER(swm050_handle_mass_erase_command)
 
 FLASH_BANK_COMMAND_HANDLER(swm050_flash_bank_command)
 {
-	if (bank->sectors) {
-		free(bank->sectors);
-		bank->sectors = NULL;
-	}
+	free(bank->sectors);
 	bank->write_start_alignment = 4;
 	bank->write_end_alignment = 4;
 	bank->size = SWM050_FLASH_PAGE_SIZE * SWM050_FLASH_PAGES;

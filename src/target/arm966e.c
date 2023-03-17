@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
  *                                                                         *
  *   Copyright (C) 2008 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -54,6 +43,16 @@ static int arm966e_target_create(struct target *target, Jim_Interp *interp)
 	struct arm966e_common *arm966e = calloc(1, sizeof(struct arm966e_common));
 
 	return arm966e_init_arch_info(target, arm966e, target->tap);
+}
+
+static void arm966e_deinit_target(struct target *target)
+{
+	struct arm *arm = target_to_arm(target);
+	struct arm966e_common *arm966e = target_to_arm966(target);
+
+	arm7_9_deinit(target);
+	arm_free_reg_cache(arm);
+	free(arm966e);
 }
 
 static int arm966e_verify_pointer(struct command_invocation *cmd,
@@ -189,7 +188,7 @@ COMMAND_HANDLER(arm966e_handle_cp15_command)
 			retval = arm966e_read_cp15(target, address, &value);
 			if (retval != ERROR_OK) {
 				command_print(CMD,
-						"couldn't access reg %" PRIi32,
+						"couldn't access reg %" PRIu32,
 						address);
 				return ERROR_OK;
 			}
@@ -197,7 +196,7 @@ COMMAND_HANDLER(arm966e_handle_cp15_command)
 			if (retval != ERROR_OK)
 				return retval;
 
-			command_print(CMD, "%" PRIi32 ": %8.8" PRIx32,
+			command_print(CMD, "%" PRIu32 ": %8.8" PRIx32,
 					address, value);
 		} else if (CMD_ARGC == 2) {
 			uint32_t value;
@@ -205,11 +204,11 @@ COMMAND_HANDLER(arm966e_handle_cp15_command)
 			retval = arm966e_write_cp15(target, address, value);
 			if (retval != ERROR_OK) {
 				command_print(CMD,
-						"couldn't access reg %" PRIi32,
+						"couldn't access reg %" PRIu32,
 						address);
 				return ERROR_OK;
 			}
-			command_print(CMD, "%" PRIi32 ": %8.8" PRIx32,
+			command_print(CMD, "%" PRIu32 ": %8.8" PRIx32,
 					address, value);
 		}
 	}
@@ -278,6 +277,7 @@ struct target_type arm966e_target = {
 	.commands = arm966e_command_handlers,
 	.target_create = arm966e_target_create,
 	.init_target = arm9tdmi_init_target,
+	.deinit_target = arm966e_deinit_target,
 	.examine = arm7_9_examine,
 	.check_reset = arm7_9_check_reset,
 };

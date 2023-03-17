@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2013 by Franck Jullien                                  *
  *   elec4fun@gmail.com                                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -99,7 +88,7 @@ static int or1k_tap_vjtag_init(struct or1k_jtag *jtag_info)
 
 	/* You can use a custom JTAG controller to discover transactions
 	 * necessary to enumerate all Virtual JTAG megafunction instances
-	 * from your design atruntime. All SLD nodes and the virtual JTAG
+	 * from your design at runtime. All SLD nodes and the virtual JTAG
 	 * registers that they contain are targeted by two Instruction Register
 	 * values, USER0 and USER1.
 	 *
@@ -218,7 +207,7 @@ static int or1k_tap_vjtag_init(struct or1k_jtag *jtag_info)
 	LOG_DEBUG("m_width         = %d", m_width);
 	LOG_DEBUG("manufacturer_id = 0x%02" PRIx32, MANUF(hub_info));
 	LOG_DEBUG("nb_of_node      = %d", nb_nodes);
-	LOG_DEBUG("version         = %" PRId32, VER(hub_info));
+	LOG_DEBUG("version         = %" PRIu32, VER(hub_info));
 	LOG_DEBUG("VIR length      = %d", guess_addr_width(nb_nodes) + m_width);
 
 	/* Because the number of SLD nodes is now known, the Nodes on the hub can be
@@ -257,11 +246,11 @@ static int or1k_tap_vjtag_init(struct or1k_jtag *jtag_info)
 
 		LOG_DEBUG("Node info register");
 		LOG_DEBUG("--------------------");
-		LOG_DEBUG("instance_id     = %" PRId32, ID(node_info));
+		LOG_DEBUG("instance_id     = %" PRIu32, ID(node_info));
 		LOG_DEBUG("manufacturer_id = 0x%02" PRIx32, MANUF(node_info));
-		LOG_DEBUG("node_id         = %" PRId32 " (%s)", ID(node_info),
+		LOG_DEBUG("node_id         = %" PRIu32 " (%s)", ID(node_info),
 						       id_to_string(ID(node_info)));
-		LOG_DEBUG("version         = %" PRId32, VER(node_info));
+		LOG_DEBUG("version         = %" PRIu32, VER(node_info));
 
 		if (ID(node_info) == VJTAG_NODE_ID)
 			vjtag_node_address = node_index + 1;

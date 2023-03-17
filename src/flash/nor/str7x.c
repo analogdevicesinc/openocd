@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -7,19 +9,6 @@
  *                                                                         *
  *   Copyright (C) 2010 Øyvind Harboe                                      *
  *   oyvind.harboe@zylin.com                                               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -376,9 +365,6 @@ static int str7x_erase(struct flash_bank *bank, unsigned int first,
 	if (err != ERROR_OK)
 		return err;
 
-	for (unsigned int i = first; i <= last; i++)
-		bank->sectors[i].is_erased = 1;
-
 	return ERROR_OK;
 }
 
@@ -452,7 +438,7 @@ static int str7x_write_block(struct flash_bank *bank, const uint8_t *buffer,
 	struct arm_algorithm arm_algo;
 	int retval = ERROR_OK;
 
-	/* see contib/loaders/flash/str7x.s for src */
+	/* see contrib/loaders/flash/str7x.s for src */
 
 	static const uint32_t str7x_flash_write_code[] = {
 					/* write:				*/
@@ -702,13 +688,13 @@ COMMAND_HANDLER(str7x_handle_part_id_command)
 }
 #endif
 
-static int get_str7x_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_str7x_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	/* Setting the write protection on a sector is a permanent change but it
 	 * can be disabled temporarily. FLASH_NVWPAR reflects the permanent
 	 * protection state of the sectors, not the temporary.
 	 */
-	snprintf(buf, buf_size, "STR7x flash protection info is only valid after a power cycle, "
+	command_print_sameline(cmd, "STR7x flash protection info is only valid after a power cycle, "
 			"clearing the protection is only temporary and may not be reflected in the current "
 			"info returned.");
 	return ERROR_OK;
@@ -720,15 +706,15 @@ COMMAND_HANDLER(str7x_handle_disable_jtag_command)
 	struct str7x_flash_bank *str7x_info = NULL;
 
 	uint32_t flash_cmd;
-	uint16_t ProtectionLevel = 0;
-	uint16_t ProtectionRegs;
+	uint16_t protection_level = 0;
+	uint16_t protection_regs;
 
 	if (CMD_ARGC < 1)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	str7x_info = bank->driver_priv;
@@ -745,17 +731,17 @@ COMMAND_HANDLER(str7x_handle_disable_jtag_command)
 	target_read_u32(target, str7x_get_flash_adr(bank, FLASH_NVAPR0), &reg);
 
 	if (!(reg & str7x_info->disable_bit))
-		ProtectionLevel = 1;
+		protection_level = 1;
 
 	target_read_u32(target, str7x_get_flash_adr(bank, FLASH_NVAPR1), &reg);
-	ProtectionRegs = ~(reg >> 16);
+	protection_regs = ~(reg >> 16);
 
-	while (((ProtectionRegs) != 0) && (ProtectionLevel < 16)) {
-		ProtectionRegs >>= 1;
-		ProtectionLevel++;
+	while (((protection_regs) != 0) && (protection_level < 16)) {
+		protection_regs >>= 1;
+		protection_level++;
 	}
 
-	if (ProtectionLevel == 0) {
+	if (protection_level == 0) {
 		flash_cmd = FLASH_SPR;
 		target_write_u32(target, str7x_get_flash_adr(bank, FLASH_CR0), flash_cmd);
 		target_write_u32(target, str7x_get_flash_adr(bank, FLASH_AR), 0x4010DFB8);
@@ -767,7 +753,7 @@ COMMAND_HANDLER(str7x_handle_disable_jtag_command)
 		target_write_u32(target, str7x_get_flash_adr(bank, FLASH_CR0), flash_cmd);
 		target_write_u32(target, str7x_get_flash_adr(bank, FLASH_AR), 0x4010DFBC);
 		target_write_u32(target, str7x_get_flash_adr(bank, FLASH_DR0),
-				~(1 << (15 + ProtectionLevel)));
+				~(1 << (15 + protection_level)));
 		flash_cmd = FLASH_SPR | FLASH_WMS;
 		target_write_u32(target, str7x_get_flash_adr(bank, FLASH_CR0), flash_cmd);
 	}

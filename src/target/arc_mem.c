@@ -1,11 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2013-2014,2019-2020 Synopsys, Inc.                      *
  *   Frank Dols <frank.dols@synopsys.com>                                  *
  *   Mischa Jonker <mischa.jonker@synopsys.com>                            *
  *   Anton Kolesov <anton.kolesov@synopsys.com>                            *
  *   Evgeniy Didin <didin@synopsys.com>                                    *
- *                                                                         *
- *   SPDX-License-Identifier: GPL-2.0-or-later                             *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -75,8 +75,8 @@ static int arc_mem_write_block16(struct target *target, uint32_t addr,
 	/* We will read data from memory, so we need to flush the cache. */
 	CHECK_RETVAL(arc_cache_flush(target));
 
-	/* non-word writes are less common, than 4-byte writes, so I suppose we can
-	 * allowe ourselves to write this in a cycle, instead of calling arc_jtag
+	/* non-word writes are less common than 4-byte writes, so I suppose we can
+	 * allow ourselves to write this in a cycle, instead of calling arc_jtag
 	 * with count > 1. */
 	for (i = 0; i < count; i++) {
 		/* We can read only word at word-aligned address. Also *jtag_read_memory
@@ -130,8 +130,8 @@ static int arc_mem_write_block8(struct target *target, uint32_t addr,
 	/* We will read data from memory, so we need to flush the cache. */
 	CHECK_RETVAL(arc_cache_flush(target));
 
-	/* non-word writes are less common, than 4-byte writes, so I suppose we can
-	 * allowe ourselves to write this in a cycle, instead of calling arc_jtag
+	/* non-word writes are less common than 4-byte writes, so I suppose we can
+	 * allow ourselves to write this in a cycle, instead of calling arc_jtag
 	 * with count > 1. */
 	for (i = 0; i < count; i++) {
 		/* See comment in arc_mem_write_block16 for details. Since it is a byte
@@ -173,7 +173,7 @@ int arc_mem_write(struct target *target, target_addr_t address, uint32_t size,
 	if (((size == 4) && (address & 0x3u)) || ((size == 2) && (address & 0x1u)))
 		return ERROR_TARGET_UNALIGNED_ACCESS;
 
-	/* correct endianess if we have word or hword access */
+	/* correct endianness if we have word or hword access */
 	if (size > 1) {
 		/*
 		 * arc_..._write_mem with size 4/2 requires uint32_t/uint16_t
@@ -281,7 +281,7 @@ int arc_mem_read(struct target *target, target_addr_t address, uint32_t size,
 	/* arc_..._read_mem with size 4/2 returns uint32_t/uint16_t in host */
 	/* endianness, but byte array should represent target endianness      */
 
-	if (ERROR_OK == retval) {
+	if (retval == ERROR_OK) {
 		switch (size) {
 		case 4:
 			target_buffer_set_u32_array(target, buffer, count,

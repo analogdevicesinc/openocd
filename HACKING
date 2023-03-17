@@ -91,7 +91,7 @@ Add yourself to the GPL copyright for non-trivial changes.
 
 @section stepbystep Step by step procedure
 
--# Create a Gerrit account at: http://openocd.zylin.com
+-# Create a Gerrit account at: https://review.openocd.org
   - On subsequent sign ins, use the full URL prefaced with 'http://'
     For example: http://user_identifier.open_id_provider.com
   -# Add a username to your profile.
@@ -121,18 +121,18 @@ Add yourself to the GPL copyright for non-trivial changes.
 to instruct git locally how to send off the changes.
   -# Add a new remote to git using Gerrit username:
 @code
-git remote add review ssh://USERNAME@openocd.zylin.com:29418/openocd.git
+git remote add review ssh://USERNAME@review.openocd.org:29418/openocd.git
 git config remote.review.push HEAD:refs/for/master
 @endcode
   Or with http only:
 @code
-git remote add review http://USERNAME@openocd.zylin.com/p/openocd.git
+git remote add review https://USERNAME@review.openocd.org/p/openocd.git
 git config remote.review.push HEAD:refs/for/master
 @endcode
-  The http password is configured from your gerrit settings - http://openocd.zylin.com/#/settings/http-password.
+  The http password is configured from your gerrit settings - https://review.openocd.org/#/settings/http-password.
   \note If you want to simplify http access you can also add your http password to the url as follows:
 @code
-git remote add review http://USERNAME:PASSWORD@openocd.zylin.com/p/openocd.git
+git remote add review https://USERNAME:PASSWORD@review.openocd.org/p/openocd.git
 @endcode
   \note All contributions should be pushed to @c refs/for/master on the
 Gerrit server, even if you plan to use several local branches for different
@@ -140,11 +140,11 @@ topics. It is possible because @c for/master is not a traditional Git
 branch.
   -# You will need to install this hook, we will look into a better solution:
 @code
-scp -p -P 29418 USERNAME@openocd.zylin.com:hooks/commit-msg .git/hooks/
+scp -p -P 29418 USERNAME@review.openocd.org:hooks/commit-msg .git/hooks/
 @endcode
   Or with http only:
 @code
-wget http://openocd.zylin.com/tools/hooks/commit-msg
+wget https://review.openocd.org/tools/hooks/commit-msg
 mv commit-msg .git/hooks
 chmod +x .git/hooks/commit-msg
 @endcode
@@ -171,18 +171,48 @@ while(!done) {
 @endcode
    \note use "git add ." before commit to add new files.
 
-   Comment template, notice the short first line w/topic. The topic field
-   should identify the main part or subsystem the patch touches. Check
-   git log for examples.
-@code
-topic: Short comment
+   \note check @ref checkpatch for hint about checkpatch script
+
+   Commit message template, notice the short first line.
+   The field '<c>specify touched area</c>'
+   should identify the main part or subsystem the patch touches.
+@code{.unparsed}
+specify touched area: short comment
 <blank line>
 Longer comments over several lines, explaining (where applicable) the
 reason for the patch and the general idea the solution is based on,
-any major design decisions, etc...
+any major design decisions, etc. Limit each comment line's length to 75
+characters; since 75 it's too short for a URL, you can put the URL in a
+separate line preceded by 'Link: '.
 <blank line>
 Signed-off-by: ...
 @endcode
+   Examples:
+@code{.unparsed}
+flash/nor/atsame5: add SAME59 support
+
+Add new device ID
+@endcode
+@code{.unparsed}
+flash/nor: flash driver for XYZ123
+
+Add new flash driver for internal flash of ...
+@endcode
+@code{.unparsed}
+target/cortex_m: fix segmentation fault in cmd 'soft_reset_halt'
+
+soft_reset_halt command failed reproducibly under following conditions: ...
+Test for NULL pointer and return error ...
+
+Reported-by: John Reporter <rep9876@gmail.com>
+Fixes: 123456789abc ("target: the commit where the problem started")
+BugLink: https://sourceforge.net/p/openocd/tickets/999/
+@endcode
+@code{.unparsed}
+doc: fix typos
+@endcode
+   See "git log" for more examples.
+
 -# Next you need to make sure that your patches
    are on top of the latest stuff on the server and
    that there are no conflicts:
@@ -200,6 +230,65 @@ git push review
 @endcode
 
 Further reading: http://www.coreboot.org/Git
+
+@section checkpatch About checkpatch script
+
+OpenOCD source code includes the script checkpatch to let developers to
+verify their patches before submitting them for review (see @ref gerrit).
+
+Every patch for OpenOCD project that is submitted for review on Gerrit
+is tested by Jenkins. Jenkins will run the checkpatch script to analyze
+each patch.
+If the script highlights either errors or warnings, Gerrit will add the
+score "-1" to the patch and maintainers will probably ignore the patch,
+waiting for the developer to send a fixed version.
+
+The script checkpatch verifies the SPDX tag for new files against a very
+short list of license tags.
+If the license of your contribution is not listed there, but compatible
+with OpenOCD license, please alert the maintainers or add the missing
+license in the first patch of your patch series.
+
+The script checkpatch has been originally developed for the Linux kernel
+source code, thus includes specific tests and checks related to Linux
+coding style and to Linux code structure. While the script has been
+adapted for OpenOCD specificities, it still includes some Linux related
+test. It is then possible that it triggers sometimes some <em>false
+positive</em>!
+
+If you think that the error identified by checkpatch is a false
+positive, please report it to the openocd-devel mailing list or prepare
+a patch for fixing checkpatch and send it to Gerrit for review.
+
+\attention The procedure below is allowed only for <em>exceptional
+cases</em>. Do not use it to submit normal patches.
+
+There are <em>exceptional cases</em> in which you need to skip some of
+the tests from checkpatch in order to pass the approval from Gerrit.
+
+For example, a patch that modify one line inside a big comment block
+will not show the beginning or the end of the comment block. This can
+prevent checkpatch to detect the comment block. Checkpatch can wrongly
+consider the modified comment line as a code line, triggering a set of
+false errors.
+
+Only for <em>exceptional cases</em>, it is allowed to submit patches
+to Gerrit with the special field 'Checkpatch-ignore:' in the commit
+message. This field will cause checkpatch to ignore the error types
+listed in the field, only for the patch itself.
+The error type is printed by checkpatch on failure.
+For example the names of Windows APIs mix lower and upper case chars,
+in violation of OpenOCD coding style, triggering a 'CAMELCASE' error:
+@code
+CHECK:CAMELCASE: Avoid CamelCase: <WSAGetLastError>
+#96105: FILE: src/helper/log.c:505:
++       error_code = WSAGetLastError();
+@endcode
+Adding in the commit message of the patch the line:
+@code
+Checkpatch-ignore: CAMELCASE
+@endcode
+will force checkpatch to ignore the CAMELCASE error.
 
 @section timeline When can I expect my contribution to be committed?
 
@@ -228,10 +317,10 @@ not have to) be disregarded if all conditions listed below are met:
 - reviewer does not answer e-mails for another month.
 
 @section browsing Browsing Patches
-All OpenOCD patches can be reviewed <a href="http://openocd.zylin.com/">here</a>.
+All OpenOCD patches can be reviewed <a href="https://review.openocd.org/">here</a>.
 
 @section reviewing Reviewing Patches
-From the main <a href="http://openocd.zylin.com/#/q/status:open,n,z">Review
+From the main <a href="https://review.openocd.org/#/q/status:open,n,z">Review
 page</a> select the patch you want to review and click on that patch. On the
 appearing page select the download method (top right). Apply the
 patch. After building and testing you can leave a note with the "Reply"

@@ -1,21 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2007 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
  *   Copyright (C) 2009 Michael Schwingen                                  *
  *   michael@schwingen.org                                                 *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -483,7 +472,7 @@ void cfi_fixup_non_cfi(struct flash_bank *bank)
 			break;
 	}
 
-	/* only fixup jedec flashs found in table */
+	/* only fixup jedec flashes found in table */
 	if (!non_cfi->mfr)
 		return;
 
@@ -536,17 +525,17 @@ void cfi_fixup_non_cfi(struct flash_bank *bank)
 		pri_ext->major_version = '1';
 		pri_ext->minor_version = '0';
 
-		pri_ext->SiliconRevision = 0x0;
-		pri_ext->EraseSuspend = 0x0;
-		pri_ext->BlkProt = 0x0;
-		pri_ext->TmpBlkUnprotect = 0x0;
-		pri_ext->BlkProtUnprot = 0x0;
-		pri_ext->SimultaneousOps = 0x0;
-		pri_ext->BurstMode = 0x0;
-		pri_ext->PageMode = 0x0;
-		pri_ext->VppMin = 0x0;
-		pri_ext->VppMax = 0x0;
-		pri_ext->TopBottom = 0x0;
+		pri_ext->silicon_revision = 0x0;
+		pri_ext->erase_suspend = 0x0;
+		pri_ext->blk_prot = 0x0;
+		pri_ext->tmp_blk_unprotected = 0x0;
+		pri_ext->blk_prot_unprot = 0x0;
+		pri_ext->simultaneous_ops = 0x0;
+		pri_ext->burst_mode = 0x0;
+		pri_ext->page_mode = 0x0;
+		pri_ext->vpp_min = 0x0;
+		pri_ext->vpp_max = 0x0;
+		pri_ext->top_bottom = 0x0;
 
 		pri_ext->_unlock1 = 0x5555;
 		pri_ext->_unlock2 = 0x2AAA;

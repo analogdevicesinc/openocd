@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -7,25 +9,12 @@
  *                                                                         *
  *   Copyright (C) 2008 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_TARGET_TYPE_H
 #define OPENOCD_TARGET_TARGET_TYPE_H
 
-#include <jim-nvp.h>
+#include <helper/jim-nvp.h>
 
 struct target;
 
@@ -40,7 +29,6 @@ struct target_type {
 	 * field directly, use target_type_name() instead.
 	 */
 	const char *name;
-	const char *deprecated_name;
 
 	/* poll current target status */
 	int (*poll)(struct target *target);
@@ -80,7 +68,7 @@ struct target_type {
 	 * state correctly.
 	 *
 	 * Otherwise the following would fail, as there will not
-	 * be any "poll" invoked inbetween the "reset run" and
+	 * be any "poll" invoked between the "reset run" and
 	 * "halt".
 	 *
 	 * reset run; halt
@@ -211,11 +199,11 @@ struct target_type {
 	/* called for various config parameters */
 	/* returns JIM_CONTINUE - if option not understood */
 	/* otherwise: JIM_OK, or JIM_ERR, */
-	int (*target_jim_configure)(struct target *target, Jim_GetOptInfo *goi);
+	int (*target_jim_configure)(struct target *target, struct jim_getopt_info *goi);
 
 	/* target commands specifically handled by the target */
 	/* returns JIM_OK, or JIM_ERR, or JIM_CONTINUE - if option not understood */
-	int (*target_jim_commands)(struct target *target, Jim_GetOptInfo *goi);
+	int (*target_jim_commands)(struct target *target, struct jim_getopt_info *goi);
 
 	/**
 	 * This method is used to perform target setup that requires
@@ -242,6 +230,17 @@ struct target_type {
 
 	/**
 	 * Free all the resources allocated by the target.
+	 *
+	 * WARNING: deinit_target is called unconditionally regardless the target has
+	 * ever been examined/initialised or not.
+	 * If a problem has prevented establishing JTAG/SWD/... communication
+	 *  or
+	 * if the target was created with -defer-examine flag and has never been
+	 *  examined
+	 * then it is not possible to communicate with the target.
+	 *
+	 * If you need to talk to the target during deinit, first check if
+	 * target_was_examined()!
 	 *
 	 * @param target The target to deinit
 	 */
@@ -287,6 +286,15 @@ struct target_type {
 	 */
 	int (*gdb_fileio_end)(struct target *target, int retcode, int fileio_errno, bool ctrl_c);
 
+	/* Parse target-specific GDB query commands.
+	 * The string pointer "response_p" is always assigned by the called function
+	 * to a pointer to a NULL-terminated string, even when the function returns
+	 * an error. The string memory is not freed by the caller, so this function
+	 * must pay attention for possible memory leaks if the string memory is
+	 * dynamically allocated.
+	 */
+	int (*gdb_query_custom)(struct target *target, const char *packet, char **response_p);
+
 	/* do target profiling
 	 */
 	int (*profiling)(struct target *target, uint32_t *samples,
@@ -296,6 +304,11 @@ struct target_type {
 	 * typically be 32 for 32-bit targets, and 64 for 64-bit targets. If not
 	 * implemented, it's assumed to be 32. */
 	unsigned (*address_bits)(struct target *target);
+
+	/* Return the number of system bus data bits this target supports. This
+	 * will typically be 32 for 32-bit targets, and 64 for 64-bit targets. If
+	 * not implemented, it's assumed to be 32. */
+	unsigned int (*data_bits)(struct target *target);
 };
 
 #endif /* OPENOCD_TARGET_TARGET_TYPE_H */

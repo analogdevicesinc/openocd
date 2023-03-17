@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # Quirks to bypass missing SRST on JTAG connector
 # EVALSPEAr310 Rev. 2.0
 # http://www.st.com/spear
@@ -24,7 +26,7 @@ set sp_reset_mode ""
 proc sp_is_halted {} {
 	global sp_target_name
 
-	return [expr [string compare [$sp_target_name curstate] "halted" ] == 0]
+	return [expr {[string compare [$sp_target_name curstate] "halted" ] == 0}]
 }
 
 # wait for reset button to be pressed, causing CPU to get halted
@@ -38,8 +40,8 @@ proc sp_reset_deassert_post {} {
 
 	poll on
 	echo "====> Press reset button on the board <===="
-	for {set i 0} { [sp_is_halted] == 0 } { set i [expr $i + 1]} {
-		echo -n "$bar([expr $i & 3])\r"
+	for {set i 0} { [sp_is_halted] == 0 } { set i [expr {$i + 1}]} {
+		echo -n "$bar([expr {$i & 3}])\r"
 		sleep 200
 	}
 
