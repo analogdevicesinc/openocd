@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2007 by Dominic Rath <Dominic.Rath@gmx.de>              *
  *   Copyright (C) 2002 Thomas Gleixner <tglx@linutronix.de>               *
  *   Copyright (C) 2009 Zachary T Welch <zw@superlucidity.net>             *
  *                                                                         *
  *   Partially based on drivers/mtd/nand_ids.c from Linux.                 *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -83,10 +72,10 @@ COMMAND_HANDLER(handle_nand_info_command)
 
 	struct nand_device *p;
 	int retval = CALL_COMMAND_HANDLER(nand_command_get_device, 0, &p);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
-	if (NULL == p->device) {
+	if (!p->device) {
 		command_print(CMD, "#%s: not probed", CMD_ARGV[0]);
 		return ERROR_OK;
 	}
@@ -124,7 +113,7 @@ COMMAND_HANDLER(handle_nand_info_command)
 			bad_state = " (block condition unknown)";
 
 		command_print(CMD,
-			"\t#%i: 0x%8.8" PRIx32 " (%" PRId32 "kB) %s%s",
+			"\t#%i: 0x%8.8" PRIx32 " (%" PRIu32 "kB) %s%s",
 			j,
 			p->blocks[j].offset,
 			p->blocks[j].size / 1024,
@@ -142,7 +131,7 @@ COMMAND_HANDLER(handle_nand_probe_command)
 
 	struct nand_device *p;
 	int retval = CALL_COMMAND_HANDLER(nand_command_get_device, 0, &p);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	retval = nand_probe(p);
@@ -161,7 +150,7 @@ COMMAND_HANDLER(handle_nand_erase_command)
 
 	struct nand_device *p;
 	int retval = CALL_COMMAND_HANDLER(nand_command_get_device, 0, &p);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	unsigned long offset;
@@ -208,7 +197,7 @@ COMMAND_HANDLER(handle_nand_check_bad_blocks_command)
 
 	struct nand_device *p;
 	int retval = CALL_COMMAND_HANDLER(nand_command_get_device, 0, &p);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	if (CMD_ARGC == 3) {
@@ -246,7 +235,7 @@ COMMAND_HANDLER(handle_nand_write_command)
 	struct nand_fileio_state s;
 	int retval = CALL_COMMAND_HANDLER(nand_fileio_parse_args,
 			&s, &nand, FILEIO_READ, false, true);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	uint32_t total_bytes = s.size;
@@ -261,7 +250,7 @@ COMMAND_HANDLER(handle_nand_write_command)
 
 		retval = nand_write_page(nand, s.address / nand->page_size,
 				s.page, s.page_size, s.oob, s.oob_size);
-		if (ERROR_OK != retval) {
+		if (retval != ERROR_OK) {
 			command_print(CMD, "failed writing file %s "
 				"to NAND flash %s at offset 0x%8.8" PRIx32,
 				CMD_ARGV[1], CMD_ARGV[0], s.address);
@@ -286,7 +275,7 @@ COMMAND_HANDLER(handle_nand_verify_command)
 	struct nand_fileio_state file;
 	int retval = CALL_COMMAND_HANDLER(nand_fileio_parse_args,
 			&file, &nand, FILEIO_READ, false, true);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	struct nand_fileio_state dev;
@@ -295,13 +284,13 @@ COMMAND_HANDLER(handle_nand_verify_command)
 	dev.size = file.size;
 	dev.oob_format = file.oob_format;
 	retval = nand_fileio_start(CMD, nand, NULL, FILEIO_NONE, &dev);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	while (file.size > 0) {
 		retval = nand_read_page(nand, dev.address / dev.page_size,
 				dev.page, dev.page_size, dev.oob, dev.oob_size);
-		if (ERROR_OK != retval) {
+		if (retval != ERROR_OK) {
 			command_print(CMD, "reading NAND flash page failed");
 			nand_fileio_cleanup(&dev);
 			nand_fileio_cleanup(&file);
@@ -346,23 +335,23 @@ COMMAND_HANDLER(handle_nand_dump_command)
 	struct nand_fileio_state s;
 	int retval = CALL_COMMAND_HANDLER(nand_fileio_parse_args,
 			&s, &nand, FILEIO_WRITE, true, false);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	while (s.size > 0) {
 		size_t size_written;
 		retval = nand_read_page(nand, s.address / nand->page_size,
 				s.page, s.page_size, s.oob, s.oob_size);
-		if (ERROR_OK != retval) {
+		if (retval != ERROR_OK) {
 			command_print(CMD, "reading NAND flash page failed");
 			nand_fileio_cleanup(&s);
 			return retval;
 		}
 
-		if (NULL != s.page)
+		if (s.page)
 			fileio_write(s.fileio, s.page_size, s.page, &size_written);
 
-		if (NULL != s.oob)
+		if (s.oob)
 			fileio_write(s.fileio, s.oob_size, s.oob, &size_written);
 
 		s.size -= nand->page_size;
@@ -388,10 +377,10 @@ COMMAND_HANDLER(handle_nand_raw_access_command)
 
 	struct nand_device *p;
 	int retval = CALL_COMMAND_HANDLER(nand_command_get_device, 0, &p);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
-	if (NULL == p->device) {
+	if (!p->device) {
 		command_print(CMD, "#%s: not probed", CMD_ARGV[0]);
 		return ERROR_OK;
 	}
@@ -479,8 +468,8 @@ static int nand_init(struct command_context *cmd_ctx)
 {
 	if (!nand_devices)
 		return ERROR_OK;
-	struct command *parent = command_find_in_context(cmd_ctx, "nand");
-	return register_commands(cmd_ctx, parent, nand_exec_command_handlers);
+
+	return register_commands(cmd_ctx, "nand", nand_exec_command_handlers);
 }
 
 COMMAND_HANDLER(handle_nand_init_command)
@@ -527,14 +516,13 @@ static COMMAND_HELPER(create_nand_device, const char *bank_name,
 		return ERROR_COMMAND_ARGUMENT_INVALID;
 	}
 
-	if (NULL != controller->commands) {
-		retval = register_commands(CMD_CTX, NULL,
-				controller->commands);
-		if (ERROR_OK != retval)
+	if (controller->commands) {
+		retval = register_commands(CMD_CTX, NULL, controller->commands);
+		if (retval != ERROR_OK)
 			return retval;
 	}
 	c = malloc(sizeof(struct nand_device));
-	if (c == NULL) {
+	if (!c) {
 		LOG_ERROR("End of memory");
 		return ERROR_FAIL;
 	}
@@ -552,7 +540,7 @@ static COMMAND_HELPER(create_nand_device, const char *bank_name,
 	c->next = NULL;
 
 	retval = CALL_COMMAND_HANDLER(controller->nand_device_command, c);
-	if (ERROR_OK != retval) {
+	if (retval != ERROR_OK) {
 		LOG_ERROR("'%s' driver rejected nand flash. Usage: %s",
 			controller->name,
 			controller->usage);
@@ -560,7 +548,7 @@ static COMMAND_HELPER(create_nand_device, const char *bank_name,
 		return retval;
 	}
 
-	if (controller->usage == NULL)
+	if (!controller->usage)
 		LOG_DEBUG("'%s' driver usage field missing", controller->name);
 
 	nand_device_add(c);
@@ -580,7 +568,7 @@ COMMAND_HANDLER(handle_nand_device_command)
 	const char *driver_name = CMD_ARGV[0];
 	struct nand_flash_controller *controller;
 	controller = nand_driver_find_by_name(CMD_ARGV[0]);
-	if (NULL == controller) {
+	if (!controller) {
 		LOG_ERROR("No valid NAND flash driver found (%s)", driver_name);
 		return CALL_COMMAND_HANDLER(handle_nand_list_drivers);
 	}

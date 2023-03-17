@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * Copyright(c) 2013 Intel Corporation.
  *
@@ -6,19 +8,6 @@
  * Ivan De Cesaris (ivan.de.cesaris@intel.com)
  * Julien Carreno (julien.carreno@intel.com)
  * Jeffrey Maxwell (jeffrey.r.maxwell@intel.com)
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Contact Information:
  * Intel Corporation
@@ -75,7 +64,7 @@ int x86_32_get_gdb_reg_list(struct target *t,
 	*reg_list_size = x86_32->cache->num_regs;
 	LOG_DEBUG("num_regs=%d, reg_class=%d", (*reg_list_size), reg_class);
 	*reg_list = malloc(sizeof(struct reg *) * (*reg_list_size));
-	if (*reg_list == NULL) {
+	if (!*reg_list) {
 		LOG_ERROR("%s out of memory", __func__);
 		return ERROR_FAIL;
 	}
@@ -95,7 +84,7 @@ int x86_32_common_init_arch_info(struct target *t, struct x86_32_common *x86_32)
 	x86_32->num_hw_bpoints = MAX_DEBUG_REGS;
 	x86_32->hw_break_list = calloc(x86_32->num_hw_bpoints,
 				sizeof(struct x86_32_dbg_reg));
-	if (x86_32->hw_break_list == NULL) {
+	if (!x86_32->hw_break_list) {
 		LOG_ERROR("%s out of memory", __func__);
 		return ERROR_FAIL;
 	}
@@ -157,7 +146,7 @@ int x86_32_common_read_phys_mem(struct target *t, target_addr_t phys_address,
 	 * with the original instructions again.
 	 */
 	struct swbp_mem_patch *iter = x86_32->swbbp_mem_patch_list;
-	while (iter != NULL) {
+	while (iter) {
 		if (iter->physaddr >= phys_address && iter->physaddr < phys_address+(size*count)) {
 			uint32_t offset = iter->physaddr - phys_address;
 			buffer[offset] = iter->orig_byte;
@@ -245,20 +234,20 @@ int x86_32_common_write_phys_mem(struct target *t, target_addr_t phys_address,
 	 * breakpoint instruction.
 	 */
 	newbuffer = malloc(size*count);
-	if (newbuffer == NULL) {
+	if (!newbuffer) {
 		LOG_ERROR("%s out of memory", __func__);
 		return ERROR_FAIL;
 	}
 	memcpy(newbuffer, buffer, size*count);
 	struct swbp_mem_patch *iter = x86_32->swbbp_mem_patch_list;
-	while (iter != NULL) {
+	while (iter) {
 		if (iter->physaddr >= phys_address && iter->physaddr < phys_address+(size*count)) {
 			uint32_t offset = iter->physaddr - phys_address;
 			newbuffer[offset] = SW_BP_OPCODE;
 
 			/* update the breakpoint */
 			struct breakpoint *pbiter = t->breakpoints;
-			while (pbiter != NULL && pbiter->unique_id != iter->swbp_unique_id)
+			while (pbiter && pbiter->unique_id != iter->swbp_unique_id)
 				pbiter = pbiter->next;
 			if (pbiter)
 				pbiter->orig_instr[0] = buffer[offset];
@@ -456,7 +445,7 @@ int calcaddr_physfromlin(struct target *t, target_addr_t addr, target_addr_t *ph
 {
 	uint8_t entry_buffer[8];
 
-	if (physaddr == NULL || t == NULL)
+	if (!physaddr || !t)
 		return ERROR_FAIL;
 
 	struct x86_32_common *x86_32 = target_to_x86_32(t);
@@ -472,10 +461,10 @@ int calcaddr_physfromlin(struct target *t, target_addr_t addr, target_addr_t *ph
 	}
 
 	uint32_t cr4 = buf_get_u32(x86_32->cache->reg_list[CR4].value, 0, 32);
-	bool isPAE = cr4 & 0x00000020; /* PAE - Physical Address Extension */
+	bool is_pae = cr4 & 0x00000020; /* PAE - Physical Address Extension */
 
 	uint32_t cr3 = buf_get_u32(x86_32->cache->reg_list[CR3].value, 0, 32);
-	if (isPAE) {
+	if (is_pae) {
 		uint32_t pdpt_base = cr3 & 0xFFFFF000; /* lower 12 bits of CR3 must always be 0 */
 		uint32_t pdpt_index = (addr & 0xC0000000) >> 30; /* A[31:30] index to PDPT */
 		uint32_t pdpt_addr = pdpt_base + (8 * pdpt_index);
@@ -862,7 +851,7 @@ int x86_32_common_remove_watchpoint(struct target *t, struct watchpoint *wp)
 {
 	if (check_not_halted(t))
 		return ERROR_TARGET_NOT_HALTED;
-	if (wp->set)
+	if (wp->is_set)
 		unset_watchpoint(t, wp);
 	return ERROR_OK;
 }
@@ -883,7 +872,7 @@ int x86_32_common_remove_breakpoint(struct target *t, struct breakpoint *bp)
 	LOG_DEBUG("type=%d, addr=" TARGET_ADDR_FMT, bp->type, bp->address);
 	if (check_not_halted(t))
 		return ERROR_TARGET_NOT_HALTED;
-	if (bp->set)
+	if (bp->is_set)
 		unset_breakpoint(t, bp);
 
 	return ERROR_OK;
@@ -995,7 +984,7 @@ static int set_hwbp(struct target *t, struct breakpoint *bp)
 	}
 	if (set_debug_regs(t, bp->address, hwbp_num, DR7_BP_EXECUTE, 1) != ERROR_OK)
 		return ERROR_FAIL;
-	bp->set = hwbp_num + 1;
+	breakpoint_hw_set(bp, hwbp_num);
 	debug_reg_list[hwbp_num].used = 1;
 	debug_reg_list[hwbp_num].bp_value = bp->address;
 	LOG_USER("%s hardware breakpoint %" PRIu32 " set at 0x%08" PRIx32 " (hwreg=%" PRIu8 ")", __func__,
@@ -1007,9 +996,9 @@ static int unset_hwbp(struct target *t, struct breakpoint *bp)
 {
 	struct x86_32_common *x86_32 = target_to_x86_32(t);
 	struct x86_32_dbg_reg *debug_reg_list = x86_32->hw_break_list;
-	int hwbp_num = bp->set - 1;
+	int hwbp_num = bp->number;
 
-	if ((hwbp_num < 0) || (hwbp_num >= x86_32->num_hw_bpoints)) {
+	if (hwbp_num >= x86_32->num_hw_bpoints) {
 		LOG_ERROR("%s invalid breakpoint number=%d, bpid=%" PRIu32,
 				__func__, hwbp_num, bp->unique_id);
 		return ERROR_OK;
@@ -1055,11 +1044,11 @@ static int set_swbp(struct target *t, struct breakpoint *bp)
 				__func__, readback, *bp->orig_instr);
 		return ERROR_FAIL;
 	}
-	bp->set = SW_BP_OPCODE; /* just non 0 */
+	bp->is_set = true;
 
 	/* add the memory patch */
 	struct swbp_mem_patch *new_patch = malloc(sizeof(struct swbp_mem_patch));
-	if (new_patch == NULL) {
+	if (!new_patch) {
 		LOG_ERROR("%s out of memory", __func__);
 		return ERROR_FAIL;
 	}
@@ -1069,10 +1058,10 @@ static int set_swbp(struct target *t, struct breakpoint *bp)
 	new_patch->swbp_unique_id = bp->unique_id;
 
 	struct swbp_mem_patch *addto = x86_32->swbbp_mem_patch_list;
-	if (addto == NULL)
+	if (!addto)
 		x86_32->swbbp_mem_patch_list = new_patch;
 	else {
-		while (addto->next != NULL)
+		while (addto->next)
 			addto = addto->next;
 		addto->next = new_patch;
 	}
@@ -1107,15 +1096,15 @@ static int unset_swbp(struct target *t, struct breakpoint *bp)
 
 	/* remove from patch */
 	struct swbp_mem_patch *iter = x86_32->swbbp_mem_patch_list;
-	if (iter != NULL) {
+	if (iter) {
 		if (iter->swbp_unique_id == bp->unique_id) {
 			/* it's the first item */
 			x86_32->swbbp_mem_patch_list = iter->next;
 			free(iter);
 		} else {
-			while (iter->next != NULL && iter->next->swbp_unique_id != bp->unique_id)
+			while (iter->next && iter->next->swbp_unique_id != bp->unique_id)
 				iter = iter->next;
-			if (iter->next != NULL) {
+			if (iter->next) {
 				/* it's the next one */
 				struct swbp_mem_patch *freeme = iter->next;
 				iter->next = iter->next->next;
@@ -1134,7 +1123,7 @@ static int set_breakpoint(struct target *t, struct breakpoint *bp)
 	int error = ERROR_OK;
 	struct x86_32_common *x86_32 = target_to_x86_32(t);
 	LOG_DEBUG("type=%d, addr=" TARGET_ADDR_FMT, bp->type, bp->address);
-	if (bp->set) {
+	if (bp->is_set) {
 		LOG_ERROR("breakpoint already set");
 		return error;
 	}
@@ -1164,7 +1153,7 @@ static int set_breakpoint(struct target *t, struct breakpoint *bp)
 static int unset_breakpoint(struct target *t, struct breakpoint *bp)
 {
 	LOG_DEBUG("type=%d, addr=" TARGET_ADDR_FMT, bp->type, bp->address);
-	if (!bp->set) {
+	if (!bp->is_set) {
 		LOG_WARNING("breakpoint not set");
 		return ERROR_OK;
 	}
@@ -1182,7 +1171,7 @@ static int unset_breakpoint(struct target *t, struct breakpoint *bp)
 			return ERROR_FAIL;
 		}
 	}
-	bp->set = 0;
+	bp->is_set = false;
 	return ERROR_OK;
 }
 
@@ -1193,7 +1182,7 @@ static int set_watchpoint(struct target *t, struct watchpoint *wp)
 	int wp_num = 0;
 	LOG_DEBUG("type=%d, addr=" TARGET_ADDR_FMT, wp->rw, wp->address);
 
-	if (wp->set) {
+	if (wp->is_set) {
 		LOG_ERROR("%s watchpoint already set", __func__);
 		return ERROR_OK;
 	}
@@ -1233,7 +1222,7 @@ static int set_watchpoint(struct target *t, struct watchpoint *wp)
 			LOG_ERROR("%s only 'access' or 'write' watchpoints are supported", __func__);
 			break;
 	}
-	wp->set = wp_num + 1;
+	watchpoint_set(wp, wp_num);
 	debug_reg_list[wp_num].used = 1;
 	debug_reg_list[wp_num].bp_value = wp->address;
 	LOG_USER("'%s' watchpoint %d set at " TARGET_ADDR_FMT " with length %" PRIu32 " (hwreg=%d)",
@@ -1248,13 +1237,13 @@ static int unset_watchpoint(struct target *t, struct watchpoint *wp)
 	struct x86_32_common *x86_32 = target_to_x86_32(t);
 	struct x86_32_dbg_reg *debug_reg_list = x86_32->hw_break_list;
 	LOG_DEBUG("type=%d, addr=" TARGET_ADDR_FMT, wp->rw, wp->address);
-	if (!wp->set) {
+	if (!wp->is_set) {
 		LOG_WARNING("watchpoint not set");
 		return ERROR_OK;
 	}
 
-	int wp_num = wp->set - 1;
-	if ((wp_num < 0) || (wp_num >= x86_32->num_hw_bpoints)) {
+	int wp_num = wp->number;
+	if (wp_num >= x86_32->num_hw_bpoints) {
 		LOG_DEBUG("Invalid FP Comparator number in watchpoint");
 		return ERROR_OK;
 	}
@@ -1263,7 +1252,7 @@ static int unset_watchpoint(struct target *t, struct watchpoint *wp)
 
 	debug_reg_list[wp_num].used = 0;
 	debug_reg_list[wp_num].bp_value = 0;
-	wp->set = 0;
+	wp->is_set = false;
 
 	LOG_USER("'%s' watchpoint %d removed from " TARGET_ADDR_FMT " with length %" PRIu32 " (hwreg=%d)",
 			wp->rw == WPT_READ ? "read" : wp->rw == WPT_WRITE ?
@@ -1428,7 +1417,7 @@ COMMAND_HANDLER(handle_iod_command)
 	uint8_t *buffer = calloc(count, size);
 	struct target *target = get_current_target(CMD_CTX);
 	int retval = x86_32_common_read_io(target, address, size, buffer);
-	if (ERROR_OK == retval)
+	if (retval == ERROR_OK)
 		handle_iod_output(CMD, target, address, size, count, buffer);
 	free(buffer);
 	return retval;

@@ -1,21 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2006 by Magnus Lundin                                   *
  *   lundin@mlu.mine.nu                                                    *
  *                                                                         *
  *   Copyright (C) 2008 by Gheorghe Guran (atlas)                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
 ****************************************************************************/
 
 /***************************************************************************
@@ -104,11 +93,11 @@ static void at91sam7_set_flash_mode(struct flash_bank *bank, int mode);
 static uint32_t at91sam7_wait_status_busy(struct flash_bank *bank, uint32_t waitbits, int timeout);
 static int at91sam7_flash_command(struct flash_bank *bank, uint8_t cmd, uint16_t pagen);
 
-static const uint32_t MC_FMR[4] = { 0xFFFFFF60, 0xFFFFFF70, 0xFFFFFF80, 0xFFFFFF90 };
-static const uint32_t MC_FCR[4] = { 0xFFFFFF64, 0xFFFFFF74, 0xFFFFFF84, 0xFFFFFF94 };
-static const uint32_t MC_FSR[4] = { 0xFFFFFF68, 0xFFFFFF78, 0xFFFFFF88, 0xFFFFFF98 };
+static const uint32_t mc_fmr[4] = { 0xFFFFFF60, 0xFFFFFF70, 0xFFFFFF80, 0xFFFFFF90 };
+static const uint32_t mc_fcr[4] = { 0xFFFFFF64, 0xFFFFFF74, 0xFFFFFF84, 0xFFFFFF94 };
+static const uint32_t mc_fsr[4] = { 0xFFFFFF68, 0xFFFFFF78, 0xFFFFFF88, 0xFFFFFF98 };
 
-static const char *EPROC[8] = {
+static const char *eproc[8] = {
 	"Unknown", "ARM946-E", "ARM7TDMI", "Unknown", "ARM920T", "ARM926EJ-S", "Unknown", "Unknown"
 };
 
@@ -179,7 +168,7 @@ static long SRAMSIZ[16] = {
 static uint32_t at91sam7_get_flash_status(struct target *target, int bank_number)
 {
 	uint32_t fsr;
-	target_read_u32(target, MC_FSR[bank_number], &fsr);
+	target_read_u32(target, mc_fsr[bank_number], &fsr);
 
 	return fsr;
 }
@@ -254,7 +243,7 @@ static void at91sam7_read_clock_info(struct flash_bank *bank)
 		at91sam7_info->mck_freq = tmp;
 }
 
-/* Setup the timimg registers for nvbits or normal flash */
+/* Setup the timing registers for nvbits or normal flash */
 static void at91sam7_set_flash_mode(struct flash_bank *bank, int mode)
 {
 	uint32_t fmr, fmcn = 0, fws = 0;
@@ -290,7 +279,7 @@ static void at91sam7_set_flash_mode(struct flash_bank *bank, int mode)
 
 		LOG_DEBUG("fmcn[%i]: %i", bank->bank_number, (int)(fmcn));
 		fmr = fmcn << 16 | fws << 8;
-		target_write_u32(target, MC_FMR[bank->bank_number], fmr);
+		target_write_u32(target, mc_fmr[bank->bank_number], fmr);
 	}
 
 	at91sam7_info->flashmode = mode;
@@ -329,7 +318,7 @@ static int at91sam7_flash_command(struct flash_bank *bank, uint8_t cmd, uint16_t
 	struct target *target = bank->target;
 
 	fcr = (0x5A << 24) | ((pagen&0x3FF) << 8) | cmd;
-	target_write_u32(target, MC_FCR[bank->bank_number], fcr);
+	target_write_u32(target, mc_fcr[bank->bank_number], fcr);
 	LOG_DEBUG("Flash command: 0x%" PRIx32 ", flash bank: %i, page number: %u",
 		fcr,
 		bank->bank_number + 1,
@@ -377,7 +366,7 @@ static int at91sam7_read_part_info(struct flash_bank *bank)
 			/* re-calculate master clock frequency */
 			at91sam7_read_clock_info(t_bank);
 
-			/* no timming */
+			/* no timing */
 			at91sam7_set_flash_mode(t_bank, FMR_TIMING_NONE);
 
 			/* check protect state */
@@ -415,7 +404,7 @@ static int at91sam7_read_part_info(struct flash_bank *bank)
 			/* calculate master clock frequency */
 			at91sam7_read_clock_info(t_bank);
 
-			/* no timming */
+			/* no timing */
 			at91sam7_set_flash_mode(t_bank, FMR_TIMING_NONE);
 
 			/* check protect state */
@@ -587,8 +576,6 @@ static int at91sam7_read_part_info(struct flash_bank *bank)
 		t_bank->bank_number = bnk;
 		t_bank->base = base_address + bnk * bank_size;
 		t_bank->size = bank_size;
-		t_bank->chip_width = 0;
-		t_bank->bus_width = 4;
 		t_bank->num_sectors = sectors_num;
 
 		/* allocate sectors */
@@ -623,7 +610,7 @@ static int at91sam7_read_part_info(struct flash_bank *bank)
 		/* calculate master clock frequency */
 		at91sam7_read_clock_info(t_bank);
 
-		/* no timming */
+		/* no timing */
 		at91sam7_set_flash_mode(t_bank, FMR_TIMING_NONE);
 
 		/* check protect state */
@@ -702,8 +689,6 @@ FLASH_BANK_COMMAND_HANDLER(at91sam7_flash_bank_command)
 	uint32_t bank_size;
 	uint32_t ext_freq = 0;
 
-	unsigned int chip_width;
-	unsigned int bus_width;
 	unsigned int banks_num;
 	unsigned int num_sectors;
 
@@ -727,9 +712,6 @@ FLASH_BANK_COMMAND_HANDLER(at91sam7_flash_bank_command)
 
 	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[1], base_address);
 
-	COMMAND_PARSE_NUMBER(uint, CMD_ARGV[3], chip_width);
-	COMMAND_PARSE_NUMBER(uint, CMD_ARGV[4], bus_width);
-
 	COMMAND_PARSE_NUMBER(uint, CMD_ARGV[8], banks_num);
 	COMMAND_PARSE_NUMBER(uint, CMD_ARGV[9], num_sectors);
 	COMMAND_PARSE_NUMBER(u16, CMD_ARGV[10], pages_per_sector);
@@ -743,7 +725,7 @@ FLASH_BANK_COMMAND_HANDLER(at91sam7_flash_bank_command)
 		at91sam7_info->ext_freq = ext_freq;
 	}
 
-	if ((bus_width == 0) || (banks_num == 0) || (num_sectors == 0) ||
+	if ((banks_num == 0) || (num_sectors == 0) ||
 			(pages_per_sector == 0) || (page_size == 0) || (num_nvmbits == 0)) {
 		at91sam7_info->flash_autodetection = 1;
 		return ERROR_OK;
@@ -772,8 +754,6 @@ FLASH_BANK_COMMAND_HANDLER(at91sam7_flash_bank_command)
 		t_bank->bank_number = bnk;
 		t_bank->base = base_address + bnk * bank_size;
 		t_bank->size = bank_size;
-		t_bank->chip_width = chip_width;
-		t_bank->bus_width = bus_width;
 		t_bank->num_sectors = num_sectors;
 
 		/* allocate sectors */
@@ -954,7 +934,7 @@ static int at91sam7_write(struct flash_bank *bank, const uint8_t *buffer, uint32
 		/* Send Write Page command to Flash Controller */
 		if (at91sam7_flash_command(bank, WP, pagen) != ERROR_OK)
 			return ERROR_FLASH_OPERATION_FAILED;
-		LOG_DEBUG("Write flash bank:%u page number:%" PRIi32 "", bank->bank_number, pagen);
+		LOG_DEBUG("Write flash bank:%u page number:%" PRIu32, bank->bank_number, pagen);
 	}
 
 	return ERROR_OK;
@@ -978,56 +958,39 @@ static int at91sam7_probe(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-static int get_at91sam7_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_at91sam7_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
-	int printed;
 	struct at91sam7_flash_bank *at91sam7_info = bank->driver_priv;
 
 	if (at91sam7_info->cidr == 0)
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
-	printed = snprintf(buf, buf_size,
-			"\n at91sam7 driver information: Chip is %s\n",
+	command_print_sameline(cmd, "\n at91sam7 driver information: Chip is %s\n",
 			at91sam7_info->target_name);
 
-	buf += printed;
-	buf_size -= printed;
-
-	printed = snprintf(buf,
-			buf_size,
+	command_print_sameline(cmd,
 			" Cidr: 0x%8.8" PRIx32 " | Arch: 0x%4.4x | Eproc: %s | Version: 0x%3.3x | "
 			"Flashsize: 0x%8.8" PRIx32 "\n",
 			at91sam7_info->cidr,
 			at91sam7_info->cidr_arch,
-			EPROC[at91sam7_info->cidr_eproc],
+			eproc[at91sam7_info->cidr_eproc],
 			at91sam7_info->cidr_version,
 			bank->size);
 
-	buf += printed;
-	buf_size -= printed;
-
-	printed = snprintf(buf, buf_size,
-			" Master clock (estimated): %u KHz | External clock: %u KHz\n",
+	command_print_sameline(cmd,
+			" Master clock (estimated): %u kHz | External clock: %u kHz\n",
 			(unsigned)(at91sam7_info->mck_freq / 1000),
 			(unsigned)(at91sam7_info->ext_freq / 1000));
 
-	buf += printed;
-	buf_size -= printed;
-
-	printed = snprintf(buf,
-			buf_size,
+	command_print_sameline(cmd,
 			" Pagesize: %i bytes | Lockbits(%u): %i 0x%4.4x | Pages in lock region: %i\n",
 			at91sam7_info->pagesize,
 			bank->num_sectors,
 			at91sam7_info->num_lockbits_on,
 			at91sam7_info->lockbits,
-			at91sam7_info->pages_per_sector*at91sam7_info->num_lockbits_on);
+			at91sam7_info->pages_per_sector * at91sam7_info->num_lockbits_on);
 
-	buf += printed;
-	buf_size -= printed;
-
-	snprintf(buf, buf_size,
-		" Securitybit: %i | Nvmbits(%i): %i 0x%1.1x\n",
+	command_print_sameline(cmd, " Securitybit: %i | Nvmbits(%i): %i 0x%1.1x\n",
 		at91sam7_info->securitybit, at91sam7_info->num_nvmbits,
 		at91sam7_info->num_nvmbits_on, at91sam7_info->nvmbits);
 
@@ -1057,7 +1020,7 @@ COMMAND_HANDLER(at91sam7_handle_gpnvm_command)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	bank = get_flash_bank_by_num_noprobe(0);
-	if (bank ==  NULL)
+	if (!bank)
 		return ERROR_FLASH_BANK_INVALID;
 	if (strcmp(bank->driver->name, "at91sam7")) {
 		command_print(CMD, "not an at91sam7 flash bank '%s'", CMD_ARGV[0]);

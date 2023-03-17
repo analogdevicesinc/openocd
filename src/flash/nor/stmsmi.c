@@ -1,18 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2010 by Antonio Borneo <borneo.antonio@gmail.com>       *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /* STM Serial Memory Interface (SMI) controller is a SPI bus controller
@@ -41,34 +30,33 @@
 #include <jtag/jtag.h>
 #include <helper/time_support.h>
 
-#define SMI_READ_REG(a) (_SMI_READ_REG(a))
-#define _SMI_READ_REG(a)			\
-{									\
-	int __a;						\
-	uint32_t __v;					\
+#define SMI_READ_REG(a)				\
+({									\
+	int _ret;						\
+	uint32_t _value;				\
 									\
-	__a = target_read_u32(target, io_base + (a), &__v); \
-	if (__a != ERROR_OK)			\
-		return __a;					\
-	__v;							\
-}
+	_ret = target_read_u32(target, io_base + (a), &_value); \
+	if (_ret != ERROR_OK)			\
+		return _ret;				\
+	_value;							\
+})
 
 #define SMI_WRITE_REG(a, v)			\
 {									\
-	int __r;						\
+	int _retval;					\
 									\
-	__r = target_write_u32(target, io_base + (a), (v)); \
-	if (__r != ERROR_OK)			\
-		return __r;					\
+	_retval = target_write_u32(target, io_base + (a), (v)); \
+	if (_retval != ERROR_OK)		\
+		return _retval;				\
 }
 
 #define SMI_POLL_TFF(timeout)		\
 {									\
-	int __r;						\
+	int _retval;					\
 									\
-	__r = poll_tff(target, io_base, timeout); \
-	if (__r != ERROR_OK)			\
-		return __r;					\
+	_retval = poll_tff(target, io_base, timeout); \
+	if (_retval != ERROR_OK)		\
+		return _retval;				\
 }
 
 #define SMI_SET_SW_MODE()	SMI_WRITE_REG(SMI_CR1, \
@@ -145,7 +133,7 @@ FLASH_BANK_COMMAND_HANDLER(stmsmi_flash_bank_command)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	stmsmi_info = malloc(sizeof(struct stmsmi_flash_bank));
-	if (stmsmi_info == NULL) {
+	if (!stmsmi_info) {
 		LOG_ERROR("not enough memory");
 		return ERROR_FAIL;
 	}
@@ -601,7 +589,7 @@ static int stmsmi_probe(struct flash_bank *bank)
 	bank->num_sectors =
 		stmsmi_info->dev->size_in_bytes / sectorsize;
 	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
-	if (sectors == NULL) {
+	if (!sectors) {
 		LOG_ERROR("not enough memory");
 		return ERROR_FAIL;
 	}
@@ -632,17 +620,16 @@ static int stmsmi_protect_check(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-static int get_stmsmi_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_stmsmi_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct stmsmi_flash_bank *stmsmi_info = bank->driver_priv;
 
 	if (!(stmsmi_info->probed)) {
-		snprintf(buf, buf_size,
-			"\nSMI flash bank not probed yet\n");
+		command_print_sameline(cmd, "\nSMI flash bank not probed yet\n");
 		return ERROR_OK;
 	}
 
-	snprintf(buf, buf_size, "\nSMI flash information:\n"
+	command_print_sameline(cmd, "\nSMI flash information:\n"
 		"  Device \'%s\' (ID 0x%08" PRIx32 ")\n",
 		stmsmi_info->dev->name, stmsmi_info->dev->device_id);
 

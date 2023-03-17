@@ -1,20 +1,9 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2018 by Square, Inc.                                    *
  *   Steven Stallion <stallion@squareup.com>                               *
  *   James Zhao <hjz@squareup.com>                                         *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ESIRISC_REGS_H
@@ -148,8 +137,8 @@ enum esirisc_reg_num {
 #define CSR_DEBUG_HWDC				0x03	/* Hardware Debug Control */
 #define CSR_DEBUG_DBS				0x04	/* Data Breakpoint Size */
 #define CSR_DEBUG_DBR				0x05	/* Data Breakpoint Range */
-#define CSR_DEBUG_IBAn				0x08	/* Instruction Breakpoint Address [0..7] */
-#define CSR_DEBUG_DBAn				0x10	/* Data Breakpoint Address [0..7] */
+#define CSR_DEBUG_IBA_N				0x08	/* Instruction Breakpoint Address [0..7] */
+#define CSR_DEBUG_DBA_N				0x10	/* Data Breakpoint Address [0..7] */
 
 /* Configuration CSRs */
 #define CSR_CONFIG_ARCH0			0x00	/* Architectural Configuration 0 */
@@ -160,12 +149,12 @@ enum esirisc_reg_num {
 #define CSR_CONFIG_IC				0x05	/* Instruction Cache Configuration */
 #define CSR_CONFIG_DC				0x06	/* Data Cache Configuration */
 #define CSR_CONFIG_INT				0x07	/* Interrupt Configuration */
-#define	CSR_CONFIG_ISAn				0x08	/* Instruction Set Configuration [0..6] */
+#define	CSR_CONFIG_ISA_N			0x08	/* Instruction Set Configuration [0..6] */
 #define CSR_CONFIG_DBG				0x0f	/* Debug Configuration */
 #define CSR_CONFIG_MID				0x10	/* Manufacturer ID */
 #define CSR_CONFIG_REV				0x11	/* Revision Number */
-#define CSR_CONFIG_MPID				0x12	/* Mulitprocessor ID */
-#define CSR_CONFIG_FREQn			0x13	/* Frequency [0..2] */
+#define CSR_CONFIG_MPID				0x12	/* Multiprocessor ID */
+#define CSR_CONFIG_FREQ_N			0x13	/* Frequency [0..2] */
 #define CSR_CONFIG_TRACE			0x16	/* Trace Configuration */
 
 /* Trace CSRs */

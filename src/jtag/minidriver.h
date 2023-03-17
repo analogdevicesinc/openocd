@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -7,19 +9,6 @@
  *                                                                         *
  *   Copyright (C) 2009 Zachary T Welch                                    *
  *   zw@superlucidity.net                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_JTAG_MINIDRIVER_H
@@ -32,7 +21,7 @@
  * interface functions, instead of the built-in asynchronous driver
  * module that is used by the standard JTAG interface drivers.
  *
- * In addtion to the functions defined in the @c minidriver.h file, the
+ * In addition to the functions defined in the @c minidriver.h file, the
  * @c jtag_minidriver.h file must declare the following functions (or
  * define static inline versions of them):
  * - jtag_add_callback
@@ -45,7 +34,7 @@
 
 /* this header will be provided by the minidriver implementation, */
 /* and it may provide additional declarations that must be defined. */
-#include <jtag/minidriver_imp.h>
+#include <jtag/drivers/minidriver_imp.h>
 
 int interface_jtag_add_ir_scan(struct jtag_tap *active,
 		const struct scan_field *fields,
@@ -74,7 +63,7 @@ int interface_add_tms_seq(unsigned num_bits,
  * trst.
  *
  * the higher level jtag_add_reset will invoke jtag_add_tlr() if
- * approperiate
+ * appropriate
  */
 int interface_jtag_add_reset(int trst, int srst);
 int interface_jtag_add_sleep(uint32_t us);

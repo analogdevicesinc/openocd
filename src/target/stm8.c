@@ -1,20 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
 *   OpenOCD STM8 target driver
 *   Copyright (C) 2017  Ake Rehnman
 *   ake.rehnman(at)gmail.com
-*
-*   This program is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU General Public License as published by
-*   the Free Software Foundation, either version 2 of the License, or
-*   (at your option) any later version.
-*
-*   This program is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU General Public License for more details.
-*
-*   You should have received a copy of the GNU General Public License
-*   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifdef HAVE_CONFIG_H
@@ -159,7 +148,6 @@ struct stm8_algorithm {
 struct stm8_core_reg {
 	uint32_t num;
 	struct target *target;
-	struct stm8_common *stm8_common;
 };
 
 enum hw_break_type {
@@ -967,7 +955,7 @@ static int stm8_reset_deassert(struct target *target)
 	if (target->reset_halt)
 		return ERROR_OK;
 
-	/* Instead of going thrugh saving context, polling and
+	/* Instead of going through saving context, polling and
 	   then resuming target again just clear stall and proceed. */
 	target->state = TARGET_RUNNING;
 	return stm8_exit_debug(target);
@@ -1221,7 +1209,6 @@ static struct reg_cache *stm8_build_reg_cache(struct target *target)
 	for (i = 0; i < num_regs; i++) {
 		arch_info[i].num = stm8_regs[i].id;
 		arch_info[i].target = target;
-		arch_info[i].stm8_common = stm8;
 
 		reg_list[i].name = stm8_regs[i].name;
 		reg_list[i].size = stm8_regs[i].bits;
@@ -1308,7 +1295,7 @@ static int stm8_arch_state(struct target *target)
 static int stm8_step(struct target *target, int current,
 		target_addr_t address, int handle_breakpoints)
 {
-	LOG_DEBUG("%" PRIx32 " " TARGET_ADDR_FMT " %" PRIx32,
+	LOG_DEBUG("%x " TARGET_ADDR_FMT " %x",
 		current, address, handle_breakpoints);
 
 	/* get pointers to arch-specific information */
@@ -1372,7 +1359,7 @@ static void stm8_enable_breakpoints(struct target *target)
 
 	/* set any pending breakpoints */
 	while (breakpoint) {
-		if (breakpoint->set == 0)
+		if (!breakpoint->is_set)
 			stm8_set_breakpoint(target, breakpoint);
 		breakpoint = breakpoint->next;
 	}
@@ -1385,7 +1372,7 @@ static int stm8_set_breakpoint(struct target *target,
 	struct stm8_comparator *comparator_list = stm8->hw_break_list;
 	int retval;
 
-	if (breakpoint->set) {
+	if (breakpoint->is_set) {
 		LOG_WARNING("breakpoint already set");
 		return ERROR_OK;
 	}
@@ -1400,7 +1387,7 @@ static int stm8_set_breakpoint(struct target *target,
 					breakpoint->unique_id);
 			return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 		}
-		breakpoint->set = bp_num + 1;
+		breakpoint_hw_set(breakpoint, bp_num);
 		comparator_list[bp_num].used = true;
 		comparator_list[bp_num].bp_value = breakpoint->address;
 		comparator_list[bp_num].type = HWBRK_EXEC;
@@ -1437,7 +1424,7 @@ static int stm8_set_breakpoint(struct target *target,
 		} else {
 			return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 		}
-		breakpoint->set = 1; /* Any nice value but 0 */
+		breakpoint->is_set = true;
 	}
 
 	return ERROR_OK;
@@ -1478,14 +1465,14 @@ static int stm8_unset_breakpoint(struct target *target,
 	struct stm8_comparator *comparator_list = stm8->hw_break_list;
 	int retval;
 
-	if (!breakpoint->set) {
+	if (!breakpoint->is_set) {
 		LOG_WARNING("breakpoint not set");
 		return ERROR_OK;
 	}
 
 	if (breakpoint->type == BKPT_HARD) {
-		int bp_num = breakpoint->set - 1;
-		if ((bp_num < 0) || (bp_num >= stm8->num_hw_bpoints)) {
+		int bp_num = breakpoint->number;
+		if (bp_num >= stm8->num_hw_bpoints) {
 			LOG_DEBUG("Invalid comparator number in breakpoint (bpid: %" PRIu32 ")",
 					  breakpoint->unique_id);
 			return ERROR_OK;
@@ -1519,7 +1506,7 @@ static int stm8_unset_breakpoint(struct target *target,
 		} else
 			return ERROR_FAIL;
 	}
-	breakpoint->set = 0;
+	breakpoint->is_set = false;
 
 	return ERROR_OK;
 }
@@ -1535,7 +1522,7 @@ static int stm8_remove_breakpoint(struct target *target,
 		return ERROR_TARGET_NOT_HALTED;
 	}
 
-	if (breakpoint->set)
+	if (breakpoint->is_set)
 		stm8_unset_breakpoint(target, breakpoint);
 
 	if (breakpoint->type == BKPT_HARD)
@@ -1552,7 +1539,7 @@ static int stm8_set_watchpoint(struct target *target,
 	int wp_num = 0;
 	int ret;
 
-	if (watchpoint->set) {
+	if (watchpoint->is_set) {
 		LOG_WARNING("watchpoint already set");
 		return ERROR_OK;
 	}
@@ -1595,7 +1582,7 @@ static int stm8_set_watchpoint(struct target *target,
 		return ret;
 	}
 
-	watchpoint->set = wp_num + 1;
+	watchpoint_set(watchpoint, wp_num);
 
 	LOG_DEBUG("wp_num %i bp_value 0x%" PRIx32 "",
 			wp_num,
@@ -1629,7 +1616,7 @@ static void stm8_enable_watchpoints(struct target *target)
 
 	/* set any pending watchpoints */
 	while (watchpoint) {
-		if (watchpoint->set == 0)
+		if (!watchpoint->is_set)
 			stm8_set_watchpoint(target, watchpoint);
 		watchpoint = watchpoint->next;
 	}
@@ -1642,18 +1629,18 @@ static int stm8_unset_watchpoint(struct target *target,
 	struct stm8_common *stm8 = target_to_stm8(target);
 	struct stm8_comparator *comparator_list = stm8->hw_break_list;
 
-	if (!watchpoint->set) {
+	if (!watchpoint->is_set) {
 		LOG_WARNING("watchpoint not set");
 		return ERROR_OK;
 	}
 
-	int wp_num = watchpoint->set - 1;
-	if ((wp_num < 0) || (wp_num >= stm8->num_hw_bpoints)) {
+	int wp_num = watchpoint->number;
+	if (wp_num >= stm8->num_hw_bpoints) {
 		LOG_DEBUG("Invalid hw comparator number in watchpoint");
 		return ERROR_OK;
 	}
 	comparator_list[wp_num].used = false;
-	watchpoint->set = 0;
+	watchpoint->is_set = false;
 
 	stm8_set_hwbreak(target, comparator_list);
 
@@ -1671,7 +1658,7 @@ static int stm8_remove_watchpoint(struct target *target,
 		return ERROR_TARGET_NOT_HALTED;
 	}
 
-	if (watchpoint->set)
+	if (watchpoint->is_set)
 		stm8_unset_watchpoint(target, watchpoint);
 
 	stm8->num_hw_bpoints_avail++;
@@ -1876,7 +1863,7 @@ static int stm8_run_algorithm(struct target *target, int num_mem_params,
 			continue;
 
 		struct reg *reg = register_get_by_name(stm8->core_cache,
-				reg_params[i].reg_name, 0);
+				reg_params[i].reg_name, false);
 
 		if (!reg) {
 			LOG_ERROR("BUG: register '%s' not found", reg_params[i].reg_name);
@@ -1910,7 +1897,7 @@ static int stm8_run_algorithm(struct target *target, int num_mem_params,
 	for (int i = 0; i < num_reg_params; i++) {
 		if (reg_params[i].direction != PARAM_OUT) {
 			struct reg *reg = register_get_by_name(stm8->core_cache,
-					reg_params[i].reg_name, 0);
+					reg_params[i].reg_name, false);
 			if (!reg) {
 				LOG_ERROR("BUG: register '%s' not found",
 						reg_params[i].reg_name);
@@ -1945,7 +1932,7 @@ static int stm8_run_algorithm(struct target *target, int num_mem_params,
 	return ERROR_OK;
 }
 
-int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
+static int stm8_jim_configure(struct target *target, struct jim_getopt_info *goi)
 {
 	struct stm8_common *stm8 = target_to_stm8(target);
 	jim_wide w;
@@ -1954,7 +1941,7 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 
 	arg = Jim_GetString(goi->argv[0], NULL);
 	if (!strcmp(arg, "-blocksize")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -1964,16 +1951,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->blocksize = w;
-		LOG_DEBUG("blocksize=%8.8x", stm8->blocksize);
+		LOG_DEBUG("blocksize=%8.8" PRIx32, stm8->blocksize);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-flashstart")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -1983,16 +1970,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->flashstart = w;
-		LOG_DEBUG("flashstart=%8.8x", stm8->flashstart);
+		LOG_DEBUG("flashstart=%8.8" PRIx32, stm8->flashstart);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-flashend")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2002,16 +1989,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->flashend = w;
-		LOG_DEBUG("flashend=%8.8x", stm8->flashend);
+		LOG_DEBUG("flashend=%8.8" PRIx32, stm8->flashend);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-eepromstart")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2021,16 +2008,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->eepromstart = w;
-		LOG_DEBUG("eepromstart=%8.8x", stm8->eepromstart);
+		LOG_DEBUG("eepromstart=%8.8" PRIx32, stm8->eepromstart);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-eepromend")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2040,16 +2027,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->eepromend = w;
-		LOG_DEBUG("eepromend=%8.8x", stm8->eepromend);
+		LOG_DEBUG("eepromend=%8.8" PRIx32, stm8->eepromend);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-optionstart")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2059,16 +2046,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->optionstart = w;
-		LOG_DEBUG("optionstart=%8.8x", stm8->optionstart);
+		LOG_DEBUG("optionstart=%8.8" PRIx32, stm8->optionstart);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-optionend")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2078,16 +2065,16 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 			return JIM_ERR;
 		}
 
-		e = Jim_GetOpt_Wide(goi, &w);
+		e = jim_getopt_wide(goi, &w);
 		if (e != JIM_OK)
 			return e;
 
 		stm8->optionend = w;
-		LOG_DEBUG("optionend=%8.8x", stm8->optionend);
+		LOG_DEBUG("optionend=%8.8" PRIx32, stm8->optionend);
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-enable_step_irq")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2096,7 +2083,7 @@ int stm8_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 		return JIM_OK;
 	}
 	if (!strcmp(arg, "-enable_stm8l")) {
-		e = Jim_GetOpt_String(goi, &arg, NULL);
+		e = jim_getopt_string(goi, &arg, NULL);
 		if (e != JIM_OK)
 			return e;
 
@@ -2159,7 +2146,7 @@ static const struct command_registration stm8_exec_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-const struct command_registration stm8_command_handlers[] = {
+static const struct command_registration stm8_command_handlers[] = {
 	{
 		.name = "stm8",
 		.mode = COMMAND_ANY,

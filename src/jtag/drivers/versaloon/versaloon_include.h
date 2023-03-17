@@ -1,23 +1,13 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2009 by Simon Qian <SimonQian@SimonQian.com>            *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_JTAG_DRIVERS_VERSALOON_VERSALOON_INCLUDE_H
 #define OPENOCD_JTAG_DRIVERS_VERSALOON_VERSALOON_INCLUDE_H
 
+#include "helper/system.h"
 /* This file is used to include different header and macros */
 /* according to different platform */
 #include <jtag/interface.h>
@@ -26,7 +16,6 @@
 #define PARAM_CHECK							1
 
 #define sleep_ms(ms)						jtag_sleep((ms) * 1000)
-#define dimof(arr)							(sizeof(arr) / sizeof((arr)[0]))
 #define TO_STR(name)						#name
 
 #define RESULT								int
@@ -41,7 +30,7 @@
 #define ERRMSG_INVALID_USAGE				"Invalid usage of %s"
 #define ERRMSG_INVALID_TARGET				"Invalid %s"
 #define ERRMSG_INVALID_PARAMETER			"Invalid parameter of %s."
-#define ERRMSG_INVALID_INTERFACE_NUM		"invalid inteface %d"
+#define ERRMSG_INVALID_INTERFACE_NUM		"invalid interface %d"
 #define ERRMSG_INVALID_BUFFER				"Buffer %s is not valid."
 #define ERRCODE_INVALID_BUFFER				ERROR_FAIL
 #define ERRCODE_INVALID_PARAMETER			ERROR_FAIL

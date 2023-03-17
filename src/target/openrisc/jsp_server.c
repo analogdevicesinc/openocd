@@ -1,21 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2014 by Franck Jullien                                  *
  *   franck.jullien@gmail.com                                              *
  *                                                                         *
  *   Based on ./src/server/telnet_server.c                                 *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -57,7 +46,7 @@ static int telnet_write(struct connection *connection, const void *data, int len
 	return ERROR_SERVER_REMOTE_CLOSED;
 }
 
-int jsp_poll_read(void *priv)
+static int jsp_poll_read(void *priv)
 {
 	struct jsp_service *jsp_service = (struct jsp_service *)priv;
 	unsigned char out_buffer[10];
@@ -103,7 +92,7 @@ static int jsp_new_connection(struct connection *connection)
 
 	int retval = target_register_timer_callback(&jsp_poll_read, 1,
 		TARGET_TIMER_TYPE_PERIODIC, jsp_service);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	return ERROR_OK;
@@ -184,26 +173,25 @@ static int jsp_input(struct connection *connection)
 
 static int jsp_connection_closed(struct connection *connection)
 {
-	struct telnet_connection *t_con = connection->priv;
 	struct jsp_service *jsp_service = connection->service->priv;
 
-	if (t_con->prompt) {
-		free(t_con->prompt);
-		t_con->prompt = NULL;
-	}
-
 	int retval = target_unregister_timer_callback(&jsp_poll_read, jsp_service);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
-	if (connection->priv) {
-		free(connection->priv);
-		connection->priv = NULL;
-	} else
-		LOG_ERROR("BUG: connection->priv == NULL");
-
+	free(connection->priv);
+	connection->priv = NULL;
 	return ERROR_OK;
 }
+
+static const struct service_driver jsp_service_driver = {
+	.name = "jsp",
+	.new_connection_during_keep_alive_handler = NULL,
+	.new_connection_handler = jsp_new_connection,
+	.input_handler = jsp_input,
+	.connection_closed_handler = jsp_connection_closed,
+	.keep_client_alive_handler = NULL,
+};
 
 int jsp_init(struct or1k_jtag *jtag_info, char *banner)
 {
@@ -211,13 +199,7 @@ int jsp_init(struct or1k_jtag *jtag_info, char *banner)
 	jsp_service->banner = banner;
 	jsp_service->jtag_info = jtag_info;
 
-	return add_service("jsp",
-		jsp_port,
-		1,
-		jsp_new_connection,
-		jsp_input,
-		jsp_connection_closed,
-		jsp_service);
+	return add_service(&jsp_service_driver, jsp_port, 1, jsp_service);
 }
 
 COMMAND_HANDLER(handle_jsp_port_command)

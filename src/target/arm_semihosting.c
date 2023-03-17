@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2009 by Marvell Technology Group Ltd.                   *
  *   Written by Nicolas Pitre <nico@marvell.com>                           *
@@ -10,19 +12,6 @@
  *                                                                         *
  *   Copyright (C) 2018 by Liviu Ionescu                                   *
  *   <ilg@livius.net>                                                      *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /**
@@ -122,6 +111,22 @@ static int post_result(struct target *target)
 
 			uint64_t pc = buf_get_u64(arm->core_cache->reg_list[32].value, 0, 64);
 			buf_set_u64(arm->pc->value, 0, 64, pc + 4);
+			arm->pc->dirty = true;
+		}  else if (arm->core_state == ARM_STATE_ARM) {
+			/* return value in R0 */
+			buf_set_u32(arm->core_cache->reg_list[0].value, 0, 32, target->semihosting->result);
+			arm->core_cache->reg_list[0].dirty = true;
+
+			uint32_t pc = buf_get_u32(arm->core_cache->reg_list[32].value, 0, 32);
+			buf_set_u32(arm->pc->value, 0, 32, pc + 4);
+			arm->pc->dirty = true;
+		} else if (arm->core_state == ARM_STATE_THUMB) {
+			/* return value in R0 */
+			buf_set_u32(arm->core_cache->reg_list[0].value, 0, 32, target->semihosting->result);
+			arm->core_cache->reg_list[0].dirty = true;
+
+			uint32_t pc = buf_get_u32(arm->core_cache->reg_list[32].value, 0, 32);
+			buf_set_u32(arm->pc->value, 0, 32, pc + 2);
 			arm->pc->dirty = true;
 		}
 	} else {
@@ -275,6 +280,16 @@ int arm_semihosting(struct target *target, int *retval)
 		if (target->debug_reason != DBG_REASON_BREAKPOINT)
 			return 0;
 
+		/* According to ARM Semihosting for AArch32 and AArch64:
+		 * The HLT encodings are new in version 2.0 of the semihosting specification.
+		 * Where possible, have semihosting callers continue to use the previously
+		 * existing trap instructions to ensure compatibility with legacy semihosting
+		 * implementations.
+		 * These trap instructions are HLT for A64, SVC on A+R profile A32 or T32,
+		 * and BKPT on M profile.
+		 * However, it is necessary to change from SVC to HLT instructions to support
+		 * AArch32 semihosting properly in a mixed AArch32/AArch64 system. */
+
 		if (arm->core_state == ARM_STATE_AARCH64) {
 			uint32_t insn = 0;
 			r = arm->pc;
@@ -284,8 +299,37 @@ int arm_semihosting(struct target *target, int *retval)
 			if (*retval != ERROR_OK)
 				return 1;
 
-			/* bkpt 0xAB */
+			/* HLT 0xF000 */
 			if (insn != 0xD45E0000)
+				return 0;
+		} else if (arm->core_state == ARM_STATE_ARM) {
+			r = arm->pc;
+			pc = buf_get_u32(r->value, 0, 32);
+
+			/* A32 instruction => check for HLT 0xF000 (0xE10F0070) */
+			uint32_t insn = 0;
+
+			*retval = target_read_u32(target, pc, &insn);
+
+			if (*retval != ERROR_OK)
+				return 1;
+
+			/* HLT 0xF000*/
+			if (insn != 0xE10F0070)
+				return 0;
+		} else if (arm->core_state == ARM_STATE_THUMB) {
+			r = arm->pc;
+			pc = buf_get_u32(r->value, 0, 32);
+
+			/* T32 instruction => check for HLT 0x3C (0xBABC) */
+			uint16_t insn = 0;
+			*retval = target_read_u16(target, pc, &insn);
+
+			if (*retval != ERROR_OK)
+				return 1;
+
+			/* HLT 0x3C*/
+			if (insn != 0xBABC)
 				return 0;
 		} else
 			return 1;
@@ -312,10 +356,13 @@ int arm_semihosting(struct target *target, int *retval)
 		}
 
 		/* Check for ARM operation numbers. */
-		if (0 <= semihosting->op && semihosting->op <= 0x31) {
+		if ((semihosting->op >= 0 && semihosting->op <= 0x31) ||
+			(semihosting->op >= 0x100 && semihosting->op <= 0x107)) {
+
 			*retval = semihosting_common(target);
 			if (*retval != ERROR_OK) {
-				LOG_ERROR("Failed semihosting operation");
+				LOG_ERROR("Failed semihosting operation (0x%02X)",
+						semihosting->op);
 				return 0;
 			}
 		} else {

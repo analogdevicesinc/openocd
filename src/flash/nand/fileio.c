@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2007 by Dominic Rath <Dominic.Rath@gmx.de>              *
  *   Copyright (C) 2002 Thomas Gleixner <tglx@linutronix.de>               *
  *   Copyright (C) 2009 Zachary T Welch <zw@superlucidity.net>             *
  *                                                                         *
  *   Partially based on drivers/mtd/nand_ids.c from Linux.                 *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -65,10 +54,10 @@ int nand_fileio_start(struct command_invocation *cmd,
 
 	duration_start(&state->bench);
 
-	if (NULL != filename) {
+	if (filename) {
 		int retval = fileio_open(&state->fileio, filename, filemode, FILEIO_BINARY);
-		if (ERROR_OK != retval) {
-			const char *msg = (FILEIO_READ == filemode) ? "read" : "write";
+		if (retval != ERROR_OK) {
+			const char *msg = (filemode == FILEIO_READ) ? "read" : "write";
 			command_print(cmd, "failed to open '%s' for %s access",
 				filename, msg);
 			return retval;
@@ -99,14 +88,11 @@ int nand_fileio_cleanup(struct nand_fileio_state *state)
 	if (state->file_opened)
 		fileio_close(state->fileio);
 
-	if (state->oob) {
-		free(state->oob);
-		state->oob = NULL;
-	}
-	if (state->page) {
-		free(state->page);
-		state->page = NULL;
-	}
+	free(state->oob);
+	state->oob = NULL;
+
+	free(state->page);
+	state->page = NULL;
 	return ERROR_OK;
 }
 int nand_fileio_finish(struct nand_fileio_state *state)
@@ -122,15 +108,15 @@ COMMAND_HELPER(nand_fileio_parse_args, struct nand_fileio_state *state,
 	nand_fileio_init(state);
 
 	unsigned minargs = need_size ? 4 : 3;
-	if (CMD_ARGC < minargs)
+	if (minargs > CMD_ARGC)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	struct nand_device *nand;
 	int retval = CALL_COMMAND_HANDLER(nand_command_get_device, 0, &nand);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
-	if (NULL == nand->device) {
+	if (!nand->device) {
 		command_print(CMD, "#%s: not probed", CMD_ARGV[0]);
 		return ERROR_NAND_DEVICE_NOT_PROBED;
 	}
@@ -144,7 +130,7 @@ COMMAND_HELPER(nand_fileio_parse_args, struct nand_fileio_state *state,
 		}
 	}
 
-	if (CMD_ARGC > minargs) {
+	if (minargs < CMD_ARGC) {
 		for (unsigned i = minargs; i < CMD_ARGC; i++) {
 			if (!strcmp(CMD_ARGV[i], "oob_raw"))
 				state->oob_format |= NAND_OOB_RAW;
@@ -162,7 +148,7 @@ COMMAND_HELPER(nand_fileio_parse_args, struct nand_fileio_state *state,
 	}
 
 	retval = nand_fileio_start(CMD, nand, CMD_ARGV[1], filemode, state);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	if (!need_size) {
@@ -187,7 +173,7 @@ int nand_fileio_read(struct nand_device *nand, struct nand_fileio_state *s)
 	size_t total_read = 0;
 	size_t one_read;
 
-	if (NULL != s->page) {
+	if (s->page) {
 		fileio_read(s->fileio, s->page_size, s->page, &one_read);
 		if (one_read < s->page_size)
 			memset(s->page + one_read, 0xff, s->page_size - one_read);
@@ -206,7 +192,7 @@ int nand_fileio_read(struct nand_device *nand, struct nand_fileio_state *s)
 	} else if (s->oob_format & NAND_OOB_SW_ECC_KW)   {
 		/*
 		 * In this case eccpos is not used as
-		 * the ECC data is always stored contigously
+		 * the ECC data is always stored contiguously
 		 * at the end of the OOB area.  It consists
 		 * of 10 bytes per 512-byte data block.
 		 */
@@ -216,7 +202,7 @@ int nand_fileio_read(struct nand_device *nand, struct nand_fileio_state *s)
 			nand_calculate_ecc_kw(nand, s->page + i, ecc);
 			ecc += 10;
 		}
-	} else if (NULL != s->oob)   {
+	} else if (s->oob)   {
 		fileio_read(s->fileio, s->oob_size, s->oob, &one_read);
 		if (one_read < s->oob_size)
 			memset(s->oob + one_read, 0xff, s->oob_size - one_read);

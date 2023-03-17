@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2011 by Martin Schmoelzer                               *
  *   <martin.schmoelzer@student.tuwien.ac.at>                              *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #include "jtag.h"
@@ -48,6 +37,7 @@ uint8_t delay_tms;
  * Maximum achievable TCK frequency is 182 kHz for ULINK clocked at 24 MHz.
  *
  * @param out_offset offset in OUT2BUF where payload data starts
+ * @param in_offset
  */
 void jtag_scan_in(uint8_t out_offset, uint8_t in_offset)
 {
@@ -125,6 +115,7 @@ void jtag_scan_in(uint8_t out_offset, uint8_t in_offset)
  * Maximum achievable TCK frequency is 113 kHz for ULINK clocked at 24 MHz.
  *
  * @param out_offset offset in OUT2BUF where payload data starts
+ * @param in_offset
  */
 void jtag_slow_scan_in(uint8_t out_offset, uint8_t in_offset)
 {
@@ -208,7 +199,7 @@ void jtag_slow_scan_in(uint8_t out_offset, uint8_t in_offset)
  *
  * Data stored in EP2 OUT buffer is shifted into the JTAG chain via TDI, TDO
  * data is not sampled.
- * The TAP-FSM state is alyways left in the PAUSE-DR/PAUSE-IR state.
+ * The TAP-FSM state is always left in the PAUSE-DR/PAUSE-IR state.
  *
  * Maximum achievable TCK frequency is 142 kHz for ULINK clocked at 24 MHz.
  *
@@ -283,7 +274,7 @@ void jtag_scan_out(uint8_t out_offset)
  *
  * Data stored in EP2 OUT buffer is shifted into the JTAG chain via TDI, TDO
  * data is not sampled.
- * The TAP-FSM state is alyways left in the PAUSE-DR/PAUSE-IR state.
+ * The TAP-FSM state is always left in the PAUSE-DR/PAUSE-IR state.
  *
  * Maximum achievable TCK frequency is 97 kHz for ULINK clocked at 24 MHz.
  *
@@ -368,11 +359,12 @@ void jtag_slow_scan_out(uint8_t out_offset)
  *
  * Data stored in EP2 OUT buffer is shifted into the JTAG chain via TDI, TDO
  * data is sampled and stored in the EP2 IN buffer.
- * The TAP-FSM state is alyways left in the PAUSE-DR/PAUSE-IR state.
+ * The TAP-FSM state is always left in the PAUSE-DR/PAUSE-IR state.
  *
  * Maximum achievable TCK frequency is 100 kHz for ULINK clocked at 24 MHz.
  *
  * @param out_offset offset in OUT2BUF where payload data starts
+ * @param in_offset
  */
 void jtag_scan_io(uint8_t out_offset, uint8_t in_offset)
 {
@@ -460,11 +452,12 @@ void jtag_scan_io(uint8_t out_offset, uint8_t in_offset)
  *
  * Data stored in EP2 OUT buffer is shifted into the JTAG chain via TDI, TDO
  * data is sampled and stored in the EP2 IN buffer.
- * The TAP-FSM state is alyways left in the PAUSE-DR/PAUSE-IR state.
+ * The TAP-FSM state is always left in the PAUSE-DR/PAUSE-IR state.
  *
  * Maximum achievable TCK frequency is 78 kHz for ULINK clocked at 24 MHz.
  *
  * @param out_offset offset in OUT2BUF where payload data starts
+ * @param in_offset
  */
 void jtag_slow_scan_io(uint8_t out_offset, uint8_t in_offset)
 {
@@ -562,7 +555,7 @@ void jtag_slow_scan_io(uint8_t out_offset, uint8_t in_offset)
  *
  * Maximum achievable TCK frequency is 375 kHz for ULINK clocked at 24 MHz.
  *
- * @param count number of TCK clock cyclces to generate.
+ * @param count number of TCK clock cycles to generate.
  */
 void jtag_clock_tck(uint16_t count)
 {
@@ -578,9 +571,9 @@ void jtag_clock_tck(uint16_t count)
 /**
  * Generate TCK clock cycles at variable frequency.
  *
- * Maximum achieveable TCK frequency is 166.6 kHz for ULINK clocked at 24 MHz.
+ * Maximum achievable TCK frequency is 166.6 kHz for ULINK clocked at 24 MHz.
  *
- * @param count number of TCK clock cyclces to generate.
+ * @param count number of TCK clock cycles to generate.
  */
 void jtag_slow_clock_tck(uint16_t count)
 {

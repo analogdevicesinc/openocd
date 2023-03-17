@@ -324,7 +324,7 @@ if (cable_params.use_usbmux)
 	}
 	else
 	{
-		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
+		ret = jtag_libusb_open(vids, pids, &dev, NULL);
 		if (ret != ERROR_OK)
 			return ret;
 

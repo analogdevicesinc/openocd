@@ -1,27 +1,13 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2015 by David Ung                                       *
- *                                                                         *
- *   Copyright (C) 2019, Ampere Computing LLC                              *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ARMV8_H
 #define OPENOCD_TARGET_ARMV8_H
 
-#include "arm_adi.h"
+#include "arm_adi_v5.h"
 #include "arm.h"
 #include "armv4_5_mmu.h"
 #include "armv4_5_cache.h"
@@ -63,7 +49,7 @@ enum {
 
 	ARMV8_SP = 31,
 	ARMV8_PC = 32,
-	ARMV8_xPSR = 33,
+	ARMV8_XPSR = 33,
 
 	ARMV8_V0 = 34,
 	ARMV8_V1,
@@ -365,7 +351,7 @@ enum run_control_op {
 	ARMV8_RUNCONTROL_STEP = 3,
 };
 
-#define ARMV8_COMMON_MAGIC 0x0A450AAA
+#define ARMV8_COMMON_MAGIC 0x0A450AAAU
 
 /* VA to PA translation operations opc2 values*/
 #define V2PCWPR  0
@@ -384,7 +370,7 @@ struct armv8_l2x_cache {
 
 struct armv8_cachesize {
 	uint32_t level_num;
-	/*  cache dimensionning */
+	/*  cache dimensioning */
 	uint32_t linelen;
 	uint32_t associativity;
 	uint32_t nsets;
@@ -435,14 +421,15 @@ struct armv8_mmu_common {
 };
 
 struct armv8_common {
+	unsigned int common_magic;
+
 	struct arm arm;
-	int common_magic;
 	struct reg_cache *core_cache;
 
 	/* Core Debug Unit */
 	struct arm_dpm dpm;
 	target_addr_t debug_base;
-	struct adi_ap *debug_ap;
+	struct adiv5_ap *debug_ap;
 
 	const uint32_t *opcodes;
 
@@ -502,8 +489,8 @@ static inline bool is_armv8(struct armv8_common *armv8)
 
 #define CPUV8_DBG_EDESR		0x20
 #define CPUV8_DBG_EDECR		0x24
-#define CPUV8_DBG_WFAR0		0x30
-#define CPUV8_DBG_WFAR1		0x34
+#define CPUV8_DBG_EDWAR0	0x30
+#define CPUV8_DBG_EDWAR1	0x34
 #define CPUV8_DBG_DSCR		0x088
 #define CPUV8_DBG_DRCR		0x090
 #define CPUV8_DBG_ECCR		0x098

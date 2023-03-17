@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -26,11 +15,6 @@
 #include "arm_disassembler.h"
 #include "register.h"
 #include "etm_dummy.h"
-
-#if BUILD_OOCD_TRACE == 1
-#include "oocd_trace.h"
-#endif
-
 
 /*
  * ARM "Embedded Trace Macrocell" (ETM) support -- direct JTAG access.
@@ -279,7 +263,7 @@ static void etm_reg_add(unsigned bcd_vers, struct arm_jtag *jtag_info,
 
 		reg->name = r->name;
 		reg->size = r->size;
-		reg->value = &ereg->value;
+		reg->value = ereg->value;
 		reg->arch_info = ereg;
 		reg->type = &etm_scan6_type;
 		reg++;
@@ -303,7 +287,7 @@ struct reg_cache *etm_build_reg_cache(struct target *target,
 	reg_list = calloc(128, sizeof(struct reg));
 	arch_info = calloc(128, sizeof(struct etm_reg));
 
-	if (reg_cache == NULL || reg_list == NULL || arch_info == NULL) {
+	if (!reg_cache || !reg_list || !arch_info) {
 		LOG_ERROR("No memory");
 		goto fail;
 	}
@@ -642,15 +626,11 @@ static int etm_write_reg(struct reg *reg, uint32_t value)
 static struct etm_capture_driver *etm_capture_drivers[] = {
 	&etb_capture_driver,
 	&etm_dummy_capture_driver,
-#if BUILD_OOCD_TRACE == 1
-	&oocd_trace_capture_driver,
-#endif
 	NULL
 };
 
 static int etm_read_instruction(struct etm_context *ctx, struct arm_instruction *instruction)
 {
-	int i;
 	int section = -1;
 	size_t size_read;
 	uint32_t opcode;
@@ -660,7 +640,7 @@ static int etm_read_instruction(struct etm_context *ctx, struct arm_instruction 
 		return ERROR_TRACE_IMAGE_UNAVAILABLE;
 
 	/* search for the section the current instruction belongs to */
-	for (i = 0; i < ctx->image->num_sections; i++) {
+	for (unsigned int i = 0; i < ctx->image->num_sections; i++) {
 		if ((ctx->image->sections[i].base_address <= ctx->current_pc) &&
 			(ctx->image->sections[i].base_address + ctx->image->sections[i].size >
 			ctx->current_pc)) {
@@ -1425,9 +1405,8 @@ COMMAND_HANDLER(handle_etm_config_command)
 
 	for (i = 0; etm_capture_drivers[i]; i++) {
 		if (strcmp(CMD_ARGV[4], etm_capture_drivers[i]->name) == 0) {
-			int retval = register_commands(CMD_CTX, NULL,
-					etm_capture_drivers[i]->commands);
-			if (ERROR_OK != retval) {
+			int retval = register_commands(CMD_CTX, NULL, etm_capture_drivers[i]->commands);
+			if (retval != ERROR_OK) {
 				free(etm_ctx);
 				return retval;
 			}
@@ -1683,15 +1662,15 @@ COMMAND_HANDLER(handle_etm_image_command)
 	}
 
 	etm_ctx->image = malloc(sizeof(struct image));
-	etm_ctx->image->base_address_set = 0;
-	etm_ctx->image->start_address_set = 0;
+	etm_ctx->image->base_address_set = false;
+	etm_ctx->image->start_address_set = false;
 
 	/* a base address isn't always necessary, default to 0x0 (i.e. don't relocate) */
 	if (CMD_ARGC >= 2) {
-		etm_ctx->image->base_address_set = 1;
+		etm_ctx->image->base_address_set = true;
 		COMMAND_PARSE_NUMBER(llong, CMD_ARGV[1], etm_ctx->image->base_address);
 	} else
-		etm_ctx->image->base_address_set = 0;
+		etm_ctx->image->base_address_set = false;
 
 	if (image_open(etm_ctx->image, CMD_ARGV[0],
 		(CMD_ARGC >= 3) ? CMD_ARGV[2] : NULL) != ERROR_OK) {
@@ -1817,7 +1796,7 @@ COMMAND_HANDLER(handle_etm_load_command)
 		fileio_read_u32(file, &etm_ctx->trace_depth);
 	}
 	etm_ctx->trace_data = malloc(sizeof(struct etmv1_trace_data) * etm_ctx->trace_depth);
-	if (etm_ctx->trace_data == NULL) {
+	if (!etm_ctx->trace_data) {
 		command_print(CMD, "not enough memory to perform operation");
 		fileio_close(file);
 		return ERROR_FAIL;
@@ -2116,6 +2095,5 @@ static const struct command_registration etm_exec_command_handlers[] = {
 
 static int etm_register_user_commands(struct command_context *cmd_ctx)
 {
-	struct command *etm_cmd = command_find_in_context(cmd_ctx, "etm");
-	return register_commands(cmd_ctx, etm_cmd, etm_exec_command_handlers);
+	return register_commands(cmd_ctx, "etm", etm_exec_command_handlers);
 }

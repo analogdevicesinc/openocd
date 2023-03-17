@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -7,19 +9,6 @@
  *                                                                         *
  *   Copyright (C) 2008 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_CORTEX_M_H
@@ -28,30 +17,58 @@
 #include "armv7m.h"
 #include "helper/bits.h"
 
-#define CORTEX_M_COMMON_MAGIC 0x1A451A45
+#define CORTEX_M_COMMON_MAGIC 0x1A451A45U
 
 #define SYSTEM_CONTROL_BASE 0x400FE000
 
 #define ITM_TER0	0xE0000E00
 #define ITM_TPR		0xE0000E40
 #define ITM_TCR		0xE0000E80
+#define ITM_TCR_ITMENA_BIT	BIT(0)
+#define ITM_TCR_BUSY_BIT	BIT(23)
 #define ITM_LAR		0xE0000FB0
 #define ITM_LAR_KEY	0xC5ACCE55
 
 #define CPUID		0xE000ED00
 
-#define ARM_CPUID_PARTNO_MASK	0xFFF0
+#define ARM_CPUID_PARTNO_POS    4
+#define ARM_CPUID_PARTNO_MASK	(0xFFF << ARM_CPUID_PARTNO_POS)
 
-#define CORTEX_M23_PARTNO	0xD200
-#define CORTEX_M33_PARTNO	0xD210
+enum cortex_m_partno {
+	CORTEX_M_PARTNO_INVALID,
+	STAR_MC1_PARTNO    = 0x132,
+	CORTEX_M0_PARTNO   = 0xC20,
+	CORTEX_M1_PARTNO   = 0xC21,
+	CORTEX_M3_PARTNO   = 0xC23,
+	CORTEX_M4_PARTNO   = 0xC24,
+	CORTEX_M7_PARTNO   = 0xC27,
+	CORTEX_M0P_PARTNO  = 0xC60,
+	CORTEX_M23_PARTNO  = 0xD20,
+	CORTEX_M33_PARTNO  = 0xD21,
+	CORTEX_M35P_PARTNO = 0xD31,
+	CORTEX_M55_PARTNO  = 0xD22,
+};
+
+/* Relevant Cortex-M flags, used in struct cortex_m_part_info.flags */
+#define CORTEX_M_F_HAS_FPV4               BIT(0)
+#define CORTEX_M_F_HAS_FPV5               BIT(1)
+#define CORTEX_M_F_TAR_AUTOINCR_BLOCK_4K  BIT(2)
+
+struct cortex_m_part_info {
+	enum cortex_m_partno partno;
+	const char *name;
+	enum arm_arch arch;
+	uint32_t flags;
+};
 
 /* Debug Control Block */
 #define DCB_DHCSR	0xE000EDF0
 #define DCB_DCRSR	0xE000EDF4
 #define DCB_DCRDR	0xE000EDF8
 #define DCB_DEMCR	0xE000EDFC
+#define DCB_DSCSR	0xE000EE08
 
-#define DCRSR_WnR	BIT(16)
+#define DCRSR_WNR	BIT(16)
 
 #define DWT_CTRL	0xE0001000
 #define DWT_CYCCNT	0xE0001004
@@ -114,19 +131,25 @@
 #define VC_MMERR		BIT(4)
 #define VC_CORERESET	BIT(0)
 
+/* DCB_DSCSR bit and field definitions */
+#define DSCSR_CDS		BIT(16)
+
+/* NVIC registers */
 #define NVIC_ICTR		0xE000E004
 #define NVIC_ISE0		0xE000E100
 #define NVIC_ICSR		0xE000ED04
 #define NVIC_AIRCR		0xE000ED0C
 #define NVIC_SHCSR		0xE000ED24
 #define NVIC_CFSR		0xE000ED28
-#define NVIC_MMFSRb		0xE000ED28
-#define NVIC_BFSRb		0xE000ED29
-#define NVIC_USFSRh		0xE000ED2A
+#define NVIC_MMFSRB		0xE000ED28
+#define NVIC_BFSRB		0xE000ED29
+#define NVIC_USFSRH		0xE000ED2A
 #define NVIC_HFSR		0xE000ED2C
 #define NVIC_DFSR		0xE000ED30
 #define NVIC_MMFAR		0xE000ED34
 #define NVIC_BFAR		0xE000ED38
+#define NVIC_SFSR		0xE000EDE4
+#define NVIC_SFAR		0xE000EDE8
 
 /* NVIC_AIRCR bits */
 #define AIRCR_VECTKEY		(0x5FAul << 16)
@@ -177,46 +200,109 @@ enum cortex_m_isrmasking_mode {
 };
 
 struct cortex_m_common {
-	int common_magic;
+	unsigned int common_magic;
+
+	struct armv7m_common armv7m;
 
 	/* Context information */
 	uint32_t dcb_dhcsr;
+	uint32_t dcb_dhcsr_cumulated_sticky;
+	/* DCB DHCSR has been at least once read, so the sticky bits have been reset */
+	bool dcb_dhcsr_sticky_is_recent;
 	uint32_t nvic_dfsr;  /* Debug Fault Status Register - shows reason for debug halt */
 	uint32_t nvic_icsr;  /* Interrupt Control State Register - shows active and pending IRQ */
 
 	/* Flash Patch and Breakpoint (FPB) */
-	int fp_num_lit;
-	int fp_num_code;
+	unsigned int fp_num_lit;
+	unsigned int fp_num_code;
 	int fp_rev;
 	bool fpb_enabled;
 	struct cortex_m_fp_comparator *fp_comparator_list;
 
 	/* Data Watchpoint and Trace (DWT) */
-	int dwt_num_comp;
-	int dwt_comp_available;
+	unsigned int dwt_num_comp;
+	unsigned int dwt_comp_available;
 	uint32_t dwt_devarch;
 	struct cortex_m_dwt_comparator *dwt_comparator_list;
 	struct reg_cache *dwt_cache;
 
 	enum cortex_m_soft_reset_config soft_reset_config;
 	bool vectreset_supported;
-
 	enum cortex_m_isrmasking_mode isrmasking_mode;
 
-	struct armv7m_common armv7m;
+	const struct cortex_m_part_info *core_info;
 
-	int apsel;
+	bool slow_register_read;	/* A register has not been ready, poll S_REGRDY */
+
+	uint64_t apsel;
 
 	/* Whether this target has the erratum that makes C_MASKINTS not apply to
 	 * already pending interrupts */
 	bool maskints_erratum;
 };
 
+static inline bool is_cortex_m_or_hla(const struct cortex_m_common *cortex_m)
+{
+	return cortex_m->common_magic == CORTEX_M_COMMON_MAGIC;
+}
+
+static inline bool is_cortex_m_with_dap_access(const struct cortex_m_common *cortex_m)
+{
+	if (!is_cortex_m_or_hla(cortex_m))
+		return false;
+
+	return !cortex_m->armv7m.is_hla_target;
+}
+
+/**
+ * @returns the pointer to the target specific struct
+ * without matching a magic number.
+ * Use in target specific service routines, where the correct
+ * type of arch_info is certain.
+ */
 static inline struct cortex_m_common *
 target_to_cm(struct target *target)
 {
 	return container_of(target->arch_info,
-			struct cortex_m_common, armv7m);
+			struct cortex_m_common, armv7m.arm);
+}
+
+/**
+ * @returns the pointer to the target specific struct
+ * or NULL if the magic number does not match.
+ * Use in a flash driver or any place where mismatch of the arch_info
+ * type can happen.
+ */
+static inline struct cortex_m_common *
+target_to_cortex_m_safe(struct target *target)
+{
+	/* Check the parent types first to prevent peeking memory too far
+	 * from arch_info pointer */
+	if (!target_to_armv7m_safe(target))
+		return NULL;
+
+	struct cortex_m_common *cortex_m = target_to_cm(target);
+	if (!is_cortex_m_or_hla(cortex_m))
+		return NULL;
+
+	return cortex_m;
+}
+
+/**
+ * @returns cached value of Cortex-M part number
+ * or CORTEX_M_PARTNO_INVALID if the magic number does not match
+ * or core_info is not initialised.
+ */
+static inline enum cortex_m_partno cortex_m_get_partno_safe(struct target *target)
+{
+	struct cortex_m_common *cortex_m = target_to_cortex_m_safe(target);
+	if (!cortex_m)
+		return CORTEX_M_PARTNO_INVALID;
+
+	if (!cortex_m->core_info)
+		return CORTEX_M_PARTNO_INVALID;
+
+	return cortex_m->core_info->partno;
 }
 
 int cortex_m_examine(struct target *target);
@@ -224,13 +310,10 @@ int cortex_m_set_breakpoint(struct target *target, struct breakpoint *breakpoint
 int cortex_m_unset_breakpoint(struct target *target, struct breakpoint *breakpoint);
 int cortex_m_add_breakpoint(struct target *target, struct breakpoint *breakpoint);
 int cortex_m_remove_breakpoint(struct target *target, struct breakpoint *breakpoint);
-int cortex_m_set_watchpoint(struct target *target, struct watchpoint *watchpoint);
-int cortex_m_unset_watchpoint(struct target *target, struct watchpoint *watchpoint);
 int cortex_m_add_watchpoint(struct target *target, struct watchpoint *watchpoint);
 int cortex_m_remove_watchpoint(struct target *target, struct watchpoint *watchpoint);
 void cortex_m_enable_breakpoints(struct target *target);
 void cortex_m_enable_watchpoints(struct target *target);
-void cortex_m_dwt_setup(struct cortex_m_common *cm, struct target *target);
 void cortex_m_deinit_target(struct target *target);
 int cortex_m_profiling(struct target *target, uint32_t *samples,
 	uint32_t max_num_samples, uint32_t *num_samples, uint32_t seconds);
