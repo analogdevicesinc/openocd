@@ -3120,12 +3120,12 @@ static int cortex_a_init_arch_info(struct target *target,
 static int cortex_a_target_create(struct target *target, Jim_Interp *interp)
 {
 	struct cortex_a_common *cortex_a;
-	struct adi_private_config *pc;
+	struct adiv5_private_config *pc;
 
 	if (!target->private_config)
 		return ERROR_FAIL;
 
-	pc = (struct adi_private_config *)target->private_config;
+	pc = (struct adiv5_private_config *)target->private_config;
 
 	cortex_a = calloc(1, sizeof(struct cortex_a_common));
 	if (!cortex_a) {
