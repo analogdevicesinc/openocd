@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2007 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
  *                                                                         *
  *   Copyright (C) 2007,2008,2009 by Øyvind Harboe                         *
  *   oyvind.harboe@zylin.com                                               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -46,15 +35,15 @@
 #define _DEBUG_INSTRUCTION_EXECUTION_
 #endif
 
-#define ARM926EJS_CP15_ADDR(opcode_1, opcode_2, CRn, CRm) ((opcode_1 << 11) | (opcode_2 << 8) | (CRn << 4) | (CRm << 0))
+#define ARM926EJS_CP15_ADDR(opcode_1, opcode_2, crn, crm) ((opcode_1 << 11) | (opcode_2 << 8) | (crn << 4) | (crm << 0))
 
 static int arm926ejs_cp15_read(struct target *target, uint32_t op1, uint32_t op2,
-		uint32_t CRn, uint32_t CRm, uint32_t *value)
+		uint32_t crn, uint32_t crm, uint32_t *value)
 {
 	int retval = ERROR_OK;
 	struct arm7_9_common *arm7_9 = target_to_arm7_9(target);
 	struct arm_jtag *jtag_info = &arm7_9->jtag_info;
-	uint32_t address = ARM926EJS_CP15_ADDR(op1, op2, CRn, CRm);
+	uint32_t address = ARM926EJS_CP15_ADDR(op1, op2, crn, crm);
 	struct scan_field fields[4];
 	uint8_t address_buf[2] = {0, 0};
 	uint8_t nr_w_buf = 0;
@@ -123,22 +112,22 @@ static int arm926ejs_cp15_read(struct target *target, uint32_t op1, uint32_t op2
 }
 
 static int arm926ejs_mrc(struct target *target, int cpnum, uint32_t op1,
-		uint32_t op2, uint32_t CRn, uint32_t CRm, uint32_t *value)
+		uint32_t op2, uint32_t crn, uint32_t crm, uint32_t *value)
 {
 	if (cpnum != 15) {
 		LOG_ERROR("Only cp15 is supported");
 		return ERROR_FAIL;
 	}
-	return arm926ejs_cp15_read(target, op1, op2, CRn, CRm, value);
+	return arm926ejs_cp15_read(target, op1, op2, crn, crm, value);
 }
 
 static int arm926ejs_cp15_write(struct target *target, uint32_t op1, uint32_t op2,
-		uint32_t CRn, uint32_t CRm, uint32_t value)
+		uint32_t crn, uint32_t crm, uint32_t value)
 {
 	int retval = ERROR_OK;
 	struct arm7_9_common *arm7_9 = target_to_arm7_9(target);
 	struct arm_jtag *jtag_info = &arm7_9->jtag_info;
-	uint32_t address = ARM926EJS_CP15_ADDR(op1, op2, CRn, CRm);
+	uint32_t address = ARM926EJS_CP15_ADDR(op1, op2, crn, crm);
 	struct scan_field fields[4];
 	uint8_t value_buf[4];
 	uint8_t address_buf[2] = {0, 0};
@@ -206,13 +195,13 @@ static int arm926ejs_cp15_write(struct target *target, uint32_t op1, uint32_t op
 }
 
 static int arm926ejs_mcr(struct target *target, int cpnum, uint32_t op1,
-		uint32_t op2, uint32_t CRn, uint32_t CRm, uint32_t value)
+		uint32_t op2, uint32_t crn, uint32_t crm, uint32_t value)
 {
 	if (cpnum != 15) {
 		LOG_ERROR("Only cp15 is supported");
 		return ERROR_FAIL;
 	}
-	return arm926ejs_cp15_write(target, op1, op2, CRn, CRm, value);
+	return arm926ejs_cp15_write(target, op1, op2, crn, crm, value);
 }
 
 static int arm926ejs_examine_debug_reason(struct target *target)
@@ -723,7 +712,7 @@ static int arm926ejs_target_create(struct target *target, Jim_Interp *interp)
 	return arm926ejs_init_arch_info(target, arm926ejs, target->tap);
 }
 
-void arm926ejs_deinit_target(struct target *target)
+static void arm926ejs_deinit_target(struct target *target)
 {
 	struct arm *arm = target_to_arm(target);
 	struct arm926ejs_common *arm926ejs = target_to_arm926(target);

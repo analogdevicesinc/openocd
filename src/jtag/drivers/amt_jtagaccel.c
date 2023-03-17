@@ -1,25 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#include <jtag/adapter.h>
 #include <jtag/interface.h>
 
 #if PARPORT_USE_PPDEV == 1
@@ -198,7 +188,7 @@ static void amt_jtagaccel_state_move(void)
 	aw_scan_tms_5 = 0x40 | (tms_scan[0] & 0x1f);
 	AMT_AW(aw_scan_tms_5);
 	int jtag_speed = 0;
-	int retval = jtag_get_speed(&jtag_speed);
+	int retval = adapter_get_speed(&jtag_speed);
 	assert(retval == ERROR_OK);
 	if (jtag_speed > 3 || rtck_enabled)
 		amt_wait_scan_busy();
@@ -254,7 +244,7 @@ static void amt_jtagaccel_scan(bool ir_scan, enum scan_type type, uint8_t *buffe
 	uint8_t aw_tms_scan;
 	uint8_t tms_scan[2];
 	int jtag_speed_var;
-	int retval = jtag_get_speed(&jtag_speed_var);
+	int retval = adapter_get_speed(&jtag_speed_var);
 	assert(retval == ERROR_OK);
 
 	if (ir_scan)
@@ -370,11 +360,10 @@ static int amt_jtagaccel_execute_queue(void)
 				amt_jtagaccel_scan(cmd->cmd.scan->ir_scan, type, buffer, scan_size);
 				if (jtag_read_buffer(buffer, cmd->cmd.scan) != ERROR_OK)
 					retval = ERROR_JTAG_QUEUE_FAILED;
-				if (buffer)
-					free(buffer);
+				free(buffer);
 				break;
 			case JTAG_SLEEP:
-				LOG_DEBUG_IO("sleep %" PRIi32, cmd->cmd.sleep->us);
+				LOG_DEBUG_IO("sleep %" PRIu32, cmd->cmd.sleep->us);
 				jtag_sleep(cmd->cmd.sleep->us);
 				break;
 			default:

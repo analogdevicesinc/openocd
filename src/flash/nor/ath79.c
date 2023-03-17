@@ -1,23 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2015 by Tobias Diedrich                                 *
  *   <ranma+openwrt@tdiedrich.de>                                          *
  *                                                                         *
  *   based on the stmsmi code written by Antonio Borneo                    *
  *   <borneo.antonio@gmail.com>                                            *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.                                        *
  *                                                                         *
  ***************************************************************************/
 /*
@@ -275,7 +263,7 @@ static int ath79_spi_bitbang_chunk(struct flash_bank *bank,
 	*transferred = 0;
 	pracc_queue_init(&ctx);
 
-	LOG_DEBUG("ath79_spi_bitbang_bytes(%p, %08x, %p, %d)",
+	LOG_DEBUG("ath79_spi_bitbang_bytes(%p, %08" PRIx32 ", %p, %d)",
 		  target, ath79_info->io_base, data, len);
 
 	LOG_DEBUG("max code %d => max len %d. to_xfer %d",
@@ -568,7 +556,7 @@ static int ath79_write_page(struct flash_bank *bank, const uint8_t *buffer,
 		ath79_info->dev->pagesize : SPIFLASH_DEF_PAGESIZE;
 
 	if (address & 0xff) {
-		LOG_ERROR("ath79_write_page: unaligned write address: %08x",
+		LOG_ERROR("ath79_write_page: unaligned write address: %08" PRIx32,
 			  address);
 		return ERROR_FAIL;
 	}
@@ -577,7 +565,7 @@ static int ath79_write_page(struct flash_bank *bank, const uint8_t *buffer,
 		return ERROR_FAIL;
 	}
 	if (len > ath79_info->dev->pagesize) {
-		LOG_ERROR("ath79_write_page: len bigger than page size %d: %d",
+		LOG_ERROR("ath79_write_page: len bigger than page size %" PRIu32 ": %" PRIu32,
 			pagesize, len);
 		return ERROR_FAIL;
 	}
@@ -589,7 +577,7 @@ static int ath79_write_page(struct flash_bank *bank, const uint8_t *buffer,
 	if (i == len)  /* all 0xff, no need to program. */
 		return ERROR_OK;
 
-	LOG_INFO("writing %d bytes to flash page @0x%08x", len, address);
+	LOG_INFO("writing %" PRIu32 " bytes to flash page @0x%08" PRIx32, len, address);
 
 	memcpy(ath79_info->spi.page_buf, buffer, len);
 
@@ -692,12 +680,12 @@ static int ath79_read_buffer(struct flash_bank *bank, uint8_t *buffer,
 		  __func__, address, len);
 
 	if (address & 0xff) {
-		LOG_ERROR("ath79_read_buffer: unaligned read address: %08x",
+		LOG_ERROR("ath79_read_buffer: unaligned read address: %08" PRIx32,
 			  address);
 		return ERROR_FAIL;
 	}
 
-	LOG_INFO("reading %d bytes from flash @0x%08x", len, address);
+	LOG_INFO("reading %" PRIu32 " bytes from flash @0x%08" PRIx32, len, address);
 
 	/* bitbang command */
 	ath79_spi_bitbang_prepare(bank);
@@ -875,17 +863,16 @@ static int ath79_protect_check(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-static int get_ath79_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_ath79_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct ath79_flash_bank *ath79_info = bank->driver_priv;
 
 	if (!ath79_info->probed) {
-		snprintf(buf, buf_size,
-			 "\nATH79 flash bank not probed yet\n");
+		command_print_sameline(cmd, "\nATH79 flash bank not probed yet\n");
 		return ERROR_OK;
 	}
 
-	snprintf(buf, buf_size, "\nATH79 flash information:\n"
+	command_print_sameline(cmd, "\nATH79 flash information:\n"
 		"  Device \'%s\' (ID 0x%08" PRIx32 ")\n",
 		ath79_info->dev->name, ath79_info->dev->device_id);
 

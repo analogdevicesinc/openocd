@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2014 by Marian Cingel                                   *
  *   cingel.marian@gmail.com                                               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -67,13 +56,12 @@ static const struct stack_register_offset rtos_mqx_arm_v7m_stack_offsets[ARMV7M_
 	{ ARMV7M_R13,    -2, 32 }, /* sp   */
 	{ ARMV7M_R14,  0x28, 32 }, /* lr   */
 	{ ARMV7M_PC,   0x44, 32 }, /* pc   */
-	{ ARMV7M_xPSR, 0x48, 32 }, /* xPSR */
+	{ ARMV7M_XPSR, 0x48, 32 }, /* xPSR */
 };
 
 const struct rtos_register_stacking rtos_mqx_arm_v7m_stacking = {
-	0x4C,					/* stack_registers_size, calculate offset base address */
-	-1,						/* stack_growth_direction */
-	ARMV7M_NUM_CORE_REGS,	/* num_output_registers */
-	NULL,					/* stack_alignment */
-	rtos_mqx_arm_v7m_stack_offsets	/* register_offsets */
+	.stack_registers_size = 0x4C,					/* calculate offset base address */
+	.stack_growth_direction = -1,
+	.num_output_registers = ARMV7M_NUM_CORE_REGS,
+	.register_offsets = rtos_mqx_arm_v7m_stack_offsets
 };

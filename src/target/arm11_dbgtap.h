@@ -1,21 +1,10 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2008 digenius technology GmbH.                          *
  *   Michael Bruck                                                         *
  *                                                                         *
  *   Copyright (C) 2008,2009 Oyvind Harboe oyvind.harboe@zylin.com         *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ARM11_DBGTAP_H
@@ -27,12 +16,12 @@
 
 void arm11_setup_field(struct arm11_common *arm11, int num_bits,
 		void *in_data, void *out_data, struct scan_field *field);
-void arm11_add_IR(struct arm11_common *arm11,
+void arm11_add_ir(struct arm11_common *arm11,
 		uint8_t instr, tap_state_t state);
-int arm11_add_debug_SCAN_N(struct arm11_common *arm11,
+int arm11_add_debug_scan_n(struct arm11_common *arm11,
 		uint8_t chain, tap_state_t state);
-int arm11_read_DSCR(struct arm11_common *arm11);
-int arm11_write_DSCR(struct arm11_common *arm11, uint32_t dscr);
+int arm11_read_dscr(struct arm11_common *arm11);
+int arm11_write_dscr(struct arm11_common *arm11, uint32_t dscr);
 
 int arm11_run_instr_data_prepare(struct arm11_common *arm11);
 int arm11_run_instr_data_finish(struct arm11_common *arm11);
@@ -78,6 +67,7 @@ int arm11_read_memory_word(struct arm11_common *arm11,
 		uint32_t address, uint32_t *result);
 
 int arm11_dpm_init(struct arm11_common *arm11, uint32_t didr);
+void arm11_dpm_deinit(struct arm11_common *arm11);
 int arm11_bpwp_flush(struct arm11_common *arm11);
 
 #endif /* OPENOCD_TARGET_ARM11_DBGTAP_H */

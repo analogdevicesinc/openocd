@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -7,22 +9,6 @@
  *                                                                         *
  *   Copyright (C) 2008 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
- * 
- *   Copyright (C) 2021 by Chad Wentworth                                  *
- *   chad.wentworth@analog.com                                             *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -31,7 +17,9 @@
 
 #include "log.h"
 #include "command.h"
+#include "replacements.h"
 #include "time_support.h"
+#include <server/server.h>
 
 #include <stdarg.h>
 
@@ -43,7 +31,7 @@
 #endif
 #endif
 
-int debug_level = -1;
+int debug_level = LOG_LVL_INFO;
 
 static FILE *log_output;
 static FILE *warning_output;
@@ -51,7 +39,6 @@ static FILE *error_output;
 static struct log_callback *log_callbacks;
 
 static int64_t last_time;
-static int64_t current_time;
 
 static int64_t start;
 
@@ -96,15 +83,14 @@ static void log_puts(enum log_levels level,
 	const char *string)
 {
 	char *f;
-	FILE *output;
 
-	if (level == LOG_LVL_WARNING)
-		output = warning_output;
-	else if (level == LOG_LVL_ERROR)
-		output = error_output;
-	else
-		output = log_output;
-	
+	if (!log_output) {
+		/* log_init() not called yet; print on stderr */
+		fputs(string, stderr);
+		fflush(stderr);
+		return;
+	}
+
 	if (level == LOG_LVL_OUTPUT) {
 		/* do not prepend any headers, just print out what we were given and return */
 		fputs(string, output);
@@ -113,35 +99,30 @@ static void log_puts(enum log_levels level,
 	}
 
 	f = strrchr(file, '/');
-	if (f != NULL)
+	if (f)
 		file = f + 1;
 
-	if (strlen(string) > 0) {
-		if (debug_level >= LOG_LVL_DEBUG) {
-			/* print with count and time information */
-			int64_t t = timeval_ms() - start;
+	if (debug_level >= LOG_LVL_DEBUG) {
+		/* print with count and time information */
+		int64_t t = timeval_ms() - start;
 #ifdef _DEBUG_FREE_SPACE_
-			struct mallinfo info;
-			info = mallinfo();
+		struct mallinfo info;
+		info = mallinfo();
 #endif
-			fprintf(output, "%s%d %" PRId64 " %s:%d %s()"
+		fprintf(log_output, "%s%d %" PRId64 " %s:%d %s()"
 #ifdef _DEBUG_FREE_SPACE_
-					" %d"
+			" %d"
 #endif
 			": %s", log_strings[level + 1], count, t, file, line, function,
 #ifdef _DEBUG_FREE_SPACE_
-					info.fordblks,
+			info.fordblks,
 #endif
-				string);
-		} else {
-			/* if we are using gdb through pipes then we do not want any output
-			 * to the pipe otherwise we get repeated strings */
-			fprintf(output, "%s%s",
-				(level > LOG_LVL_USER) ? log_strings[level + 1] : "", string);
-		}
+			string);
 	} else {
-		/* Empty strings are sent to log callbacks to keep e.g. gdbserver alive, here we do
-		 *nothing. */
+		/* if we are using gdb through pipes then we do not want any output
+		 * to the pipe otherwise we get repeated strings */
+		fprintf(log_output, "%s%s",
+			(level > LOG_LVL_USER) ? log_strings[level + 1] : "", string);
 	}
 
 	fflush(output);
@@ -168,7 +149,7 @@ void log_printf(enum log_levels level,
 	va_start(ap, format);
 
 	string = alloc_vprintf(format, ap);
-	if (string != NULL) {
+	if (string) {
 		log_puts(level, file, line, function, string);
 		free(string);
 	}
@@ -235,7 +216,7 @@ COMMAND_HANDLER(handle_debug_level_command)
 COMMAND_HANDLER(handle_log_output_command)
 {
 	if (CMD_ARGC == 0 || (CMD_ARGC == 1 && strcmp(CMD_ARGV[0], "default") == 0)) {
-		if (log_output != stderr && log_output != NULL) {
+		if (log_output != stderr && log_output) {
 			/* Close previous log file, if it was open and wasn't stderr. */
 			fclose(log_output);
 		}
@@ -260,11 +241,11 @@ COMMAND_HANDLER(handle_log_output_command)
 	}
 	if (CMD_ARGC == 1) {
 		FILE *file = fopen(CMD_ARGV[0], "w");
-		if (file == NULL) {
+		if (!file) {
 			LOG_ERROR("failed to open output log '%s'", CMD_ARGV[0]);
 			return ERROR_FAIL;
 		}
-		if (log_output != stderr && log_output != NULL) {
+		if (log_output != stderr && log_output) {
 			/* Close previous log file, if it was open and wasn't stderr. */
 			fclose(log_output);
 		}
@@ -372,35 +353,29 @@ void log_init(void)
 {
 	/* set defaults for daemon configuration,
 	 * if not set by cmdline or cfgfile */
-	if (debug_level == -1)
-		debug_level = LOG_LVL_INFO;
-
 	char *debug_env = getenv("OPENOCD_DEBUG_LEVEL");
-	if (NULL != debug_env) {
+	if (debug_env) {
 		int value;
 		int retval = parse_int(debug_env, &value);
-		if (ERROR_OK == retval &&
+		if (retval == ERROR_OK &&
 				debug_level >= LOG_LVL_SILENT &&
 				debug_level <= LOG_LVL_DEBUG_IO)
 				debug_level = value;
 	}
 
-	if (log_output == NULL)
-		log_output = stdout;
-	
-	if (warning_output == NULL)
-		warning_output = stderr;
-	
-	if (error_output == NULL)
-		error_output = stderr;
+	if (!log_output)
+		log_output = stderr;
 
 	start = last_time = timeval_ms();
 }
 
-int set_log_output(struct command_context *cmd_ctx, FILE *output)
+void log_exit(void)
 {
-	log_output = output;
-	return ERROR_OK;
+	if (log_output && log_output != stderr) {
+		/* Close log file, if it was open and wasn't stderr. */
+		fclose(log_output);
+	}
+	log_output = NULL;
 }
 
 /* add/remove log callback handler */
@@ -417,7 +392,7 @@ int log_add_callback(log_callback_fn fn, void *priv)
 	/* alloc memory, it is safe just to return in case of an error, no need for the caller to
 	 *check this */
 	cb = malloc(sizeof(struct log_callback));
-	if (cb == NULL)
+	if (!cb)
 		return ERROR_BUF_TOO_SMALL;
 
 	/* add item to the beginning of the linked list */
@@ -462,7 +437,7 @@ char *alloc_vprintf(const char *fmt, va_list ap)
 	 * other code depend on that. They should be probably be fixed, but for
 	 * now reserve the extra byte. */
 	string = malloc(len + 2);
-	if (string == NULL)
+	if (!string)
 		return NULL;
 
 	/* do the real work */
@@ -526,8 +501,7 @@ static void gdb_timeout_warning(int64_t delta_time)
 
 void keep_alive(void)
 {
-	current_time = timeval_ms();
-
+	int64_t current_time = timeval_ms();
 	int64_t delta_time = current_time - last_time;
 
 	if (delta_time > KEEP_ALIVE_TIMEOUT_MS) {
@@ -540,7 +514,7 @@ void keep_alive(void)
 		last_time = current_time;
 
 		/* this will keep the GDB connection alive */
-		LOG_USER_N("%s", "");
+		server_keep_clients_alive();
 
 		/* DANGER!!!! do not add code to invoke e.g. target event processing,
 		 * jim timer processing, etc. it can cause infinite recursion +
@@ -555,7 +529,7 @@ void keep_alive(void)
 /* reset keep alive timer without sending message */
 void kept_alive(void)
 {
-	current_time = timeval_ms();
+	int64_t current_time = timeval_ms();
 
 	int64_t delta_time = current_time - last_time;
 
@@ -565,14 +539,14 @@ void kept_alive(void)
 		gdb_timeout_warning(delta_time);
 }
 
-/* if we sleep for extended periods of time, we must invoke keep_alive() intermittantly */
+/* if we sleep for extended periods of time, we must invoke keep_alive() intermittently */
 void alive_sleep(uint64_t ms)
 {
-	uint64_t napTime = 10;
-	for (uint64_t i = 0; i < ms; i += napTime) {
+	uint64_t nap_time = 10;
+	for (uint64_t i = 0; i < ms; i += nap_time) {
 		uint64_t sleep_a_bit = ms - i;
-		if (sleep_a_bit > napTime)
-			sleep_a_bit = napTime;
+		if (sleep_a_bit > nap_time)
+			sleep_a_bit = nap_time;
 
 		usleep(sleep_a_bit * 1000);
 		keep_alive();
@@ -589,7 +563,7 @@ void busy_sleep(uint64_t ms)
 	}
 }
 
-/* Maximum size of socket error message retreived from operation system */
+/* Maximum size of socket error message retrieved from operation system */
 #define MAX_SOCKET_ERR_MSG_LENGTH 256
 
 /* Provide log message for the last socket error.
@@ -612,4 +586,17 @@ void log_socket_error(const char *socket_desc)
 	error_code = errno;
 	LOG_ERROR("Error on socket '%s': errno==%d, message: %s.", socket_desc, error_code, strerror(error_code));
 #endif
+}
+
+/**
+ * Find the first non-printable character in the char buffer, return a pointer to it.
+ * If no such character exists, return NULL.
+ */
+char *find_nonprint_char(char *buf, unsigned buf_len)
+{
+	for (unsigned int i = 0; i < buf_len; i++) {
+		if (!isprint(buf[i]))
+			return buf + i;
+	}
+	return NULL;
 }

@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2009 by Paulius Zaleckas                                *
  *   paulius.zaleckas@gmail.com                                            *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /*
@@ -347,6 +336,16 @@ static int fa526_target_create(struct target *target, Jim_Interp *interp)
 	return fa526_init_arch_info(target, arm920t, target->tap);
 }
 
+static void fa526_deinit_target(struct target *target)
+{
+	struct arm *arm = target_to_arm(target);
+	struct arm920t_common *arm920t = target_to_arm920(target);
+
+	arm7_9_deinit(target);
+	arm_free_reg_cache(arm);
+	free(arm920t);
+}
+
 /** Holds methods for FA526 targets. */
 struct target_type fa526_target = {
 	.name = "fa526",
@@ -383,6 +382,7 @@ struct target_type fa526_target = {
 	.commands = arm920t_command_handlers,
 	.target_create = fa526_target_create,
 	.init_target = arm9tdmi_init_target,
+	.deinit_target = fa526_deinit_target,
 	.examine = arm7_9_examine,
 	.check_reset = arm7_9_check_reset,
 };

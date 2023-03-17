@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 noinst_LTLIBRARIES += %D%/libocdjtagdrivers.la
 %C%_libocdjtagdrivers_la_LIBADD =
 
@@ -19,18 +21,11 @@ DRIVERFILES =
 
 # Standard Driver: common files
 DRIVERFILES += %D%/driver.c
-DRIVERFILES += %D%/jtag_usb_common.c
 
 if USE_LIBUSB1
 DRIVERFILES += %D%/libusb_helper.c
 %C%_libocdjtagdrivers_la_CPPFLAGS += $(LIBUSB1_CFLAGS)
 %C%_libocdjtagdrivers_la_LIBADD += $(LIBUSB1_LIBS)
-endif
-
-if USE_LIBUSB0
-DRIVERFILES += %D%/usb_common.c
-%C%_libocdjtagdrivers_la_CPPFLAGS += $(LIBUSB0_CFLAGS)
-%C%_libocdjtagdrivers_la_LIBADD += $(LIBUSB0_LIBS)
 endif
 
 if USE_LIBFTDI
@@ -89,6 +84,12 @@ endif
 if JTAG_VPI
 DRIVERFILES += %D%/jtag_vpi.c
 endif
+if VDEBUG
+DRIVERFILES += %D%/vdebug.c
+endif
+if JTAG_DPI
+DRIVERFILES += %D%/jtag_dpi.c
+endif
 if USB_BLASTER_DRIVER
 %C%_libocdjtagdrivers_la_LIBADD += %D%/usb_blaster/libocdusbblaster.la
 include %D%/usb_blaster/Makefile.am
@@ -113,6 +114,9 @@ DRIVERFILES += %D%/bitq.c
 endif
 if PRESTO
 DRIVERFILES += %D%/presto.c
+endif
+if ESP_USB_JTAG
+DRIVERFILES += %D%/esp_usb_jtag.c
 endif
 if USBPROG
 DRIVERFILES += %D%/usbprog.c
@@ -150,6 +154,9 @@ endif
 if HLADAPTER_ICDI
 DRIVERFILES += %D%/ti_icdi_usb.c
 endif
+if HLADAPTER_NULINK
+DRIVERFILES += %D%/nulink_usb.c
+endif
 if RSHIM
 DRIVERFILES += %D%/rshim.c
 endif
@@ -171,6 +178,10 @@ endif
 if OPENJTAG
 DRIVERFILES += %D%/openjtag.c
 endif
+if CMSIS_DAP_HID
+DRIVERFILES += %D%/cmsis_dap_usb_hid.c
+DRIVERFILES += %D%/cmsis_dap.c
+endif
 if ADI_DBGAGENT
 DRIVERFILES += %D%/adi_dbg_agent.c
 endif
@@ -186,8 +197,11 @@ DRIVERFILES += %D%/ice1500.c
 endif
 
 
-if CMSIS_DAP
-DRIVERFILES += %D%/cmsis_dap_usb.c
+if CMSIS_DAP_USB
+DRIVERFILES += %D%/cmsis_dap_usb_bulk.c
+if !CMSIS_DAP_HID
+DRIVERFILES += %D%/cmsis_dap.c
+endif
 endif
 if IMX_GPIO
 DRIVERFILES += %D%/imx_gpio.c
@@ -198,19 +212,22 @@ endif
 if XDS110
 DRIVERFILES += %D%/xds110.c
 endif
+if AM335XGPIO
+DRIVERFILES += %D%/am335xgpio.c
+endif
 
 DRIVERHEADERS = \
 	%D%/bitbang.h \
 	%D%/bitq.h \
-	%D%/jtag_usb_common.h \
+	%D%/libftdi_helper.h \
 	%D%/libusb_helper.h \
+	%D%/cmsis_dap.h \
 	%D%/minidriver_imp.h \
 	%D%/mpsse.h \
 	%D%/rlink.h \
 	%D%/rlink_dtc_cmd.h \
 	%D%/rlink_ep1_cmd.h \
 	%D%/rlink_st7.h \
-	%D%/usb_common.h \
 	%D%/versaloon/usbtoxxx/usbtoxxx.h \
 	%D%/versaloon/usbtoxxx/usbtoxxx_internal.h \
 	%D%/versaloon/versaloon.h \

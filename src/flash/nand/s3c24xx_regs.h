@@ -1,19 +1,9 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
+
 /***************************************************************************
  *   Copyright (C) 2004, 2005 by Simtec Electronics                        *
  *   linux@simtec.co.uk                                                    *
  *   http://www.simtec.co.uk/products/SWLINUX/                             *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; version 2 of the License.               *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /*
@@ -61,7 +51,7 @@
 #define S3C2410_NFCONF_512BYTE     (1 << 14)
 #define S3C2410_NFCONF_4STEP       (1 << 13)
 #define S3C2410_NFCONF_INITECC     (1 << 12)
-#define S3C2410_NFCONF_nFCE        (1 << 11)
+#define S3C2410_NFCONF_NFCE        (1 << 11)
 #define S3C2410_NFCONF_TACLS(x)    ((x) << 8)
 #define S3C2410_NFCONF_TWRPH0(x)   ((x) << 4)
 #define S3C2410_NFCONF_TWRPH1(x)   ((x) << 0)
@@ -83,12 +73,12 @@
 #define S3C2440_NFCONT_SPARE_ECCLOCK	(1 << 6)
 #define S3C2440_NFCONT_MAIN_ECCLOCK	(1 << 5)
 #define S3C2440_NFCONT_INITECC		(1 << 4)
-#define S3C2440_NFCONT_nFCE			(1 << 1)
+#define S3C2440_NFCONT_NFCE			(1 << 1)
 #define S3C2440_NFCONT_ENABLE		(1 << 0)
 
 #define S3C2440_NFSTAT_READY		(1 << 0)
-#define S3C2440_NFSTAT_nCE			(1 << 1)
-#define S3C2440_NFSTAT_RnB_CHANGE	(1 << 2)
+#define S3C2440_NFSTAT_NCE			(1 << 1)
+#define S3C2440_NFSTAT_RNB_CHANGE	(1 << 2)
 #define S3C2440_NFSTAT_ILLEGAL_ACCESS	(1 << 3)
 
 #define S3C2412_NFCONF_NANDBOOT		(1 << 31)
@@ -103,16 +93,16 @@
 #define S3C2412_NFCONT_ECC4_DECINT	(1 << 12)
 #define S3C2412_NFCONT_MAIN_ECC_LOCK	(1 << 7)
 #define S3C2412_NFCONT_INIT_MAIN_ECC	(1 << 5)
-#define S3C2412_NFCONT_nFCE1		(1 << 2)
-#define S3C2412_NFCONT_nFCE0		(1 << 1)
+#define S3C2412_NFCONT_NFCE1		(1 << 2)
+#define S3C2412_NFCONT_NFCE0		(1 << 1)
 
 #define S3C2412_NFSTAT_ECC_ENCDONE	(1 << 7)
 #define S3C2412_NFSTAT_ECC_DECDONE	(1 << 6)
 #define S3C2412_NFSTAT_ILLEGAL_ACCESS	(1 << 5)
-#define S3C2412_NFSTAT_RnB_CHANGE	(1 << 4)
-#define S3C2412_NFSTAT_nFCE1		(1 << 3)
-#define S3C2412_NFSTAT_nFCE0		(1 << 2)
-#define S3C2412_NFSTAT_Res1			(1 << 1)
+#define S3C2412_NFSTAT_RNB_CHANGE	(1 << 4)
+#define S3C2412_NFSTAT_NFCE1		(1 << 3)
+#define S3C2412_NFSTAT_NFCE0		(1 << 2)
+#define S3C2412_NFSTAT_RES1			(1 << 1)
 #define S3C2412_NFSTAT_READY		(1 << 0)
 
 #define S3C2412_NFECCERR_SERRDATA(x)	(((x) >> 21) & 0xf)

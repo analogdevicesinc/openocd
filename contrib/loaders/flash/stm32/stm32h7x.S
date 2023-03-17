@@ -1,19 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2017 by STMicroelectronics                              *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.                                        *
  ***************************************************************************/
 
 	.text
@@ -25,7 +13,7 @@
  * Code limitations:
  * The workarea must have size multiple of 4 bytes, since R/W
  * operations are all at 32 bits.
- * The workarea must be big enough to contain rp, wp and data, thus the minumum
+ * The workarea must be big enough to contain rp, wp and data, thus the minimum
  * workarea size is: min_wa_size = sizeof(rp, wp, data) = 4 + 4 + sizeof(data).
  *  - for 0x450 devices: sizeof(data) = 32 bytes, thus min_wa_size = 40 bytes.
  *  - for 0x480 devices: sizeof(data) = 16 bytes, thus min_wa_size = 24 bytes.
@@ -78,7 +66,7 @@ wait_fifo:
 	str		r7, [r5, #STM32_FLASH_CR_OFFSET]
 
 	mov		r8, #4
-	udiv	r8, r4, r8			/* number of words is size of write word devided by 4*/
+	udiv	r8, r4, r8			/* number of words is size of write word divided by 4*/
 write_flash:
 	dsb
 	ldr		r7, [r6], #0x04		/* read one word from src, increment ptr */

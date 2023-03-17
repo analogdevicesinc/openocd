@@ -580,7 +580,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 
 	uint8_t buffer[ICE_1000_FLASH_DATA_BUFFER_SIZE];
 	uint8_t first = 1, last = 0;
-	int i;
+	unsigned int i;
 	uint16_t crc = 0xffff;
 	size_t total_size = 0, total_written = 0;
 
@@ -607,7 +607,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 			return ERROR_FAIL;
 		}
 
-		ret = image_read_section(firmware, i, 0, section_size, section_buffer, &size_read);
+		ret = image_read_section(firmware, (int)i, 0, section_size, section_buffer, &size_read);
 		if (ret != ERROR_OK || size_read != section_size)
 		{
 			free(section_buffer);
@@ -740,7 +740,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	}
 	else
 	{
-		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
+		ret = jtag_libusb_open(vids, pids, &dev, NULL);
 		if (ret != ERROR_OK)
 			return ret;
 

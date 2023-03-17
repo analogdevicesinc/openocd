@@ -1,8 +1,9 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 proc proc_exists { NAME } {
     set n [info commands $NAME]
     set l [string length $n]
-    return [expr $l != 0]
+    return [expr {$l != 0}]
 }
 
 # Give: REGISTER name - must be a global variable.
@@ -45,14 +46,14 @@ proc show_mmr32_bits { NAMES VAL } {
     for { set x 24 } { $x >= 0 } { incr x -8 } {
 	echo -n "  "
 	for { set y 7 } { $y >= 0 } { incr y -1 } {
-	    set s $MYNAMES([expr $x + $y])
-	    echo -n [format "%2d: %-*s | " [expr $x + $y] $w $s ]
+	    set s $MYNAMES([expr {$x + $y}])
+	    echo -n [format "%2d: %-*s | " [expr {$x + $y}] $w $s ]
 	}
 	echo ""
 
 	echo -n "  "
 	for { set y 7 } { $y >= 0 } { incr y -1 } {
-	    echo -n [format "    %d%*s | " [expr !!($VAL & (1 << ($x + $y)))] [expr $w -1] ""]
+	    echo -n [format "    %d%*s | " [expr {!!($VAL & (1 << ($x + $y)))}] [expr {$w -1}] ""]
 	}
 	echo ""
     }
@@ -60,7 +61,7 @@ proc show_mmr32_bits { NAMES VAL } {
 
 
 proc show_mmr_bitfield { MSB LSB VAL FIELDNAME FIELDVALUES } {
-    set width [expr (($MSB - $LSB + 1) + 7) / 4]
+    set width [expr {(($MSB - $LSB + 1) + 7) / 4}]
     set nval [show_normalize_bitfield $VAL $MSB $LSB ]
     set name0 [lindex $FIELDVALUES 0 ]
     if [ string compare $name0 _NUMBER_ ] {
@@ -69,4 +70,23 @@ proc show_mmr_bitfield { MSB LSB VAL FIELDNAME FIELDVALUES } {
 	set sval ""
     }
     log_debug [format "%-15s: %d (0x%0*x) %s" $FIELDNAME $nval $width $nval $sval ]
+}
+
+# Give: ADDR - address of the register.
+#       BIT - bit's number.
+
+proc get_mmr_bit { ADDR BIT } {
+	set val [memread32 $ADDR]
+	set bit_val [expr {$val & [expr {1 << $BIT}]}]
+	return $bit_val
+}
+
+
+# Give: ADDR - address of the register.
+#       MSB - MSB bit's number.
+#       LSB - LSB bit's number.
+
+proc get_mmr_bitfield { ADDR MSB LSB } {
+	set rval [memread32 $ADDR]
+	return normalize_bitfield $rval $MSB $LSB
 }

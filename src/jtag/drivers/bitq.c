@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
 *   Copyright (C) 2007 by Pavel Chromy                                    *
 *   chromy@asix.cz                                                        *
-*                                                                         *
-*   This program is free software; you can redistribute it and/or modify  *
-*   it under the terms of the GNU General Public License as published by  *
-*   the Free Software Foundation; either version 2 of the License, or     *
-*   (at your option) any later version.                                   *
-*                                                                         *
-*   This program is distributed in the hope that it will be useful,       *
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-*   GNU General Public License for more details.                          *
-*                                                                         *
-*   You should have received a copy of the GNU General Public License     *
-*   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
 ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -168,7 +157,7 @@ static void bitq_scan_field(struct scan_field *field, int do_pause)
 	else
 		tdo_req = 0;
 
-	if (field->out_value == NULL) {
+	if (!field->out_value) {
 		/* just send zeros and request data from TDO */
 		for (bit_cnt = field->num_bits; bit_cnt > 1; bit_cnt--)
 			bitq_io(0, 0, tdo_req);
@@ -245,7 +234,7 @@ int bitq_execute_queue(void)
 		case JTAG_TLR_RESET:
 			LOG_DEBUG_IO("statemove end in %i", cmd->cmd.statemove->end_state);
 			bitq_end_state(cmd->cmd.statemove->end_state);
-			bitq_state_move(tap_get_end_state());   /* uncoditional TAP move */
+			bitq_state_move(tap_get_end_state());   /* unconditional TAP move */
 			break;
 
 		case JTAG_PATHMOVE:
@@ -264,7 +253,7 @@ int bitq_execute_queue(void)
 			break;
 
 		case JTAG_SLEEP:
-			LOG_DEBUG_IO("sleep %i", cmd->cmd.sleep->us);
+			LOG_DEBUG_IO("sleep %" PRIu32, cmd->cmd.sleep->us);
 			bitq_interface->sleep(cmd->cmd.sleep->us);
 			if (bitq_interface->in_rdy())
 				bitq_in_proc();

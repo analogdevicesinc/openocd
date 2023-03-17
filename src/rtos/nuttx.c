@@ -1,20 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright 2016,2017 Sony Video & Sound Products Inc.                  *
  *   Masatoshi Tateishi - Masatoshi.Tateishi@jp.sony.com                   *
  *   Masayuki Ishikawa - Masayuki.Ishikawa@jp.sony.com                     *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -72,7 +61,7 @@ struct tcb {
 	uint8_t  dat[512];
 };
 
-struct {
+static struct {
 	uint32_t addr;
 	uint32_t prio;
 } g_tasklist[TASK_QUEUE_NUM];
@@ -114,16 +103,15 @@ static const struct stack_register_offset nuttx_stack_offsets_cortex_m[] = {
 	{ ARMV7M_R13,	  0,  32 },		/* sp   */
 	{ ARMV7M_R14,	0x3c, 32 },		/* lr   */
 	{ ARMV7M_PC,	0x40, 32 },		/* pc   */
-	{ ARMV7M_xPSR,	0x44, 32 },		/* xPSR */
+	{ ARMV7M_XPSR,	0x44, 32 },		/* xPSR */
 };
 
 
 static const struct rtos_register_stacking nuttx_stacking_cortex_m = {
-	0x48,                                   /* stack_registers_size */
-	-1,                                     /* stack_growth_direction */
-	17,                                     /* num_output_registers */
-	0,                                      /* stack_alignment */
-	nuttx_stack_offsets_cortex_m   /* register_offsets */
+	.stack_registers_size = 0x48,
+	.stack_growth_direction = -1,
+	.num_output_registers = 17,
+	.register_offsets = nuttx_stack_offsets_cortex_m
 };
 
 static const struct stack_register_offset nuttx_stack_offsets_cortex_m_fpu[] = {
@@ -143,15 +131,14 @@ static const struct stack_register_offset nuttx_stack_offsets_cortex_m_fpu[] = {
 	{ ARMV7M_R13,	  0,  32 },		/* sp   */
 	{ ARMV7M_R14,	0x80, 32 },		/* lr   */
 	{ ARMV7M_PC,	0x84, 32 },		/* pc   */
-	{ ARMV7M_xPSR,	0x88, 32 },		/* xPSR */
+	{ ARMV7M_XPSR,	0x88, 32 },		/* xPSR */
 };
 
 static const struct rtos_register_stacking nuttx_stacking_cortex_m_fpu = {
-	0x8c,                                   /* stack_registers_size */
-	-1,                                     /* stack_growth_direction */
-	17,                                     /* num_output_registers */
-	0,                                      /* stack_alignment */
-	nuttx_stack_offsets_cortex_m_fpu        /* register_offsets */
+	.stack_registers_size = 0x8c,
+	.stack_growth_direction = -1,
+	.num_output_registers = 17,
+	.register_offsets = nuttx_stack_offsets_cortex_m_fpu
 };
 
 static int pid_offset = PID;
@@ -174,7 +161,7 @@ static int rcmd_offset(const char *cmd, const char *name)
 static int nuttx_thread_packet(struct connection *connection,
 	char const *packet, int packet_size)
 {
-	char cmd[GDB_BUFFER_SIZE / 2 + 1] = ""; /* Extra byte for nul-termination */
+	char cmd[GDB_BUFFER_SIZE / 2 + 1] = ""; /* Extra byte for null-termination */
 
 	if (!strncmp(packet, "qRcmd", 5)) {
 		size_t len = unhexify((uint8_t *)cmd, packet + 6, sizeof(cmd));
@@ -233,7 +220,7 @@ retok:
 
 static bool nuttx_detect_rtos(struct target *target)
 {
-	if ((target->rtos->symbols != NULL) &&
+	if ((target->rtos->symbols) &&
 			(target->rtos->symbols[0].address != 0) &&
 			(target->rtos->symbols[1].address != 0)) {
 		return true;
@@ -259,7 +246,7 @@ static int nuttx_update_threads(struct rtos *rtos)
 	uint32_t i;
 	uint8_t state;
 
-	if (rtos->symbols == NULL) {
+	if (!rtos->symbols) {
 		LOG_ERROR("No symbols for NuttX");
 		return -3;
 	}
@@ -314,7 +301,7 @@ static int nuttx_update_threads(struct rtos *rtos)
 
 			state = tcb.dat[state_offset - 8];
 			thread->extra_info_str = NULL;
-			if (state < sizeof(task_state_str)/sizeof(char *)) {
+			if (state < ARRAY_SIZE(task_state_str)) {
 				thread->extra_info_str = malloc(256);
 				snprintf(thread->extra_info_str, 256, "pid:%d, %s",
 				    tcb.dat[pid_offset - 8] |
@@ -352,7 +339,7 @@ static int nuttx_get_thread_reg_list(struct rtos *rtos, int64_t thread_id,
 	bool cm4_fpu_enabled = false;
 	struct armv7m_common *armv7m_target = target_to_armv7m(rtos->target);
 	if (is_armv7m(armv7m_target)) {
-		if (armv7m_target->fp_feature == FPv4_SP) {
+		if (armv7m_target->fp_feature == FPV4_SP) {
 			/* Found ARM v7m target which includes a FPU */
 			uint32_t cpacr;
 
@@ -380,12 +367,12 @@ static int nuttx_get_thread_reg_list(struct rtos *rtos, int64_t thread_id,
 	    (uint32_t)thread_id + xcpreg_offset, reg_list, num_regs);
 }
 
-static int nuttx_get_symbol_list_to_lookup(symbol_table_elem_t *symbol_list[])
+static int nuttx_get_symbol_list_to_lookup(struct symbol_table_elem *symbol_list[])
 {
 	unsigned int i;
 
-	*symbol_list = (symbol_table_elem_t *) calloc(1,
-		sizeof(symbol_table_elem_t) * ARRAY_SIZE(nuttx_symbol_list));
+	*symbol_list = (struct symbol_table_elem *) calloc(1,
+		sizeof(struct symbol_table_elem) * ARRAY_SIZE(nuttx_symbol_list));
 
 	for (i = 0; i < ARRAY_SIZE(nuttx_symbol_list); i++)
 		(*symbol_list)[i].symbol_name = nuttx_symbol_list[i];

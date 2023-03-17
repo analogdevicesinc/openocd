@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -10,19 +12,6 @@
  *                                                                         *
  *   Copyright (C) 2014 by Tomas Vanek (PSoC 4 support derived from STM32) *
  *   vanekt@fbl.cz                                                         *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -35,7 +24,7 @@
 #include <target/algorithm.h>
 #include <target/armv7m.h>
 
-/* device documets:
+/* device documents:
 
  PSoC(R) 4: PSoC 4200 Family Datasheet
 	Document Number: 001-87197 Rev. *B  Revised August 29, 2013
@@ -139,7 +128,7 @@ struct psoc4_chip_family {
 	uint32_t flags;
 };
 
-const struct psoc4_chip_family psoc4_families[] = {
+static const struct psoc4_chip_family psoc4_families[] = {
 	{ 0x93, "PSoC4100/4200",           .flags = PSOC4_FAMILY_FLAG_LEGACY },
 	{ 0x9A, "PSoC4000",                .flags = 0 },
 	{ 0x9E, "PSoC/PRoC BLE (119E)",    .flags = 0 },
@@ -320,7 +309,7 @@ static int psoc4_sysreq(struct flash_bank *bank, uint8_t cmd,
 		    sysreq_wait_algorithm->address + sysreq_wait_algorithm->size);
 
 	struct armv7m_common *armv7m = target_to_armv7m(target);
-	if (armv7m == NULL) {
+	if (!armv7m) {
 		/* something is very wrong if armv7m is NULL */
 		LOG_ERROR("unable to get armv7m target");
 		retval = ERROR_FAIL;
@@ -335,7 +324,7 @@ static int psoc4_sysreq(struct flash_bank *bank, uint8_t cmd,
 
 	/* Execute wait code */
 	retval = target_run_algorithm(target, 0, NULL,
-				sizeof(reg_params) / sizeof(*reg_params), reg_params,
+				ARRAY_SIZE(reg_params), reg_params,
 				sysreq_wait_algorithm->address, 0, 1000, &armv7m_info);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("sysreq wait code execution failed");
@@ -392,7 +381,7 @@ static int psoc4_get_silicon_id(struct flash_bank *bank, uint32_t *silicon_id, u
 	/* build ID as Cypress sw does:
 	 * bit 31..16 silicon ID
 	 * bit 15..8  revision ID (so far 0x11 for all devices)
-	 * bit 7..0   family ID (lowes 8 bits)
+	 * bit 7..0   family ID (lowest 8 bits)
 	 */
 	if (silicon_id)
 			*silicon_id = ((part0 & 0x0000ffff) << 16)
@@ -520,16 +509,9 @@ static int psoc4_mass_erase(struct flash_bank *bank)
 
 	/* Call "Erase All" system ROM API */
 	uint32_t param = 0;
-	retval = psoc4_sysreq(bank, PSOC4_CMD_ERASE_ALL,
+	return psoc4_sysreq(bank, PSOC4_CMD_ERASE_ALL,
 			0,
 			&param, sizeof(param), NULL);
-
-	if (retval == ERROR_OK)
-		/* set all sectors as erased */
-		for (unsigned int i = 0; i < bank->num_sectors; i++)
-			bank->sectors[i].is_erased = 1;
-
-	return retval;
 }
 
 
@@ -576,7 +558,7 @@ static int psoc4_protect(struct flash_bank *bank, int set, unsigned int first,
 	int prot_sz = num_bits / 8;
 
 	sysrq_buffer = malloc(param_sz + prot_sz);
-	if (sysrq_buffer == NULL) {
+	if (!sysrq_buffer) {
 		LOG_ERROR("no memory for row buffer");
 		return ERROR_FAIL;
 	}
@@ -610,8 +592,7 @@ static int psoc4_protect(struct flash_bank *bank, int set, unsigned int first,
 			break;
 	}
 
-	if (sysrq_buffer)
-		free(sysrq_buffer);
+	free(sysrq_buffer);
 
 	psoc4_protect_check(bank);
 	return retval;
@@ -625,7 +606,7 @@ COMMAND_HANDLER(psoc4_handle_flash_autoerase_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	struct psoc4_flash_bank *psoc4_info = bank->driver_priv;
@@ -659,7 +640,7 @@ static int psoc4_write(struct flash_bank *bank, const uint8_t *buffer,
 		return retval;
 
 	sysrq_buffer = malloc(param_sz + psoc4_info->row_size);
-	if (sysrq_buffer == NULL) {
+	if (!sysrq_buffer) {
 		LOG_ERROR("no memory for row buffer");
 		return ERROR_FAIL;
 	}
@@ -670,8 +651,8 @@ static int psoc4_write(struct flash_bank *bank, const uint8_t *buffer,
 	if (row_offset)
 		memset(row_buffer, bank->default_padded_value, row_offset);
 
-	bool save_poll = jtag_poll_get_enabled();
-	jtag_poll_set_enabled(false);
+	/* Mask automatic polling triggered by execution of halted events */
+	bool save_poll_mask = jtag_poll_mask();
 
 	while (count) {
 		uint32_t chunk_size = psoc4_info->row_size - row_offset;
@@ -712,11 +693,9 @@ static int psoc4_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 
 cleanup:
-	jtag_poll_set_enabled(save_poll);
+	jtag_poll_unmask(save_poll_mask);
 
-	if (sysrq_buffer)
-		free(sysrq_buffer);
-
+	free(sysrq_buffer);
 	return retval;
 }
 
@@ -795,7 +774,7 @@ static int psoc4_probe(struct flash_bank *bank)
 		num_macros++;
 	}
 
-	LOG_DEBUG("SPCIF geometry: %" PRIu32 " kb flash, row %" PRIu32 " bytes.",
+	LOG_DEBUG("SPCIF geometry: %" PRIu32 " KiB flash, row %" PRIu32 " bytes.",
 		 flash_size_in_kb, row_size);
 
 	/* if the user sets the size manually then ignore the probed value
@@ -809,7 +788,7 @@ static int psoc4_probe(struct flash_bank *bank)
 	if (num_macros > 1)
 		snprintf(macros_txt, sizeof(macros_txt), " in %" PRIu32 " macros", num_macros);
 
-	LOG_INFO("flash size = %" PRIu32 " kbytes%s", flash_size_in_kb, macros_txt);
+	LOG_INFO("flash size = %" PRIu32 " KiB%s", flash_size_in_kb, macros_txt);
 
 	/* calculate number of pages */
 	uint32_t num_rows = flash_size_in_kb * 1024 / row_size;
@@ -827,9 +806,7 @@ static int psoc4_probe(struct flash_bank *bank)
 		}
 	}
 
-	if (bank->sectors) {
-		free(bank->sectors);
-	}
+	free(bank->sectors);
 
 	psoc4_info->family_id = family_id;
 	psoc4_info->num_macros = num_macros;
@@ -838,7 +815,7 @@ static int psoc4_probe(struct flash_bank *bank)
 	bank->size = num_rows * row_size;
 	bank->num_sectors = num_rows;
 	bank->sectors = alloc_block_array(0, row_size, num_rows);
-	if (bank->sectors == NULL)
+	if (!bank->sectors)
 		return ERROR_FAIL;
 
 	LOG_DEBUG("flash bank set %" PRIu32 " rows", num_rows);
@@ -856,7 +833,7 @@ static int psoc4_auto_probe(struct flash_bank *bank)
 }
 
 
-static int get_psoc4_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_psoc4_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct target *target = bank->target;
 	struct psoc4_flash_bank *psoc4_info = bank->driver_priv;
@@ -868,35 +845,30 @@ static int get_psoc4_info(struct flash_bank *bank, char *buf, int buf_size)
 	uint32_t size_in_kb = bank->size / 1024;
 
 	if (target->state != TARGET_HALTED) {
-		snprintf(buf, buf_size, "%s, flash %" PRIu32 " kb"
+		command_print_sameline(cmd, "%s, flash %" PRIu32 " kb"
 			" (halt target to see details)", family->name, size_in_kb);
 		return ERROR_OK;
 	}
 
-	int retval;
-	int printed = 0;
 	uint32_t silicon_id;
 	uint16_t family_id;
 	uint8_t protection;
 
-	retval = psoc4_get_silicon_id(bank, &silicon_id, &family_id, &protection);
+	int retval = psoc4_get_silicon_id(bank, &silicon_id, &family_id, &protection);
 	if (retval != ERROR_OK)
 		return retval;
 
 	if (family_id != psoc4_info->family_id)
-		printed = snprintf(buf, buf_size, "Family id mismatch 0x%02" PRIx16
+		command_print_sameline(cmd, "Family id mismatch 0x%02" PRIx16
 			"/0x%02" PRIx16 ", silicon id 0x%08" PRIx32,
 			psoc4_info->family_id, family_id, silicon_id);
 	else {
-		printed = snprintf(buf, buf_size, "%s silicon id 0x%08" PRIx32 "",
+		command_print_sameline(cmd, "%s silicon id 0x%08" PRIx32 "",
 			family->name, silicon_id);
 	}
 
-	buf += printed;
-	buf_size -= printed;
-
 	const char *prot_txt = psoc4_decode_chip_protection(protection);
-	snprintf(buf, buf_size, ", flash %" PRIu32 " kb %s", size_in_kb, prot_txt);
+	command_print_sameline(cmd, ", flash %" PRIu32 " kb %s", size_in_kb, prot_txt);
 	return ERROR_OK;
 }
 
@@ -908,7 +880,7 @@ COMMAND_HANDLER(psoc4_handle_mass_erase_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	retval = psoc4_mass_erase(bank);

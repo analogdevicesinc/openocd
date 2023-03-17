@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2009 by                                                 *
  *   Rolf Meeser <rolfm_9dq@yahoo.de>                                      *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -49,8 +38,8 @@
 #define FTCTR           0x2020000C	/* Flash test control */
 #define FBWST           0x20200010	/* Flash bridge wait-state */
 #define FCRA            0x2020001C	/* Flash clock divider */
-#define FMSSTART        0x20200020	/* Flash Built-In Selft Test start address */
-#define FMSSTOP         0x20200024	/* Flash Built-In Selft Test stop address */
+#define FMSSTART        0x20200020	/* Flash Built-In Self Test start address */
+#define FMSSTOP         0x20200024	/* Flash Built-In Self Test stop address */
 #define FMS16           0x20200028	/* Flash 16-bit signature */
 #define FMSW0           0x2020002C	/* Flash 128-bit signature Word 0 */
 #define FMSW1           0x20200030	/* Flash 128-bit signature Word 1 */
@@ -160,7 +149,7 @@ struct lpc2900_flash_bank {
 
 	/**
 	 * Maximum contiguous block of internal SRAM (bytes).
-	 * Autodetected by the driver. Not the total amount of SRAM, only the
+	 * Autodetected by the driver. Not the total amount of SRAM, only
 	 * the largest \em contiguous block!
 	 */
 	uint32_t max_ram_block;
@@ -174,7 +163,7 @@ static uint32_t lpc2900_read_security_status(struct flash_bank *bank);
 static uint32_t lpc2900_run_bist128(struct flash_bank *bank,
 		uint32_t addr_from, uint32_t addr_to,
 		uint32_t signature[4]);
-static uint32_t lpc2900_address2sector(struct flash_bank *bank, uint32_t offset);
+static unsigned int lpc2900_address2sector(struct flash_bank *bank, uint32_t offset);
 static uint32_t lpc2900_calc_tr(uint32_t clock_var, uint32_t time_var);
 
 /***********************  Helper functions  **************************/
@@ -453,8 +442,8 @@ static int lpc2900_write_index_page(struct flash_bank *bank,
 /**
  * Calculate FPTR.TR register value for desired program/erase time.
  *
- * @param clock System clock in Hz
- * @param time Program/erase time in µs
+ * @param clock_var System clock in Hz
+ * @param time_var Program/erase time in µs
  */
 static uint32_t lpc2900_calc_tr(uint32_t clock_var, uint32_t time_var)
 {
@@ -487,7 +476,7 @@ COMMAND_HANDLER(lpc2900_handle_signature_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	if (bank->target->state != TARGET_HALTED) {
@@ -522,7 +511,7 @@ COMMAND_HANDLER(lpc2900_handle_read_custom_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	struct lpc2900_flash_bank *lpc2900_info = bank->driver_priv;
@@ -584,7 +573,7 @@ COMMAND_HANDLER(lpc2900_handle_password_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	struct lpc2900_flash_bank *lpc2900_info = bank->driver_priv;
@@ -614,7 +603,7 @@ COMMAND_HANDLER(lpc2900_handle_write_custom_command)
 
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	struct lpc2900_flash_bank *lpc2900_info = bank->driver_priv;
@@ -635,9 +624,9 @@ COMMAND_HANDLER(lpc2900_handle_write_custom_command)
 
 	/* The image will always start at offset 0 */
 	struct image image;
-	image.base_address_set = 1;
+	image.base_address_set = true;
 	image.base_address = 0;
-	image.start_address_set = 0;
+	image.start_address_set = false;
 
 	const char *filename = CMD_ARGV[1];
 	const char *type = (CMD_ARGC >= 3) ? CMD_ARGV[2] : NULL;
@@ -713,7 +702,7 @@ COMMAND_HANDLER(lpc2900_handle_secure_sector_command)
 	/* Get the bank descriptor */
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	struct lpc2900_flash_bank *lpc2900_info = bank->driver_priv;
@@ -794,7 +783,7 @@ COMMAND_HANDLER(lpc2900_handle_secure_jtag_command)
 	/* Get the bank descriptor */
 	struct flash_bank *bank;
 	int retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	struct lpc2900_flash_bank *lpc2900_info = bank->driver_priv;
@@ -1143,9 +1132,9 @@ static int lpc2900_write(struct flash_bank *bank, const uint8_t *buffer,
 	 * reduced size if that fails. */
 	struct working_area *warea;
 	uint32_t buffer_size = lpc2900_info->max_ram_block - 1 * KiB;
-	while ((retval = target_alloc_working_area_try(target,
+	while (target_alloc_working_area_try(target,
 				 buffer_size + target_code_size,
-				 &warea)) != ERROR_OK) {
+				 &warea) != ERROR_OK) {
 		/* Try a smaller buffer now, and stop if it's too small. */
 		buffer_size -= 1 * KiB;
 		if (buffer_size < 2 * KiB) {
@@ -1535,7 +1524,7 @@ static int lpc2900_erase_check(struct flash_bank *bank)
 		return status;
 	}
 
-	/* Use the BIST (Built-In Selft Test) to generate a signature of each flash
+	/* Use the BIST (Built-In Self Test) to generate a signature of each flash
 	 * sector. Compare against the expected signature of an empty sector.
 	 */
 	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {

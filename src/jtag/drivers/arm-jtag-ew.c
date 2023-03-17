@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2009 by Dimitar Dimitrov <dinuxbg@gmail.com>            *
  *   based on Dominic Rath's and Benedikt Sauter's usbprog.c               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -22,8 +11,8 @@
 
 #include <jtag/interface.h>
 #include <jtag/commands.h>
-#include <usb.h>
-#include "usb_common.h"
+#include "helper/system.h"
+#include "libusb_helper.h"
 
 #define USB_VID						0x15ba
 #define USB_PID						0x001e
@@ -75,7 +64,7 @@ static void armjtagew_tap_append_scan(int length, uint8_t *buffer, struct scan_c
 
 /* ARM-JTAG-EW lowlevel functions */
 struct armjtagew {
-	struct usb_dev_handle *usb_handle;
+	struct libusb_device_handle *usb_handle;
 };
 
 static struct armjtagew *armjtagew_usb_open(void);
@@ -103,7 +92,7 @@ static int armjtagew_execute_queue(void)
 	enum scan_type type;
 	uint8_t *buffer;
 
-	while (cmd != NULL) {
+	while (cmd) {
 		switch (cmd->type) {
 			case JTAG_RUNTEST:
 				LOG_DEBUG_IO("runtest %i cycles, end in %i",
@@ -160,7 +149,7 @@ static int armjtagew_execute_queue(void)
 				break;
 
 			case JTAG_SLEEP:
-				LOG_DEBUG_IO("sleep %i", cmd->cmd.sleep->us);
+				LOG_DEBUG_IO("sleep %" PRIu32, cmd->cmd.sleep->us);
 				armjtagew_tap_execute();
 				jtag_sleep(cmd->cmd.sleep->us);
 				break;
@@ -664,8 +653,7 @@ static int armjtagew_tap_execute(void)
 					return ERROR_JTAG_QUEUE_FAILED;
 				}
 
-				if (pending_scan_result->buffer != NULL)
-					free(pending_scan_result->buffer);
+				free(pending_scan_result->buffer);
 			}
 		} else {
 			LOG_ERROR("armjtagew_tap_execute, wrong result %d, expected %d",
@@ -685,35 +673,37 @@ static int armjtagew_tap_execute(void)
 
 static struct armjtagew *armjtagew_usb_open(void)
 {
-	usb_init();
-
 	const uint16_t vids[] = { USB_VID, 0 };
 	const uint16_t pids[] = { USB_PID, 0 };
-	struct usb_dev_handle *dev;
-	if (jtag_usb_open(vids, pids, &dev) != ERROR_OK)
+	struct libusb_device_handle *dev;
+
+	if (jtag_libusb_open(vids, pids, &dev, NULL) != ERROR_OK)
 		return NULL;
 
 	struct armjtagew *result = malloc(sizeof(struct armjtagew));
 	result->usb_handle = dev;
 
 #if 0
-	/* usb_set_configuration required under win32 */
-	usb_set_configuration(dev, dev->config[0].bConfigurationValue);
+	/* libusb_set_configuration required under win32 */
+	struct libusb_config_descriptor *config;
+	struct libusb_device *usb_dev = libusb_get_device(dev);
+	libusb_get_config_descriptor(usb_dev, 0, &config);
+	libusb_set_configuration(dev, config->bConfigurationValue);
 #endif
-	usb_claim_interface(dev, 0);
+	libusb_claim_interface(dev, 0);
 #if 0
 	/*
 	 * This makes problems under Mac OS X. And is not needed
 	 * under Windows. Hopefully this will not break a linux build
 	 */
-	usb_set_altinterface(dev, 0);
+	libusb_set_interface_alt_setting(dev, 0, 0);
 #endif
 	return result;
 }
 
 static void armjtagew_usb_close(struct armjtagew *armjtagew)
 {
-	usb_close(armjtagew->usb_handle);
+	libusb_close(armjtagew->usb_handle);
 	free(armjtagew);
 }
 
@@ -726,13 +716,13 @@ static int armjtagew_usb_message(struct armjtagew *armjtagew, int out_length, in
 	if (result == out_length) {
 		result = armjtagew_usb_read(armjtagew, in_length);
 		if (result != in_length) {
-			LOG_ERROR("usb_bulk_read failed (requested=%d, result=%d)",
+			LOG_ERROR("jtag_libusb_bulk_read failed (requested=%d, result=%d)",
 				in_length,
 				result);
 			return -1;
 		}
 	} else {
-		LOG_ERROR("usb_bulk_write failed (requested=%d, result=%d)", out_length, result);
+		LOG_ERROR("jtag_libusb_bulk_write failed (requested=%d, result=%d)", out_length, result);
 		return -1;
 	}
 	return 0;
@@ -742,6 +732,7 @@ static int armjtagew_usb_message(struct armjtagew *armjtagew, int out_length, in
 static int armjtagew_usb_write(struct armjtagew *armjtagew, int out_length)
 {
 	int result;
+	int transferred;
 
 	if (out_length > ARMJTAGEW_OUT_BUFFER_SIZE) {
 		LOG_ERROR("armjtagew_write illegal out_length=%d (max=%d)",
@@ -750,29 +741,34 @@ static int armjtagew_usb_write(struct armjtagew *armjtagew, int out_length)
 		return -1;
 	}
 
-	result = usb_bulk_write(armjtagew->usb_handle, ARMJTAGEW_EPT_BULK_OUT,
-			(char *)usb_out_buffer, out_length, ARMJTAGEW_USB_TIMEOUT);
+	result = jtag_libusb_bulk_write(armjtagew->usb_handle, ARMJTAGEW_EPT_BULK_OUT,
+			(char *)usb_out_buffer, out_length, ARMJTAGEW_USB_TIMEOUT, &transferred);
 
 	LOG_DEBUG_IO("armjtagew_usb_write, out_length = %d, result = %d", out_length, result);
 
 #ifdef _DEBUG_USB_COMMS_
 	armjtagew_debug_buffer(usb_out_buffer, out_length);
 #endif
-	return result;
+	if (result != ERROR_OK)
+		return -1;
+	return transferred;
 }
 
 /* Read data from USB into in_buffer. */
 static int armjtagew_usb_read(struct armjtagew *armjtagew, int exp_in_length)
 {
-	int result = usb_bulk_read(armjtagew->usb_handle, ARMJTAGEW_EPT_BULK_IN,
-			(char *)usb_in_buffer, exp_in_length, ARMJTAGEW_USB_TIMEOUT);
+	int transferred;
+	int result = jtag_libusb_bulk_read(armjtagew->usb_handle, ARMJTAGEW_EPT_BULK_IN,
+			(char *)usb_in_buffer, exp_in_length, ARMJTAGEW_USB_TIMEOUT, &transferred);
 
 	LOG_DEBUG_IO("armjtagew_usb_read, result = %d", result);
 
 #ifdef _DEBUG_USB_COMMS_
 	armjtagew_debug_buffer(usb_in_buffer, result);
 #endif
-	return result;
+	if (result != ERROR_OK)
+		return -1;
+	return transferred;
 }
 
 #ifdef _DEBUG_USB_COMMS_

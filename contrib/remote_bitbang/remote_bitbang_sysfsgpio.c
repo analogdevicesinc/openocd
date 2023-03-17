@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2013 Paul Fertser <fercerpav@gmail.com>                 *
  *   Copyright (C) 2012 by Creative Product Design, marc @ cpdesign.com.au *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /*
@@ -30,12 +19,12 @@
   socat TCP6-LISTEN:7777,fork EXEC:"sudo ./remote_bitbang_sysfsgpio tck 11 tms 25 tdo 9 tdi 10"
 
   On host run:
-  openocd -c "interface remote_bitbang; remote_bitbang_host raspberrypi; remote_bitbang_port 7777" \
+  openocd -c "interface remote_bitbang; remote_bitbang host raspberrypi; remote_bitbang port 7777" \
 	  -f target/stm32f1x.cfg
 
   Or if you want to test UNIX sockets, run both on Raspberry Pi:
   socat UNIX-LISTEN:/tmp/remotebitbang-socket,fork EXEC:"sudo ./remote_bitbang_sysfsgpio tck 11 tms 25 tdo 9 tdi 10"
-  openocd -c "interface remote_bitbang; remote_bitbang_host /tmp/remotebitbang-socket" -f target/stm32f1x.cfg
+  openocd -c "interface remote_bitbang; remote_bitbang host /tmp/remotebitbang-socket" -f target/stm32f1x.cfg
 */
 
 #include <sys/types.h>

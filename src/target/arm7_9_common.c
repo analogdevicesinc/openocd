@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -12,19 +14,6 @@
  *   hontor@126.com                                                        *
  *                                                                         *
  *   Copyright (C) 2009 by David Brownell                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -55,8 +44,8 @@
  * shadowed registers, and support for the Thumb instruction set.
  *
  * Processor differences include things like presence or absence of MMU
- * and cache, pipeline sizes, use of a modified Harvard Architecure
- * (with separate instruction and data busses from the CPU), support
+ * and cache, pipeline sizes, use of a modified Harvard Architecture
+ * (with separate instruction and data buses from the CPU), support
  * for cpu clock gating during idle, and more.
  */
 
@@ -93,19 +82,20 @@ static void arm7_9_assign_wp(struct arm7_9_common *arm7_9, struct breakpoint *br
 {
 	if (!arm7_9->wp0_used) {
 		arm7_9->wp0_used = 1;
-		breakpoint->set = 1;
+		breakpoint_hw_set(breakpoint, 0);
 		arm7_9->wp_available--;
 	} else if (!arm7_9->wp1_used) {
 		arm7_9->wp1_used = 1;
-		breakpoint->set = 2;
+		breakpoint_hw_set(breakpoint, 1);
 		arm7_9->wp_available--;
-	} else
+	} else {
 		LOG_ERROR("BUG: no hardware comparator available");
+	}
 
-	LOG_DEBUG("BPID: %" PRId32 " (0x%08" TARGET_PRIxADDR ") using hw wp: %d",
+	LOG_DEBUG("BPID: %" PRIu32 " (0x%08" TARGET_PRIxADDR ") using hw wp: %u",
 			breakpoint->unique_id,
 			breakpoint->address,
-			breakpoint->set);
+			breakpoint->number);
 }
 
 /**
@@ -141,13 +131,13 @@ static int arm7_9_set_software_breakpoints(struct arm7_9_common *arm7_9)
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_DATA_VALUE], arm7_9->arm_bkpt);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_DATA_MASK], 0x0);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_ADDR_MASK], 0xffffffffu);
-		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK], ~EICE_W_CTRL_nOPC & 0xff);
+		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK], ~EICE_W_CTRL_NOPC & 0xff);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_VALUE], EICE_W_CTRL_ENABLE);
 	} else if (arm7_9->sw_breakpoints_added == 2) {
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_DATA_VALUE], arm7_9->arm_bkpt);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_DATA_MASK], 0x0);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_ADDR_MASK], 0xffffffffu);
-		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_MASK], ~EICE_W_CTRL_nOPC & 0xff);
+		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_MASK], ~EICE_W_CTRL_NOPC & 0xff);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_VALUE], EICE_W_CTRL_ENABLE);
 	} else {
 		LOG_ERROR("BUG: both watchpoints used, but wp_available >= 1");
@@ -188,7 +178,7 @@ static int arm7_9_set_breakpoint(struct target *target, struct breakpoint *break
 	struct arm7_9_common *arm7_9 = target_to_arm7_9(target);
 	int retval = ERROR_OK;
 
-	LOG_DEBUG("BPID: %" PRId32 ", Address: 0x%08" TARGET_PRIxADDR ", Type: %d",
+	LOG_DEBUG("BPID: %" PRIu32 ", Address: 0x%08" TARGET_PRIxADDR ", Type: %d",
 		breakpoint->unique_id,
 		breakpoint->address,
 		breakpoint->type);
@@ -203,20 +193,20 @@ static int arm7_9_set_breakpoint(struct target *target, struct breakpoint *break
 		uint32_t mask = (breakpoint->length == 4) ? 0x3u : 0x1u;
 
 		/* reassign a hw breakpoint */
-		if (breakpoint->set == 0)
+		if (!breakpoint->is_set)
 			arm7_9_assign_wp(arm7_9, breakpoint);
 
-		if (breakpoint->set == 1) {
+		if (breakpoint->number == 0) {
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_ADDR_VALUE], breakpoint->address);
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_ADDR_MASK], mask);
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_DATA_MASK], 0xffffffffu);
-			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK], ~EICE_W_CTRL_nOPC & 0xff);
+			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK], ~EICE_W_CTRL_NOPC & 0xff);
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_VALUE], EICE_W_CTRL_ENABLE);
-		} else if (breakpoint->set == 2) {
+		} else if (breakpoint->number == 1) {
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_ADDR_VALUE], breakpoint->address);
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_ADDR_MASK], mask);
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_DATA_MASK], 0xffffffffu);
-			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_MASK], ~EICE_W_CTRL_nOPC & 0xff);
+			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_MASK], ~EICE_W_CTRL_NOPC & 0xff);
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_VALUE], EICE_W_CTRL_ENABLE);
 		} else {
 			LOG_ERROR("BUG: no hardware comparator available");
@@ -226,7 +216,7 @@ static int arm7_9_set_breakpoint(struct target *target, struct breakpoint *break
 		retval = jtag_execute_queue();
 	} else if (breakpoint->type == BKPT_SOFT) {
 		/* did we already set this breakpoint? */
-		if (breakpoint->set)
+		if (breakpoint->is_set)
 			return ERROR_OK;
 
 		if (breakpoint->length == 4) {
@@ -277,7 +267,7 @@ static int arm7_9_set_breakpoint(struct target *target, struct breakpoint *break
 
 		arm7_9->sw_breakpoint_count++;
 
-		breakpoint->set = 1;
+		breakpoint->is_set = true;
 	}
 
 	return retval;
@@ -300,30 +290,30 @@ static int arm7_9_unset_breakpoint(struct target *target, struct breakpoint *bre
 	int retval = ERROR_OK;
 	struct arm7_9_common *arm7_9 = target_to_arm7_9(target);
 
-	LOG_DEBUG("BPID: %" PRId32 ", Address: 0x%08" TARGET_PRIxADDR,
+	LOG_DEBUG("BPID: %" PRIu32 ", Address: 0x%08" TARGET_PRIxADDR,
 		breakpoint->unique_id,
 		breakpoint->address);
 
-	if (!breakpoint->set) {
+	if (!breakpoint->is_set) {
 		LOG_WARNING("breakpoint not set");
 		return ERROR_OK;
 	}
 
 	if (breakpoint->type == BKPT_HARD) {
-		LOG_DEBUG("BPID: %" PRId32 " Releasing hw wp: %d",
+		LOG_DEBUG("BPID: %" PRIu32 " Releasing hw wp: %d",
 			breakpoint->unique_id,
-			breakpoint->set);
-		if (breakpoint->set == 1) {
+			breakpoint->is_set);
+		if (breakpoint->number == 0) {
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_VALUE], 0x0);
 			arm7_9->wp0_used = 0;
 			arm7_9->wp_available++;
-		} else if (breakpoint->set == 2) {
+		} else if (breakpoint->number == 1) {
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_VALUE], 0x0);
 			arm7_9->wp1_used = 0;
 			arm7_9->wp_available++;
 		}
 		retval = jtag_execute_queue();
-		breakpoint->set = 0;
+		breakpoint->is_set = false;
 	} else {
 		/* restore original instruction (kept in target endianness) */
 		if (breakpoint->length == 4) {
@@ -368,7 +358,7 @@ static int arm7_9_unset_breakpoint(struct target *target, struct breakpoint *bre
 						EICE_W1_CONTROL_VALUE], 0);
 		}
 
-		breakpoint->set = 0;
+		breakpoint->is_set = false;
 	}
 
 	return retval;
@@ -484,14 +474,14 @@ static int arm7_9_set_watchpoint(struct target *target, struct watchpoint *watch
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_DATA_VALUE],
 				watchpoint->value);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK],
-			0xff & ~EICE_W_CTRL_nOPC & ~rw_mask);
+			0xff & ~EICE_W_CTRL_NOPC & ~rw_mask);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_VALUE],
-			EICE_W_CTRL_ENABLE | EICE_W_CTRL_nOPC | (watchpoint->rw & 1));
+			EICE_W_CTRL_ENABLE | EICE_W_CTRL_NOPC | (watchpoint->rw & 1));
 
 		retval = jtag_execute_queue();
 		if (retval != ERROR_OK)
 			return retval;
-		watchpoint->set = 1;
+		watchpoint_set(watchpoint, 1);
 		arm7_9->wp0_used = 2;
 	} else if (!arm7_9->wp1_used) {
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_ADDR_VALUE],
@@ -503,14 +493,14 @@ static int arm7_9_set_watchpoint(struct target *target, struct watchpoint *watch
 			embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_DATA_VALUE],
 				watchpoint->value);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_MASK],
-			0xff & ~EICE_W_CTRL_nOPC & ~rw_mask);
+			0xff & ~EICE_W_CTRL_NOPC & ~rw_mask);
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_VALUE],
-			EICE_W_CTRL_ENABLE | EICE_W_CTRL_nOPC | (watchpoint->rw & 1));
+			EICE_W_CTRL_ENABLE | EICE_W_CTRL_NOPC | (watchpoint->rw & 1));
 
 		retval = jtag_execute_queue();
 		if (retval != ERROR_OK)
 			return retval;
-		watchpoint->set = 2;
+		watchpoint_set(watchpoint, 2);
 		arm7_9->wp1_used = 2;
 	} else {
 		LOG_ERROR("BUG: no hardware comparator available");
@@ -538,25 +528,25 @@ static int arm7_9_unset_watchpoint(struct target *target, struct watchpoint *wat
 		return ERROR_TARGET_NOT_HALTED;
 	}
 
-	if (!watchpoint->set) {
+	if (!watchpoint->is_set) {
 		LOG_WARNING("breakpoint not set");
 		return ERROR_OK;
 	}
 
-	if (watchpoint->set == 1) {
+	if (watchpoint->number == 1) {
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_VALUE], 0x0);
 		retval = jtag_execute_queue();
 		if (retval != ERROR_OK)
 			return retval;
 		arm7_9->wp0_used = 0;
-	} else if (watchpoint->set == 2) {
+	} else if (watchpoint->number == 2) {
 		embeddedice_set_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_VALUE], 0x0);
 		retval = jtag_execute_queue();
 		if (retval != ERROR_OK)
 			return retval;
 		arm7_9->wp1_used = 0;
 	}
-	watchpoint->set = 0;
+	watchpoint->is_set = false;
 
 	return ERROR_OK;
 }
@@ -597,7 +587,7 @@ int arm7_9_remove_watchpoint(struct target *target, struct watchpoint *watchpoin
 	int retval = ERROR_OK;
 	struct arm7_9_common *arm7_9 = target_to_arm7_9(target);
 
-	if (watchpoint->set) {
+	if (watchpoint->is_set) {
 		retval = arm7_9_unset_watchpoint(target, watchpoint);
 		if (retval != ERROR_OK)
 			return retval;
@@ -933,7 +923,7 @@ int arm7_9_assert_reset(struct target *target)
 			embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_ADDR_MASK], 0x3);
 			embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_DATA_MASK], 0xffffffff);
 			embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_VALUE], EICE_W_CTRL_ENABLE);
-			embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK], ~EICE_W_CTRL_nOPC & 0xff);
+			embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK], ~EICE_W_CTRL_NOPC & 0xff);
 		}
 	}
 
@@ -1009,7 +999,7 @@ int arm7_9_deassert_reset(struct target *target)
 
 /**
  * Clears the halt condition for an ARM7/9 target.  If it isn't coming out of
- * reset and if DBGRQ is used, it is progammed to be deasserted.  If the reset
+ * reset and if DBGRQ is used, it is programmed to be deasserted.  If the reset
  * vector catch was used, it is restored.  Otherwise, the control value is
  * restored and the watchpoint unit is restored if it was in use.
  *
@@ -1212,7 +1202,7 @@ int arm7_9_halt(struct target *target)
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_VALUE],
 			EICE_W_CTRL_ENABLE);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK],
-			~EICE_W_CTRL_nOPC & 0xff);
+			~EICE_W_CTRL_NOPC & 0xff);
 	}
 
 	target->debug_reason = DBG_REASON_DBGRQ;
@@ -1391,6 +1381,11 @@ static int arm7_9_full_context(struct target *target)
 	int retval;
 	struct arm7_9_common *arm7_9 = target_to_arm7_9(target);
 	struct arm *arm = &arm7_9->arm;
+	struct {
+		uint32_t value;
+		uint8_t *reg_p;
+	} read_cache[6 * (16 + 1)];
+	int read_cache_idx = 0;
 
 	LOG_DEBUG("-");
 
@@ -1433,10 +1428,12 @@ static int arm7_9_full_context(struct target *target)
 			for (j = 0; j < 15; j++) {
 				if (!ARMV4_5_CORE_REG_MODE(arm->core_cache,
 						armv4_5_number_to_mode(i), j).valid) {
-					reg_p[j] = (uint32_t *)ARMV4_5_CORE_REG_MODE(
+					read_cache[read_cache_idx].reg_p = ARMV4_5_CORE_REG_MODE(
 							arm->core_cache,
 							armv4_5_number_to_mode(i),
 							j).value;
+					reg_p[j] = &read_cache[read_cache_idx].value;
+					read_cache_idx++;
 					mask |= 1 << j;
 					ARMV4_5_CORE_REG_MODE(arm->core_cache,
 						armv4_5_number_to_mode(i),
@@ -1454,9 +1451,10 @@ static int arm7_9_full_context(struct target *target)
 			/* check if the PSR has to be read */
 			if (!ARMV4_5_CORE_REG_MODE(arm->core_cache, armv4_5_number_to_mode(i),
 					16).valid) {
-				arm7_9->read_xpsr(target,
-					(uint32_t *)ARMV4_5_CORE_REG_MODE(arm->core_cache,
-						armv4_5_number_to_mode(i), 16).value, 1);
+				read_cache[read_cache_idx].reg_p = ARMV4_5_CORE_REG_MODE(arm->core_cache,
+					armv4_5_number_to_mode(i), 16).value;
+				arm7_9->read_xpsr(target, &read_cache[read_cache_idx].value, 1);
+				read_cache_idx++;
 				ARMV4_5_CORE_REG_MODE(arm->core_cache, armv4_5_number_to_mode(i),
 					16).valid = true;
 				ARMV4_5_CORE_REG_MODE(arm->core_cache, armv4_5_number_to_mode(i),
@@ -1472,6 +1470,14 @@ static int arm7_9_full_context(struct target *target)
 	retval = jtag_execute_queue();
 	if (retval != ERROR_OK)
 		return retval;
+	/*
+	 * FIXME: regs in cache should be tagged as 'valid' only now,
+	 * not before the jtag_execute_queue()
+	 */
+	while (read_cache_idx) {
+		read_cache_idx--;
+		buf_set_u32(read_cache[read_cache_idx].reg_p, 0, 32, read_cache[read_cache_idx].value);
+	}
 	return ERROR_OK;
 }
 
@@ -1668,7 +1674,7 @@ static void arm7_9_enable_watchpoints(struct target *target)
 	struct watchpoint *watchpoint = target->watchpoints;
 
 	while (watchpoint) {
-		if (watchpoint->set == 0)
+		if (!watchpoint->is_set)
 			arm7_9_set_watchpoint(target, watchpoint);
 		watchpoint = watchpoint->next;
 	}
@@ -1724,8 +1730,8 @@ int arm7_9_resume(struct target *target,
 		struct breakpoint *breakpoint;
 		breakpoint = breakpoint_find(target,
 				buf_get_u32(arm->pc->value, 0, 32));
-		if (breakpoint != NULL) {
-			LOG_DEBUG("unset breakpoint at 0x%8.8" TARGET_PRIxADDR " (id: %" PRId32,
+		if (breakpoint) {
+			LOG_DEBUG("unset breakpoint at 0x%8.8" TARGET_PRIxADDR " (id: %" PRIu32,
 				breakpoint->address,
 				breakpoint->unique_id);
 			retval = arm7_9_unset_breakpoint(target, breakpoint);
@@ -1857,14 +1863,14 @@ void arm7_9_enable_eice_step(struct target *target, uint32_t next_pc)
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_VALUE],
 			EICE_W_CTRL_ENABLE);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_CONTROL_MASK],
-			~(EICE_W_CTRL_RANGE | EICE_W_CTRL_nOPC) & 0xff);
+			~(EICE_W_CTRL_RANGE | EICE_W_CTRL_NOPC) & 0xff);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W1_ADDR_VALUE],
 			current_pc);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W1_ADDR_MASK], 0);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W1_DATA_MASK], 0xffffffff);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_VALUE], 0x0);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_MASK],
-			~EICE_W_CTRL_nOPC & 0xff);
+			~EICE_W_CTRL_NOPC & 0xff);
 	} else {
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_ADDR_MASK], 0xffffffff);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W0_DATA_MASK], 0xffffffff);
@@ -1876,7 +1882,7 @@ void arm7_9_enable_eice_step(struct target *target, uint32_t next_pc)
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_VALUE],
 			EICE_W_CTRL_ENABLE);
 		embeddedice_write_reg(&arm7_9->eice_cache->reg_list[EICE_W1_CONTROL_MASK],
-			~EICE_W_CTRL_nOPC & 0xff);
+			~EICE_W_CTRL_NOPC & 0xff);
 	}
 }
 
@@ -1916,7 +1922,7 @@ int arm7_9_step(struct target *target, int current, target_addr_t address, int h
 	/* the front-end may request us not to handle breakpoints */
 	if (handle_breakpoints)
 		breakpoint = breakpoint_find(target, current_pc);
-	if (breakpoint != NULL) {
+	if (breakpoint) {
 		retval = arm7_9_unset_breakpoint(target, breakpoint);
 		if (retval != ERROR_OK)
 			return retval;
@@ -2659,7 +2665,7 @@ int arm7_9_examine(struct target *target)
 		struct reg_cache *t, **cache_p;
 
 		t = embeddedice_build_reg_cache(target, arm7_9);
-		if (t == NULL)
+		if (!t)
 			return ERROR_FAIL;
 
 		cache_p = register_get_last_cache_p(&target->reg_cache);

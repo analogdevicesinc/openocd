@@ -1,34 +1,8 @@
+/* SPDX-License-Identifier: BSD-3-Clause */
+
 /******************************************************************************
 *
 * Copyright (C) 2016-2018 Texas Instruments Incorporated - http://www.ti.com/
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-*
-*  Redistributions of source code must retain the above copyright
-*  notice, this list of conditions and the following disclaimer.
-*
-*  Redistributions in binary form must reproduce the above copyright
-*  notice, this list of conditions and the following disclaimer in the
-*  documentation and/or other materials provided with the
-*  distribution.
-*
-*  Neither the name of Texas Instruments Incorporated nor the names of
-*  its contributors may be used to endorse or promote products derived
-*  from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-* A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-* DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-* THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-* OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 ******************************************************************************/
 
@@ -108,7 +82,7 @@ extern "C"
 
 /******************************************************************************
 *
-* Define for the clock frequencey input to the flash module in number of MHz
+* Define for the clock frequency input to the flash module in number of MHz
 *
 ******************************************************************************/
 #define FLASH_MODULE_CLK_FREQ 48
@@ -279,7 +253,7 @@ static inline uint32_t flash_check_fsm_for_ready(void)
 * This function will erase the specified flash sector. The function will
 * not return until the flash sector has been erased or an error condition
 * occurred. If flash top sector is erased the function will program the
-* the device security data bytes with default values. The device security
+* device security data bytes with default values. The device security
 * data located in the customer configuration area of the flash top sector,
 * must have valid values at all times. These values affect the configuration
 * of the device during boot.
@@ -305,7 +279,7 @@ extern uint32_t flash_sector_erase(uint32_t sector_address);
 *
 * This function will erase all unprotected flash sectors. The function will
 * not return until the flash sectors has been erased or an error condition
-* occurred. Since the flash top sector is erased the function will program the
+* occurred. Since the flash top sector is erased the function will program
 * the device security data bytes with default values. The device security
 * data located in the customer configuration area of the flash top sector,
 * must have valid values at all times. These values affect the configuration
