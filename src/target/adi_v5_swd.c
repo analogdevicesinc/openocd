@@ -50,25 +50,6 @@ static bool do_sync;
 static struct adiv5_dap *swd_multidrop_selected_dap;
 
 
-static int swd_queue_dp_write_inner(struct adiv5_dap *dap, unsigned int reg,
-		uint32_t data);
-
-
-static int swd_send_sequence(struct adiv5_dap *dap, enum swd_special_seq seq)
-{
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
-	assert(swd);
-
-	return swd->switch_seq(seq);
-}
-
-static struct adiv5_dap *swd_multidrop_selected_dap;
-
-
-static int swd_queue_dp_write_inner(struct adiv5_dap *dap, unsigned int reg,
-		uint32_t data);
-
-
 static int swd_send_sequence(struct adiv5_dap *dap, enum swd_special_seq seq)
 {
 	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
@@ -88,7 +69,7 @@ static void swd_finish_read(struct adiv5_dap *dap)
 
 static void swd_clear_sticky_errors(struct adiv5_dap *dap)
 {
-	const struct swd_driver *swd = adi_dap_swd_driver(dap);
+	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
 	assert(swd);
 
 	swd->write_reg(swd_cmd(false, false, DP_ABORT),
@@ -97,7 +78,7 @@ static void swd_clear_sticky_errors(struct adiv5_dap *dap)
 
 static int swd_run_inner(struct adiv5_dap *dap)
 {
-	const struct swd_driver *swd = adi_dap_swd_driver(dap);
+	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
 	int retval;
 
 	retval = swd->run();
@@ -152,37 +133,6 @@ static int swd_queue_dp_read_inner(struct adiv5_dap *dap, unsigned int reg,
 
 	return check_sync(dap);
 }
-
-static int swd_queue_dp_write_inner(struct adiv5_dap *dap, unsigned int reg,
-		uint32_t data)
-{
-	int retval;
-	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
-	assert(swd);
-
-	swd_finish_read(dap);
-
-	if (reg == DP_SELECT) {
-		dap->select = data & (DP_SELECT_APSEL | DP_SELECT_APBANK | DP_SELECT_DPBANK);
-
-		swd->write_reg(swd_cmd(false, false, reg), data, 0);
-
-		retval = check_sync(dap);
-		if (retval != ERROR_OK)
-			dap->select = DP_SELECT_INVALID;
-
-		return retval;
-	}
-
-	retval = swd_queue_dp_bankselect(dap, reg);
-	if (retval != ERROR_OK)
-		return retval;
-
-	swd->write_reg(swd_cmd(false, false, reg), data, 0);
-
-	return check_sync(dap);
-}
-
 
 static int swd_multidrop_select_inner(struct adiv5_dap *dap, uint32_t *dpidr_ptr,
 		uint32_t *dlpidr_ptr, bool clear_sticky)
@@ -651,7 +601,37 @@ static void swd_quit(struct adiv5_dap *dap)
 	swd->run();
 }
 
-const struct dp_ops adiv5_swd_dp_ops = {
+static int swd_queue_dp_write_inner(struct adiv5_dap *dap, unsigned int reg,
+		uint32_t data)
+{
+	int retval;
+	const struct swd_driver *swd = adiv5_dap_swd_driver(dap);
+	assert(swd);
+
+	swd_finish_read(dap);
+
+	if (reg == DP_SELECT) {
+		dap->select = data & (DP_SELECT_APSEL | DP_SELECT_APBANK | DP_SELECT_DPBANK);
+
+		swd->write_reg(swd_cmd(false, false, reg), data, 0);
+
+		retval = check_sync(dap);
+		if (retval != ERROR_OK)
+			dap->select = DP_SELECT_INVALID;
+
+		return retval;
+	}
+
+	retval = swd_queue_dp_bankselect(dap, reg);
+	if (retval != ERROR_OK)
+		return retval;
+
+	swd->write_reg(swd_cmd(false, false, reg), data, 0);
+
+	return check_sync(dap);
+}
+
+const struct dap_ops adiv5_swd_dp_ops = {
 	.connect = swd_connect,
 	.send_sequence = swd_send_sequence,
 	.queue_dp_read = swd_queue_dp_read,
