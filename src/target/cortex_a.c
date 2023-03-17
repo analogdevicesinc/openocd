@@ -2893,12 +2893,8 @@ static int cortex_a_examine_first(struct target *target)
 {
 	struct cortex_a_common *cortex_a = target_to_cortex_a(target);
 	struct armv7a_common *armv7a = &cortex_a->armv7a_common;
-<<<<<<< HEAD
-	struct adi_dap *swjdp = armv7a->arm.dap;
-=======
 	struct adiv5_dap *swjdp = armv7a->arm.dap;
 	struct adiv5_private_config *pc = target->private_config;
->>>>>>> 9501b263e0ae127b012f5c5e3ba5dffcc7daa8d1
 
 	int i;
 	int retval = ERROR_OK;
@@ -3123,7 +3119,7 @@ static int cortex_a_init_target(struct command_context *cmd_ctx,
 }
 
 static int cortex_a_init_arch_info(struct target *target,
-	struct cortex_a_common *cortex_a, struct adi_dap *dap)
+	struct cortex_a_common *cortex_a, struct adiv5_dap *dap)
 {
 	struct armv7a_common *armv7a = &cortex_a->armv7a_common;
 
