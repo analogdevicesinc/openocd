@@ -2547,9 +2547,10 @@ static int armv8_read_reg_simdfp_aarch32(struct armv8_common *armv8, int regnum,
 				ARMV4_5_MCR(14, 0, 1, 0, 5, 0),
 				&value_r1);
 		if (retval == ERROR_OK) {
+			*hvalue = value_r1;
+			*hvalue = ((*hvalue) << 32) | value_r0;
+		}else
 			return retval;
-		*hvalue = value_r1;
-		*hvalue = ((*hvalue) << 32) | value_r0;
 		break;
 	default:
 		retval = ERROR_FAIL;
