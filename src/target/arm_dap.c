@@ -118,10 +118,10 @@ static int dap_init_all(void)
 			dap->ops = &jtag_dp_ops;
 
 		if (dap->adi_version == 0) {
-			LOG_INFO("DAP %s configured by default to use ADIv5 protocol", jtag_tap_name(dap->tap));
+			LOG_DEBUG("DAP %s configured by default to use ADIv5 protocol", jtag_tap_name(dap->tap));
 			dap->adi_version = 5;
 		} else {
-			LOG_INFO("DAP %s configured to use %s protocol by user cfg file", jtag_tap_name(dap->tap),
+			LOG_DEBUG("DAP %s configured to use %s protocol by user cfg file", jtag_tap_name(dap->tap),
 				is_adiv6(dap) ? "ADIv6" : "ADIv5");
 		}
 
