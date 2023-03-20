@@ -1318,7 +1318,7 @@ static int aarch64_set_breakpoint(struct target *target,
 				breakpoint->length);
 
 		armv8_cache_i_inner_inval_virt(armv8,
-				breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+				breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 				breakpoint->length);
 
 		breakpoint->is_set = true;
