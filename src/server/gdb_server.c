@@ -3572,13 +3572,8 @@ static int gdb_input_inner(struct connection *connection)
 					/* '?' is sent after the eventual '!' */
 					if (!warn_use_ext && !gdb_con->extended_protocol && gdb_warn_target_extended_remote) {
 						warn_use_ext = true;
-<<<<<<< HEAD
-						LOG_WARNING("Prefer GDB command \"target extended-remote %s\" instead of \"target remote %s\"",
-							connection->service->port, connection->service->port);
-=======
 						LOG_WARNING("Prefer GDB command \"target extended-remote :%s\" instead of \"target remote :%s\"",
 									connection->service->port, connection->service->port);
->>>>>>> 9501b263e0ae127b012f5c5e3ba5dffcc7daa8d1
 					}
 					break;
 				case 'c':
