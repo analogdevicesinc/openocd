@@ -643,7 +643,7 @@ struct target_type hla_target = {
 	.init_target = adapter_init_target,
 	.deinit_target = cortex_m_deinit_target,
 	.target_create = adapter_target_create,
-	.target_jim_configure = adi_jim_configure,
+	.target_jim_configure = adiv5_jim_configure,
 	.examine = cortex_m_examine,
 	.commands = hla_command_handlers,
 
