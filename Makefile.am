@@ -45,7 +45,6 @@ if INTERNAL_JIMTCL
 AM_CPPFLAGS += -I$(top_srcdir)/jimtcl \
 			   -I$(top_builddir)/jimtcl
 endif
-EXTRA_DIST_NEWS != ls $(srcdir)/NEWS-*
 EXTRA_DIST += \
 	BUGS \
 	HACKING \
@@ -105,7 +104,7 @@ $(THE_MANUAL): %.pdf: %.tex
 
 TCL_PATH = tcl
 # command to find paths of script files, relative to TCL_PATH
-TCL_FILES = find $(srcdir)/$(TCL_PATH) -name '*.cfg' -o -name '*.tcl' -o -name '*.txt' -o -name '*.xml' | \
+TCL_FILES = find $(srcdir)/$(TCL_PATH) -name '*.cfg' -o -name '*.tcl' -o -name '*.txt' | \
 		sed -e 's,^$(srcdir)/$(TCL_PATH),,'
 
 dist-hook:
