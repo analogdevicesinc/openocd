@@ -152,9 +152,9 @@
 #define MEM_AP_REG_BASE(dap)    (is_adiv6(dap) ? ADIV6_MEM_AP_REG_BASE   : ADIV5_MEM_AP_REG_BASE)
 
 /* Generic AP register address */
-#define adiv5_ap_REG_IDR        (0xFC)		/* RO: Identification Register */
-#define ADIV6_AP_REG_IDR        (0xD00 + adiv5_ap_REG_IDR)
-#define AP_REG_IDR(dap)         (is_adiv6(dap) ? ADIV6_AP_REG_IDR : adiv5_ap_REG_IDR)
+#define ADIV5_AP_REG_IDR        (0xFC)		/* RO: Identification Register */
+#define ADIV6_AP_REG_IDR        (0xD00 + ADIV5_AP_REG_IDR)
+#define AP_REG_IDR(dap)         (is_adiv6(dap) ? ADIV6_AP_REG_IDR : ADIV5_AP_REG_IDR)
 
 /* Fields of the MEM-AP's CSW register */
 #define CSW_SIZE_MASK		7
