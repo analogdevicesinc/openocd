@@ -34,7 +34,7 @@ enum halt_mode {
 };
 
 struct aarch64_private_config {
-	struct adi_private_config adi_config;
+	struct adiv5_private_config adiv5_config;
 	struct arm_cti *cti;
 };
 
@@ -588,7 +588,7 @@ static int aarch64_restore_one(struct target *target, int current,
 			resume_pc &= 0xFFFFFFFC;
 			break;
 		case ARM_STATE_AARCH64:
-			resume_pc &= 0xFFFFFFFFFFFFFFFCull;
+			resume_pc &= 0xFFFFFFFFFFFFFFFC;
 			break;
 		case ARM_STATE_THUMB:
 		case ARM_STATE_THUMB_EE:
@@ -1245,7 +1245,7 @@ static int aarch64_set_breakpoint(struct target *target,
 			| (byte_addr_select << 5)
 			| (3 << 1) | 1;
 		brp_list[brp_i].used = 1;
-		brp_list[brp_i].value = breakpoint->address & 0xFFFFFFFFFFFFFFFCull;
+		brp_list[brp_i].value = breakpoint->address & 0xFFFFFFFFFFFFFFFC;
 		brp_list[brp_i].control = control;
 		bpt_value = brp_list[brp_i].value;
 
@@ -1297,24 +1297,24 @@ static int aarch64_set_breakpoint(struct target *target,
 		buf_set_u32(code, 0, 32, opcode);
 
 		retval = target_read_memory(target,
-				breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+				breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 				breakpoint->length, 1,
 				breakpoint->orig_instr);
 		if (retval != ERROR_OK)
 			return retval;
 
 		armv8_cache_d_inner_flush_virt(armv8,
-				breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+				breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 				breakpoint->length);
 
 		retval = target_write_memory(target,
-				breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+				breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 				breakpoint->length, 1, code);
 		if (retval != ERROR_OK)
 			return retval;
 
 		armv8_cache_d_inner_flush_virt(armv8,
-				breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+				breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 				breakpoint->length);
 
 		armv8_cache_i_inner_inval_virt(armv8,
@@ -1574,29 +1574,29 @@ static int aarch64_unset_breakpoint(struct target *target, struct breakpoint *br
 		/* restore original instruction (kept in target endianness) */
 
 		armv8_cache_d_inner_flush_virt(armv8,
-				breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+				breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 				breakpoint->length);
 
 		if (breakpoint->length == 4) {
 			retval = target_write_memory(target,
-					breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+					breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 					4, 1, breakpoint->orig_instr);
 			if (retval != ERROR_OK)
 				return retval;
 		} else {
 			retval = target_write_memory(target,
-					breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+					breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 					2, 1, breakpoint->orig_instr);
 			if (retval != ERROR_OK)
 				return retval;
 		}
 
 		armv8_cache_d_inner_flush_virt(armv8,
-				breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+				breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 				breakpoint->length);
 
 		armv8_cache_i_inner_inval_virt(armv8,
-				breakpoint->address & 0xFFFFFFFFFFFFFFFEull,
+				breakpoint->address & 0xFFFFFFFFFFFFFFFE,
 				breakpoint->length);
 	}
 	breakpoint->is_set = false;
@@ -2345,7 +2345,7 @@ static int aarch64_read_cpu_memory(struct target *target,
 	struct arm *arm = &armv8->arm;
 	uint32_t dscr;
 
-	LOG_DEBUG("Reading CPU memory address 0x%16.16" PRIx64 " size %" PRIu32 " count %" PRIu32,
+	LOG_DEBUG("Reading CPU memory address 0x%016" PRIx64 " size %" PRIu32 " count %" PRIu32,
 			address, size, count);
 
 	if (target->state != TARGET_HALTED) {
@@ -2566,15 +2566,13 @@ static int aarch64_examine_first(struct target *target)
 		}
 	}
 
-		retval = mem_ap_init(armv8->debug_ap);
-		if (retval != ERROR_OK) {
-			LOG_ERROR("Could not initialize the APB-AP");
-			return retval;
-		}
-
-		if (!armv8->debug_ap->memaccess_tck)
-			armv8->debug_ap->memaccess_tck = 10;
+	retval = mem_ap_init(armv8->debug_ap);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Could not initialize the APB-AP");
+		return retval;
 	}
+
+	armv8->debug_ap->memaccess_tck = 10;
 
 	if (!target->dbgbase_set) {
 		/* Lookup Processor DAP */
@@ -2710,14 +2708,13 @@ static int aarch64_init_target(struct command_context *cmd_ctx,
 }
 
 static int aarch64_init_arch_info(struct target *target,
-	struct aarch64_common *aarch64, struct adiv5_dap *dap, int ap_num)
+	struct aarch64_common *aarch64, struct adiv5_dap *dap)
 {
 	struct armv8_common *armv8 = &aarch64->armv8_common;
 
 	/* Setup struct aarch64_common */
 	aarch64->common_magic = AARCH64_COMMON_MAGIC;
 	armv8->arm.dap = dap;
-	armv8->debug_ap = ap_num == DP_APSEL_INVALID ? NULL : dap_ap(dap, ap_num);
 
 	/* register arch-specific functions */
 	armv8->examine_debug_reason = NULL;
@@ -2737,7 +2734,7 @@ static int aarch64_target_create(struct target *target, Jim_Interp *interp)
 	struct aarch64_private_config *pc = target->private_config;
 	struct aarch64_common *aarch64;
 
-	if (adi_verify_config(&pc->adi_config) != ERROR_OK)
+	if (adiv5_verify_config(&pc->adiv5_config) != ERROR_OK)
 		return ERROR_FAIL;
 
 	aarch64 = calloc(1, sizeof(struct aarch64_common));
@@ -2746,7 +2743,7 @@ static int aarch64_target_create(struct target *target, Jim_Interp *interp)
 		return ERROR_FAIL;
 	}
 
-	return aarch64_init_arch_info(target, aarch64, pc->adi_config.dap, pc->adi_config.ap_num);
+	return aarch64_init_arch_info(target, aarch64, pc->adiv5_config.dap);
 }
 
 static void aarch64_deinit_target(struct target *target)
@@ -2809,7 +2806,7 @@ static int aarch64_jim_configure(struct target *target, struct jim_getopt_info *
 	}
 
 	/*
-	 * Call adi_jim_configure() to parse the common DAP options
+	 * Call adiv5_jim_configure() to parse the common DAP options
 	 * It will return JIM_CONTINUE if it didn't find any known
 	 * options, JIM_OK if it correctly parsed the topmost option
 	 * and JIM_ERR if an error occurred during parameter evaluation.
