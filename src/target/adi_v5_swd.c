@@ -36,7 +36,6 @@
 
 #include "arm.h"
 #include "arm_adi_v5.h"
-#include "arm_adi_v5.h"
 #include <helper/time_support.h>
 
 #include <transport/transport.h>
@@ -164,6 +163,8 @@ static int swd_queue_dp_write_inner(struct adiv5_dap *dap, unsigned int reg,
 
 	return check_sync(dap);
 }
+
+
 static int swd_multidrop_select_inner(struct adiv5_dap *dap, uint32_t *dpidr_ptr,
 		uint32_t *dlpidr_ptr, bool clear_sticky)
 {
@@ -642,3 +643,87 @@ const struct dap_ops swd_dap_ops = {
 	.run = swd_run,
 	.quit = swd_quit,
 };
+
+
+static const struct command_registration swd_commands[] = {
+	{
+		/*
+		 * Set up SWD and JTAG targets identically, unless/until
+		 * infrastructure improves ...  meanwhile, ignore all
+		 * JTAG-specific stuff like IR length for SWD.
+		 *
+		 * REVISIT can we verify "just one SWD DAP" here/early?
+		 */
+		.name = "newdap",
+		.jim_handler = jim_jtag_newtap,
+		.mode = COMMAND_CONFIG,
+		.help = "declare a new SWD DAP"
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration swd_handlers[] = {
+	{
+		.name = "swd",
+		.mode = COMMAND_ANY,
+		.help = "SWD command group",
+		.chain = swd_commands,
+		.usage = "",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static int swd_select(struct command_context *ctx)
+{
+	/* FIXME: only place where global 'adapter_driver' is still needed */
+	extern struct adapter_driver *adapter_driver;
+	const struct swd_driver *swd = adapter_driver->swd_ops;
+	int retval;
+
+	retval = register_commands(ctx, NULL, swd_handlers);
+	if (retval != ERROR_OK)
+		return retval;
+
+	 /* be sure driver is in SWD mode; start
+	  * with hardware default TRN (1), it can be changed later
+	  */
+	if (!swd || !swd->read_reg || !swd->write_reg || !swd->init) {
+		LOG_DEBUG("no SWD driver?");
+		return ERROR_FAIL;
+	}
+
+	retval = swd->init();
+	if (retval != ERROR_OK) {
+		LOG_DEBUG("can't init SWD driver");
+		return retval;
+	}
+
+	return retval;
+}
+
+static int swd_init(struct command_context *ctx)
+{
+	/* nothing done here, SWD is initialized
+	 * together with the DAP */
+	return ERROR_OK;
+}
+
+static struct transport swd_transport = {
+	.name = "swd",
+	.select = swd_select,
+	.init = swd_init,
+};
+
+static void swd_constructor(void) __attribute__((constructor));
+static void swd_constructor(void)
+{
+	transport_register(&swd_transport);
+}
+
+/** Returns true if the current debug session
+ * is using SWD as its transport.
+ */
+bool transport_is_swd(void)
+{
+	return get_current_transport() == &swd_transport;
+}
