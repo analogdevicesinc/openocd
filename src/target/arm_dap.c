@@ -69,6 +69,7 @@ struct adiv5_dap *adiv5_get_dap(struct arm_dap_object *obj)
 {
 	return &obj->dap;
 }
+
 struct adiv5_dap *dap_instance_by_jim_obj(Jim_Interp *interp, Jim_Obj *o)
 {
 	struct arm_dap_object *obj = NULL;
