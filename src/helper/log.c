@@ -34,8 +34,6 @@
 int debug_level = LOG_LVL_INFO;
 
 static FILE *log_output;
-static FILE *warning_output;
-static FILE *error_output;
 static struct log_callback *log_callbacks;
 
 static int64_t last_time;
@@ -93,8 +91,8 @@ static void log_puts(enum log_levels level,
 
 	if (level == LOG_LVL_OUTPUT) {
 		/* do not prepend any headers, just print out what we were given and return */
-		fputs(string, output);
-		fflush(output);
+		fputs(string, log_output);
+		fflush(log_output);
 		return;
 	}
 
@@ -125,7 +123,7 @@ static void log_puts(enum log_levels level,
 			(level > LOG_LVL_USER) ? log_strings[level + 1] : "", string);
 	}
 
-	fflush(output);
+	fflush(log_output);
 
 	/* Never forward LOG_LVL_DEBUG, too verbose and they can be found in the log if need be */
 	if (level <= LOG_LVL_INFO)
@@ -222,21 +220,6 @@ COMMAND_HANDLER(handle_log_output_command)
 		}
 		log_output = stderr;
 		LOG_DEBUG("set log_output to default");
-		
-		if (warning_output != stderr && warning_output != NULL) {
-			/* Close previous log file, if it was open and wasn't stderr. */
-			fclose(warning_output);
-		}
-		warning_output = stderr;
-		LOG_DEBUG("set warning_output to default");
-		
-		if (error_output != stderr && error_output != NULL) {
-			/* Close previous log file, if it was open and wasn't stderr. */
-			fclose(error_output);
-		}
-		error_output = stderr;
-		LOG_DEBUG("set error_output to default");
-		
 		return ERROR_OK;
 	}
 	if (CMD_ARGC == 1) {
@@ -251,55 +234,10 @@ COMMAND_HANDLER(handle_log_output_command)
 		}
 		log_output = file;
 		LOG_DEBUG("set log_output to \"%s\"", CMD_ARGV[0]);
-		
-		if (warning_output != stderr && warning_output != NULL) {
-			/* Close previous log file, if it was open and wasn't stderr. */
-			fclose(warning_output);
-		}
-		warning_output = file;
-		LOG_DEBUG("set warning_output to \"%s\"", CMD_ARGV[0]);
-		
-		if (error_output != stderr && error_output != NULL) {
-			/* Close previous log file, if it was open and wasn't stderr. */
-			fclose(error_output);
-		}
-		error_output = file;
-		LOG_DEBUG("set error_output to \"%s\"", CMD_ARGV[0]);
-		
 		return ERROR_OK;
 	}
 
 	return ERROR_COMMAND_SYNTAX_ERROR;
-}
-
-COMMAND_HANDLER(handle_log_info_command)
-{
-	if (CMD_ARGC == 0) {
-		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
-		return ERROR_COMMAND_SYNTAX_ERROR;
-	}
-	LOG_INFO("%s", CMD_ARGV[0]);
-	return ERROR_OK;
-}
-
-COMMAND_HANDLER(handle_log_error_command)
-{
-	if (CMD_ARGC == 0) {
-		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
-		return ERROR_COMMAND_SYNTAX_ERROR;
-	}
-	LOG_ERROR("%s", CMD_ARGV[0]);
-	return ERROR_OK;
-}
-
-COMMAND_HANDLER(handle_log_debug_command)
-{
-	if (CMD_ARGC == 0) {
-		LOG_ERROR("Insufficient number of arguments\nCheck command usage");
-		return ERROR_COMMAND_SYNTAX_ERROR;
-	}
-	LOG_DEBUG("%s", CMD_ARGV[0]);
-	return ERROR_OK;
 }
 
 static const struct command_registration log_command_handlers[] = {
@@ -319,27 +257,6 @@ static const struct command_registration log_command_handlers[] = {
 			"2 (default) adds other info; 3 adds debugging; "
 			"4 adds extra verbose debugging.",
 		.usage = "number",
-	},
-	{
-		.name = "log_info",
-		.handler = handle_log_info_command,
-		.mode = COMMAND_ANY,
-		.help = "accepts a string and calls the log print fuctions corresponding to info level. ",
-		.usage = "string",
-	},
-	{
-		.name = "log_error",
-		.handler = handle_log_error_command,
-		.mode = COMMAND_ANY,
-		.help = "accepts a string and calls the log print fuctions corresponding to error level. ",
-		.usage = "string",
-	},
-	{
-		.name = "log_debug",
-		.handler = handle_log_debug_command,
-		.mode = COMMAND_ANY,
-		.help = "accepts a string and calls the log print fuctions corresponding to debug level. ",
-		.usage = "string",
 	},
 	COMMAND_REGISTRATION_DONE
 };
