@@ -3582,13 +3582,16 @@ COMMAND_HANDLER(handle_mw_command)
 	if (CMD_ARGC < 2)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	bool physical = strcmp(CMD_ARGV[0], "phys") == 0;
+        bool ignore_data_abort = strcmp(CMD_ARGV[0], "ignore-data-abort") == 0;
 	target_write_fn fn;
-	if (physical) {
+	if (physical || ignore_data_abort) {
 		CMD_ARGC--;
 		CMD_ARGV++;
+    }
+    if (physical)
 		fn = target_write_phys_memory;
-	} else
-		fn = target_write_memory;
+	else
+        fn = target_write_memory;
 	if ((CMD_ARGC < 2) || (CMD_ARGC > 3))
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
@@ -3621,7 +3624,14 @@ COMMAND_HANDLER(handle_mw_command)
 			return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	return target_fill_mem(target, address, fn, wordsize, value, count);
+	int retval = target_fill_mem(target, address, fn, wordsize, value, count);
+
+	if (retval == ERROR_TARGET_DATA_ABORT && ignore_data_abort) {
+		LOG_DEBUG("data abort from command '%s' ignored as requested", CMD_NAME);
+		retval = ERROR_OK;
+	}
+
+	return retval;
 }
 
 static COMMAND_HELPER(parse_load_image_command, struct image *image,
@@ -7138,21 +7148,21 @@ static const struct command_registration target_exec_command_handlers[] = {
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory word",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "mwh",
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory half-word",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "mwb",
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory byte",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "bp",
