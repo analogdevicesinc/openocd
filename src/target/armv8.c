@@ -3937,7 +3937,7 @@ struct reg_cache *armv8_build_reg_cache(struct target *target)
 
 		reg_list[i].reg_data_type = calloc(1, sizeof(struct reg_data_type));
 		if (reg_list[i].reg_data_type) {
-			if (armv8_regs[i].data_type == NULL)
+			if (!armv8_regs[i].data_type)
 				reg_list[i].reg_data_type->type = armv8_regs[i].type;
 			else
 				*reg_list[i].reg_data_type = *armv8_regs[i].data_type;
@@ -4023,7 +4023,7 @@ void armv8_free_reg_cache(struct target *target)
 	struct reg_cache *cache = NULL, *cache32 = NULL;
 
 	cache = arm->core_cache;
-	if (cache != NULL)
+	if (cache)
 		cache32 = cache->next;
 	armv8_free_cache(cache32, true);
 	armv8_free_cache(cache, false);
