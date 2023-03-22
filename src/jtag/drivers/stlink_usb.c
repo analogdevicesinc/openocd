@@ -4268,12 +4268,6 @@ static int stlink_dap_dp_write(struct adiv5_dap *dap, unsigned int reg, uint32_t
 	return retval;
 }
 
-/* Return address of DAP AP IDR register */
-static inline uint32_t stlink_apidr_address(struct adiv5_dap *dap)
-{
-	return dap->dap_ops->dap_apidr_address();
-}
-
 /** */
 static int stlink_dap_ap_read(struct adiv5_ap *ap, unsigned int reg, uint32_t *data)
 {

@@ -37,8 +37,10 @@
 #include "arm.h"
 #include "arm_adi_v5.h"
 #include <helper/time_support.h>
+
 #include <transport/transport.h>
 #include <jtag/interface.h>
+
 #include <jtag/swd.h>
 
 /* for debug, set do_sync to true to force synchronous transfers */
@@ -46,7 +48,10 @@ static bool do_sync;
 
 static struct adiv5_dap *swd_multidrop_selected_dap;
 
-static int swd_queue_dp_write_inner(struct adiv5_dap *dap, unsigned int reg, uint32_t data);
+
+static int swd_queue_dp_write_inner(struct adiv5_dap *dap, unsigned int reg,
+		uint32_t data);
+
 
 static int swd_send_sequence(struct adiv5_dap *dap, enum swd_special_seq seq)
 {
@@ -641,7 +646,6 @@ const struct dap_ops swd_dap_ops = {
 	.run = swd_run,
 	.quit = swd_quit,
 };
-
 
 static const struct command_registration swd_commands[] = {
 	{
