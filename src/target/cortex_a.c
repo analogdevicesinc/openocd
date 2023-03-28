@@ -27,6 +27,8 @@
  *                                                                         *
  *   Copyright (C) 2016 Chengyu Zheng                                      *
  *   chengyu.zheng@polimi.it : watchpoint support                          *
+ * 																		   *
+ *   Copyright (C) 2023, Analog Devices, Inc.                              *
  *                                                                         *
  *   Cortex-A8(tm) TRM, ARM DDI 0344H                                      *
  *   Cortex-A9(tm) TRM, ARM DDI 0407F                                      *
