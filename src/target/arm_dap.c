@@ -443,6 +443,100 @@ COMMAND_HANDLER(handle_dap_init)
 	return dap_init_all();
 }
 
+static int jim_dap_readmem(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+{
+	const char *cmd_name = Jim_GetString(argv[0], NULL);
+
+	struct jim_getopt_info goi;
+	jim_getopt_setup(&goi, interp, argc - 1, argv + 1);
+
+	if (goi.argc != 2) {
+		Jim_SetResultFormatted(goi.interp,
+				"usage: %s <ap> <address>", cmd_name);
+		return JIM_ERR;
+	}
+
+	int e;
+	jim_wide ap;
+	e = jim_getopt_wide(&goi, &ap);
+	if (e != JIM_OK)
+		return e;
+
+	jim_wide address;
+	e = jim_getopt_wide(&goi, &address);
+	if (e != JIM_OK)
+		return e;
+
+	/* all args must be consumed */
+	if (goi.argc != 0)
+		return JIM_ERR;
+
+	struct command_context *cmd_ctx = current_command_context(goi.interp);
+	struct target *target = get_current_target(cmd_ctx);
+	struct arm *arm = target_to_arm(target);
+	struct adiv5_dap *dap = arm->dap;
+
+	uint32_t value;
+	int retval;
+
+	dap->apsel = (uint8_t)ap;
+	retval = mem_ap_read_atomic_u32(&dap->ap[dap->apsel], (uint32_t)address, &value);
+	if (retval != ERROR_OK)
+		return JIM_ERR;
+
+	Jim_SetResult(goi.interp, Jim_NewIntObj(goi.interp, value));
+
+	return JIM_OK;
+}
+
+static int jim_dap_writemem(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
+{
+	const char *cmd_name = Jim_GetString(argv[0], NULL);
+
+	struct jim_getopt_info goi;
+	jim_getopt_setup(&goi, interp, argc - 1, argv + 1);
+
+	if (goi.argc != 3) {
+		Jim_SetResultFormatted(goi.interp,
+				"usage: %s <ap> <address> <value>", cmd_name);
+		return JIM_ERR;
+	}
+
+	int e;
+	jim_wide ap;
+	e = jim_getopt_wide(&goi, &ap);
+	if (e != JIM_OK)
+		return e;
+
+	jim_wide address;
+	e = jim_getopt_wide(&goi, &address);
+	if (e != JIM_OK)
+		return e;
+
+	jim_wide value;
+	e = jim_getopt_wide(&goi, &value);
+	if (e != JIM_OK)
+		return e;
+
+	/* all args must be consumed */
+	if (goi.argc != 0)
+		return JIM_ERR;
+
+	struct command_context *cmd_ctx = current_command_context(goi.interp);
+	struct target *target = get_current_target(cmd_ctx);
+	struct arm *arm = target_to_arm(target);
+	struct adiv5_dap *dap = arm->dap;
+
+	int retval;
+
+	dap->apsel = (uint8_t)ap;
+	retval = mem_ap_write_atomic_u32(&dap->ap[dap->apsel], (uint32_t)address, value);
+	if (retval != ERROR_OK)
+		return JIM_ERR;
+
+	return JIM_OK;
+}
+
 COMMAND_HANDLER(handle_dap_info_command)
 {
 	struct target *target = get_current_target(CMD_CTX);
@@ -519,6 +613,20 @@ static const struct command_registration dap_subcommand_handlers[] = {
 		.help = "display ROM table for specified MEM-AP (default MEM-AP of current target) "
 			"or the ADIv6 root ROM table of current target's DAP",
 		.usage = "[ap_num | 'root']",
+	},
+	{
+		.name = "readmem",
+		.jim_handler = jim_dap_readmem,
+		.mode = COMMAND_EXEC,
+		.help = "read memory using MEM-AP",
+		.usage = "ap address",
+	},
+	{
+		.name = "writemem",
+		.jim_handler = jim_dap_writemem,
+		.mode = COMMAND_EXEC,
+		.help = "write memory using MEM-AP",
+		.usage = "ap address value",
 	},
 	COMMAND_REGISTRATION_DONE
 };
