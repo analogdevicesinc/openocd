@@ -24,6 +24,8 @@
  *                                                                         *
  *   Copyright (C) 2011 Andreas Fritiofson                                 *
  *   andreas.fritiofson@gmail.com                                          *
+ *                                                                         *
+ * 	 Copyright (C) 2023, Analog Devices, Inc.                              *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -3582,7 +3584,7 @@ COMMAND_HANDLER(handle_mw_command)
 	if (CMD_ARGC < 2)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	bool physical = strcmp(CMD_ARGV[0], "phys") == 0;
-        bool ignore_data_abort = strcmp(CMD_ARGV[0], "ignore-data-abort") == 0;
+	bool ignore_data_abort = strcmp(CMD_ARGV[0], "ignore-data-abort") == 0;
 	target_write_fn fn;
 	if (physical || ignore_data_abort) {
 		CMD_ARGC--;
