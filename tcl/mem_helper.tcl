@@ -39,9 +39,7 @@ add_help_text mmw "Modify word in memory. new_val = (old_val & ~clearbits) | set
 
 # pmrw: "physical memory read word", returns value of $reg
 proc pmrw {reg} {
-	set value ""
-	mem2array value 32 $reg 1 phys
-	return $value(0)
+	return [read_memory $reg 32 1 phys]
 }
 
 add_usage_text pmrw "address"
@@ -51,7 +49,7 @@ add_help_text pmrw "Returns value of word in physical memory."
 #       $reg <== ((value & ~$clearbits) | $setbits)
 proc pmmw {reg setbits clearbits} {
 	set old [pmrw $reg]
-	set new [expr ($old & ~$clearbits) | $setbits]
+	set new [expr {($old & ~$clearbits) | $setbits}]
 	mww phys $reg $new
 }
 
