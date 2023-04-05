@@ -1,21 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2016 by Matthias Welwarsky                              *
  *   matthias.welwarsky@sysgo.com                                          *
  *                                                                         *
  *   Copyright (C) ST-Ericsson SA 2011 michel.jaouen@stericsson.com        *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -245,7 +234,7 @@ COMMAND_HANDLER(armv7a_mmu_dump_table)
 	LOG_USER("Page Directory at (phys): %8.8" TARGET_PRIxADDR, ttb);
 
 	first_lvl_ptbl = malloc(sizeof(uint32_t)*(max_pt_idx+1));
-	if (first_lvl_ptbl == NULL)
+	if (!first_lvl_ptbl)
 		return ERROR_FAIL;
 
 	/*
@@ -266,7 +255,7 @@ COMMAND_HANDLER(armv7a_mmu_dump_table)
 		uint32_t first_lvl_descriptor = target_buffer_get_u32(target,
 						(uint8_t *)&first_lvl_ptbl[pt_idx]);
 
-		LOG_DEBUG("L1 desc[%8.8"PRIx32"]: %8.8"PRIx32, pt_idx << 20, first_lvl_descriptor);
+		LOG_DEBUG("L1 desc[%8.8x]: %8.8"PRIx32, pt_idx << 20, first_lvl_descriptor);
 
 		/* skip empty entries in the first level table */
 		if ((first_lvl_descriptor & 3) == 0) {

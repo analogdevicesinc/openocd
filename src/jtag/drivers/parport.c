@@ -1,28 +1,18 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
  *                                                                         *
  *   Copyright (C) 2008 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#include <jtag/adapter.h>
 #include <jtag/interface.h>
 #include "bitbang.h"
 
@@ -272,7 +262,7 @@ static int parport_init(void)
 
 	cur_cable = cables;
 
-	if (parport_cable == NULL) {
+	if (!parport_cable) {
 		parport_cable = strdup("wiggler");
 		LOG_WARNING("No parport cable specified, using default 'wiggler'");
 	}
@@ -392,10 +382,8 @@ static int parport_quit(void)
 		parport_write_data();
 	}
 
-	if (parport_cable) {
-		free(parport_cable);
-		parport_cable = NULL;
-	}
+	free(parport_cable);
+	parport_cable = NULL;
 
 	return ERROR_OK;
 }
@@ -450,7 +438,7 @@ COMMAND_HANDLER(parport_handle_parport_toggling_time_command)
 		uint32_t ns;
 		int retval = parse_u32(CMD_ARGV[0], &ns);
 
-		if (ERROR_OK != retval)
+		if (retval != ERROR_OK)
 			return retval;
 
 		if (ns == 0) {
@@ -459,9 +447,9 @@ COMMAND_HANDLER(parport_handle_parport_toggling_time_command)
 		}
 
 		parport_toggling_time_ns = ns;
-		retval = jtag_get_speed(&wait_states);
+		retval = adapter_get_speed(&wait_states);
 		if (retval != ERROR_OK) {
-			/* if jtag_get_speed fails then the clock_mode
+			/* if adapter_get_speed fails then the clock_mode
 			 * has not been configured, this happens if parport_toggling_time is
 			 * called before the adapter speed is set */
 			LOG_INFO("no parport speed set - defaulting to zero wait states");
@@ -475,9 +463,9 @@ COMMAND_HANDLER(parport_handle_parport_toggling_time_command)
 	return ERROR_OK;
 }
 
-static const struct command_registration parport_command_handlers[] = {
+static const struct command_registration parport_subcommand_handlers[] = {
 	{
-		.name = "parport_port",
+		.name = "port",
 		.handler = parport_handle_parport_port_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Display the address of the I/O port (e.g. 0x378) "
@@ -486,7 +474,7 @@ static const struct command_registration parport_command_handlers[] = {
 		.usage = "[port_number]",
 	},
 	{
-		.name = "parport_cable",
+		.name = "cable",
 		.handler = parport_handle_parport_cable_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Set the layout of the parallel port cable "
@@ -495,7 +483,7 @@ static const struct command_registration parport_command_handlers[] = {
 		.usage = "[layout]",
 	},
 	{
-		.name = "parport_write_on_exit",
+		.name = "write_on_exit",
 		.handler = parport_handle_write_on_exit_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Configure the parallel driver to write "
@@ -503,12 +491,23 @@ static const struct command_registration parport_command_handlers[] = {
 		.usage = "('on'|'off')",
 	},
 	{
-		.name = "parport_toggling_time",
+		.name = "toggling_time",
 		.handler = parport_handle_parport_toggling_time_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Displays or assigns how many nanoseconds it "
 			"takes for the hardware to toggle TCK.",
 		.usage = "[nanoseconds]",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration parport_command_handlers[] = {
+	{
+		.name = "parport",
+		.mode = COMMAND_ANY,
+		.help = "perform parport management",
+		.chain = parport_subcommand_handlers,
+		.usage = "",
 	},
 	COMMAND_REGISTRATION_DONE
 };

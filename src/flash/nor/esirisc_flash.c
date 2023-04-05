@@ -1,20 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2018 by Square, Inc.                                    *
  *   Steven Stallion <stallion@squareup.com>                               *
  *   James Zhao <hjz@squareup.com>                                         *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -109,7 +98,6 @@ static const struct command_registration esirisc_flash_command_handlers[];
 FLASH_BANK_COMMAND_HANDLER(esirisc_flash_bank_command)
 {
 	struct esirisc_flash_bank *esirisc_info;
-	struct command *esirisc_cmd;
 
 	if (CMD_ARGC < 9)
 		return ERROR_COMMAND_SYNTAX_ERROR;
@@ -123,8 +111,7 @@ FLASH_BANK_COMMAND_HANDLER(esirisc_flash_bank_command)
 	bank->driver_priv = esirisc_info;
 
 	/* register commands using existing esirisc context */
-	esirisc_cmd = command_find_in_context(CMD_CTX, "esirisc");
-	register_commands(CMD_CTX, esirisc_cmd, esirisc_flash_command_handlers);
+	register_commands(CMD_CTX, "esirisc", esirisc_flash_command_handlers);
 
 	return ERROR_OK;
 }
@@ -489,12 +476,12 @@ static int esirisc_flash_auto_probe(struct flash_bank *bank)
 	return esirisc_flash_probe(bank);
 }
 
-static int esirisc_flash_info(struct flash_bank *bank, char *buf, int buf_size)
+static int esirisc_flash_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct esirisc_flash_bank *esirisc_info = bank->driver_priv;
 
-	snprintf(buf, buf_size,
-			"%4s cfg at 0x%" PRIx32 ", clock %" PRId32 ", wait_states %" PRId32,
+	command_print_sameline(cmd,
+			"%4s cfg at 0x%" PRIx32 ", clock %" PRIu32 ", wait_states %" PRIu32,
 			"",	/* align with first line */
 			esirisc_info->cfg,
 			esirisc_info->clock,

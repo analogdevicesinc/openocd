@@ -1,4 +1,5 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+// SPDX-License-Identifier: GPL-2.0-only
+
 /*
  * SH QSPI (Quad SPI) driver
  * Copyright (C) 2019 Marek Vasut <marek.vasut@gmail.com>
@@ -508,7 +509,7 @@ static int sh_qspi_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 
 	if (offset & 0xff) {
-		LOG_ERROR("sh_qspi_write_page: unaligned write address: %08x",
+		LOG_ERROR("sh_qspi_write_page: unaligned write address: %08" PRIx32,
 			  offset);
 		return ERROR_FAIL;
 	}
@@ -703,11 +704,14 @@ static int sh_qspi_upload_helper(struct flash_bank *bank)
 	};
 	int ret;
 
-	if (info->source)
-		target_free_working_area(target, info->source);
-	if (info->io_algorithm)
-		target_free_working_area(target, info->io_algorithm);
+	target_free_working_area(target, info->source);
+	target_free_working_area(target, info->io_algorithm);
 
+	/* FIXME: Working areas are allocated during flash probe
+	 * and eventual target_free_all_working_areas() called in case
+	 * of target reset or run is not handled at all.
+	 * Not a big problem if area backp is off.
+	 */
 	/* flash write code */
 	if (target_alloc_working_area(target, sizeof(sh_qspi_io_code),
 			&info->io_algorithm) != ERROR_OK) {
@@ -851,17 +855,16 @@ static int sh_qspi_protect_check(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-static int sh_qspi_get_info(struct flash_bank *bank, char *buf, int buf_size)
+static int sh_qspi_get_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct sh_qspi_flash_bank *info = bank->driver_priv;
 
 	if (!info->probed) {
-		snprintf(buf, buf_size,
-			 "\nSH QSPI flash bank not probed yet\n");
+		command_print_sameline(cmd, "\nSH QSPI flash bank not probed yet\n");
 		return ERROR_OK;
 	}
 
-	snprintf(buf, buf_size, "\nSH QSPI flash information:\n"
+	command_print_sameline(cmd, "\nSH QSPI flash information:\n"
 		"  Device \'%s\' (ID 0x%08" PRIx32 ")\n",
 		info->dev->name, info->dev->device_id);
 

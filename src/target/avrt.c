@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2009 by Simon Qian                                      *
  *   SimonQian@SimonQian.com                                               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -160,7 +149,7 @@ int avr_jtag_sendinstr(struct jtag_tap *tap, uint8_t *ir_in, uint8_t ir_out)
 static int mcu_write_ir(struct jtag_tap *tap, uint8_t *ir_in, uint8_t *ir_out,
 		int ir_len, int rti)
 {
-	if (NULL == tap) {
+	if (!tap) {
 		LOG_ERROR("invalid tap");
 		return ERROR_FAIL;
 	}
@@ -179,7 +168,7 @@ static int mcu_write_ir(struct jtag_tap *tap, uint8_t *ir_in, uint8_t *ir_out,
 static int mcu_write_dr(struct jtag_tap *tap, uint8_t *dr_in, uint8_t *dr_out,
 		int dr_len, int rti)
 {
-	if (NULL == tap) {
+	if (!tap) {
 		LOG_ERROR("invalid tap");
 		return ERROR_FAIL;
 	}
@@ -195,7 +184,7 @@ static int mcu_write_ir_u8(struct jtag_tap *tap, uint8_t *ir_in,
 		uint8_t ir_out, int ir_len, int rti)
 {
 	if (ir_len > 8) {
-		LOG_ERROR("ir_len overflow, maxium is 8");
+		LOG_ERROR("ir_len overflow, maximum is 8");
 		return ERROR_FAIL;
 	}
 
@@ -208,7 +197,7 @@ static int mcu_write_dr_u32(struct jtag_tap *tap, uint32_t *dr_in,
 		uint32_t dr_out, int dr_len, int rti)
 {
 	if (dr_len > 32) {
-		LOG_ERROR("dr_len overflow, maxium is 32");
+		LOG_ERROR("dr_len overflow, maximum is 32");
 		return ERROR_FAIL;
 	}
 

@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2008-2009 by Marvell Semiconductors, Inc.                    *
  *   Written by Nicolas Pitre <nico@marvell.com>                           *
  *                                                                         *
  *   Copyright (C) 2008 by Hongtao Zheng                                   *
  *   hontor@126.com                                                        *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /*
@@ -37,7 +26,7 @@
  * - asserting DBGRQ doesn't work if target is looping on the undef vector
  *
  * - the EICE version signature in the COMMS_CTL reg is next to the flow bits
- *   not at the top, and rather meaningless due to existing discrepencies
+ *   not at the top, and rather meaningless due to existing discrepancies
  *
  * - the DCC channel is half duplex (only one FIFO for both directions) with
  *   seemingly no proper flow control.
@@ -373,14 +362,14 @@ static void feroceon_branch_resume_thumb(struct target *target)
 }
 
 static int feroceon_read_cp15(struct target *target, uint32_t op1,
-		uint32_t op2, uint32_t CRn, uint32_t CRm, uint32_t *value)
+		uint32_t op2, uint32_t crn, uint32_t crm, uint32_t *value)
 {
 	struct arm *arm = target->arch_info;
 	struct arm7_9_common *arm7_9 = arm->arch_info;
 	struct arm_jtag *jtag_info = &arm7_9->jtag_info;
 	int err;
 
-	arm9tdmi_clock_out(jtag_info, ARMV4_5_MRC(15, op1, 0, CRn, CRm, op2), 0, NULL, 0);
+	arm9tdmi_clock_out(jtag_info, ARMV4_5_MRC(15, op1, 0, crn, crm, op2), 0, NULL, 0);
 	arm9tdmi_clock_out(jtag_info, ARMV4_5_NOP, 0, NULL, 1);
 	err = arm7_9_execute_sys_speed(target);
 	if (err != ERROR_OK)
@@ -396,7 +385,7 @@ static int feroceon_read_cp15(struct target *target, uint32_t op1,
 }
 
 static int feroceon_write_cp15(struct target *target, uint32_t op1,
-		uint32_t op2, uint32_t CRn, uint32_t CRm, uint32_t value)
+		uint32_t op2, uint32_t crn, uint32_t crm, uint32_t value)
 {
 	struct arm *arm = target->arch_info;
 	struct arm7_9_common *arm7_9 = arm->arch_info;
@@ -410,7 +399,7 @@ static int feroceon_write_cp15(struct target *target, uint32_t op1,
 	arm9tdmi_clock_out(jtag_info, ARMV4_5_NOP, 0, NULL, 0);
 	arm9tdmi_clock_out(jtag_info, ARMV4_5_NOP, 0, NULL, 0);
 
-	arm9tdmi_clock_out(jtag_info, ARMV4_5_MCR(15, op1, 0, CRn, CRm, op2), 0, NULL, 0);
+	arm9tdmi_clock_out(jtag_info, ARMV4_5_MCR(15, op1, 0, crn, crm, op2), 0, NULL, 0);
 	arm9tdmi_clock_out(jtag_info, ARMV4_5_NOP, 0, NULL, 1);
 	return arm7_9_execute_sys_speed(target);
 }
@@ -593,6 +582,11 @@ static int feroceon_init_target(struct command_context *cmd_ctx,
 	return ERROR_OK;
 }
 
+static void feroceon_deinit_target(struct target *target)
+{
+	arm9tdmi_deinit_target(target);
+}
+
 static void feroceon_common_setup(struct target *target)
 {
 	struct arm *arm = target->arch_info;
@@ -729,6 +723,7 @@ struct target_type feroceon_target = {
 	.commands = arm926ejs_command_handlers,
 	.target_create = feroceon_target_create,
 	.init_target = feroceon_init_target,
+	.deinit_target = feroceon_deinit_target,
 	.examine = feroceon_examine,
 };
 

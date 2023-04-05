@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005, 2007 by Dominic Rath                              *
  *   Dominic.Rath@gmx.de                                                   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -62,10 +51,9 @@ COMMAND_HANDLER(handle_trace_point_command)
 	}
 
 	if (!strcmp(CMD_ARGV[0], "clear")) {
-		if (trace->trace_points) {
-			free(trace->trace_points);
-			trace->trace_points = NULL;
-		}
+		free(trace->trace_points);
+		trace->trace_points = NULL;
+
 		trace->num_trace_points = 0;
 		trace->trace_points_size = 0;
 
@@ -102,8 +90,7 @@ COMMAND_HANDLER(handle_trace_history_command)
 			return ERROR_OK;
 		}
 
-		if (trace->trace_history)
-			free(trace->trace_history);
+		free(trace->trace_history);
 
 		COMMAND_PARSE_NUMBER(u32, CMD_ARGV[0], trace->trace_history_size);
 		trace->trace_history = malloc(sizeof(uint32_t) * trace->trace_history_size);

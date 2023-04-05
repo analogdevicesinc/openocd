@@ -1,18 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2009 - 2010 by Simon Qian <SimonQian@SimonQian.com>     *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -28,21 +17,21 @@
 #include "usbtoxxx.h"
 #include "usbtoxxx_internal.h"
 
-RESULT usbtoswd_read_callback(void *p, uint8_t *src, uint8_t *processed)
+static RESULT usbtoswd_read_callback(void *p, uint8_t *src, uint8_t *processed)
 {
 	struct versaloon_pending_t *pending = (struct versaloon_pending_t *)p;
 
-	if (pending->extra_data != NULL)
+	if (pending->extra_data)
 		*((uint8_t *)pending->extra_data) = src[0];
 
 	return ERROR_OK;
 }
 
-RESULT usbtoswd_write_callback(void *p, uint8_t *src, uint8_t *processed)
+static RESULT usbtoswd_write_callback(void *p, uint8_t *src, uint8_t *processed)
 {
 	struct versaloon_pending_t *pending = (struct versaloon_pending_t *)p;
 
-	if (pending->extra_data != NULL)
+	if (pending->extra_data)
 		*((uint8_t *)pending->extra_data) = src[0];
 
 	/* mark it processed to ignore other input data */
@@ -135,7 +124,7 @@ RESULT usbtoswd_transact(uint8_t interface_index, uint8_t request,
 	parity += (request >> 4) & 1;
 	parity &= 1;
 	buff[0] = (request | 0x81 | (parity << 5)) & ~0x40;
-	if (data != NULL)
+	if (data)
 		SET_LE_U32(&buff[1], *data);
 	else
 		memset(buff + 1, 0, 4);

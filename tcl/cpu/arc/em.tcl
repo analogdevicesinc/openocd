@@ -1,8 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 #  Copyright (C) 2015, 2020 Synopsys, Inc.
 #  Anton Kolesov <anton.kolesov@synopsys.com>
 #  Didin Evgeniy <didin@synopsys.com>
-#
-# SPDX-License-Identifier: GPL-2.0-or-later
 
 source [find cpu/arc/v2.tcl]
 
@@ -27,6 +27,6 @@ proc arc_em_reset { {target ""} } {
 	# This is specific to ARC EM.
 	set debug [arc jtag get-aux-reg 5]
 	if { !($debug & (1 << 20)) } {
-		arc jtag set-aux-reg 5 [expr $debug | (1 << 20)]
+		arc jtag set-aux-reg 5 [expr {$debug | (1 << 20)}]
 	}
 }

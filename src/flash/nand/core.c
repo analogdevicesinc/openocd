@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2007 by Dominic Rath <Dominic.Rath@gmx.de>              *
  *   Copyright (C) 2002 Thomas Gleixner <tglx@linutronix.de>               *
  *   Copyright (C) 2009 Zachary T Welch <zw@superlucidity.net>             *
  *                                                                         *
  *   Partially based on drivers/mtd/nand_ids.c from Linux.                 *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -180,7 +169,7 @@ static struct nand_device *get_nand_device_by_name(const char *name)
 	unsigned found = 0;
 
 	struct nand_device *nand;
-	for (nand = nand_devices; NULL != nand; nand = nand->next) {
+	for (nand = nand_devices; nand; nand = nand->next) {
 		if (strcmp(nand->name, name) == 0)
 			return nand;
 		if (!flash_driver_name_matches(nand->controller->name, name))
@@ -682,7 +671,7 @@ int nand_write_page(struct nand_device *nand, uint32_t page,
 	if (nand->blocks[block].is_erased == 1)
 		nand->blocks[block].is_erased = 0;
 
-	if (nand->use_raw || nand->controller->write_page == NULL)
+	if (nand->use_raw || !nand->controller->write_page)
 		return nand_write_page_raw(nand, page, data, data_size, oob, oob_size);
 	else
 		return nand->controller->write_page(nand, page, data, data_size, oob, oob_size);
@@ -695,7 +684,7 @@ int nand_read_page(struct nand_device *nand, uint32_t page,
 	if (!nand->device)
 		return ERROR_NAND_DEVICE_NOT_PROBED;
 
-	if (nand->use_raw || nand->controller->read_page == NULL)
+	if (nand->use_raw || !nand->controller->read_page)
 		return nand_read_page_raw(nand, page, data, data_size, oob, oob_size);
 	else
 		return nand->controller->read_page(nand, page, data, data_size, oob, oob_size);
@@ -750,7 +739,7 @@ int nand_page_command(struct nand_device *nand, uint32_t page,
 			nand->controller->address(nand, (page >> 16) & 0xff);
 
 		/* large page devices need a start command if reading */
-		if (NAND_CMD_READ0 == cmd)
+		if (cmd == NAND_CMD_READ0)
 			nand->controller->command(nand, NAND_CMD_READSTART);
 	}
 
@@ -769,10 +758,10 @@ int nand_read_data_page(struct nand_device *nand, uint8_t *data, uint32_t size)
 {
 	int retval = ERROR_NAND_NO_BUFFER;
 
-	if (nand->controller->read_block_data != NULL)
+	if (nand->controller->read_block_data)
 		retval = (nand->controller->read_block_data)(nand, data, size);
 
-	if (ERROR_NAND_NO_BUFFER == retval) {
+	if (retval == ERROR_NAND_NO_BUFFER) {
 		uint32_t i;
 		int incr = (nand->device->options & NAND_BUSWIDTH_16) ? 2 : 1;
 
@@ -793,7 +782,7 @@ int nand_read_page_raw(struct nand_device *nand, uint32_t page,
 	int retval;
 
 	retval = nand_page_command(nand, page, NAND_CMD_READ0, !data);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	if (data)
@@ -809,10 +798,10 @@ int nand_write_data_page(struct nand_device *nand, uint8_t *data, uint32_t size)
 {
 	int retval = ERROR_NAND_NO_BUFFER;
 
-	if (nand->controller->write_block_data != NULL)
+	if (nand->controller->write_block_data)
 		retval = (nand->controller->write_block_data)(nand, data, size);
 
-	if (ERROR_NAND_NO_BUFFER == retval) {
+	if (retval == ERROR_NAND_NO_BUFFER) {
 		bool is16bit = nand->device->options & NAND_BUSWIDTH_16;
 		uint32_t incr = is16bit ? 2 : 1;
 		uint16_t write_data;
@@ -825,7 +814,7 @@ int nand_write_data_page(struct nand_device *nand, uint8_t *data, uint32_t size)
 				write_data = *data;
 
 			retval = nand->controller->write_data(nand, write_data);
-			if (ERROR_OK != retval)
+			if (retval != ERROR_OK)
 				break;
 
 			data += incr;
@@ -849,7 +838,7 @@ int nand_write_finish(struct nand_device *nand)
 		return ERROR_NAND_OPERATION_TIMEOUT;
 
 	retval = nand_read_status(nand, &status);
-	if (ERROR_OK != retval) {
+	if (retval != ERROR_OK) {
 		LOG_ERROR("couldn't read status");
 		return ERROR_NAND_OPERATION_FAILED;
 	}
@@ -870,12 +859,12 @@ int nand_write_page_raw(struct nand_device *nand, uint32_t page,
 	int retval;
 
 	retval = nand_page_command(nand, page, NAND_CMD_SEQIN, !data);
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	if (data) {
 		retval = nand_write_data_page(nand, data, data_size);
-		if (ERROR_OK != retval) {
+		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to write data to NAND device");
 			return retval;
 		}
@@ -883,7 +872,7 @@ int nand_write_page_raw(struct nand_device *nand, uint32_t page,
 
 	if (oob) {
 		retval = nand_write_data_page(nand, oob, oob_size);
-		if (ERROR_OK != retval) {
+		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to write OOB data to NAND device");
 			return retval;
 		}

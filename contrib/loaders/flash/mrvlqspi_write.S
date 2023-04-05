@@ -1,24 +1,11 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2014 by Mahavir Jain <mjain@marvell.com>                *
  *                                                                         *
  *   Adapted from (contrib/loaders/flash/lpcspifi_write.S):                *
  *   Copyright (C) 2012 by George Harris                                   *
  *   george@luminairecoffee.com                                            *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.           *
  ***************************************************************************/
 
 	.text
@@ -81,7 +68,7 @@ find_next_page_boundary:
 	/* If we have not reached the next page boundary after the target address, keep going */
 	bls 	find_next_page_boundary
 write_enable:
-	/* Flush read/write fifo's */
+	/* Flush read/write fifos */
 	bl 	flush_fifo
 
 	/* Instruction byte 1 */
@@ -134,7 +121,7 @@ write_wait:
 	bl 	stop_tx		/* Otherwise, end the command and keep going w/ the next page */
 	add 	r10, r4 	/* Move up the end-of-page address by the page size*/
 check_flash_busy:		/* Wait for the flash to finish the previous page write */
-	/* Flush read/write fifo's */
+	/* Flush read/write fifos */
 	bl 	flush_fifo
 	/* Instruction byte 1 */
 	movs 	r8, #0x1

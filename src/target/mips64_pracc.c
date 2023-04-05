@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * Support for processors implementing MIPS64 instruction set
  *
@@ -9,8 +11,6 @@
  *       Copyright (C) 2008 by Spencer Oliver
  *       Copyright (C) 2008 by David T.L. Wong
  *       Copyright (C) 2010 by Konstantin Kostyukhin, Nikolay Shmyrev
- *
- * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #ifdef HAVE_CONFIG_H
@@ -20,11 +20,12 @@
 #include "mips64.h"
 #include "mips64_pracc.h"
 
-#include "time_support.h"
+#include <helper/time_support.h>
+#include <jtag/adapter.h>
 
 #define STACK_DEPTH	32
 
-typedef struct {
+struct mips64_pracc_context {
 	uint64_t *local_iparam;
 	unsigned num_iparam;
 	uint64_t *local_oparam;
@@ -34,7 +35,7 @@ typedef struct {
 	uint64_t stack[STACK_DEPTH];
 	unsigned stack_offset;
 	struct mips_ejtag *ejtag_info;
-} mips64_pracc_context;
+};
 
 static int wait_for_pracc_rw(struct mips_ejtag *ejtag_info, uint32_t *ctrl)
 {
@@ -61,7 +62,7 @@ static int wait_for_pracc_rw(struct mips_ejtag *ejtag_info, uint32_t *ctrl)
 	return ERROR_OK;
 }
 
-static int mips64_pracc_exec_read(mips64_pracc_context *ctx, uint64_t address)
+static int mips64_pracc_exec_read(struct mips64_pracc_context *ctx, uint64_t address)
 {
 	struct mips_ejtag *ejtag_info = ctx->ejtag_info;
 	unsigned offset;
@@ -79,7 +80,7 @@ static int mips64_pracc_exec_read(mips64_pracc_context *ctx, uint64_t address)
 			return ERROR_JTAG_DEVICE_ERROR;
 		}
 
-		if (ctx->local_iparam == NULL) {
+		if (!ctx->local_iparam) {
 			LOG_ERROR("Error: unexpected reading of input parameter");
 			return ERROR_JTAG_DEVICE_ERROR;
 		}
@@ -91,7 +92,7 @@ static int mips64_pracc_exec_read(mips64_pracc_context *ctx, uint64_t address)
 		   && (address < MIPS64_PRACC_PARAM_OUT + ctx->num_oparam * MIPS64_PRACC_DATA_STEP)) {
 
 		offset = (address - MIPS64_PRACC_PARAM_OUT) / MIPS64_PRACC_DATA_STEP;
-		if (ctx->local_oparam == NULL) {
+		if (!ctx->local_oparam) {
 			LOG_ERROR("Error: unexpected reading of output parameter");
 			return ERROR_JTAG_DEVICE_ERROR;
 		}
@@ -149,7 +150,7 @@ static int mips64_pracc_exec_read(mips64_pracc_context *ctx, uint64_t address)
 	return jtag_execute_queue();
 }
 
-static int mips64_pracc_exec_write(mips64_pracc_context *ctx, uint64_t address)
+static int mips64_pracc_exec_write(struct mips64_pracc_context *ctx, uint64_t address)
 {
 	uint32_t ejtag_ctrl;
 	uint64_t data;
@@ -179,7 +180,7 @@ static int mips64_pracc_exec_write(mips64_pracc_context *ctx, uint64_t address)
 	if ((address >= MIPS64_PRACC_PARAM_IN)
 		&& (address < MIPS64_PRACC_PARAM_IN + ctx->num_iparam * MIPS64_PRACC_DATA_STEP)) {
 		offset = (address - MIPS64_PRACC_PARAM_IN) / MIPS64_PRACC_DATA_STEP;
-		if (ctx->local_iparam == NULL) {
+		if (!ctx->local_iparam) {
 			LOG_ERROR("Error: unexpected writing of input parameter");
 			return ERROR_JTAG_DEVICE_ERROR;
 		}
@@ -187,7 +188,7 @@ static int mips64_pracc_exec_write(mips64_pracc_context *ctx, uint64_t address)
 	} else if ((address >= MIPS64_PRACC_PARAM_OUT)
 		&& (address < MIPS64_PRACC_PARAM_OUT + ctx->num_oparam * MIPS64_PRACC_DATA_STEP)) {
 		offset = (address - MIPS64_PRACC_PARAM_OUT) / MIPS64_PRACC_DATA_STEP;
-		if (ctx->local_oparam == NULL) {
+		if (!ctx->local_oparam) {
 			LOG_ERROR("Error: unexpected writing of output parameter");
 			return ERROR_JTAG_DEVICE_ERROR;
 		}
@@ -213,15 +214,15 @@ int mips64_pracc_exec(struct mips_ejtag *ejtag_info,
 		      unsigned num_param_out, uint64_t *param_out)
 {
 	uint32_t ejtag_ctrl;
-	uint64_t address = 0, address_prev = 0, data;
-	mips64_pracc_context ctx;
+	uint64_t address = 0, address_prev = 0;
+	struct mips64_pracc_context ctx;
 	int retval;
 	int pass = 0;
 	bool first_time_call = true;
 	unsigned i;
 
 	for (i = 0; i < code_len; i++)
-		LOG_DEBUG("%08x", code[i]);
+		LOG_DEBUG("%08" PRIx32, code[i]);
 
 	ctx.local_iparam = param_in;
 	ctx.local_oparam = param_out;
@@ -243,11 +244,11 @@ int mips64_pracc_exec(struct mips_ejtag *ejtag_info,
 			address_prev = address;
 		else
 			address_prev = 0;
-		address32 = data = 0;
+		address32 = 0;
 
 		mips_ejtag_set_instr(ejtag_info, EJTAG_INST_ADDRESS);
 		mips_ejtag_drscan_32(ejtag_info, &address32);
-		LOG_DEBUG("-> %08x", address32);
+		LOG_DEBUG("-> %08" PRIx32, address32);
 		address = 0xffffffffff200000ull | address32;
 
 		int psz = (ejtag_ctrl >> 29) & 3;
@@ -283,7 +284,7 @@ int mips64_pracc_exec(struct mips_ejtag *ejtag_info,
 		if (ejtag_ctrl & EJTAG_CTRL_PRNW) {
 			retval = mips64_pracc_exec_write(&ctx, address);
 			if (retval != ERROR_OK) {
-				printf("ERROR mips64_pracc_exec_write\n");
+				LOG_ERROR("mips64_pracc_exec_write() failed");
 				return retval;
 			}
 		} else {
@@ -296,7 +297,7 @@ int mips64_pracc_exec(struct mips_ejtag *ejtag_info,
 			}
 			retval = mips64_pracc_exec_read(&ctx, address);
 			if (retval != ERROR_OK) {
-				printf("ERROR mips64_pracc_exec_read\n");
+				LOG_ERROR("mips64_pracc_exec_read() failed");
 				return retval;
 			}
 
@@ -1349,7 +1350,7 @@ int mips64_pracc_fastdata_xfer(struct mips_ejtag *ejtag_info,
 
 	LOG_DEBUG("%s using " TARGET_ADDR_FMT " for write handler", __func__,
 		  source->address);
-	LOG_DEBUG("daddiu: %08x", handler_code[11]);
+	LOG_DEBUG("daddiu: %08" PRIx32, handler_code[11]);
 
 	jmp_code[0] |= UPPER16(source->address);
 	jmp_code[1] |= LOWER16(source->address);
@@ -1358,8 +1359,6 @@ int mips64_pracc_fastdata_xfer(struct mips_ejtag *ejtag_info,
 			  0, NULL, 0, NULL);
 
 	/* next fetch to dmseg should be in FASTDATA_AREA, check */
-	address = 0;
-
 	mips_ejtag_set_instr(ejtag_info, EJTAG_INST_ADDRESS);
 	retval = mips_ejtag_drscan_32(ejtag_info, &address32);
 	if (retval != ERROR_OK)
@@ -1388,7 +1387,7 @@ int mips64_pracc_fastdata_xfer(struct mips_ejtag *ejtag_info,
 	/* like in legacy code */
 	unsigned num_clocks = 0;
 	if (ejtag_info->mode != 0)
-		num_clocks = ((uint64_t)(ejtag_info->scan_delay) * jtag_get_speed_khz() + 500000) / 1000000;
+		num_clocks = ((uint64_t)(ejtag_info->scan_delay) * adapter_get_speed_khz() + 500000) / 1000000;
 	LOG_DEBUG("num_clocks=%d", num_clocks);
 	for (i = 0; i < count; i++) {
 		jtag_add_clocks(num_clocks);
@@ -1411,7 +1410,6 @@ int mips64_pracc_fastdata_xfer(struct mips_ejtag *ejtag_info,
 		return retval;
 	}
 
-	address = 0;
 	mips_ejtag_set_instr(ejtag_info, EJTAG_INST_ADDRESS);
 	retval = mips_ejtag_drscan_32(ejtag_info, &address32);
 	if (retval != ERROR_OK) {

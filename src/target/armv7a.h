@@ -1,26 +1,13 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
- *   Copyright (C) 2009 by David Brownell                                  *
- *                                                                         *
- *   Copyright (C) 2019, Ampere Computing LLC                              *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *    Copyright (C) 2009 by David Brownell                                 *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ARMV7A_H
 #define OPENOCD_TARGET_ARMV7A_H
 
-#include "arm_adi.h"
+#include "arm_adi_v5.h"
 #include "armv7a_cache.h"
 #include "arm.h"
 #include "armv4_5_mmu.h"
@@ -32,7 +19,7 @@ enum {
 	ARM_CPSR = 16
 };
 
-#define ARMV7_COMMON_MAGIC 0x0A450999
+#define ARMV7_COMMON_MAGIC 0x0A450999U
 
 /* VA to PA translation operations opc2 values*/
 #define V2PCWPR  0
@@ -50,7 +37,7 @@ struct armv7a_l2x_cache {
 };
 
 struct armv7a_cachesize {
-	/*  cache dimensionning */
+	/*  cache dimensioning */
 	uint32_t linelen;
 	uint32_t associativity;
 	uint32_t nsets;
@@ -100,14 +87,15 @@ struct armv7a_mmu_common {
 };
 
 struct armv7a_common {
+	unsigned int common_magic;
+
 	struct arm arm;
-	int common_magic;
 	struct reg_cache *core_cache;
 
 	/* Core Debug Unit */
 	struct arm_dpm dpm;
 	target_addr_t debug_base;
-	struct adi_ap *debug_ap;
+	struct adiv5_ap *debug_ap;
 	/* mdir */
 	uint8_t multi_processor_system;
 	uint8_t multi_threading_processor;

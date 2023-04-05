@@ -1,18 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2018 by Texas Instruments, Inc.                         *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_FLASH_NOR_MSP432_H
@@ -43,7 +32,7 @@
 #define P4_SECTOR_LENGTH   0x1000
 #define P4_ALGO_ENTRY_ADDR 0x01000110
 
-/* MSP432E4 flash paramters */
+/* MSP432E4 flash parameters */
 #define E4_FLASH_BASE      FLASH_BASE
 #define E4_FLASH_SIZE      0x100000
 #define E4_SECTOR_LENGTH   0x4000
@@ -110,21 +99,6 @@ struct msp432_algo_params {
 	uint8_t buffer2_status[4];
 	uint8_t erase_param[4];
 	uint8_t unlock_bsl[4];
-};
-
-/* Flash helper algorithm for MSP432P401x targets */
-const uint8_t msp432p401x_algo[] = {
-#include "../../../contrib/loaders/flash/msp432/msp432p401x_algo.inc"
-};
-
-/* Flash helper algorithm for MSP432P411x targets */
-const uint8_t msp432p411x_algo[] = {
-#include "../../../contrib/loaders/flash/msp432/msp432p411x_algo.inc"
-};
-
-/* Flash helper algorithm for MSP432E4x targets */
-const uint8_t msp432e4x_algo[] = {
-#include "../../../contrib/loaders/flash/msp432/msp432e4x_algo.inc"
 };
 
 #endif /* OPENOCD_FLASH_NOR_MSP432_H */

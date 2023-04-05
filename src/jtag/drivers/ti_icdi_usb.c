@@ -1,20 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *                                                                         *
  *   Copyright (C) 2012 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -23,6 +12,7 @@
 
 /* project specific includes */
 #include <helper/binarybuffer.h>
+#include <jtag/adapter.h>
 #include <jtag/interface.h>
 #include <jtag/hla/hla_layout.h>
 #include <jtag/hla/hla_transport.h>
@@ -31,21 +21,20 @@
 
 #include <target/cortex_m.h>
 
-#include <libusb.h>
+#include "libusb_helper.h"
 
 #define ICDI_WRITE_ENDPOINT 0x02
 #define ICDI_READ_ENDPOINT 0x83
 
-#define ICDI_WRITE_TIMEOUT 1000
-#define ICDI_READ_TIMEOUT 1000
+#define ICDI_WRITE_TIMEOUT (LIBUSB_TIMEOUT_MS)
+#define ICDI_READ_TIMEOUT (LIBUSB_TIMEOUT_MS)
 #define ICDI_PACKET_SIZE 2048
 
 #define PACKET_START "$"
 #define PACKET_END "#"
 
 struct icdi_usb_handle_s {
-	libusb_context *usb_ctx;
-	libusb_device_handle *usb_dev;
+	struct libusb_device_handle *usb_dev;
 
 	char *read_buffer;
 	char *write_buffer;
@@ -123,7 +112,7 @@ static int icdi_send_packet(void *handle, int len)
 	int result, retry = 0;
 	int transferred = 0;
 
-	assert(handle != NULL);
+	assert(handle);
 
 	/* check we have a large enough buffer for checksum "#00" */
 	if (len + 3 > h->max_packet) {
@@ -254,7 +243,7 @@ static int icdi_get_cmd_result(void *handle)
 	int offset = 0;
 	char ch;
 
-	assert(handle != NULL);
+	assert(handle);
 
 	do {
 		ch = h->read_buffer[offset++];
@@ -476,13 +465,13 @@ static int icdi_usb_read_regs(void *handle)
 	return ERROR_OK;
 }
 
-static int icdi_usb_read_reg(void *handle, int num, uint32_t *val)
+static int icdi_usb_read_reg(void *handle, unsigned int regsel, uint32_t *val)
 {
 	int result;
 	struct icdi_usb_handle_s *h = handle;
 	char cmd[10];
 
-	snprintf(cmd, sizeof(cmd), "p%x", num);
+	snprintf(cmd, sizeof(cmd), "p%x", regsel);
 	result = icdi_send_cmd(handle, cmd);
 	if (result != ERROR_OK)
 		return result;
@@ -505,14 +494,14 @@ static int icdi_usb_read_reg(void *handle, int num, uint32_t *val)
 	return result;
 }
 
-static int icdi_usb_write_reg(void *handle, int num, uint32_t val)
+static int icdi_usb_write_reg(void *handle, unsigned int regsel, uint32_t val)
 {
 	int result;
 	char cmd[20];
 	uint8_t buf[4];
 	h_u32_to_le(buf, val);
 
-	int cmd_len = snprintf(cmd, sizeof(cmd), "P%x=", num);
+	int cmd_len = snprintf(cmd, sizeof(cmd), "P%x=", regsel);
 	hexify(cmd + cmd_len, buf, 4, sizeof(cmd));
 
 	result = icdi_send_cmd(handle, cmd);
@@ -657,24 +646,17 @@ static int icdi_usb_close(void *handle)
 		return ERROR_OK;
 
 	if (h->usb_dev)
-		libusb_close(h->usb_dev);
+		jtag_libusb_close(h->usb_dev);
 
-	if (h->usb_ctx)
-		libusb_exit(h->usb_ctx);
-
-	if (h->read_buffer)
-		free(h->read_buffer);
-
-	if (h->write_buffer)
-		free(h->write_buffer);
-
+	free(h->read_buffer);
+	free(h->write_buffer);
 	free(handle);
-
 	return ERROR_OK;
 }
 
 static int icdi_usb_open(struct hl_interface_param_s *param, void **fd)
 {
+	/* TODO: Convert remaining libusb_ calls to jtag_libusb_ */
 	int retval;
 	struct icdi_usb_handle_s *h;
 
@@ -687,19 +669,14 @@ static int icdi_usb_open(struct hl_interface_param_s *param, void **fd)
 		return ERROR_FAIL;
 	}
 
-	LOG_DEBUG("transport: %d vid: 0x%04x pid: 0x%04x", param->transport,
-		  param->vid[0], param->pid[0]);
+	for (uint8_t i = 0; param->vid[i] && param->pid[i]; ++i)
+		LOG_DEBUG("transport: %d vid: 0x%04x pid: 0x%04x serial: %s", param->transport,
+			param->vid[i], param->pid[i], adapter_get_required_serial() ? adapter_get_required_serial() : "");
 
-	/* TODO: convert libusb_ calls to jtag_libusb_ */
-	if (param->vid[1])
-		LOG_WARNING("Bad configuration: 'hla_vid_pid' command does not accept more than one VID PID pair on ti-icdi!");
+	/* TI (Stellaris) ICDI provides its serial number in the USB descriptor;
+	   no need to provide a callback here. */
+	jtag_libusb_open(param->vid, param->pid, &h->usb_dev, NULL);
 
-	if (libusb_init(&h->usb_ctx) != 0) {
-		LOG_ERROR("libusb init failed");
-		goto error_open;
-	}
-
-	h->usb_dev = libusb_open_device_with_vid_pid(h->usb_ctx, param->vid[0], param->pid[0]);
 	if (!h->usb_dev) {
 		LOG_ERROR("open failed");
 		goto error_open;

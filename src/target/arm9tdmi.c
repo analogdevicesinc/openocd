@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -7,19 +9,6 @@
  *                                                                         *
  *   Copyright (C) 2008 by Hongtao Zheng                                   *
  *   hontor@126.com                                                        *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -781,9 +770,19 @@ static int arm9tdmi_target_create(struct target *target, Jim_Interp *interp)
 	struct arm7_9_common *arm7_9 = calloc(1, sizeof(struct arm7_9_common));
 
 	arm9tdmi_init_arch_info(target, arm7_9, target->tap);
-	arm7_9->arm.is_armv4 = true;
+	arm7_9->arm.arch = ARM_ARCH_V4;
 
 	return ERROR_OK;
+}
+
+void arm9tdmi_deinit_target(struct target *target)
+{
+	struct arm *arm = target_to_arm(target);
+	struct arm7_9_common *arm7_9 = target_to_arm7_9(target);
+
+	arm7_9_deinit(target);
+	arm_free_reg_cache(arm);
+	free(arm7_9);
 }
 
 COMMAND_HANDLER(handle_arm9tdmi_catch_vectors_command)
@@ -921,6 +920,7 @@ struct target_type arm9tdmi_target = {
 	.commands = arm9tdmi_command_handlers,
 	.target_create = arm9tdmi_target_create,
 	.init_target = arm9tdmi_init_target,
+	.deinit_target = arm9tdmi_deinit_target,
 	.examine = arm7_9_examine,
 	.check_reset = arm7_9_check_reset,
 };

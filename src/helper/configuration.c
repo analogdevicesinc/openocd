@@ -1,29 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2004, 2005 by Dominic Rath                              *
  *   Dominic.Rath@gmx.de                                                   *
  *                                                                         *
  *   Copyright (C) 2007,2008 Øyvind Harboe                                 *
  *   oyvind.harboe@zylin.com                                               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include "configuration.h"
 #include "log.h"
+#include "replacements.h"
 
 static size_t num_config_files;
 static char **config_file_names;
@@ -111,7 +102,7 @@ FILE *open_file_from_path(const char *file, const char *mode)
 		return fopen(file, mode);
 	else {
 		char *full_path = find_file(file);
-		if (full_path == NULL)
+		if (!full_path)
 			return NULL;
 		FILE *fp = NULL;
 		fp = fopen(full_path, mode);
@@ -148,16 +139,18 @@ int parse_config_file(struct command_context *cmd_ctx)
 
 char *get_home_dir(const char *append_path)
 {
+#ifdef _WIN32
+	char homepath[MAX_PATH];
+#endif
+
 	char *home = getenv("HOME");
 
-	if (home == NULL) {
+	if (!home) {
 
 #ifdef _WIN32
 		home = getenv("USERPROFILE");
 
-		if (home == NULL) {
-
-			char homepath[MAX_PATH];
+		if (!home) {
 			char *drive = getenv("HOMEDRIVE");
 			char *path = getenv("HOMEPATH");
 			if (drive && path) {
@@ -173,7 +166,7 @@ char *get_home_dir(const char *append_path)
 #endif
 	}
 
-	if (home == NULL)
+	if (!home)
 		return home;
 
 	char *home_path;

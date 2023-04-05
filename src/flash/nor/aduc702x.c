@@ -1,20 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2008 by Kevin McGuire                                   *
  *   Copyright (C) 2008 by Marcel Wijlaars                                 *
  *   Copyright (C) 2009 by Michael Ashton                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -31,15 +20,15 @@ static int aduc702x_build_sector_list(struct flash_bank *bank);
 static int aduc702x_check_flash_completion(struct target *target, unsigned int timeout_ms);
 static int aduc702x_set_write_enable(struct target *target, int enable);
 
-#define ADUC702x_FLASH                          0xfffff800
-#define ADUC702x_FLASH_FEESTA           (0*4)
-#define ADUC702x_FLASH_FEEMOD           (1*4)
-#define ADUC702x_FLASH_FEECON           (2*4)
-#define ADUC702x_FLASH_FEEDAT           (3*4)
-#define ADUC702x_FLASH_FEEADR           (4*4)
-#define ADUC702x_FLASH_FEESIGN          (5*4)
-#define ADUC702x_FLASH_FEEPRO           (6*4)
-#define ADUC702x_FLASH_FEEHIDE          (7*4)
+#define ADUC702X_FLASH                          0xfffff800
+#define ADUC702X_FLASH_FEESTA           (0*4)
+#define ADUC702X_FLASH_FEEMOD           (1*4)
+#define ADUC702X_FLASH_FEECON           (2*4)
+#define ADUC702X_FLASH_FEEDAT           (3*4)
+#define ADUC702X_FLASH_FEEADR           (4*4)
+#define ADUC702X_FLASH_FEESIGN          (5*4)
+#define ADUC702X_FLASH_FEEPRO           (6*4)
+#define ADUC702X_FLASH_FEEHIDE          (7*4)
 
 /* flash bank aduc702x 0 0 0 0 <target#>
  * The ADC7019-28 devices all have the same flash layout */
@@ -87,9 +76,9 @@ static int aduc702x_erase(struct flash_bank *bank, unsigned int first,
 	/* mass erase */
 	if (((first | last) == 0) || ((first == 0) && (last >= bank->num_sectors))) {
 		LOG_DEBUG("performing mass erase.");
-		target_write_u16(target, ADUC702x_FLASH + ADUC702x_FLASH_FEEDAT, 0x3cff);
-		target_write_u16(target, ADUC702x_FLASH + ADUC702x_FLASH_FEEADR, 0xffc3);
-		target_write_u8(target, ADUC702x_FLASH + ADUC702x_FLASH_FEECON, 0x06);
+		target_write_u16(target, ADUC702X_FLASH + ADUC702X_FLASH_FEEDAT, 0x3cff);
+		target_write_u16(target, ADUC702X_FLASH + ADUC702X_FLASH_FEEADR, 0xffc3);
+		target_write_u8(target, ADUC702X_FLASH + ADUC702X_FLASH_FEECON, 0x06);
 
 		if (aduc702x_check_flash_completion(target, 3500) != ERROR_OK) {
 			LOG_ERROR("mass erase failed");
@@ -106,8 +95,8 @@ static int aduc702x_erase(struct flash_bank *bank, unsigned int first,
 		for (x = 0; x < count; ++x) {
 			adr = bank->base + ((first + x) * 512);
 
-			target_write_u16(target, ADUC702x_FLASH + ADUC702x_FLASH_FEEADR, adr);
-			target_write_u8(target, ADUC702x_FLASH + ADUC702x_FLASH_FEECON, 0x05);
+			target_write_u16(target, ADUC702X_FLASH + ADUC702X_FLASH_FEEADR, adr);
+			target_write_u8(target, ADUC702X_FLASH + ADUC702X_FLASH_FEECON, 0x05);
 
 			if (aduc702x_check_flash_completion(target, 50) != ERROR_OK) {
 				LOG_ERROR("failed to erase sector at address 0x%08lX", adr);
@@ -283,7 +272,7 @@ static int aduc702x_write_single(struct flash_bank *bank,
 
 	for (x = 0; x < count; x += 2) {
 		/* FEEADR = address */
-		target_write_u16(target, ADUC702x_FLASH + ADUC702x_FLASH_FEEADR, offset + x);
+		target_write_u16(target, ADUC702X_FLASH + ADUC702X_FLASH_FEEADR, offset + x);
 
 		/* set up data */
 		if ((x + 1) == count) {
@@ -292,10 +281,10 @@ static int aduc702x_write_single(struct flash_bank *bank,
 		} else
 			b = buffer[x + 1];
 
-		target_write_u16(target, ADUC702x_FLASH + ADUC702x_FLASH_FEEDAT, buffer[x] | (b << 8));
+		target_write_u16(target, ADUC702X_FLASH + ADUC702X_FLASH_FEEDAT, buffer[x] | (b << 8));
 
 		/* do single-write command */
-		target_write_u8(target, ADUC702x_FLASH + ADUC702x_FLASH_FEECON, 0x02);
+		target_write_u8(target, ADUC702X_FLASH + ADUC702X_FLASH_FEECON, 0x02);
 
 		if (aduc702x_check_flash_completion(target, 1) != ERROR_OK) {
 			LOG_ERROR("single write failed for address 0x%08lX",
@@ -345,7 +334,7 @@ static int aduc702x_probe(struct flash_bank *bank)
 static int aduc702x_set_write_enable(struct target *target, int enable)
 {
 	/* don't bother to preserve int enable bit here */
-	target_write_u16(target, ADUC702x_FLASH + ADUC702x_FLASH_FEEMOD, enable ? 8 : 0);
+	target_write_u16(target, ADUC702X_FLASH + ADUC702X_FLASH_FEEMOD, enable ? 8 : 0);
 
 	return ERROR_OK;
 }
@@ -361,7 +350,7 @@ static int aduc702x_check_flash_completion(struct target *target, unsigned int t
 
 	int64_t endtime = timeval_ms() + timeout_ms;
 	while (1) {
-		target_read_u8(target, ADUC702x_FLASH + ADUC702x_FLASH_FEESTA, &v);
+		target_read_u8(target, ADUC702X_FLASH + ADUC702X_FLASH_FEESTA, &v);
 		if ((v & 4) == 0)
 			break;
 		alive_sleep(1);
