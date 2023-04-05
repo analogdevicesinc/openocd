@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2012 by Matthias Blaicher                               *
  *   Matthias Blaicher - matthias@blaicher.com                             *
  *                                                                         *
  *   Copyright (C) 2011 by Broadcom Corporation                            *
  *   Evan Hunter - ehunter@broadcom.com                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -43,15 +32,14 @@ static const struct stack_register_offset rtos_chibios_arm_v7m_stack_offsets[ARM
 	{ ARMV7M_R13,  -2,   32 },		/* sp   */
 	{ ARMV7M_R14,  -1,   32 },		/* lr   */
 	{ ARMV7M_PC,   0x20, 32 },		/* pc   */
-	{ ARMV7M_xPSR, -1,   32 },		/* xPSR */
+	{ ARMV7M_XPSR, -1,   32 },		/* xPSR */
 };
 
 const struct rtos_register_stacking rtos_chibios_arm_v7m_stacking = {
-	0x24,					/* stack_registers_size */
-	-1,						/* stack_growth_direction */
-	ARMV7M_NUM_CORE_REGS,	/* num_output_registers */
-	NULL,					/* stack_alignment */
-	rtos_chibios_arm_v7m_stack_offsets	/* register_offsets */
+	.stack_registers_size = 0x24,
+	.stack_growth_direction = -1,
+	.num_output_registers = ARMV7M_NUM_CORE_REGS,
+	.register_offsets = rtos_chibios_arm_v7m_stack_offsets
 };
 
 static const struct stack_register_offset rtos_chibios_arm_v7m_stack_offsets_w_fpu[ARMV7M_NUM_CORE_REGS] = {
@@ -71,13 +59,12 @@ static const struct stack_register_offset rtos_chibios_arm_v7m_stack_offsets_w_f
 	{ ARMV7M_R13,  -2,   32 },		/* sp   */
 	{ ARMV7M_R14,  -1,   32 },		/* lr   */
 	{ ARMV7M_PC,   0x60, 32 },		/* pc   */
-	{ ARMV7M_xPSR, -1,   32 },		/* xPSR */
+	{ ARMV7M_XPSR, -1,   32 },		/* xPSR */
 };
 
 const struct rtos_register_stacking rtos_chibios_arm_v7m_stacking_w_fpu = {
-	0x64,										/* stack_registers_size */
-	-1,											/* stack_growth_direction */
-	ARMV7M_NUM_CORE_REGS,						/* num_output_registers */
-	NULL,										/* stack_alignment */
-	rtos_chibios_arm_v7m_stack_offsets_w_fpu	/* register_offsets */
+	.stack_registers_size = 0x64,
+	.stack_growth_direction = -1,
+	.num_output_registers = ARMV7M_NUM_CORE_REGS,
+	.register_offsets = rtos_chibios_arm_v7m_stack_offsets_w_fpu
 };

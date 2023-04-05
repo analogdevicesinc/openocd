@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2018 by Square, Inc.                                    *
  *   Steven Stallion <stallion@squareup.com>                               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -461,7 +450,7 @@ static int esirisc_trace_analyze_full(struct command_invocation *cmd, uint8_t *b
 						if (retval != ERROR_OK)
 							goto fail;
 
-						command_print(cmd, "repeats %" PRId32 " %s", count,
+						command_print(cmd, "repeats %" PRIu32 " %s", count,
 								(count == 1) ? "time" : "times");
 						break;
 					}
@@ -470,13 +459,13 @@ static int esirisc_trace_analyze_full(struct command_invocation *cmd, uint8_t *b
 						return ERROR_OK;
 
 					default:
-						command_print(cmd, "invalid extended trace ID: %" PRId32, ext_id);
+						command_print(cmd, "invalid extended trace ID: %" PRIu32, ext_id);
 						return ERROR_FAIL;
 				}
 				break;
 			}
 			default:
-				command_print(cmd, "invalid trace ID: %" PRId32, id);
+				command_print(cmd, "invalid trace ID: %" PRIu32, id);
 				return ERROR_FAIL;
 		}
 	}
@@ -551,7 +540,7 @@ static int esirisc_trace_analyze_buffer(struct command_invocation *cmd)
 
 	size = esirisc_trace_buffer_size(trace_info);
 	buffer = calloc(1, size);
-	if (buffer == NULL) {
+	if (!buffer) {
 		command_print(cmd, "out of memory");
 		return ERROR_FAIL;
 	}
@@ -576,7 +565,7 @@ static int esirisc_trace_analyze_memory(struct command_invocation *cmd,
 	int retval;
 
 	buffer = calloc(1, size);
-	if (buffer == NULL) {
+	if (!buffer) {
 		command_print(cmd, "out of memory");
 		return ERROR_FAIL;
 	}
@@ -628,7 +617,7 @@ static int esirisc_trace_dump_buffer(struct command_invocation *cmd, const char 
 
 	size = esirisc_trace_buffer_size(trace_info);
 	buffer = calloc(1, size);
-	if (buffer == NULL) {
+	if (!buffer) {
 		command_print(cmd, "out of memory");
 		return ERROR_FAIL;
 	}
@@ -653,7 +642,7 @@ static int esirisc_trace_dump_memory(struct command_invocation *cmd, const char 
 	int retval;
 
 	buffer = calloc(1, size);
-	if (buffer == NULL) {
+	if (!buffer) {
 		command_print(cmd, "out of memory");
 		return ERROR_FAIL;
 	}
@@ -729,7 +718,7 @@ COMMAND_HANDLER(handle_esirisc_trace_info_command)
 
 	command_print(CMD, "trigger delay: %s",
 			esirisc_trace_delay_strings[trace_info->delay]);
-	command_print(CMD, "trigger delay cycles: %i", trace_info->delay_cycles);
+	command_print(CMD, "trigger delay cycles: %" PRIu32, trace_info->delay_cycles);
 
 	return ERROR_OK;
 }

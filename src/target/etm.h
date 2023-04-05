@@ -1,22 +1,11 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2005, 2007 by Dominic Rath                              *
  *   Dominic.Rath@gmx.de                                                   *
  *                                                                         *
  *   Copyright (C) 2007 by Vincent Palatin                                 *
  *   vincent.palatin_openocd@m4x.org                                       *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ETM_H
@@ -203,7 +192,7 @@ typedef enum {
 	BR_ENABLE  = 0x1, /* Trace has been enabled */
 	BR_RESTART = 0x2, /* Trace restarted after a FIFO overflow */
 	BR_NODEBUG = 0x3, /* ARM has exited for debug state */
-	BR_PERIOD  = 0x4, /* Peridioc synchronization point (ETM >= v1.2)*/
+	BR_PERIOD  = 0x4, /* Periodic synchronization point (ETM >= v1.2)*/
 	BR_RSVD5   = 0x5, /* reserved */
 	BR_RSVD6   = 0x6, /* reserved */
 	BR_RSVD7   = 0x7, /* reserved */

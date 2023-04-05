@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2013 Andes Technology                                   *
  *   Hsiangkai Wang <hkwang@andestech.com>                                 *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -310,7 +299,7 @@ static int nds32_v3_add_breakpoint(struct target *target,
 		return ERROR_OK;
 	} else if (breakpoint->type == BKPT_SOFT) {
 		result = nds32_add_software_breakpoint(target, breakpoint);
-		if (ERROR_OK != result) {
+		if (result != ERROR_OK) {
 			/* auto convert to hardware breakpoint if failed */
 			if (nds32->auto_convert_hw_bp) {
 				/* convert to hardware breakpoint */
@@ -404,7 +393,7 @@ static int nds32_v3_remove_watchpoint(struct target *target,
 	return ERROR_OK;
 }
 
-struct nds32_v3_common_callback nds32_v3_common_callback = {
+static struct nds32_v3_common_callback nds32_v3_common_callback = {
 	.check_interrupt_stack = nds32_v3_check_interrupt_stack,
 	.restore_interrupt_stack = nds32_v3_restore_interrupt_stack,
 	.activate_hardware_breakpoint = nds32_v3_activate_hardware_breakpoint,

@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
  *                                                                         *
  *   Copyright (C) 2007,2008 Øyvind Harboe                                 *
  *   oyvind.harboe@zylin.com                                               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -39,21 +28,20 @@
 struct reg *register_get_by_number(struct reg_cache *first,
 		uint32_t reg_num, bool search_all)
 {
-	unsigned i;
 	struct reg_cache *cache = first;
 
 	while (cache) {
-		for (i = 0; i < cache->num_regs; i++) {
-			if (cache->reg_list[i].exist == false)
+		for (unsigned int i = 0; i < cache->num_regs; i++) {
+			if (!cache->reg_list[i].exist)
 				continue;
 			if (cache->reg_list[i].number == reg_num)
 				return &(cache->reg_list[i]);
 		}
 
-		if (search_all)
-			cache = cache->next;
-		else
+		if (!search_all)
 			break;
+
+		cache = cache->next;
 	}
 
 	return NULL;
@@ -62,21 +50,20 @@ struct reg *register_get_by_number(struct reg_cache *first,
 struct reg *register_get_by_name(struct reg_cache *first,
 		const char *name, bool search_all)
 {
-	unsigned i;
 	struct reg_cache *cache = first;
 
 	while (cache) {
-		for (i = 0; i < cache->num_regs; i++) {
-			if (cache->reg_list[i].exist == false)
+		for (unsigned int i = 0; i < cache->num_regs; i++) {
+			if (!cache->reg_list[i].exist)
 				continue;
 			if (strcmp(cache->reg_list[i].name, name) == 0)
 				return &(cache->reg_list[i]);
 		}
 
-		if (search_all)
-			cache = cache->next;
-		else
+		if (!search_all)
 			break;
+
+		cache = cache->next;
 	}
 
 	return NULL;
@@ -108,8 +95,8 @@ void register_cache_invalidate(struct reg_cache *cache)
 {
 	struct reg *reg = cache->reg_list;
 
-	for (unsigned n = cache->num_regs; n != 0; n--, reg++) {
-		if (reg->exist == false)
+	for (unsigned int n = cache->num_regs; n != 0; n--, reg++) {
+		if (!reg->exist)
 			continue;
 		reg->valid = false;
 		reg->dirty = false;

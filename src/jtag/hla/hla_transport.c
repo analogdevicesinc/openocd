@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2011 by Mathias Kuester                                 *
  *   Mathias Kuester <kesmtp@freenet.de>                                   *
  *                                                                         *
  *   Copyright (C) 2012 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -45,8 +34,28 @@ COMMAND_HANDLER(hl_transport_reset_command)
 	return hl_interface_init_reset();
 }
 
-static const struct command_registration
-hl_transport_stlink_subcommand_handlers[] = {
+static const struct command_registration hl_swd_transport_subcommand_handlers[] = {
+	{
+	 .name = "newdap",
+	 .mode = COMMAND_CONFIG,
+	 .jim_handler = jim_hl_newtap,
+	 .help = "declare a new SWD DAP",
+	 },
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration hl_swd_transport_command_handlers[] = {
+	{
+	 .name = "swd",
+	 .mode = COMMAND_ANY,
+	 .help = "SWD command group",
+	 .usage = "",
+	 .chain = hl_swd_transport_subcommand_handlers,
+	 },
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration hl_transport_jtag_subcommand_handlers[] = {
 	{
 	 .name = "newtap",
 	 .mode = COMMAND_CONFIG,
@@ -54,14 +63,8 @@ hl_transport_stlink_subcommand_handlers[] = {
 	 .help = "Create a new TAP instance named basename.tap_type, "
 	 "and appends it to the scan chain.",
 	 .usage = "basename tap_type '-irlen' count "
-	 "['-expected_id' number] ",
+	 "['-expected_id' number]",
 	 },
-
-	COMMAND_REGISTRATION_DONE
-};
-
-static const struct command_registration
-hl_transport_jtag_subcommand_handlers[] = {
 	{
 	 .name = "init",
 	 .mode = COMMAND_ANY,
@@ -117,18 +120,11 @@ hl_transport_jtag_subcommand_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-static const struct command_registration stlink_transport_command_handlers[] = {
-
-	{
-	 .name = "hla",
-	 .mode = COMMAND_ANY,
-	 .help = "perform hl adapter actions",
-	 .usage = "",
-	 .chain = hl_transport_stlink_subcommand_handlers,
-	 },
+static const struct command_registration hl_jtag_transport_command_handlers[] = {
 	{
 	 .name = "jtag",
 	 .mode = COMMAND_ANY,
+	 .help = "perform jtag tap actions",
 	 .usage = "",
 	 .chain = hl_transport_jtag_subcommand_handlers,
 	 },
@@ -141,11 +137,6 @@ static const struct command_registration stlink_transport_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-static int hl_transport_register_commands(struct command_context *cmd_ctx)
-{
-	return register_commands(cmd_ctx, NULL,
-				 stlink_transport_command_handlers);
-}
 
 static int hl_transport_init(struct command_context *cmd_ctx)
 {
@@ -184,34 +175,33 @@ static int hl_transport_init(struct command_context *cmd_ctx)
 	return hl_interface_init_target(t);
 }
 
-static int hl_transport_select(struct command_context *ctx)
+static int hl_jtag_transport_select(struct command_context *cmd_ctx)
 {
-	LOG_DEBUG("hl_transport_select");
-
-	int retval;
+	LOG_DEBUG("hl_jtag_transport_select");
 
 	/* NOTE:  interface init must already have been done.
 	 * That works with only C code ... no Tcl glue required.
 	 */
 
-	retval = hl_transport_register_commands(ctx);
+	return register_commands(cmd_ctx, NULL, hl_jtag_transport_command_handlers);
+}
 
-	if (retval != ERROR_OK)
-		return retval;
-
-	return ERROR_OK;
+static int hl_swd_transport_select(struct command_context *cmd_ctx)
+{
+	LOG_DEBUG("hl_swd_transport_select");
+	return register_commands(cmd_ctx, NULL, hl_swd_transport_command_handlers);
 }
 
 static struct transport hl_swd_transport = {
 	.name = "hla_swd",
-	.select = hl_transport_select,
+	.select = hl_swd_transport_select,
 	.init = hl_transport_init,
 	.override_target = hl_interface_override_target,
 };
 
 static struct transport hl_jtag_transport = {
 	.name = "hla_jtag",
-	.select = hl_transport_select,
+	.select = hl_jtag_transport_select,
 	.init = hl_transport_init,
 	.override_target = hl_interface_override_target,
 };

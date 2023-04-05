@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2005, 2006 by Dominic Rath                              *
  *   Dominic.Rath@gmx.de                                                   *
@@ -7,19 +9,6 @@
  *                                                                         *
  *   Copyright (C) 2008 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_EMBEDDEDICE_H
@@ -69,11 +58,11 @@ enum {
 	EICE_W_CTRL_RANGE = 0x80,
 	EICE_W_CTRL_CHAIN = 0x40,
 	EICE_W_CTRL_EXTERN = 0x20,
-	EICE_W_CTRL_nTRANS = 0x10,
-	EICE_W_CTRL_nOPC = 0x8,
+	EICE_W_CTRL_NTRANS = 0x10,
+	EICE_W_CTRL_NOPC = 0x8,
 	EICE_W_CTRL_MAS = 0x6,
 	EICE_W_CTRL_ITBIT = 0x2,
-	EICE_W_CTRL_nRW = 0x1
+	EICE_W_CTRL_NRW = 0x1
 };
 
 enum {
@@ -106,7 +95,7 @@ int embeddedice_send(struct arm_jtag *jtag_info, uint32_t *data, uint32_t size);
 
 int embeddedice_handshake(struct arm_jtag *jtag_info, int hsbit, uint32_t timeout);
 
-/* If many embeddedice_write_reg() follow eachother, then the >1 invocations can be
+/* If many embeddedice_write_reg() follow each other, then the >1 invocations can be
  * this faster version of embeddedice_write_reg
  */
 static inline void embeddedice_write_reg_inner(struct jtag_tap *tap, int reg_addr, uint32_t value)

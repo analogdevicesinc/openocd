@@ -1,18 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2009 by Simon Qian <SimonQian@SimonQian.com>            *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_JTAG_DRIVERS_VERSALOON_VERSALOON_H
@@ -69,7 +58,7 @@ struct interface_swd_t {
 struct interface_jtag_raw_t {
 	RESULT(*init)(uint8_t interface_index);
 	RESULT(*fini)(uint8_t interface_index);
-	RESULT(*config)(uint8_t interface_index, uint32_t kHz);
+	RESULT(*config)(uint8_t interface_index, uint32_t khz);
 	RESULT(*execute)(uint8_t interface_index, uint8_t *tdi, uint8_t *tms,
 		uint8_t *tdo, uint32_t bitlen);
 };
@@ -94,8 +83,6 @@ struct versaloon_usb_setting_t {
 	uint8_t ep_out;
 	uint8_t ep_in;
 	uint8_t interface;
-	char *serialstring;
-
 	uint16_t buf_size;
 };
 
@@ -107,6 +94,6 @@ struct versaloon_interface_t {
 };
 
 extern struct versaloon_interface_t versaloon_interface;
-extern libusb_device_handle *versaloon_usb_device_handle;
+extern struct libusb_device_handle *versaloon_usb_device_handle;
 
 #endif /* OPENOCD_JTAG_DRIVERS_VERSALOON_VERSALOON_H */

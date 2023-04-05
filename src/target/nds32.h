@@ -1,19 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2013 Andes Technology                                   *
  *   Hsiangkai Wang <hkwang@andestech.com>                                 *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_NDS32_H
@@ -217,7 +206,7 @@ struct nds32_misc_config {
 	bool div_instruction;
 	bool mac_instruction;
 	int audio_isa;
-	bool L2_cache;
+	bool l2_cache;
 	bool reduce_register;
 	bool addr_24;
 	bool interruption_level;
@@ -235,7 +224,8 @@ struct nds32_misc_config {
  * Represents a generic Andes core.
  */
 struct nds32 {
-	uint32_t common_magic;
+	unsigned int common_magic;
+
 	struct reg_cache *core_cache;
 
 	/** Handle for the debug module. */
@@ -431,26 +421,26 @@ extern int nds32_profiling(struct target *target, uint32_t *samples,
 /** Convert target handle to generic Andes target state handle. */
 static inline struct nds32 *target_to_nds32(struct target *target)
 {
-	assert(target != NULL);
+	assert(target);
 	return target->arch_info;
 }
 
 /** */
 static inline struct aice_port_s *target_to_aice(struct target *target)
 {
-	assert(target != NULL);
+	assert(target);
 	return target->tap->priv;
 }
 
 static inline bool is_nds32(struct nds32 *nds32)
 {
-	assert(nds32 != NULL);
+	assert(nds32);
 	return nds32->common_magic == NDS32_COMMON_MAGIC;
 }
 
 static inline bool nds32_reach_max_interrupt_level(struct nds32 *nds32)
 {
-	assert(nds32 != NULL);
+	assert(nds32);
 	return nds32->max_interrupt_level == nds32->current_interrupt_level;
 }
 

@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2013 by Andrey Yurovsky                                 *
  *   Andrey Yurovsky <yurovsky@gmail.com>                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -22,6 +11,7 @@
 
 #include "imp.h"
 
+#include <jtag/jtag.h>
 #include <target/cortex_m.h>
 
 /* At this time, the SAM4L Flash is available in these capacities:
@@ -346,7 +336,7 @@ static int sam4l_probe(struct flash_bank *bank)
 	/* Done */
 	chip->probed = true;
 
-	LOG_INFO("SAM4L MCU: %s (Rev %c) (%" PRIu32 "KB Flash with %d %" PRId32 "B pages, %" PRIu32 "KB RAM)",
+	LOG_INFO("SAM4L MCU: %s (Rev %c) (%" PRIu32 "KB Flash with %d %" PRIu32 "B pages, %" PRIu32 "KB RAM)",
 			chip->details ? chip->details->name : "unknown", (char)('A' + (id & 0xF)),
 			chip->flash_kb, chip->num_pages, chip->page_size, chip->ram_kb);
 
@@ -480,9 +470,6 @@ static int sam4l_erase(struct flash_bank *bank, unsigned int first,
 					return ERROR_FAIL;
 				}
 			}
-
-			/* This sector is definitely erased. */
-			bank->sectors[i].is_erased = 1;
 		}
 	}
 

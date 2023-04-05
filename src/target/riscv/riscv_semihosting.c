@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2018 by Liviu Ionescu                                   *
  *   ilg@livius.net                                                        *
@@ -10,19 +12,6 @@
  *                                                                         *
  *   Copyright (C) 2016 by Square, Inc.                                    *
  *   Steven Stallion <stallion@squareup.com>                               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /**
@@ -39,10 +28,9 @@
 #include "config.h"
 #endif
 
-#include "log.h"
+#include <helper/log.h>
 
 #include "target/target.h"
-#include "target/semihosting_common.h"
 #include "riscv.h"
 
 static int riscv_semihosting_setup(struct target *target, int enable);
@@ -60,35 +48,38 @@ void riscv_semihosting_init(struct target *target)
 /**
  * Check for and process a semihosting request using the ARM protocol). This
  * is meant to be called when the target is stopped due to a debug mode entry.
- * If the value 0 is returned then there was nothing to process. A non-zero
- * return value signifies that a request was processed and the target resumed,
- * or an error was encountered, in which case the caller must return
- * immediately.
  *
  * @param target Pointer to the target to process.
  * @param retval Pointer to a location where the return code will be stored
  * @return non-zero value if a request was processed or an error encountered
  */
-int riscv_semihosting(struct target *target, int *retval)
+enum semihosting_result riscv_semihosting(struct target *target, int *retval)
 {
 	struct semihosting *semihosting = target->semihosting;
-	if (!semihosting)
-		return 0;
+	if (!semihosting) {
+		LOG_DEBUG("   -> NONE (!semihosting)");
+		return SEMIHOSTING_NONE;
+	}
 
-	if (!semihosting->is_active)
-		return 0;
+	if (!semihosting->is_active) {
+		LOG_DEBUG("   -> NONE (!semihosting->is_active)");
+		return SEMIHOSTING_NONE;
+	}
 
-	riscv_reg_t dpc;
-	int result = riscv_get_register(target, &dpc, GDB_REGNO_DPC);
+	riscv_reg_t pc;
+	int result = riscv_get_register(target, &pc, GDB_REGNO_PC);
 	if (result != ERROR_OK)
-		return 0;
+		return SEMIHOSTING_ERROR;
 
-	uint8_t tmp[12];
+	uint8_t tmp_buf[12];
 
-	/* Read the current instruction, including the bracketing */
-	*retval = target_read_memory(target, dpc - 4, 2, 6, tmp);
-	if (*retval != ERROR_OK)
-		return 0;
+	/* Read three uncompressed instructions: The previous, the current one (pointed to by PC) and the next one */
+	for (int i = 0; i < 3; i++) {
+		/* Instruction memories may not support arbitrary read size. Use any size that will work. */
+		*retval = riscv_read_by_any_size(target, (pc - 4) + 4 * i, 4, tmp_buf + 4 * i);
+		if (*retval != ERROR_OK)
+			return SEMIHOSTING_ERROR;
+	}
 
 	/*
 	 * The instructions that trigger a semihosting call,
@@ -98,15 +89,15 @@ int riscv_semihosting(struct target *target, int *retval)
 	 * 00100073              ebreak
 	 * 40705013              srai    zero,zero,0x7
 	 */
-	uint32_t pre = target_buffer_get_u32(target, tmp);
-	uint32_t ebreak = target_buffer_get_u32(target, tmp + 4);
-	uint32_t post = target_buffer_get_u32(target, tmp + 8);
-	LOG_DEBUG("check %08x %08x %08x from 0x%" PRIx64 "-4", pre, ebreak, post, dpc);
+	uint32_t pre = target_buffer_get_u32(target, tmp_buf);
+	uint32_t ebreak = target_buffer_get_u32(target, tmp_buf + 4);
+	uint32_t post = target_buffer_get_u32(target, tmp_buf + 8);
+	LOG_DEBUG("check %08x %08x %08x from 0x%" PRIx64 "-4", pre, ebreak, post, pc);
 
 	if (pre != 0x01f01013 || ebreak != 0x00100073 || post != 0x40705013) {
-
 		/* Not the magic sequence defining semihosting. */
-		return 0;
+		LOG_DEBUG("   -> NONE (no magic)");
+		return SEMIHOSTING_NONE;
 	}
 
 	/*
@@ -114,33 +105,39 @@ int riscv_semihosting(struct target *target, int *retval)
 	 * operation to complete.
 	 */
 	if (!semihosting->hit_fileio) {
-
 		/* RISC-V uses A0 and A1 to pass function arguments */
 		riscv_reg_t r0;
 		riscv_reg_t r1;
 
 		result = riscv_get_register(target, &r0, GDB_REGNO_A0);
-		if (result != ERROR_OK)
-			return 0;
+		if (result != ERROR_OK) {
+			LOG_DEBUG("   -> ERROR (couldn't read a0)");
+			return SEMIHOSTING_ERROR;
+		}
 
 		result = riscv_get_register(target, &r1, GDB_REGNO_A1);
-		if (result != ERROR_OK)
-			return 0;
+		if (result != ERROR_OK) {
+			LOG_DEBUG("   -> ERROR (couldn't read a1)");
+			return SEMIHOSTING_ERROR;
+		}
 
 		semihosting->op = r0;
 		semihosting->param = r1;
 		semihosting->word_size_bytes = riscv_xlen(target) / 8;
 
 		/* Check for ARM operation numbers. */
-		if (0 <= semihosting->op && semihosting->op <= 0x31) {
+		if ((semihosting->op >= 0 && semihosting->op <= 0x31) ||
+			(semihosting->op >= 0x100 && semihosting->op <= 0x107)) {
+
 			*retval = semihosting_common(target);
 			if (*retval != ERROR_OK) {
-				LOG_ERROR("Failed semihosting operation");
-				return 0;
+				LOG_ERROR("Failed semihosting operation (0x%02X)", semihosting->op);
+				return SEMIHOSTING_ERROR;
 			}
 		} else {
 			/* Unknown operation number, not a semihosting call. */
-			return 0;
+			LOG_DEBUG("   -> NONE (unknown operation number)");
+			return SEMIHOSTING_NONE;
 		}
 	}
 
@@ -150,16 +147,16 @@ int riscv_semihosting(struct target *target, int *retval)
 	 */
 	if (semihosting->is_resumable && !semihosting->hit_fileio) {
 		/* Resume right after the EBREAK 4 bytes instruction. */
-		*retval = target_resume(target, 0, dpc+4, 0, 0);
-		if (*retval != ERROR_OK) {
-			LOG_ERROR("Failed to resume target");
-			return 0;
-		}
+		*retval = riscv_set_register(target, GDB_REGNO_PC, pc + 4);
+		if (*retval != ERROR_OK)
+			return SEMIHOSTING_ERROR;
 
-		return 1;
+		LOG_DEBUG("   -> HANDLED");
+		return SEMIHOSTING_HANDLED;
 	}
 
-	return 0;
+	LOG_DEBUG("   -> WAITING");
+	return SEMIHOSTING_WAITING;
 }
 
 /* -------------------------------------------------------------------------
@@ -171,7 +168,7 @@ int riscv_semihosting(struct target *target, int *retval)
  */
 static int riscv_semihosting_setup(struct target *target, int enable)
 {
-	LOG_DEBUG("enable=%d", enable);
+	LOG_DEBUG("[%s] enable=%d", target_name(target), enable);
 
 	struct semihosting *semihosting = target->semihosting;
 	if (semihosting)

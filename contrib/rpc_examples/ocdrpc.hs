@@ -1,4 +1,6 @@
--- OpenOCD RPC example, covered by GNU GPLv3 or later
+-- SPDX-License-Identifier: GPL-3.0-or-later
+
+-- OpenOCD RPC example
 -- Copyright (C) 2014 Paul Fertser
 --
 -- Example output:
@@ -16,13 +18,11 @@
 module Main where
 
 import Prelude
-import Control.Applicative
 import Network.Socket
 import System.IO.Streams.Core hiding (connect)
 import System.IO.Streams.Network
 import System.IO.Streams.Attoparsec
 import Data.Attoparsec.ByteString.Char8
-import Data.Attoparsec.Combinator
 import Data.ByteString.Char8 hiding (putStrLn, concat, map)
 import Text.Printf
 
@@ -38,15 +38,14 @@ mdwParser = (manyTill anyChar (string ": ") *>
             `sepBy` string " \n"
 
 ocdMdw :: (InputStream ByteString, OutputStream ByteString) -> Integer -> Integer -> IO [Integer]
-ocdMdw s start count = do
-  s <- ocdExec s $ "mdw " ++ show start ++ " " ++ show count
-  case parseOnly mdwParser (pack s) of
+ocdMdw s start qnt = do
+  res <- ocdExec s $ "mdw " ++ show start ++ " " ++ show qnt
+  case parseOnly mdwParser (pack res) of
     Right r -> return $ concat r
 
 main = do
   osock <- socket AF_INET Stream defaultProtocol
-  haddr <- inet_addr "127.0.0.1"
-  connect osock (SockAddrInet 6666 haddr)
+  connect osock (SockAddrInet 6666 $ tupleToHostAddress (127,0,0,1))
   ostreams <- socketToStreams osock
   putStrLn "Halting the target, full log output captured:"
   ocdExec ostreams "capture \"halt\"" >>= putStrLn

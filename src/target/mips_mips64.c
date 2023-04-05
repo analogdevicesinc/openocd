@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * MIPS64 generic target support
  *
@@ -8,8 +10,6 @@
  * Based on the work of:
  *     Copyright (C) 2008 by Spencer Oliver
  *     Copyright (C) 2008 by David T.L. Wong
- *
- * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 #ifdef HAVE_CONFIG_H
@@ -62,7 +62,7 @@ static int mips_mips64_debug_entry(struct target *target)
 	mips_mips64_examine_debug_reason(target);
 
 	LOG_DEBUG("entered debug state at PC 0x%" PRIx64 ", target->state: %s",
-		  *(uint64_t *)pc->value, target_state_name(target));
+		  buf_get_u64(pc->value, 0, 64), target_state_name(target));
 
 	return ERROR_OK;
 }
@@ -205,12 +205,6 @@ static int mips_mips64_deassert_reset(struct target *target)
 	return ERROR_OK;
 }
 
-static int mips_mips64_soft_reset_halt(struct target *target)
-{
-	/* TODO */
-	return ERROR_OK;
-}
-
 static int mips_mips64_single_step_core(struct target *target)
 {
 	struct mips64_common *mips64 = target->arch_info;
@@ -247,7 +241,7 @@ static int mips_mips64_set_hwbp(struct target *target, struct breakpoint *bp)
 		bp_num++;
 
 	if (bp_num >= mips64->num_inst_bpoints) {
-		LOG_DEBUG("ERROR Can not find free FP Comparator(bpid: %d)",
+		LOG_DEBUG("ERROR Can not find free FP Comparator(bpid: %" PRIu32 ")",
 			  bp->unique_id);
 		LOG_WARNING("ERROR Can not find free FP Comparator");
 		exit(-1);
@@ -274,7 +268,7 @@ static int mips_mips64_set_hwbp(struct target *target, struct breakpoint *bp)
 	if (retval != ERROR_OK)
 		return retval;
 
-	LOG_DEBUG("bpid: %d, bp_num %i bp_value 0x%" PRIx64 "", bp->unique_id,
+	LOG_DEBUG("bpid: %" PRIu32 ", bp_num %i bp_value 0x%" PRIx64, bp->unique_id,
 		  bp_num, c->bp_value);
 
 	return ERROR_OK;
@@ -346,7 +340,7 @@ static int mips_mips64_set_breakpoint(struct target *target,
 {
 	int retval;
 
-	if (bp->set) {
+	if (bp->is_set) {
 		LOG_WARNING("breakpoint already set");
 		return ERROR_OK;
 	}
@@ -354,7 +348,7 @@ static int mips_mips64_set_breakpoint(struct target *target,
 	if (bp->type == BKPT_HARD) {
 		retval = mips_mips64_set_hwbp(target, bp);
 	} else {
-		LOG_DEBUG("bpid: %d", bp->unique_id);
+		LOG_DEBUG("bpid: %" PRIu32, bp->unique_id);
 
 		switch (bp->length) {
 		case MIPS64_SDBBP_SIZE:
@@ -373,7 +367,7 @@ static int mips_mips64_set_breakpoint(struct target *target,
 		return retval;
 	}
 
-	bp->set = true;
+	bp->is_set = true;
 
 	return ERROR_OK;
 }
@@ -385,7 +379,7 @@ static int mips_mips64_enable_breakpoints(struct target *target)
 
 	/* set any pending breakpoints */
 	while (bp) {
-		if (!bp->set) {
+		if (!bp->is_set) {
 			retval = mips_mips64_set_breakpoint(target, bp);
 			if (retval != ERROR_OK)
 				return retval;
@@ -410,10 +404,10 @@ static int mips_mips64_set_watchpoint(struct target *target,
 	 * and exclude both load and store accesses from  watchpoint
 	 * condition evaluation
 	*/
-	int enable = EJTAG_DBCn_NOSB | EJTAG_DBCn_NOLB | EJTAG_DBCn_BE
-		| (0xff << EJTAG_DBCn_BLM_SHIFT);
+	int enable = EJTAG_DBCN_NOSB | EJTAG_DBCN_NOLB | EJTAG_DBCN_BE
+		| (0xff << EJTAG_DBCN_BLM_SHIFT);
 
-	if (watchpoint->set) {
+	if (watchpoint->is_set) {
 		LOG_WARNING("watchpoint already set");
 		return ERROR_OK;
 	}
@@ -438,20 +432,20 @@ static int mips_mips64_set_watchpoint(struct target *target,
 
 	switch (watchpoint->rw)	{
 	case WPT_READ:
-		enable &= ~EJTAG_DBCn_NOLB;
+		enable &= ~EJTAG_DBCN_NOLB;
 		break;
 	case WPT_WRITE:
-		enable &= ~EJTAG_DBCn_NOSB;
+		enable &= ~EJTAG_DBCN_NOSB;
 		break;
 	case WPT_ACCESS:
-		enable &= ~(EJTAG_DBCn_NOLB | EJTAG_DBCn_NOSB);
+		enable &= ~(EJTAG_DBCN_NOLB | EJTAG_DBCN_NOSB);
 		break;
 	default:
 		LOG_ERROR("BUG: watchpoint->rw neither read, write nor access");
 	}
 
 	c = &cl[wp_num];
-	watchpoint->set = wp_num + 1;
+	watchpoint_set(watchpoint, wp_num);
 	c->used = true;
 	c->bp_value = watchpoint->address;
 
@@ -491,7 +485,7 @@ static int mips_mips64_enable_watchpoints(struct target *target)
 
 	/* set any pending watchpoints */
 	while (watchpoint) {
-		if (watchpoint->set == 0) {
+		if (!watchpoint->is_set) {
 			retval = mips_mips64_set_watchpoint(target, watchpoint);
 			if (retval != ERROR_OK)
 				return retval;
@@ -506,17 +500,16 @@ static int mips_mips64_unset_hwbp(struct target *target, struct breakpoint *bp)
 {
 	struct mips64_common *mips64 = target->arch_info;
 	struct mips64_comparator *comparator_list = mips64->inst_break_list;
-	int bp_num;
 
-	bp_num = bp->set - 1;
+	int bp_num = bp->number;
 
-	if ((bp_num < 0) || (bp_num >= mips64->num_inst_bpoints)) {
-		LOG_DEBUG("Invalid FP Comparator number in breakpoint (bpid: %d)",
+	if (bp_num >= mips64->num_inst_bpoints) {
+		LOG_DEBUG("Invalid FP Comparator number in breakpoint (bpid: %" PRIu32 ")",
 			  bp->unique_id);
 		return ERROR_OK;
 	}
 
-	LOG_DEBUG("bpid: %d - releasing hw: %d", bp->unique_id, bp_num);
+	LOG_DEBUG("bpid: %" PRIu32 " - releasing hw: %d", bp->unique_id, bp_num);
 	comparator_list[bp_num].used = false;
 	comparator_list[bp_num].bp_value = 0;
 
@@ -568,7 +561,7 @@ static int mips_mips64_unset_breakpoint(struct target *target,
 	/* get pointers to arch-specific information */
 	int retval;
 
-	if (!bp->set) {
+	if (!bp->is_set) {
 		LOG_WARNING("breakpoint not set");
 		return ERROR_OK;
 	}
@@ -576,7 +569,7 @@ static int mips_mips64_unset_breakpoint(struct target *target,
 	if (bp->type == BKPT_HARD) {
 		retval = mips_mips64_unset_hwbp(target, bp);
 	} else {
-		LOG_DEBUG("bpid: %d", bp->unique_id);
+		LOG_DEBUG("bpid: %" PRIu32, bp->unique_id);
 
 		switch (bp->length) {
 		case MIPS64_SDBBP_SIZE:
@@ -594,7 +587,7 @@ static int mips_mips64_unset_breakpoint(struct target *target,
 		return retval;
 	}
 
-	bp->set = false;
+	bp->is_set = false;
 
 	return ERROR_OK;
 }
@@ -815,7 +808,7 @@ static int mips_mips64_remove_breakpoint(struct target *target,
 		return ERROR_TARGET_NOT_HALTED;
 	}
 
-	if (bp->set)
+	if (bp->is_set)
 		retval = mips_mips64_unset_breakpoint(target, bp);
 
 	if (bp->type == BKPT_HARD)
@@ -831,20 +824,20 @@ static int mips_mips64_unset_watchpoint(struct target *target,
 	struct mips64_common *mips64 = target->arch_info;
 	struct mips64_comparator *comparator_list = mips64->data_break_list;
 
-	if (!watchpoint->set) {
+	if (!watchpoint->is_set) {
 		LOG_WARNING("watchpoint not set");
 		return ERROR_OK;
 	}
 
-	int wp_num = watchpoint->set - 1;
-	if ((wp_num < 0) || (wp_num >= mips64->num_data_bpoints)) {
+	int wp_num = watchpoint->number;
+	if (wp_num >= mips64->num_data_bpoints) {
 		LOG_DEBUG("Invalid FP Comparator number in watchpoint");
 		return ERROR_OK;
 	}
 	comparator_list[wp_num].used = false;
 	comparator_list[wp_num].bp_value = 0;
 	target_write_u64(target, comparator_list[wp_num].reg_address + 0x18, 0);
-	watchpoint->set = 0;
+	watchpoint->is_set = false;
 
 	return ERROR_OK;
 }
@@ -876,7 +869,7 @@ static int mips_mips64_remove_watchpoint(struct target *target,
 		return ERROR_TARGET_NOT_HALTED;
 	}
 
-	if (watchpoint->set)
+	if (watchpoint->is_set)
 		retval = mips_mips64_unset_watchpoint(target, watchpoint);
 
 	mips64->num_data_bpoints_avail++;
@@ -923,7 +916,7 @@ static int mips_mips64_read_memory(struct target *target, uint64_t address,
 	retval = mips64_pracc_read_mem(ejtag_info, address, size, count,
 				       (void *)t);
 
-	if (ERROR_OK != retval) {
+	if (retval != ERROR_OK) {
 		LOG_ERROR("mips64_pracc_read_mem filed");
 		goto read_done;
 	}
@@ -1169,7 +1162,7 @@ struct target_type mips_mips64_target = {
 
 	.assert_reset = mips_mips64_assert_reset,
 	.deassert_reset = mips_mips64_deassert_reset,
-	.soft_reset_halt = mips_mips64_soft_reset_halt,
+	/* TODO: add .soft_reset_halt */
 
 	.get_gdb_reg_list = mips64_get_gdb_reg_list,
 

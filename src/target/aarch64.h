@@ -1,19 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2015 by David Ung                                       *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_AARCH64_H
@@ -21,7 +9,7 @@
 
 #include "armv8.h"
 
-#define AARCH64_COMMON_MAGIC 0x411fc082
+#define AARCH64_COMMON_MAGIC 0x41413634U
 
 #define CPUDBG_CPUID	0xD00
 #define CPUDBG_CTYPR	0xD04
@@ -46,11 +34,13 @@ struct aarch64_brp {
 	int type;
 	target_addr_t value;
 	uint32_t control;
-	uint8_t BRPn;
+	uint8_t brpn;
 };
 
 struct aarch64_common {
-	int common_magic;
+	unsigned int common_magic;
+
+	struct armv8_common armv8_common;
 
 	/* Context information */
 	uint32_t system_control_reg;
@@ -62,7 +52,10 @@ struct aarch64_common {
 	int brp_num_available;
 	struct aarch64_brp *brp_list;
 
-	struct armv8_common armv8_common;
+	/* Watchpoint register pairs */
+	int wp_num;
+	int wp_num_available;
+	struct aarch64_brp *wp_list;
 
 	enum aarch64_isrmasking_mode isrmasking_mode;
 };

@@ -1,21 +1,14 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /*
  * Copyright (C) 2009 by David Brownell
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
  */
 
 #ifndef OPENOCD_TARGET_ARMV8_DPM_H
 #define OPENOCD_TARGET_ARMV8_DPM_H
 
 #include "arm_dpm.h"
+#include "helper/bits.h"
 
 /* forward-declare struct armv8_common */
 struct armv8_common;
@@ -36,8 +29,6 @@ int armv8_dpm_modeswitch(struct arm_dpm *dpm, enum arm_mode mode);
 
 
 int armv8_dpm_write_dirty_registers(struct arm_dpm *dpm, bool bpwp);
-
-void armv8_dpm_report_wfar(struct arm_dpm *dpm, uint64_t wfar);
 
 /* DSCR bits; see ARMv7a arch spec section C10.3.1.
  * Not all v7 bits are valid in v6.
@@ -95,6 +86,12 @@ void armv8_dpm_report_wfar(struct arm_dpm *dpm, uint64_t wfar);
 #define DRCR_HALT				(1 << 0)
 #define DRCR_RESTART			(1 << 1)
 #define DRCR_CLEAR_EXCEPTIONS	(1 << 2)
+
+/* ECR (Execution Control Register) bits */
+#define ECR_RCE         BIT(1)
+
+/* ESR (Event Status Register) bits */
+#define ESR_RC          BIT(1)
 
 /* PRSR (processor debug status register) bits */
 #define PRSR_PU					(1 << 0)

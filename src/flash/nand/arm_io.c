@@ -1,21 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /*
  * Copyright (C) 2009 by Marvell Semiconductors, Inc.
  * Written by Nicolas Pitre <nico at marvell.com>
  *
  * Copyright (C) 2009 by David Brownell
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -55,7 +44,7 @@ static int arm_code_to_working_area(struct target *target,
 	 */
 
 	/* make sure we have a working area */
-	if (NULL == *area) {
+	if (!*area) {
 		retval = target_alloc_working_area(target, size, area);
 		if (retval != ERROR_OK) {
 			LOG_DEBUG("%s: no %d byte buffer", __func__, (int) size);
@@ -173,7 +162,7 @@ int arm_nandwrite(struct arm_nand_data *nand, uint8_t *data, int size)
 	buf_set_u32(reg_params[2].value, 0, 32, size);
 
 	/* armv4 must exit using a hardware breakpoint */
-	if (arm->is_armv4)
+	if (arm->arch == ARM_ARCH_V4)
 		exit_var = nand->copy_area->address + target_code_size - 4;
 
 	/* use alg to write data from work area to NAND chip */
@@ -279,7 +268,7 @@ int arm_nandread(struct arm_nand_data *nand, uint8_t *data, uint32_t size)
 	buf_set_u32(reg_params[2].value, 0, 32, size);
 
 	/* armv4 must exit using a hardware breakpoint */
-	if (arm->is_armv4)
+	if (arm->arch == ARM_ARCH_V4)
 		exit_var = nand->copy_area->address + target_code_size - 4;
 
 	/* use alg to write data from NAND chip to work area */
