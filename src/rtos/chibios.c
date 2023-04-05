@@ -1,22 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2012 by Matthias Blaicher                               *
  *   Matthias Blaicher - matthias@blaicher.com                             *
  *                                                                         *
  *   Copyright (C) 2011 by Broadcom Corporation                            *
  *   Evan Hunter - ehunter@broadcom.com                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -62,9 +51,9 @@ struct chibios_chdebug {
 	uint8_t   cf_off_time;            /**< @brief Offset of @p p_time field.  */
 };
 
-#define GET_CH_KERNEL_MAJOR(codedVersion) ((codedVersion >> 11) & 0x1f)
-#define GET_CH_KERNEL_MINOR(codedVersion) ((codedVersion >> 6) & 0x1f)
-#define GET_CH_KERNEL_PATCH(codedVersion) ((codedVersion >> 0) & 0x3f)
+#define GET_CH_KERNEL_MAJOR(coded_version) ((coded_version >> 11) & 0x1f)
+#define GET_CH_KERNEL_MINOR(coded_version) ((coded_version >> 6) & 0x1f)
+#define GET_CH_KERNEL_PATCH(coded_version) ((coded_version >> 0) & 0x3f)
 
 /**
  * @brief ChibiOS thread states.
@@ -74,7 +63,7 @@ static const char * const chibios_thread_states[] = { "READY", "CURRENT",
 "WTEXIT", "WTOREVT", "WTANDEVT", "SNDMSGQ", "SNDMSG", "WTMSG", "FINAL"
 };
 
-#define CHIBIOS_NUM_STATES (sizeof(chibios_thread_states)/sizeof(char *))
+#define CHIBIOS_NUM_STATES ARRAY_SIZE(chibios_thread_states)
 
 /* Maximum ChibiOS thread name. There is no real limit set by ChibiOS but 64
  * chars ought to be enough.
@@ -100,14 +89,13 @@ static struct chibios_params chibios_params_list[] = {
 	NULL,									/* stacking_info */
 	}
 };
-#define CHIBIOS_NUM_PARAMS ((int)(sizeof(chibios_params_list)/sizeof(struct chibios_params)))
 
 static bool chibios_detect_rtos(struct target *target);
 static int chibios_create(struct target *target);
 static int chibios_update_threads(struct rtos *rtos);
 static int chibios_get_thread_reg_list(struct rtos *rtos, int64_t thread_id,
 		struct rtos_reg **reg_list, int *num_regs);
-static int chibios_get_symbol_list_to_lookup(symbol_table_elem_t *symbol_list[]);
+static int chibios_get_symbol_list_to_lookup(struct symbol_table_elem *symbol_list[]);
 
 struct rtos_type chibios_rtos = {
 	.name = "chibios",
@@ -131,7 +119,7 @@ enum chibios_symbol_values {
 	CHIBIOS_VAL_CH_DEBUG = 2
 };
 
-static symbol_table_elem_t chibios_symbol_list[] = {
+static struct symbol_table_elem chibios_symbol_list[] = {
 	{ "rlist", 0, true},		/* Thread ready list */
 	{ "ch", 0, true},			/* System data structure */
 	{ "ch_debug", 0, false},	/* Memory Signature containing offsets of fields in rlist */
@@ -150,10 +138,8 @@ static int chibios_update_memory_signature(struct rtos *rtos)
 	param = (struct chibios_params *) rtos->rtos_specific_params;
 
 	/* Free existing memory description.*/
-	if (param->signature) {
-		free(param->signature);
-		param->signature = 0;
-	}
+	free(param->signature);
+	param->signature = NULL;
 
 	signature = malloc(sizeof(*signature));
 	if (!signature) {
@@ -187,10 +173,10 @@ static int chibios_update_memory_signature(struct rtos *rtos)
 	}
 
 	/* Convert endianness of version field */
-	const uint8_t *versionTarget = (const uint8_t *)
+	const uint8_t *versiontarget = (const uint8_t *)
 										&signature->ch_version;
 	signature->ch_version = rtos->target->endianness == TARGET_LITTLE_ENDIAN ?
-			le_to_h_u32(versionTarget) : be_to_h_u32(versionTarget);
+			le_to_h_u32(versiontarget) : be_to_h_u32(versiontarget);
 
 	const uint16_t ch_version = signature->ch_version;
 	LOG_INFO("Successfully loaded memory map of ChibiOS/RT target "
@@ -472,8 +458,8 @@ static int chibios_get_thread_reg_list(struct rtos *rtos, int64_t thread_id,
 	const struct chibios_params *param;
 	uint32_t stack_ptr = 0;
 
-	if ((rtos == NULL) || (thread_id == 0) ||
-			(rtos->rtos_specific_params == NULL))
+	if ((!rtos) || (thread_id == 0) ||
+			(!rtos->rtos_specific_params))
 		return -1;
 
 	param = (const struct chibios_params *) rtos->rtos_specific_params;
@@ -499,11 +485,11 @@ static int chibios_get_thread_reg_list(struct rtos *rtos, int64_t thread_id,
 	return rtos_generic_stack_read(rtos->target, param->stacking_info, stack_ptr, reg_list, num_regs);
 }
 
-static int chibios_get_symbol_list_to_lookup(symbol_table_elem_t *symbol_list[])
+static int chibios_get_symbol_list_to_lookup(struct symbol_table_elem *symbol_list[])
 {
 	*symbol_list = malloc(sizeof(chibios_symbol_list));
 
-	if (*symbol_list == NULL)
+	if (!*symbol_list)
 		return ERROR_FAIL;
 
 	memcpy(*symbol_list, chibios_symbol_list, sizeof(chibios_symbol_list));
@@ -512,7 +498,7 @@ static int chibios_get_symbol_list_to_lookup(symbol_table_elem_t *symbol_list[])
 
 static bool chibios_detect_rtos(struct target *target)
 {
-	if ((target->rtos->symbols != NULL) &&
+	if ((target->rtos->symbols) &&
 			((target->rtos->symbols[CHIBIOS_VAL_RLIST].address != 0) ||
 			 (target->rtos->symbols[CHIBIOS_VAL_CH].address != 0))) {
 
@@ -531,17 +517,13 @@ static bool chibios_detect_rtos(struct target *target)
 
 static int chibios_create(struct target *target)
 {
-	int i = 0;
-	while ((i < CHIBIOS_NUM_PARAMS) &&
-			(0 != strcmp(chibios_params_list[i].target_name, target->type->name))) {
-		i++;
-	}
-	if (i >= CHIBIOS_NUM_PARAMS) {
-		LOG_WARNING("Could not find target \"%s\" in ChibiOS compatibility "
-				"list", target->type->name);
-		return -1;
-	}
+	for (unsigned int i = 0; i < ARRAY_SIZE(chibios_params_list); i++)
+		if (strcmp(chibios_params_list[i].target_name, target->type->name) == 0) {
+			target->rtos->rtos_specific_params = (void *)&chibios_params_list[i];
+			return 0;
+		}
 
-	target->rtos->rtos_specific_params = (void *) &chibios_params_list[i];
-	return 0;
+	LOG_WARNING("Could not find target \"%s\" in ChibiOS compatibility "
+				"list", target->type->name);
+	return -1;
 }

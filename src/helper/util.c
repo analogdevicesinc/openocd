@@ -1,18 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2010 by Øyvind Harboe                                   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /* this file contains various functionality useful to standalone systems */
@@ -24,7 +13,7 @@
 #include "log.h"
 #include "time_support.h"
 
-static int util_Jim_Command_ms(Jim_Interp *interp,
+static int jim_util_ms(Jim_Interp *interp,
 	int argc,
 	Jim_Obj * const *argv)
 {
@@ -45,9 +34,9 @@ static const struct command_registration util_command_handlers[] = {
 	{
 		.name = "ms",
 		.mode = COMMAND_ANY,
-		.jim_handler = util_Jim_Command_ms,
+		.jim_handler = jim_util_ms,
 		.help =
-			"Returns ever increasing milliseconds. Used to calculuate differences in time.",
+			"Returns ever increasing milliseconds. Used to calculate differences in time.",
 		.usage = "",
 	},
 	COMMAND_REGISTRATION_DONE

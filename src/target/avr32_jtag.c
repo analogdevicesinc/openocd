@@ -1,18 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2010 by Oleksandr Tymoshenko <gonzo@bluezbox.com>       *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -29,7 +18,7 @@ static int avr32_jtag_set_instr(struct avr32_jtag *jtag_info, int new_instr)
 	int busy = 0;
 
 	tap = jtag_info->tap;
-	if (tap == NULL)
+	if (!tap)
 		return ERROR_FAIL;
 
 	if (buf_get_u32(tap->cur_instr, 0, tap->ir_length) != (uint32_t)new_instr) {
@@ -55,7 +44,7 @@ static int avr32_jtag_set_instr(struct avr32_jtag *jtag_info, int new_instr)
 	return ERROR_OK;
 }
 
-int avr32_jtag_nexus_set_address(struct avr32_jtag *jtag_info,
+static int avr32_jtag_nexus_set_address(struct avr32_jtag *jtag_info,
 		uint32_t addr, int mode)
 {
 	struct scan_field fields[2];
@@ -92,7 +81,7 @@ int avr32_jtag_nexus_set_address(struct avr32_jtag *jtag_info,
 }
 
 
-int avr32_jtag_nexus_read_data(struct avr32_jtag *jtag_info,
+static int avr32_jtag_nexus_read_data(struct avr32_jtag *jtag_info,
 	uint32_t *pdata)
 {
 
@@ -129,7 +118,7 @@ int avr32_jtag_nexus_read_data(struct avr32_jtag *jtag_info,
 	return ERROR_OK;
 }
 
-int avr32_jtag_nexus_write_data(struct avr32_jtag *jtag_info,
+static int avr32_jtag_nexus_write_data(struct avr32_jtag *jtag_info,
 		uint32_t data)
 {
 
@@ -184,7 +173,7 @@ int avr32_jtag_nexus_write(struct avr32_jtag *jtag_info,
 	return avr32_jtag_nexus_write_data(jtag_info, value);
 }
 
-int avr32_jtag_mwa_set_address(struct avr32_jtag *jtag_info, int slave,
+static int avr32_jtag_mwa_set_address(struct avr32_jtag *jtag_info, int slave,
 		uint32_t addr, int mode)
 {
 	struct scan_field fields[2];
@@ -223,7 +212,7 @@ int avr32_jtag_mwa_set_address(struct avr32_jtag *jtag_info, int slave,
 	return ERROR_OK;
 }
 
-int avr32_jtag_mwa_read_data(struct avr32_jtag *jtag_info,
+static int avr32_jtag_mwa_read_data(struct avr32_jtag *jtag_info,
 	uint32_t *pdata)
 {
 
@@ -260,7 +249,7 @@ int avr32_jtag_mwa_read_data(struct avr32_jtag *jtag_info,
 	return ERROR_OK;
 }
 
-int avr32_jtag_mwa_write_data(struct avr32_jtag *jtag_info,
+static int avr32_jtag_mwa_write_data(struct avr32_jtag *jtag_info,
 	uint32_t data)
 {
 

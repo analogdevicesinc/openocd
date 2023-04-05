@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 #ifndef TARGET__RISCV__PROGRAM_H
 #define TARGET__RISCV__PROGRAM_H
 
@@ -38,31 +40,25 @@ int riscv_program_write(struct riscv_program *program);
  * program to execute.  That's OK, just make sure this eventually terminates.
  * */
 int riscv_program_exec(struct riscv_program *p, struct target *t);
-int riscv_program_load(struct riscv_program *p, struct target *t);
-
-/* Clears a program, removing all the state associated with it. */
-int riscv_program_clear(struct riscv_program *p, struct target *t);
 
 /* A lower level interface, you shouldn't use this unless you have a reason. */
 int riscv_program_insert(struct riscv_program *p, riscv_insn_t i);
 
-/* There is hardware support for saving at least one register.  This register
- * doesn't need to be saved/restored the usual way, which is useful during
- * early initialization when we can't save/restore arbitrary registerrs to host
- * memory. */
-int riscv_program_save_to_dscratch(struct riscv_program *p, enum gdb_regno to_save);
-
 /* Helpers to assemble various instructions.  Return 0 on success.  These might
  * assemble into a multi-instruction sequence that overwrites some other
  * register, but those will be properly saved and restored. */
+int riscv_program_ldr(struct riscv_program *p, enum gdb_regno d, enum gdb_regno a, int o);
 int riscv_program_lwr(struct riscv_program *p, enum gdb_regno d, enum gdb_regno a, int o);
 int riscv_program_lhr(struct riscv_program *p, enum gdb_regno d, enum gdb_regno a, int o);
 int riscv_program_lbr(struct riscv_program *p, enum gdb_regno d, enum gdb_regno a, int o);
 
+int riscv_program_sdr(struct riscv_program *p, enum gdb_regno s, enum gdb_regno a, int o);
 int riscv_program_swr(struct riscv_program *p, enum gdb_regno s, enum gdb_regno a, int o);
 int riscv_program_shr(struct riscv_program *p, enum gdb_regno s, enum gdb_regno a, int o);
 int riscv_program_sbr(struct riscv_program *p, enum gdb_regno s, enum gdb_regno a, int o);
 
+int riscv_program_csrrsi(struct riscv_program *p, enum gdb_regno d, unsigned int z, enum gdb_regno csr);
+int riscv_program_csrrci(struct riscv_program *p, enum gdb_regno d, unsigned int z, enum gdb_regno csr);
 int riscv_program_csrr(struct riscv_program *p, enum gdb_regno d, enum gdb_regno csr);
 int riscv_program_csrw(struct riscv_program *p, enum gdb_regno s, enum gdb_regno csr);
 

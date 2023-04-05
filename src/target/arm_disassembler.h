@@ -1,19 +1,8 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2006 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ARM_DISASSEMBLER_H
@@ -112,11 +101,11 @@ enum arm_instruction_type {
 	ARM_QDADD,
 	ARM_QSUB,
 	ARM_QDSUB,
-	ARM_SMLAxy,
-	ARM_SMLALxy,
-	ARM_SMLAWy,
-	ARM_SMULxy,
-	ARM_SMULWy,
+	ARM_SMLAXY,
+	ARM_SMLALXY,
+	ARM_SMLAWY,
+	ARM_SMULXY,
+	ARM_SMULWY,
 	ARM_LDRD,
 	ARM_STRD,
 
@@ -133,35 +122,35 @@ union arm_shifter_operand {
 		uint32_t immediate;
 	} immediate;
 	struct {
-		uint8_t Rm;
+		uint8_t rm;
 		uint8_t shift; /* 0: LSL, 1: LSR, 2: ASR, 3: ROR, 4: RRX */
 		uint8_t shift_imm;
 	} immediate_shift;
 	struct {
-		uint8_t Rm;
+		uint8_t rm;
 		uint8_t shift;
-		uint8_t Rs;
+		uint8_t rs;
 	} register_shift;
 };
 
 struct arm_data_proc_instr {
 	int variant; /* 0: immediate, 1: immediate_shift, 2: register_shift */
-	uint8_t S;
-	uint8_t Rn;
-	uint8_t Rd;
+	uint8_t s;
+	uint8_t rn;
+	uint8_t rd;
 	union arm_shifter_operand shifter_operand;
 };
 
 struct arm_load_store_instr {
-	uint8_t Rd;
-	uint8_t Rn;
-	uint8_t U;
+	uint8_t rd;
+	uint8_t rn;
+	uint8_t u;
 	int index_mode; /* 0: offset, 1: pre-indexed, 2: post-indexed */
 	int offset_mode; /* 0: immediate, 1: (scaled) register */
 	union {
 		uint32_t offset;
 		struct {
-			uint8_t Rm;
+			uint8_t rm;
 			uint8_t shift; /* 0: LSL, 1: LSR, 2: ASR, 3: ROR, 4: RRX */
 			uint8_t shift_imm;
 		} reg;
@@ -169,11 +158,11 @@ struct arm_load_store_instr {
 };
 
 struct arm_load_store_multiple_instr {
-	uint8_t Rn;
+	uint8_t rn;
 	uint32_t register_list;
 	uint8_t addressing_mode; /* 0: IA, 1: IB, 2: DA, 3: DB */
-	uint8_t S;
-	uint8_t W;
+	uint8_t s;
+	uint8_t w;
 };
 
 struct arm_instruction {
@@ -197,9 +186,11 @@ int arm_evaluate_opcode(uint32_t opcode, uint32_t address,
 		struct arm_instruction *instruction);
 int thumb_evaluate_opcode(uint16_t opcode, uint32_t address,
 		struct arm_instruction *instruction);
-int thumb2_opcode(struct target *target, uint32_t address,
-		struct arm_instruction *instruction);
 int arm_access_size(struct arm_instruction *instruction);
+#if HAVE_CAPSTONE
+int arm_disassemble(struct command_invocation *cmd, struct target *target,
+		target_addr_t address, size_t count, bool thumb_mode);
+#endif
 
 #define COND(opcode) (arm_condition_strings[(opcode & 0xf0000000) >> 28])
 

@@ -1,18 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2009-2010 by Simon Qian <SimonQian@SimonQian.com>       *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /* Versaloon is a programming tool for multiple MCUs.
@@ -24,6 +13,7 @@
 #include "config.h"
 #endif
 
+#include <jtag/adapter.h>
 #include <jtag/interface.h>
 #include <jtag/commands.h>
 #include <jtag/swd.h>
@@ -105,7 +95,7 @@ static int vsllink_execute_queue(void)
 		" vsllink "
 		"-------------------------------------");
 
-	while (cmd != NULL) {
+	while (cmd) {
 		switch (cmd->type) {
 			case JTAG_RUNTEST:
 				LOG_DEBUG_IO("runtest %i cycles, end in %s",
@@ -165,7 +155,7 @@ static int vsllink_execute_queue(void)
 				break;
 
 			case JTAG_SLEEP:
-				LOG_DEBUG_IO("sleep %i", cmd->cmd.sleep->us);
+				LOG_DEBUG_IO("sleep %" PRIu32, cmd->cmd.sleep->us);
 				vsllink_tap_execute();
 				jtag_sleep(cmd->cmd.sleep->us);
 				break;
@@ -245,18 +235,14 @@ static int vsllink_speed_div(int jtag_speed, int *khz)
 
 static void vsllink_free_buffer(void)
 {
-	if (tdi_buffer != NULL) {
-		free(tdi_buffer);
-		tdi_buffer = NULL;
-	}
-	if (tdo_buffer != NULL) {
-		free(tdo_buffer);
-		tdo_buffer = NULL;
-	}
-	if (tms_buffer != NULL) {
-		free(tms_buffer);
-		tms_buffer = NULL;
-	}
+	free(tdi_buffer);
+	tdi_buffer = NULL;
+
+	free(tdo_buffer);
+	tdo_buffer = NULL;
+
+	free(tms_buffer);
+	tms_buffer = NULL;
 }
 
 static int vsllink_quit(void)
@@ -276,6 +262,7 @@ static int vsllink_quit(void)
 	vsllink_free_buffer();
 	vsllink_usb_close(vsllink_handle);
 
+	libusb_exit(vsllink_handle->libusb_ctx);
 	free(vsllink_handle);
 
 	return ERROR_OK;
@@ -284,14 +271,14 @@ static int vsllink_quit(void)
 static int vsllink_interface_init(void)
 {
 	vsllink_handle = malloc(sizeof(struct vsllink));
-	if (NULL == vsllink_handle) {
+	if (!vsllink_handle) {
 		LOG_ERROR("unable to allocate memory");
 		return ERROR_FAIL;
 	}
 
 	libusb_init(&vsllink_handle->libusb_ctx);
 
-	if (ERROR_OK != vsllink_usb_open(vsllink_handle)) {
+	if (vsllink_usb_open(vsllink_handle) != ERROR_OK) {
 		LOG_ERROR("Can't find USB JTAG Interface!"
 			"Please check connection and permissions.");
 		return ERROR_JTAG_INIT_FAILED;
@@ -301,7 +288,7 @@ static int vsllink_interface_init(void)
 		versaloon_interface.usb_setting.pid);
 	versaloon_usb_device_handle = vsllink_handle->usb_device_handle;
 
-	if (ERROR_OK != versaloon_interface.init())
+	if (versaloon_interface.init() != ERROR_OK)
 		return ERROR_FAIL;
 	if (versaloon_interface.usb_setting.buf_size < 32) {
 		versaloon_interface.fini();
@@ -314,7 +301,7 @@ static int vsllink_interface_init(void)
 static int vsllink_init(void)
 {
 	int retval = vsllink_interface_init();
-	if (ERROR_OK != retval)
+	if (retval != ERROR_OK)
 		return retval;
 
 	versaloon_interface.adaptors.gpio.init(0);
@@ -327,7 +314,7 @@ static int vsllink_init(void)
 		versaloon_interface.adaptors.gpio.config(0, GPIO_TRST, 0,
 			GPIO_TRST, GPIO_TRST);
 		versaloon_interface.adaptors.swd.init(0);
-		vsllink_swd_frequency(jtag_get_speed_khz() * 1000);
+		vsllink_swd_frequency(adapter_get_speed_khz() * 1000);
 		vsllink_swd_switch_seq(JTAG_TO_SWD);
 
 	} else {
@@ -337,18 +324,18 @@ static int vsllink_init(void)
 		tdi_buffer = malloc(tap_buffer_size);
 		tdo_buffer = malloc(tap_buffer_size);
 		tms_buffer = malloc(tap_buffer_size);
-		if ((NULL == tdi_buffer) || (NULL == tdo_buffer) || (NULL == tms_buffer)) {
+		if ((!tdi_buffer) || (!tdo_buffer) || (!tms_buffer)) {
 			vsllink_quit();
 			return ERROR_FAIL;
 		}
 
 		versaloon_interface.adaptors.jtag_raw.init(0);
-		versaloon_interface.adaptors.jtag_raw.config(0, jtag_get_speed_khz());
+		versaloon_interface.adaptors.jtag_raw.config(0, adapter_get_speed_khz());
 		versaloon_interface.adaptors.gpio.config(0, GPIO_SRST | GPIO_TRST,
 			GPIO_TRST, GPIO_SRST, GPIO_SRST);
 	}
 
-	if (ERROR_OK != versaloon_interface.adaptors.peripheral_commit())
+	if (versaloon_interface.adaptors.peripheral_commit() != ERROR_OK)
 		return ERROR_FAIL;
 
 	vsllink_reset(0, 0);
@@ -499,21 +486,6 @@ COMMAND_HANDLER(vsllink_handle_usb_pid_command)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	COMMAND_PARSE_NUMBER(u16, CMD_ARGV[0],
 		versaloon_interface.usb_setting.pid);
-	return ERROR_OK;
-}
-
-COMMAND_HANDLER(vsllink_handle_usb_serial_command)
-{
-	if (CMD_ARGC > 1)
-		return ERROR_COMMAND_SYNTAX_ERROR;
-
-	free(versaloon_interface.usb_setting.serialstring);
-
-	if (CMD_ARGC == 1)
-		versaloon_interface.usb_setting.serialstring = strdup(CMD_ARGV[0]);
-	else
-		versaloon_interface.usb_setting.serialstring = NULL;
-
 	return ERROR_OK;
 }
 
@@ -676,8 +648,7 @@ static int vsllink_jtag_execute(void)
 					return ERROR_JTAG_QUEUE_FAILED;
 				}
 
-				if (pending_scan_result->buffer != NULL)
-					free(pending_scan_result->buffer);
+				free(pending_scan_result->buffer);
 			}
 		}
 	} else {
@@ -790,14 +761,14 @@ static int vsllink_check_usb_strings(
 	char desc_string[256];
 	int retval;
 
-	if (NULL != versaloon_interface.usb_setting.serialstring) {
+	if (adapter_get_required_serial()) {
 		retval = libusb_get_string_descriptor_ascii(usb_device_handle,
 			usb_desc->iSerialNumber, (unsigned char *)desc_string,
 			sizeof(desc_string));
 		if (retval < 0)
 			return ERROR_FAIL;
 
-		if (strncmp(desc_string, versaloon_interface.usb_setting.serialstring,
+		if (strncmp(desc_string, adapter_get_required_serial(),
 				sizeof(desc_string)))
 			return ERROR_FAIL;
 	}
@@ -808,7 +779,7 @@ static int vsllink_check_usb_strings(
 	if (retval < 0)
 		return ERROR_FAIL;
 
-	if (strstr(desc_string, "Versaloon") == NULL)
+	if (!strstr(desc_string, "Versaloon"))
 		return ERROR_FAIL;
 
 	return ERROR_OK;
@@ -817,7 +788,7 @@ static int vsllink_check_usb_strings(
 static int vsllink_usb_open(struct vsllink *vsllink)
 {
 	ssize_t num_devices, i;
-	libusb_device **usb_devices;
+	struct libusb_device **usb_devices;
 	struct libusb_device_descriptor usb_desc;
 	struct libusb_device_handle *usb_device_handle;
 	int retval;
@@ -828,7 +799,7 @@ static int vsllink_usb_open(struct vsllink *vsllink)
 		return ERROR_FAIL;
 
 	for (i = 0; i < num_devices; i++) {
-		libusb_device *device = usb_devices[i];
+		struct libusb_device *device = usb_devices[i];
 
 		retval = libusb_get_device_descriptor(device, &usb_desc);
 		if (retval != 0)
@@ -843,7 +814,7 @@ static int vsllink_usb_open(struct vsllink *vsllink)
 			continue;
 
 		retval = vsllink_check_usb_strings(usb_device_handle, &usb_desc);
-		if (ERROR_OK == retval)
+		if (retval == ERROR_OK)
 			break;
 
 		libusb_close(usb_device_handle);
@@ -892,48 +863,52 @@ static void vsllink_debug_buffer(uint8_t *buffer, int length)
 	}
 }
 
-static const struct command_registration vsllink_command_handlers[] = {
+static const struct command_registration vsllink_subcommand_handlers[] = {
 	{
-		.name = "vsllink_usb_vid",
+		.name = "usb_vid",
 		.handler = &vsllink_handle_usb_vid_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Set USB VID",
 		.usage = "<vid>",
 	},
 	{
-		.name = "vsllink_usb_pid",
+		.name = "usb_pid",
 		.handler = &vsllink_handle_usb_pid_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Set USB PID",
 		.usage = "<pid>",
 	},
 	{
-		.name = "vsllink_usb_serial",
-		.handler = &vsllink_handle_usb_serial_command,
-		.mode = COMMAND_CONFIG,
-		.help = "Set or disable check for USB serial",
-		.usage = "[<serial>]",
-	},
-	{
-		.name = "vsllink_usb_bulkin",
+		.name = "usb_bulkin",
 		.handler = &vsllink_handle_usb_bulkin_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Set USB input endpoint",
 		.usage = "<ep_in>",
 	},
 	{
-		.name = "vsllink_usb_bulkout",
+		.name = "usb_bulkout",
 		.handler = &vsllink_handle_usb_bulkout_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Set USB output endpoint",
 		.usage = "<ep_out>",
 	},
 	{
-		.name = "vsllink_usb_interface",
+		.name = "usb_interface",
 		.handler = &vsllink_handle_usb_interface_command,
 		.mode = COMMAND_CONFIG,
 		.help = "Set USB output interface",
 		.usage = "<interface>",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration vsllink_command_handlers[] = {
+	{
+		.name = "vsllink",
+		.mode = COMMAND_ANY,
+		.help = "perform vsllink management",
+		.chain = vsllink_subcommand_handlers,
+		.usage = "",
 	},
 	COMMAND_REGISTRATION_DONE
 };

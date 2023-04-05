@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2022 by Analog Devices, Inc.                     			*
+*   Copyright (C) 2022 - 2023 by Analog Devices, Inc.                     *
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
 *   it under the terms of the GNU General Public License as published by  *
@@ -324,7 +324,7 @@ if (cable_params.use_usbmux)
 	}
 	else
 	{
-		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
+		ret = jtag_libusb_open(vids, pids, &dev, NULL);
 		if (ret != ERROR_OK)
 			return ret;
 

@@ -1,25 +1,16 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2017 by Michele Sardo                                   *
  *   msmttchr@gmail.com                                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#include <helper/binarybuffer.h>
+#include "helper/types.h"
 #include <target/algorithm.h>
 #include <target/armv7m.h>
 #include <target/cortex_m.h>
@@ -33,6 +24,8 @@
 #define JTAG_IDCODE_REG(bluenrgx_info)      (bluenrgx_info->flash_ptr->jtag_idcode_reg)
 #define FLASH_PAGE_SIZE(bluenrgx_info)      (bluenrgx_info->flash_ptr->flash_page_size)
 
+#define FLASH_SIZE_REG_MASK (0xFFFF)
+
 struct flash_ctrl_priv_data {
 	uint32_t die_id_reg;
 	uint32_t jtag_idcode_reg;
@@ -43,7 +36,7 @@ struct flash_ctrl_priv_data {
 	char *part_name;
 };
 
-const struct flash_ctrl_priv_data flash_priv_data_1 = {
+static const struct flash_ctrl_priv_data flash_priv_data_1 = {
 	.die_id_reg = 0x4090001C,
 	.jtag_idcode_reg = 0x40900028,
 	.flash_base = 0x10040000,
@@ -53,7 +46,7 @@ const struct flash_ctrl_priv_data flash_priv_data_1 = {
 	.part_name = "BLUENRG-1",
 };
 
-const struct flash_ctrl_priv_data flash_priv_data_2 = {
+static const struct flash_ctrl_priv_data flash_priv_data_2 = {
 	.die_id_reg = 0x4090001C,
 	.jtag_idcode_reg = 0x40900028,
 	.flash_base = 0x10040000,
@@ -63,7 +56,7 @@ const struct flash_ctrl_priv_data flash_priv_data_2 = {
 	.part_name = "BLUENRG-2",
 };
 
-const struct flash_ctrl_priv_data flash_priv_data_lp = {
+static const struct flash_ctrl_priv_data flash_priv_data_lp = {
 	.die_id_reg = 0x40000000,
 	.jtag_idcode_reg = 0x40000004,
 	.flash_base = 0x10040000,
@@ -73,13 +66,27 @@ const struct flash_ctrl_priv_data flash_priv_data_lp = {
 	.part_name = "BLUENRG-LP",
 };
 
+static const struct flash_ctrl_priv_data flash_priv_data_lps = {
+	.die_id_reg = 0x40000000,
+	.jtag_idcode_reg = 0x40000004,
+	.flash_base = 0x10040000,
+	.flash_regs_base = 0x40001000,
+	.flash_page_size = 2048,
+	.jtag_idcode = 0x02028041,
+	.part_name = "BLUENRG-LPS",
+};
+
 struct bluenrgx_flash_bank {
 	bool probed;
 	uint32_t die_id;
 	const struct flash_ctrl_priv_data *flash_ptr;
 };
 
-const struct flash_ctrl_priv_data *flash_ctrl[] = {&flash_priv_data_1, &flash_priv_data_2, &flash_priv_data_lp};
+static const struct flash_ctrl_priv_data *flash_ctrl[] = {
+	&flash_priv_data_1,
+	&flash_priv_data_2,
+	&flash_priv_data_lp,
+	&flash_priv_data_lps};
 
 /* flash_bank bluenrg-x 0 0 0 0 <target#> */
 FLASH_BANK_COMMAND_HANDLER(bluenrgx_flash_bank_command)
@@ -89,7 +96,7 @@ FLASH_BANK_COMMAND_HANDLER(bluenrgx_flash_bank_command)
 	bluenrgx_info = calloc(1, sizeof(*bluenrgx_info));
 
 	/* Check allocation */
-	if (bluenrgx_info == NULL) {
+	if (!bluenrgx_info) {
 		LOG_ERROR("failed to allocate bank structure");
 		return ERROR_FAIL;
 	}
@@ -184,7 +191,7 @@ static int bluenrgx_erase(struct flash_bank *bank, unsigned int first,
 		command = FLASH_CMD_ERASE_PAGE;
 		for (unsigned int i = first; i <= last; i++) {
 			address = bank->base+i*FLASH_PAGE_SIZE(bluenrgx_info);
-			LOG_DEBUG("address = %08x, index = %u", address, i);
+			LOG_DEBUG("address = %08" PRIx32 ", index = %u", address, i);
 
 			if (bluenrgx_write_flash_reg(bank, FLASH_REG_IRQRAW, 0x3f) != ERROR_OK) {
 				LOG_ERROR("Register write failed");
@@ -229,7 +236,7 @@ static int bluenrgx_write(struct flash_bank *bank, const uint8_t *buffer,
 	struct target *target = bank->target;
 	uint32_t buffer_size = 16384 + 8;
 	struct working_area *write_algorithm;
-	struct working_area *write_algorithm_sp;
+	struct working_area *write_algorithm_stack;
 	struct working_area *source;
 	uint32_t address = bank->base + offset;
 	struct reg_param reg_params[5];
@@ -249,7 +256,7 @@ static int bluenrgx_write(struct flash_bank *bank, const uint8_t *buffer,
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
 	if ((offset + count) > bank->size) {
-		LOG_ERROR("Requested write past beyond of flash size: (offset+count) = %d, size=%d",
+		LOG_ERROR("Requested write past beyond of flash size: (offset+count) = %" PRIu32 ", size=%" PRIu32,
 			  (offset + count),
 			  bank->size);
 		return ERROR_FLASH_DST_OUT_OF_BANK;
@@ -278,10 +285,10 @@ static int bluenrgx_write(struct flash_bank *bank, const uint8_t *buffer,
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 	}
 
-	/* Stack pointer area */
+	/* Stack area */
 	if (target_alloc_working_area(target, 128,
-					  &write_algorithm_sp) != ERROR_OK) {
-		LOG_DEBUG("no working area for write code stack pointer");
+					  &write_algorithm_stack) != ERROR_OK) {
+		LOG_DEBUG("no working area for target algorithm stack");
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 	}
 
@@ -293,8 +300,19 @@ static int bluenrgx_write(struct flash_bank *bank, const uint8_t *buffer,
 	init_reg_param(&reg_params[2], "r2", 32, PARAM_OUT);
 	init_reg_param(&reg_params[3], "r3", 32, PARAM_OUT);
 	init_reg_param(&reg_params[4], "sp", 32, PARAM_OUT);
-	/* Put the parameter at the first available stack location */
-	init_mem_param(&mem_params[0], write_algorithm_sp->address + 80, 32, PARAM_OUT);
+	/* Put the 4th parameter at the location in the stack frame of target write() function.
+	 * See contrib/loaders/flash/bluenrg-x/bluenrg-x_write.lst
+	 * 34 ldr     r6, [sp, #80]
+	 *                     ^^^ offset
+	 */
+	init_mem_param(&mem_params[0], write_algorithm_stack->address + 80, 32, PARAM_OUT);
+	/* Stack for target write algorithm - target write() function has
+	 * __attribute__((naked)) so it does not setup the new stack frame.
+	 * Therefore the stack frame uses the area from SP upwards!
+	 * Interrupts are disabled and no subroutines are called from write()
+	 * so no need to allocate stack below SP.
+	 * TODO: remove __attribute__((naked)) and use similar parameter passing as stm32l4x */
+	buf_set_u32(reg_params[4].value, 0, 32, write_algorithm_stack->address);
 
 	/* FIFO start address (first two words used for write and read pointers) */
 	buf_set_u32(reg_params[0].value, 0, 32, source->address);
@@ -304,16 +322,14 @@ static int bluenrgx_write(struct flash_bank *bank, const uint8_t *buffer,
 	buf_set_u32(reg_params[2].value, 0, 32, address);
 	/* Number of bytes */
 	buf_set_u32(reg_params[3].value, 0, 32, count);
-	/* Stack pointer for program working area */
-	buf_set_u32(reg_params[4].value, 0, 32, write_algorithm_sp->address);
 	/* Flash register base address */
 	buf_set_u32(mem_params[0].value, 0, 32, bluenrgx_info->flash_ptr->flash_regs_base);
 
 	LOG_DEBUG("source->address = " TARGET_ADDR_FMT, source->address);
 	LOG_DEBUG("source->address+ source->size = " TARGET_ADDR_FMT, source->address+source->size);
-	LOG_DEBUG("write_algorithm_sp->address = " TARGET_ADDR_FMT, write_algorithm_sp->address);
-	LOG_DEBUG("address = %08x", address);
-	LOG_DEBUG("count = %08x", count);
+	LOG_DEBUG("write_algorithm_stack->address = " TARGET_ADDR_FMT, write_algorithm_stack->address);
+	LOG_DEBUG("address = %08" PRIx32, address);
+	LOG_DEBUG("count = %08" PRIx32, count);
 
 	retval = target_run_flash_async_algorithm(target,
 						  buffer,
@@ -350,7 +366,7 @@ static int bluenrgx_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 	target_free_working_area(target, source);
 	target_free_working_area(target, write_algorithm);
-	target_free_working_area(target, write_algorithm_sp);
+	target_free_working_area(target, write_algorithm_stack);
 
 	destroy_reg_param(&reg_params[0]);
 	destroy_reg_param(&reg_params[1]);
@@ -371,7 +387,7 @@ static int bluenrgx_probe(struct flash_bank *bank)
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (idcode != flash_priv_data_lp.jtag_idcode) {
+	if ((idcode != flash_priv_data_lp.jtag_idcode) && (idcode != flash_priv_data_lps.jtag_idcode)) {
 		retval = target_read_u32(bank->target, BLUENRG2_JTAG_REG, &idcode);
 		if (retval != ERROR_OK)
 			return retval;
@@ -389,6 +405,7 @@ static int bluenrgx_probe(struct flash_bank *bank)
 		}
 	}
 	retval = bluenrgx_read_flash_reg(bank, FLASH_SIZE_REG, &size_info);
+	size_info = size_info & FLASH_SIZE_REG_MASK;
 	if (retval != ERROR_OK)
 		return retval;
 
@@ -424,7 +441,7 @@ static int bluenrgx_auto_probe(struct flash_bank *bank)
 }
 
 /* This method must return a string displaying information about the bank */
-static int bluenrgx_get_info(struct flash_bank *bank, char *buf, int buf_size)
+static int bluenrgx_get_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct bluenrgx_flash_bank *bluenrgx_info = bank->driver_priv;
 	int mask_number, cut_number;
@@ -432,8 +449,7 @@ static int bluenrgx_get_info(struct flash_bank *bank, char *buf, int buf_size)
 	if (!bluenrgx_info->probed) {
 		int retval = bluenrgx_probe(bank);
 		if (retval != ERROR_OK) {
-			snprintf(buf, buf_size,
-				 "Unable to find bank information.");
+			command_print_sameline(cmd, "Unable to find bank information.");
 			return retval;
 		}
 	}
@@ -441,8 +457,8 @@ static int bluenrgx_get_info(struct flash_bank *bank, char *buf, int buf_size)
 	mask_number = (bluenrgx_info->die_id >> 4) & 0xF;
 	cut_number = bluenrgx_info->die_id & 0xF;
 
-	snprintf(buf, buf_size,
-		 "%s - Rev: %d.%d", bluenrgx_info->flash_ptr->part_name, mask_number, cut_number);
+	command_print_sameline(cmd, "%s - Rev: %d.%d",
+			bluenrgx_info->flash_ptr->part_name, mask_number, cut_number);
 	return ERROR_OK;
 }
 

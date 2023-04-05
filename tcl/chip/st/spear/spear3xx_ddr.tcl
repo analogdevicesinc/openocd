@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 # Init scripts to configure DDR controller of SPEAr3xx
 # http://www.st.com/spear
 # Original values taken from XLoader source code
@@ -28,7 +30,7 @@ proc sp3xx_ddr_init {ddr_type {ddr_chips 1}} {
 	if { $ddr_chips == 2 } {
 		echo [format \
 			"Double chip DDR memory. Total memory size 0x%08x byte" \
-			[expr 2 * $ddr_size]]
+			[expr {2 * $ddr_size}]]
 	} else {
 		echo [format \
 			"Single chip DDR memory. Memory size 0x%08x byte" \

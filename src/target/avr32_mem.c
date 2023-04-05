@@ -1,18 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2010 by Oleksandr Tymoshenko <gonzo@bluezbox.com>       *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -176,7 +165,7 @@ int avr32_jtag_write_memory16(struct avr32_jtag *jtag_info,
 	 */
 	if (addr & 3) {
 		/*
-		 * mwa_read will read whole world, no nead to fiddle
+		 * mwa_read will read whole world, no need to fiddle
 		 * with address. It will be truncated in set_addr
 		 */
 		retval = avr32_jtag_mwa_read(jtag_info, SLAVE_HSB_UNCACHED,
@@ -248,7 +237,7 @@ int avr32_jtag_write_memory8(struct avr32_jtag *jtag_info,
 	 */
 	if (addr & 3) {
 		/*
-		 * mwa_read will read whole world, no nead to fiddle
+		 * mwa_read will read whole world, no need to fiddle
 		 * with address. It will be truncated in set_addr
 		 */
 		retval = avr32_jtag_mwa_read(jtag_info, SLAVE_HSB_UNCACHED,

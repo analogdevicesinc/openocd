@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2007 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -44,7 +33,7 @@ static int etb_set_instr(struct etb *etb, uint32_t new_instr)
 	struct jtag_tap *tap;
 
 	tap = etb->tap;
-	if (tap == NULL)
+	if (!tap)
 		return ERROR_FAIL;
 
 	if (buf_get_u32(tap->cur_instr, 0, tap->ir_length) != new_instr) {
@@ -349,7 +338,7 @@ COMMAND_HANDLER(handle_etb_config_command)
 	}
 
 	tap = jtag_tap_by_string(CMD_ARGV[1]);
-	if (tap == NULL) {
+	if (!tap) {
 		command_print(CMD, "ETB: TAP %s does not exist", CMD_ARGV[1]);
 		return ERROR_FAIL;
 	}

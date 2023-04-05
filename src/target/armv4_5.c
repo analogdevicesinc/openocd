@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2005 by Dominic Rath                                    *
  *   Dominic.Rath@gmx.de                                                   *
@@ -10,19 +12,6 @@
  *                                                                         *
  *   Copyright (C) 2018 by Liviu Ionescu                                   *
  *   <ilg@livius.net>                                                      *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -546,7 +535,7 @@ static struct reg_feature arm_gdb_dummy_fp_features = {
  * Modern ARM cores use Vector Floating Point (VFP), if they
  * have any floating point support.  VFP is not FPA-compatible.
  */
-struct reg arm_gdb_dummy_fp_reg = {
+static struct reg arm_gdb_dummy_fp_reg = {
 	.name = "GDB dummy FPA register",
 	.value = (uint8_t *) arm_gdb_dummy_fp_value,
 	.valid = true,
@@ -563,7 +552,7 @@ static const uint8_t arm_gdb_dummy_fps_value[4];
  * Dummy FPA status registers are required to support GDB on ARM.
  * Register packets require an obsolete FPA status register.
  */
-struct reg arm_gdb_dummy_fps_reg = {
+static struct reg arm_gdb_dummy_fps_reg = {
 	.name = "GDB dummy FPA status register",
 	.value = (uint8_t *) arm_gdb_dummy_fps_value,
 	.valid = true,
@@ -856,6 +845,9 @@ COMMAND_HANDLER(handle_armv4_5_reg_command)
 		char *sep = "\n";
 		char *shadow = "";
 
+		if (!arm_mode_data[mode].n_indices)
+			continue;
+
 		/* label this bank of registers (or shadows) */
 		switch (arm_mode_data[mode].psr) {
 			case ARM_MODE_SYS:
@@ -869,6 +861,7 @@ COMMAND_HANDLER(handle_armv4_5_reg_command)
 					continue;
 			/* FALLTHROUGH */
 			case ARM_MODE_MON:
+			case ARM_MODE_1176_MON:
 				if (arm->core_type != ARM_CORE_TYPE_SEC_EXT
 					&& arm->core_type != ARM_CORE_TYPE_VIRT_EXT)
 					continue;
@@ -912,48 +905,49 @@ COMMAND_HANDLER(handle_armv4_5_reg_command)
 	return ERROR_OK;
 }
 
-COMMAND_HANDLER(handle_armv4_5_core_state_command)
+COMMAND_HANDLER(handle_arm_core_state_command)
 {
 	struct target *target = get_current_target(CMD_CTX);
 	struct arm *arm = target_to_arm(target);
+	int ret = ERROR_OK;
 
 	if (!is_arm(arm)) {
 		command_print(CMD, "current target isn't an ARM");
 		return ERROR_FAIL;
 	}
 
-	if (arm->core_type == ARM_CORE_TYPE_M_PROFILE) {
-		/* armv7m not supported */
-		command_print(CMD, "Unsupported Command");
-		return ERROR_OK;
-	}
-
 	if (CMD_ARGC > 0) {
-		if (strcmp(CMD_ARGV[0], "arm") == 0)
-			arm->core_state = ARM_STATE_ARM;
+		if (strcmp(CMD_ARGV[0], "arm") == 0) {
+			if (arm->core_type == ARM_CORE_TYPE_M_PROFILE) {
+				command_print(CMD, "arm mode not supported on Cortex-M");
+				ret = ERROR_FAIL;
+			} else {
+				arm->core_state = ARM_STATE_ARM;
+			}
+		}
 		if (strcmp(CMD_ARGV[0], "thumb") == 0)
 			arm->core_state = ARM_STATE_THUMB;
 	}
 
 	command_print(CMD, "core state: %s", arm_state_strings[arm->core_state]);
 
-	return ERROR_OK;
+	return ret;
 }
 
 COMMAND_HANDLER(handle_arm_disassemble_command)
 {
-	int retval = ERROR_OK;
+#if HAVE_CAPSTONE
 	struct target *target = get_current_target(CMD_CTX);
 
-	if (target == NULL) {
+	if (!target) {
 		LOG_ERROR("No target selected");
 		return ERROR_FAIL;
 	}
 
 	struct arm *arm = target_to_arm(target);
 	target_addr_t address;
-	int count = 1;
-	int thumb = 0;
+	unsigned int count = 1;
+	bool thumb = false;
 
 	if (!is_arm(arm)) {
 		command_print(CMD, "current target isn't an ARM");
@@ -962,62 +956,37 @@ COMMAND_HANDLER(handle_arm_disassemble_command)
 
 	if (arm->core_type == ARM_CORE_TYPE_M_PROFILE) {
 		/* armv7m is always thumb mode */
-		thumb = 1;
+		thumb = true;
 	}
 
 	switch (CMD_ARGC) {
 		case 3:
 			if (strcmp(CMD_ARGV[2], "thumb") != 0)
-				goto usage;
-			thumb = 1;
+				return ERROR_COMMAND_SYNTAX_ERROR;
+			thumb = true;
 		/* FALL THROUGH */
 		case 2:
-			COMMAND_PARSE_NUMBER(int, CMD_ARGV[1], count);
+			COMMAND_PARSE_NUMBER(uint, CMD_ARGV[1], count);
 		/* FALL THROUGH */
 		case 1:
 			COMMAND_PARSE_ADDRESS(CMD_ARGV[0], address);
 			if (address & 0x01) {
 				if (!thumb) {
 					command_print(CMD, "Disassemble as Thumb");
-					thumb = 1;
+					thumb = true;
 				}
 				address &= ~1;
 			}
 			break;
 		default:
-usage:
-			count = 0;
-			retval = ERROR_COMMAND_SYNTAX_ERROR;
+			return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	while (count-- > 0) {
-		struct arm_instruction cur_instruction;
-
-		if (thumb) {
-			/* Always use Thumb2 disassembly for best handling
-			 * of 32-bit BL/BLX, and to work with newer cores
-			 * (some ARMv6, all ARMv7) that use Thumb2.
-			 */
-			retval = thumb2_opcode(target, address,
-					&cur_instruction);
-			if (retval != ERROR_OK)
-				break;
-		} else {
-			uint32_t opcode;
-
-			retval = target_read_u32(target, address, &opcode);
-			if (retval != ERROR_OK)
-				break;
-			retval = arm_evaluate_opcode(opcode, address,
-					&cur_instruction) != ERROR_OK;
-			if (retval != ERROR_OK)
-				break;
-		}
-		command_print(CMD, "%s", cur_instruction.text);
-		address += cur_instruction.instruction_size;
-	}
-
-	return retval;
+	return arm_disassemble(CMD, target, address, count, thumb);
+#else
+	command_print(CMD, "capstone disassembly framework required");
+	return ERROR_FAIL;
+#endif
 }
 
 static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
@@ -1028,10 +997,10 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 	int retval;
 
 	context = current_command_context(interp);
-	assert(context != NULL);
+	assert(context);
 
 	target = get_current_target(context);
-	if (target == NULL) {
+	if (!target) {
 		LOG_ERROR("%s: no current target", __func__);
 		return JIM_ERR;
 	}
@@ -1054,8 +1023,8 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 	int cpnum;
 	uint32_t op1;
 	uint32_t op2;
-	uint32_t CRn;
-	uint32_t CRm;
+	uint32_t crn;
+	uint32_t crm;
 	uint32_t value;
 	long l;
 
@@ -1092,7 +1061,7 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 			"CRn", (int) l);
 		return JIM_ERR;
 	}
-	CRn = l;
+	crn = l;
 
 	retval = Jim_GetLong(interp, argv[4], &l);
 	if (retval != JIM_OK)
@@ -1102,7 +1071,7 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 			"CRm", (int) l);
 		return JIM_ERR;
 	}
-	CRm = l;
+	crm = l;
 
 	retval = Jim_GetLong(interp, argv[5], &l);
 	if (retval != JIM_OK)
@@ -1131,14 +1100,14 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 		value = l;
 
 		/* NOTE: parameters reordered! */
-		/* ARMV4_5_MCR(cpnum, op1, 0, CRn, CRm, op2) */
-		retval = arm->mcr(target, cpnum, op1, op2, CRn, CRm, value);
+		/* ARMV4_5_MCR(cpnum, op1, 0, crn, crm, op2) */
+		retval = arm->mcr(target, cpnum, op1, op2, crn, crm, value);
 		if (retval != ERROR_OK)
 			return JIM_ERR;
 	} else {
 		/* NOTE: parameters reordered! */
-		/* ARMV4_5_MRC(cpnum, op1, 0, CRn, CRm, op2) */
-		retval = arm->mrc(target, cpnum, op1, op2, CRn, CRm, &value);
+		/* ARMV4_5_MRC(cpnum, op1, 0, crn, crm, op2) */
+		retval = arm->mrc(target, cpnum, op1, op2, crn, crm, &value);
 		if (retval != ERROR_OK)
 			return JIM_ERR;
 
@@ -1148,8 +1117,6 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 	return JIM_OK;
 }
 
-extern const struct command_registration semihosting_common_handlers[];
-
 static const struct command_registration arm_exec_command_handlers[] = {
 	{
 		.name = "reg",
@@ -1157,20 +1124,6 @@ static const struct command_registration arm_exec_command_handlers[] = {
 		.mode = COMMAND_EXEC,
 		.help = "display ARM core registers",
 		.usage = "",
-	},
-	{
-		.name = "core_state",
-		.handler = handle_armv4_5_core_state_command,
-		.mode = COMMAND_EXEC,
-		.usage = "['arm'|'thumb']",
-		.help = "display/change ARM core state",
-	},
-	{
-		.name = "disassemble",
-		.handler = handle_arm_disassemble_command,
-		.mode = COMMAND_EXEC,
-		.usage = "address [count ['thumb']]",
-		.help = "disassemble instructions ",
 	},
 	{
 		.name = "mcr",
@@ -1187,10 +1140,32 @@ static const struct command_registration arm_exec_command_handlers[] = {
 		.usage = "cpnum op1 CRn CRm op2",
 	},
 	{
+		.chain = arm_all_profiles_command_handlers,
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+const struct command_registration arm_all_profiles_command_handlers[] = {
+	{
+		.name = "core_state",
+		.handler = handle_arm_core_state_command,
+		.mode = COMMAND_EXEC,
+		.usage = "['arm'|'thumb']",
+		.help = "display/change ARM core state",
+	},
+	{
+		.name = "disassemble",
+		.handler = handle_arm_disassemble_command,
+		.mode = COMMAND_EXEC,
+		.usage = "address [count ['thumb']]",
+		.help = "disassemble instructions",
+	},
+	{
 		.chain = semihosting_common_handlers,
 	},
 	COMMAND_REGISTRATION_DONE
 };
+
 const struct command_registration arm_command_handlers[] = {
 	{
 		.name = "arm",
@@ -1368,7 +1343,7 @@ int armv4_5_run_algorithm_inner(struct target *target,
 	}
 
 	/* armv5 and later can terminate with BKPT instruction; less overhead */
-	if (!exit_point && arm->is_armv4) {
+	if (!exit_point && arm->arch == ARM_ARCH_V4) {
 		LOG_ERROR("ARMv4 target needs HW breakpoint location");
 		return ERROR_FAIL;
 	}
@@ -1401,7 +1376,7 @@ int armv4_5_run_algorithm_inner(struct target *target,
 		if (reg_params[i].direction == PARAM_IN)
 			continue;
 
-		struct reg *reg = register_get_by_name(arm->core_cache, reg_params[i].reg_name, 0);
+		struct reg *reg = register_get_by_name(arm->core_cache, reg_params[i].reg_name, false);
 		if (!reg) {
 			LOG_ERROR("BUG: register '%s' not found", reg_params[i].reg_name);
 			return ERROR_COMMAND_SYNTAX_ERROR;
@@ -1473,7 +1448,7 @@ int armv4_5_run_algorithm_inner(struct target *target,
 
 			struct reg *reg = register_get_by_name(arm->core_cache,
 					reg_params[i].reg_name,
-					0);
+					false);
 			if (!reg) {
 				LOG_ERROR("BUG: register '%s' not found", reg_params[i].reg_name);
 				retval = ERROR_COMMAND_SYNTAX_ERROR;
@@ -1589,7 +1564,7 @@ int arm_checksum_memory(struct target *target,
 	int timeout = 20000 * (1 + (count / (1024 * 1024)));
 
 	/* armv4 must exit using a hardware breakpoint */
-	if (arm->is_armv4)
+	if (arm->arch == ARM_ARCH_V4)
 		exit_var = crc_algorithm->address + sizeof(arm_crc_code_le) - 8;
 
 	retval = target_run_algorithm(target, 0, NULL, 2, reg_params,
@@ -1670,7 +1645,7 @@ int arm_blank_check_memory(struct target *target,
 	buf_set_u32(reg_params[2].value, 0, 32, erased_value);
 
 	/* armv4 must exit using a hardware breakpoint */
-	if (arm->is_armv4)
+	if (arm->arch == ARM_ARCH_V4)
 		exit_var = check_algorithm->address + sizeof(check_code_le) - 4;
 
 	retval = target_run_algorithm(target, 0, NULL, 3, reg_params,
@@ -1702,7 +1677,7 @@ static int arm_full_context(struct target *target)
 	int retval = ERROR_OK;
 
 	for (; num_regs && retval == ERROR_OK; num_regs--, reg++) {
-		if (reg->valid)
+		if (!reg->exist || reg->valid)
 			continue;
 		retval = armv4_5_get_core_reg(reg);
 	}
@@ -1711,7 +1686,7 @@ static int arm_full_context(struct target *target)
 
 static int arm_default_mrc(struct target *target, int cpnum,
 	uint32_t op1, uint32_t op2,
-	uint32_t CRn, uint32_t CRm,
+	uint32_t crn, uint32_t crm,
 	uint32_t *value)
 {
 	LOG_ERROR("%s doesn't implement MRC", target_type_name(target));
@@ -1720,7 +1695,7 @@ static int arm_default_mrc(struct target *target, int cpnum,
 
 static int arm_default_mcr(struct target *target, int cpnum,
 	uint32_t op1, uint32_t op2,
-	uint32_t CRn, uint32_t CRm,
+	uint32_t crn, uint32_t crm,
 	uint32_t value)
 {
 	LOG_ERROR("%s doesn't implement MCR", target_type_name(target));

@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
 /***************************************************************************
  *   Copyright (C) 2008 by Spencer Oliver                                  *
  *   spen@spen-soft.co.uk                                                  *
@@ -6,19 +8,6 @@
  *                                                                         *
  *   Copyright (C) 2011 by Drasko DRASKOVIC                                *
  *   drasko.draskovic@gmail.com                                            *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_MIPS32_H
@@ -27,7 +16,7 @@
 #include "target.h"
 #include "mips32_pracc.h"
 
-#define MIPS32_COMMON_MAGIC		0xB320B320
+#define MIPS32_COMMON_MAGIC		0xB320B320U
 
 /**
  * Memory segments (32bit kernel mode addresses)
@@ -42,7 +31,7 @@
 /** Returns the kernel segment base of a given address */
 #define KSEGX(a)		((a) & 0xe0000000)
 
-/** CP0 CONFIG regites fields */
+/** CP0 CONFIG register fields */
 #define MIPS32_CONFIG0_KU_SHIFT 25
 #define MIPS32_CONFIG0_KU_MASK (0x7 << MIPS32_CONFIG0_KU_SHIFT)
 
@@ -93,7 +82,8 @@ struct mips32_comparator {
 };
 
 struct mips32_common {
-	uint32_t common_magic;
+	unsigned int common_magic;
+
 	void *arch_info;
 	struct reg_cache *core_cache;
 	struct mips_ejtag ejtag_info;
@@ -130,7 +120,7 @@ struct mips32_core_reg {
 };
 
 struct mips32_algorithm {
-	int common_magic;
+	unsigned int common_magic;
 	enum mips32_isa_mode isa_mode;
 };
 
@@ -248,7 +238,7 @@ struct mips32_algorithm {
 
 /*MICRO MIPS INSTRUCTIONS, see doc MD00582 */
 #define POOL32A					0X00u
-#define POOL32AXf				0x3Cu
+#define POOL32AXF				0x3Cu
 #define POOL32B					0x08u
 #define POOL32I					0x10u
 #define MMIPS32_OP_ADDI			0x04u
@@ -300,24 +290,24 @@ struct mips32_algorithm {
 #define MMIPS32_CACHE(op, off, base)		MIPS32_R_INST(POOL32B, op, base, MMIPS32_OP_CACHE << 1, 0, off)
 
 #define MMIPS32_J(tar)				MIPS32_J_INST(MMIPS32_OP_J, ((0x07FFFFFFu & ((tar) >> 1))))
-#define MMIPS32_JR(reg)				MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_JALR, POOL32AXf)
+#define MMIPS32_JR(reg)				MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_JALR, POOL32AXF)
 #define MMIPS32_LB(reg, off, base)		MIPS32_I_INST(MMIPS32_OP_LB, reg, base, off)
 #define MMIPS32_LBU(reg, off, base)		MIPS32_I_INST(MMIPS32_OP_LBU, reg, base, off)
 #define MMIPS32_LHU(reg, off, base)		MIPS32_I_INST(MMIPS32_OP_LHU, reg, base, off)
 #define MMIPS32_LUI(reg, val)			MIPS32_I_INST(POOL32I, MMIPS32_OP_LUI, reg, val)
 #define MMIPS32_LW(reg, off, base)		MIPS32_I_INST(MMIPS32_OP_LW, reg, base, off)
 
-#define MMIPS32_MFC0(gpr, cpr, sel)		MIPS32_R_INST(POOL32A, gpr, cpr, sel, MMIPS32_OP_MFC0, POOL32AXf)
-#define MMIPS32_MFLO(reg)			MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_MFLO, POOL32AXf)
-#define MMIPS32_MFHI(reg)			MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_MFHI, POOL32AXf)
-#define MMIPS32_MTC0(gpr, cpr, sel)		MIPS32_R_INST(POOL32A, gpr, cpr, sel, MMIPS32_OP_MTC0, POOL32AXf)
-#define MMIPS32_MTLO(reg)			MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_MTLO, POOL32AXf)
-#define MMIPS32_MTHI(reg)			MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_MTHI, POOL32AXf)
+#define MMIPS32_MFC0(gpr, cpr, sel)		MIPS32_R_INST(POOL32A, gpr, cpr, sel, MMIPS32_OP_MFC0, POOL32AXF)
+#define MMIPS32_MFLO(reg)			MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_MFLO, POOL32AXF)
+#define MMIPS32_MFHI(reg)			MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_MFHI, POOL32AXF)
+#define MMIPS32_MTC0(gpr, cpr, sel)		MIPS32_R_INST(POOL32A, gpr, cpr, sel, MMIPS32_OP_MTC0, POOL32AXF)
+#define MMIPS32_MTLO(reg)			MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_MTLO, POOL32AXF)
+#define MMIPS32_MTHI(reg)			MIPS32_R_INST(POOL32A, 0, reg, 0, MMIPS32_OP_MTHI, POOL32AXF)
 
 #define MMIPS32_MOVN(dst, src, tar)		MIPS32_R_INST(POOL32A, tar, src, dst, 0, MMIPS32_OP_MOVN)
 #define MMIPS32_NOP				0
 #define MMIPS32_ORI(tar, src, val)		MIPS32_I_INST(MMIPS32_OP_ORI, tar, src, val)
-#define MMIPS32_RDHWR(tar, dst)			MIPS32_R_INST(POOL32A, dst, tar, 0, MMIPS32_OP_RDHWR, POOL32AXf)
+#define MMIPS32_RDHWR(tar, dst)			MIPS32_R_INST(POOL32A, dst, tar, 0, MMIPS32_OP_RDHWR, POOL32AXF)
 #define MMIPS32_SB(reg, off, base)		MIPS32_I_INST(MMIPS32_OP_SB, reg, base, off)
 #define MMIPS32_SH(reg, off, base)		MIPS32_I_INST(MMIPS32_OP_SH, reg, base, off)
 #define MMIPS32_SW(reg, off, base)		MIPS32_I_INST(MMIPS32_OP_SW, reg, base, off)
@@ -327,7 +317,7 @@ struct mips32_algorithm {
 #define MMIPS32_SYNCI(off, base)		MIPS32_I_INST(POOL32I, MMIPS32_OP_SYNCI, base, off)
 #define MMIPS32_SLL(dst, src, sa)		MIPS32_R_INST(POOL32A, dst, src, sa, 0, MMIPS32_OP_SLL)
 #define MMIPS32_SLTI(tar, src, val)		MIPS32_I_INST(MMIPS32_OP_SLTI, tar, src, val)
-#define MMIPS32_SYNC				0x00001A7Cu /* MIPS32_R_INST(POOL32A, 0, 0, 0, 0x1ADu, POOL32AXf) */
+#define MMIPS32_SYNC				0x00001A7Cu /* MIPS32_R_INST(POOL32A, 0, 0, 0, 0x1ADu, POOL32AXF) */
 
 #define MMIPS32_XOR(reg, val1, val2)		MIPS32_R_INST(POOL32A, val1, val2, reg, 0, MMIPS32_OP_XOR)
 #define MMIPS32_XORI(tar, src, val)		MIPS32_I_INST(MMIPS32_OP_XORI, tar, src, val)
@@ -336,8 +326,8 @@ struct mips32_algorithm {
 
 
 /* ejtag specific instructions */
-#define MMIPS32_DRET			0x0000E37Cu	/* MIPS32_R_INST(POOL32A, 0, 0, 0, 0x38D, POOL32AXf) */
-#define MMIPS32_SDBBP			0x0000DB7Cu	/* MIPS32_R_INST(POOL32A, 0, 0, 0, 0x1BD, POOL32AXf) */
+#define MMIPS32_DRET			0x0000E37Cu	/* MIPS32_R_INST(POOL32A, 0, 0, 0, 0x38D, POOL32AXF) */
+#define MMIPS32_SDBBP			0x0000DB7Cu	/* MIPS32_R_INST(POOL32A, 0, 0, 0, 0x1BD, POOL32AXF) */
 #define MMIPS16_SDBBP			0x46C0u		/* POOL16C instr */
 
 /* instruction code with isa selection */

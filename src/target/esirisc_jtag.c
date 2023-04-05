@@ -1,20 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2018 by Square, Inc.                                    *
  *   Steven Stallion <stallion@squareup.com>                               *
  *   James Zhao <hjz@squareup.com>                                         *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -57,7 +46,7 @@ static int esirisc_jtag_get_padding(void)
 	int padding = 0;
 	int bypass_devices = 0;
 
-	for (struct jtag_tap *tap = jtag_tap_next_enabled(NULL); tap != NULL;
+	for (struct jtag_tap *tap = jtag_tap_next_enabled(NULL); tap;
 			tap = jtag_tap_next_enabled(tap))
 		if (tap->bypass)
 			bypass_devices++;
@@ -141,7 +130,9 @@ static int esirisc_jtag_recv(struct esirisc_jtag *jtag_info,
 	int num_in_bytes = DIV_ROUND_UP(num_in_bits, 8);
 
 	struct scan_field fields[3];
-	uint8_t r[num_in_bytes * 2];
+	/* prevent zero-size variable length array */
+	int r_size = num_in_bytes ? num_in_bytes * 2 : 1;
+	uint8_t r[r_size];
 
 	esirisc_jtag_set_instr(jtag_info, INSTR_DEBUG);
 
@@ -181,8 +172,8 @@ static int esirisc_jtag_check_status(struct esirisc_jtag *jtag_info)
 {
 	uint8_t eid = esirisc_jtag_get_eid(jtag_info);
 	if (eid != EID_NONE) {
-		LOG_ERROR("esirisc_jtag: bad status: 0x%02" PRIx32 " (DA: %" PRId32 ", "
-				"S: %" PRId32 ", EID: 0x%02" PRIx32 ")",
+		LOG_ERROR("esirisc_jtag: bad status: 0x%02" PRIx8 " (DA: %" PRId32 ", "
+				"S: %" PRId32 ", EID: 0x%02" PRIx8 ")",
 				jtag_info->status, esirisc_jtag_is_debug_active(jtag_info),
 				esirisc_jtag_is_stopped(jtag_info), eid);
 		return ERROR_FAIL;
@@ -201,13 +192,13 @@ static int esirisc_jtag_send_and_recv(struct esirisc_jtag *jtag_info, uint8_t co
 
 	retval = esirisc_jtag_send(jtag_info, command, num_out_fields, out_fields);
 	if (retval != ERROR_OK) {
-		LOG_ERROR("esirisc_jtag: send failed (command: 0x%02" PRIx32 ")", command);
+		LOG_ERROR("esirisc_jtag: send failed (command: 0x%02" PRIx8 ")", command);
 		return ERROR_FAIL;
 	}
 
 	retval = esirisc_jtag_recv(jtag_info, num_in_fields, in_fields);
 	if (retval != ERROR_OK) {
-		LOG_ERROR("esirisc_jtag: recv failed (command: 0x%02" PRIx32 ")", command);
+		LOG_ERROR("esirisc_jtag: recv failed (command: 0x%02" PRIx8 ")", command);
 		return ERROR_FAIL;
 	}
 
@@ -409,7 +400,7 @@ int esirisc_jtag_read_reg(struct esirisc_jtag *jtag_info, uint8_t reg, uint32_t 
 		return retval;
 
 	*data = le_to_h_u32(d);
-	LOG_DEBUG("register: 0x%" PRIx32 ", data: 0x%" PRIx32, reg, *data);
+	LOG_DEBUG("register: 0x%" PRIx8 ", data: 0x%" PRIx32, reg, *data);
 
 	return ERROR_OK;
 }
@@ -419,7 +410,7 @@ int esirisc_jtag_write_reg(struct esirisc_jtag *jtag_info, uint8_t reg, uint32_t
 	struct scan_field out_fields[2];
 	uint8_t d[4];
 
-	LOG_DEBUG("register: 0x%" PRIx32 ", data: 0x%" PRIx32, reg, data);
+	LOG_DEBUG("register: 0x%" PRIx8 ", data: 0x%" PRIx32, reg, data);
 
 	out_fields[0].num_bits = 8;
 	out_fields[0].out_value = &reg;
@@ -457,7 +448,7 @@ int esirisc_jtag_read_csr(struct esirisc_jtag *jtag_info, uint8_t bank, uint8_t 
 		return retval;
 
 	*data = le_to_h_u32(d);
-	LOG_DEBUG("bank: 0x%" PRIx32 ", csr: 0x%" PRIx32 ", data: 0x%" PRIx32, bank, csr, *data);
+	LOG_DEBUG("bank: 0x%" PRIx8 ", csr: 0x%" PRIx8 ", data: 0x%" PRIx32, bank, csr, *data);
 
 	return ERROR_OK;
 }
@@ -467,7 +458,7 @@ int esirisc_jtag_write_csr(struct esirisc_jtag *jtag_info, uint8_t bank, uint8_t
 	struct scan_field out_fields[2];
 	uint8_t c[2], d[4];
 
-	LOG_DEBUG("bank: 0x%" PRIx32 ", csr: 0x%" PRIx32 ", data: 0x%" PRIx32, bank, csr, data);
+	LOG_DEBUG("bank: 0x%" PRIx8 ", csr: 0x%" PRIx8 ", data: 0x%" PRIx32, bank, csr, data);
 
 	out_fields[0].num_bits = 16;
 	out_fields[0].out_value = c;

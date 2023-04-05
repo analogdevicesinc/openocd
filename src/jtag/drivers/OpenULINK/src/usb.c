@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2011-2013 by Martin Schmoelzer                          *
  *   <martin.schmoelzer@student.tuwien.ac.at>                              *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 /**
@@ -38,7 +27,7 @@ volatile bool EP2_in;
 volatile __xdata __at 0x7FE8 struct setup_data setup_data;
 
 /* Define number of endpoints (except Control Endpoint 0) in a central place.
- * Be sure to include the neccessary endpoint descriptors! */
+ * Be sure to include the necessary endpoint descriptors! */
 #define NUM_ENDPOINTS 2
 
 __code struct usb_device_descriptor device_descriptor = {

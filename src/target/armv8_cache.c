@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2016 by Matthias Welwarsky                              *
  *   matthias.welwarsky@sysgo.com                                          *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -23,6 +12,7 @@
 #include "armv8_cache.h"
 #include "armv8_dpm.h"
 #include "armv8_opcodes.h"
+#include "smp.h"
 
 /* CLIDR cache types */
 #define CACHE_LEVEL_HAS_UNIFIED_CACHE	0x4
@@ -31,26 +21,30 @@
 
 static int armv8_d_cache_sanity_check(struct armv8_common *armv8)
 {
-/*	struct armv8_cache_common *armv8_cache = &armv8->armv8_mmu.armv8_cache;
+#if 0	
+	//TBD if this can be used pending an investigation into GXP2 when running on FPGA
+	struct armv8_cache_common *armv8_cache = &armv8->armv8_mmu.armv8_cache;
 
 	if (armv8_cache->d_u_cache_enabled)
 		return ERROR_OK;
 
 	return ERROR_TARGET_INVALID;
-	*/
+#endif
 	// for now report cache is enabled to flush cache always
 	return ERROR_OK;
 }
 
 static int armv8_i_cache_sanity_check(struct armv8_common *armv8)
 {
-/*	struct armv8_cache_common *armv8_cache = &armv8->armv8_mmu.armv8_cache;
+#if 0
+    //TBD if this can be used pending an investigation into GXP2 when running on FPGA
+	struct armv8_cache_common *armv8_cache = &armv8->armv8_mmu.armv8_cache;
 
 	if (armv8_cache->i_cache_enabled)
 		return ERROR_OK;
 
 	return ERROR_TARGET_INVALID;
-	*/
+#endif
 	// for now report cache is enabled to flush cache always
 	return ERROR_OK;
 }
@@ -209,10 +203,10 @@ static int armv8_handle_inner_cache_info_command(struct command_invocation *cmd,
 
 		if (arch->ctype & 1) {
 			command_print(cmd,
-				"L%d I-Cache: linelen %" PRIi32
-				", associativity %" PRIi32
-				", nsets %" PRIi32
-				", cachesize %" PRId32 " KBytes",
+				"L%d I-Cache: linelen %" PRIu32
+				", associativity %" PRIu32
+				", nsets %" PRIu32
+				", cachesize %" PRIu32 " KBytes",
 				cl+1,
 				arch->i_size.linelen,
 				arch->i_size.associativity,
@@ -222,10 +216,10 @@ static int armv8_handle_inner_cache_info_command(struct command_invocation *cmd,
 
 		if (arch->ctype >= 2) {
 			command_print(cmd,
-				"L%d D-Cache: linelen %" PRIi32
-				", associativity %" PRIi32
-				", nsets %" PRIi32
-				", cachesize %" PRId32 " KBytes",
+				"L%d D-Cache: linelen %" PRIu32
+				", associativity %" PRIu32
+				", nsets %" PRIu32
+				", cachesize %" PRIu32 " KBytes",
 				cl+1,
 				arch->d_u_size.linelen,
 				arch->d_u_size.associativity,
@@ -256,15 +250,12 @@ static int  armv8_flush_all_data(struct target *target)
 		/*  look if all the other target have been flushed in order to flush level
 		 *  2 */
 		struct target_list *head;
-		struct target *curr;
-		head = target->head;
-		while (head != (struct target_list *)NULL) {
-			curr = head->target;
+		foreach_smp_target(head, target->smp_targets) {
+			struct target *curr = head->target;
 			if (curr->state == TARGET_HALTED) {
 				LOG_INFO("Wait flushing data l1 on core %" PRId32, curr->coreid);
 				retval = _armv8_flush_all_data(curr);
 			}
-			head = head->next;
 		}
 	} else
 		retval = _armv8_flush_all_data(target);
@@ -342,7 +333,7 @@ int armv8_identify_cache(struct armv8_common *armv8)
 
 	cache->iminline = 4UL << (ctr & 0xf);
 	cache->dminline = 4UL << ((ctr & 0xf0000) >> 16);
-	LOG_DEBUG("ctr %" PRIx32 " ctr.iminline %" PRId32 " ctr.dminline %" PRId32,
+	LOG_DEBUG("ctr %" PRIx32 " ctr.iminline %" PRIu32 " ctr.dminline %" PRIu32,
 		 ctr, cache->iminline, cache->dminline);
 
 	/*  retrieve CLIDR */
@@ -379,13 +370,13 @@ int armv8_identify_cache(struct armv8_common *armv8)
 				goto done;
 			cache->arch[cl].d_u_size = decode_cache_reg(cache_reg);
 
-			LOG_DEBUG("data/unified cache index %d << %d, way %d << %d",
+			LOG_DEBUG("data/unified cache index %" PRIu32 " << %" PRIu32 ", way %" PRIu32 " << %" PRIu32,
 					cache->arch[cl].d_u_size.index,
 					cache->arch[cl].d_u_size.index_shift,
 					cache->arch[cl].d_u_size.way,
 					cache->arch[cl].d_u_size.way_shift);
 
-			LOG_DEBUG("cacheline %d bytes %d KBytes asso %d ways",
+			LOG_DEBUG("cacheline %" PRIu32 " bytes %" PRIu32 " KBytes asso %" PRIu32 " ways",
 					cache->arch[cl].d_u_size.linelen,
 					cache->arch[cl].d_u_size.cachesize,
 					cache->arch[cl].d_u_size.associativity);
@@ -399,13 +390,13 @@ int armv8_identify_cache(struct armv8_common *armv8)
 				goto done;
 			cache->arch[cl].i_size = decode_cache_reg(cache_reg);
 
-			LOG_DEBUG("instruction cache index %d << %d, way %d << %d",
+			LOG_DEBUG("instruction cache index %" PRIu32 " << %" PRIu32 ", way %" PRIu32 " << %" PRIu32,
 					cache->arch[cl].i_size.index,
 					cache->arch[cl].i_size.index_shift,
 					cache->arch[cl].i_size.way,
 					cache->arch[cl].i_size.way_shift);
 
-			LOG_DEBUG("cacheline %d bytes %d KBytes asso %d ways",
+			LOG_DEBUG("cacheline %" PRIu32 " bytes %" PRIu32 " KBytes asso %" PRIu32 " ways",
 					cache->arch[cl].i_size.linelen,
 					cache->arch[cl].i_size.cachesize,
 					cache->arch[cl].i_size.associativity);
@@ -423,7 +414,7 @@ int armv8_identify_cache(struct armv8_common *armv8)
 	armv8->armv8_mmu.armv8_cache.info = 1;
 
 	/*  if no l2 cache initialize l1 data cache flush function function */
-	if (armv8->armv8_mmu.armv8_cache.flush_all_data_cache == NULL) {
+	if (!armv8->armv8_mmu.armv8_cache.flush_all_data_cache) {
 		armv8->armv8_mmu.armv8_cache.display_cache_info =
 			armv8_handle_inner_cache_info_command;
 		armv8->armv8_mmu.armv8_cache.flush_all_data_cache =

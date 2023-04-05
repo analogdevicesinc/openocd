@@ -1,19 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Copyright (C) 2012 by George Harris                                   *
  *   george@luminairecoffee.com                                            *
- *																		   *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -66,7 +55,7 @@ FLASH_BANK_COMMAND_HANDLER(lpcspifi_flash_bank_command)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	lpcspifi_info = malloc(sizeof(struct lpcspifi_flash_bank));
-	if (lpcspifi_info == NULL) {
+	if (!lpcspifi_info) {
 		LOG_ERROR("not enough memory");
 		return ERROR_FAIL;
 	}
@@ -894,7 +883,7 @@ static int lpcspifi_probe(struct flash_bank *bank)
 	/* create and fill sectors array */
 	bank->num_sectors = lpcspifi_info->dev->size_in_bytes / sectorsize;
 	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
-	if (sectors == NULL) {
+	if (!sectors) {
 		LOG_ERROR("not enough memory");
 		return ERROR_FAIL;
 	}
@@ -926,17 +915,16 @@ static int lpcspifi_protect_check(struct flash_bank *bank)
 	return ERROR_OK;
 }
 
-static int get_lpcspifi_info(struct flash_bank *bank, char *buf, int buf_size)
+static int get_lpcspifi_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	struct lpcspifi_flash_bank *lpcspifi_info = bank->driver_priv;
 
 	if (!(lpcspifi_info->probed)) {
-		snprintf(buf, buf_size,
-			"\nSPIFI flash bank not probed yet\n");
+		command_print_sameline(cmd, "\nSPIFI flash bank not probed yet\n");
 		return ERROR_OK;
 	}
 
-	snprintf(buf, buf_size, "\nSPIFI flash information:\n"
+	command_print_sameline(cmd, "\nSPIFI flash information:\n"
 		"  Device \'%s\' (ID 0x%08" PRIx32 ")\n",
 		lpcspifi_info->dev->name, lpcspifi_info->dev->device_id);
 

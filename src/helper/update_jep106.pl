@@ -1,4 +1,6 @@
 #!/usr/bin/perl
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 use strict;
 use warnings;
 use File::Basename;
@@ -6,7 +8,7 @@ use File::Basename;
 if (@ARGV != 1) {
 	die "Usage: $0 <JEP106 PDF document>\n\n"
 	. "Convert the JEDEC document containing manufacturer identification codes\n"
-	. "to an array initializer suitable for incusion into jep106.c. The latest\n"
+	. "to an array initializer suitable for inclusion into jep106.c. The latest\n"
 	. "version of the document can be found here:\n"
 	. "http://www.jedec.org/standards-documents/results/jep106\n";
 };
