@@ -3,6 +3,8 @@
  *                                                                         *
  *   Copyright (C) 2019-2020, Ampere Computing LLC                         *
  *                                                                         *
+ *   Copyright (C) 2023, Analog Devices Inc                                *
+ *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *
@@ -48,6 +50,7 @@ enum halt_mode {
 struct aarch64_private_config {
 	struct adi_private_config adi_config;
 	struct arm_cti *cti;
+	struct arm_cti *sys_cti;
 };
 
 static int aarch64_poll(struct target *target);
@@ -230,12 +233,28 @@ static int aarch64_init_debug_access(struct target *target)
 		retval = arm_cti_write_reg(armv8->cti, CTI_GATE, 0);
 	/* output halt requests to PE on channel 0 event */
 	if (retval == ERROR_OK)
-		retval = arm_cti_write_reg(armv8->cti, CTI_OUTEN0, CTI_CHNL(0));
+		retval = arm_cti_set_halt(armv8->cti, CTI_CHNL(0));
 	/* output restart requests to PE on channel 1 event */
 	if (retval == ERROR_OK)
-		retval = arm_cti_write_reg(armv8->cti, CTI_OUTEN1, CTI_CHNL(1));
+		retval = arm_cti_set_dbgrestart(armv8->cti, CTI_CHNL(1));
 	if (retval != ERROR_OK)
 		return retval;
+
+	if (armv8->sys_cti != NULL) {
+		/* Enable SYS CTI */
+		retval = arm_cti_enable(armv8->sys_cti, true);
+		/* By default, gate all channel events to and from the CTM */
+		if (retval == ERROR_OK)
+			retval = arm_cti_write_reg(armv8->sys_cti, CTI_GATE, 0);
+		/* output halt requests to System Peripheral on channel 0 event */
+		if (retval == ERROR_OK)
+			retval = arm_cti_set_halt(armv8->sys_cti, CTI_CHNL(0));
+		/* output restart requests to System Peripheral on channel 1 event */
+		if (retval == ERROR_OK)
+			retval = arm_cti_set_dbgrestart(armv8->sys_cti, CTI_CHNL(1));
+		if (retval != ERROR_OK)
+			return retval;
+	}
 
 	/* Resync breakpoint registers */
 
@@ -381,6 +400,12 @@ static int aarch64_halt_one(struct target *target, enum halt_mode mode)
 	retval = arm_cti_pulse_channel(armv8->cti, 0);
 	if (retval != ERROR_OK)
 		return retval;
+
+	if (armv8->sys_cti != NULL) {
+		retval = arm_cti_pulse_channel(armv8->sys_cti, 0);
+		if (retval != ERROR_OK)
+			return retval;
+	}
 
 	if (mode == HALT_SYNC) {
 		retval = aarch64_wait_halt_one(target);
@@ -680,6 +705,12 @@ static int aarch64_do_restart_one(struct target *target, enum restart_mode mode)
 	retval = arm_cti_pulse_channel(armv8->cti, 1);
 	if (retval != ERROR_OK)
 		return retval;
+
+	if (armv8->sys_cti != NULL) {
+		retval = arm_cti_pulse_channel(armv8->sys_cti, 1);
+		if (retval != ERROR_OK)
+			return retval;
+	}
 
 	if (mode == RESTART_SYNC) {
 		int64_t then = timeval_ms();
@@ -2348,6 +2379,9 @@ static int aarch64_examine_first(struct target *target)
 
 	armv8->cti = pc->cti;
 
+	if (pc->sys_cti != NULL)
+		armv8->sys_cti = pc->sys_cti;
+
 	retval = aarch64_dpm_setup(aarch64, debug);
 	if (retval != ERROR_OK)
 		return retval;
@@ -2480,10 +2514,12 @@ static int aarch64_virt2phys(struct target *target, target_addr_t virt,
  */
 enum aarch64_cfg_param {
 	CFG_CTI,
+	CFG_SYSCTI,
 };
 
 static const Jim_Nvp nvp_config_opts[] = {
 	{ .name = "-cti", .value = CFG_CTI },
+	{ .name = "-syscti", .value = CFG_SYSCTI },
 	{ .name = NULL, .value = -1 }
 };
 
@@ -2552,6 +2588,36 @@ static int aarch64_jim_configure(struct target *target, Jim_GetOptInfo *goi)
 					return JIM_ERR;
 				}
 				Jim_SetResultString(goi->interp, arm_cti_name(pc->cti), -1);
+			}
+			break;
+		}
+
+		case CFG_SYSCTI: {
+			if (goi->isconfigure) {
+				Jim_Obj *o_cti;
+				struct arm_cti *cti;
+				e = Jim_GetOpt_Obj(goi, &o_cti);
+				if (e != JIM_OK)
+					return e;
+				cti = cti_instance_by_jim_obj(goi->interp, o_cti);
+				if (cti == NULL) {
+					Jim_SetResultString(goi->interp, "SYS CTI name invalid!", -1);
+					return JIM_ERR;
+				}
+				pc->sys_cti = cti;
+			} else {
+				if (goi->argc != 0) {
+					Jim_WrongNumArgs(goi->interp,
+							goi->argc, goi->argv,
+							"NO PARAMS");
+					return JIM_ERR;
+				}
+
+				if (pc == NULL || pc->cti == NULL) {
+					Jim_SetResultString(goi->interp, "SYS CTI not configured", -1);
+					return JIM_ERR;
+				}
+				Jim_SetResultString(goi->interp, arm_cti_name(pc->sys_cti), -1);
 			}
 			break;
 		}

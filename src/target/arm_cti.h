@@ -1,6 +1,8 @@
 /***************************************************************************
  *   Copyright (C) 2016 by Matthias Welwarsky                              *
  *                                                                         *
+ *   Copyright (C) 2023, Analog Devices Inc                                *
+ *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *
@@ -58,6 +60,8 @@
 #define CTI_TRIG_RESUME		1
 #define CTI_TRIG(n)			(1 << CTI_TRIG_##n)
 
+#define CTI_OUTEN_MAX_NUM   31
+
 /* forward-declare arm_cti struct */
 struct arm_cti;
 struct adiv5_ap;
@@ -73,6 +77,8 @@ extern int arm_cti_read_reg(struct arm_cti *self, unsigned int reg, uint32_t *va
 extern int arm_cti_pulse_channel(struct arm_cti *self, uint32_t channel);
 extern int arm_cti_set_channel(struct arm_cti *self, uint32_t channel);
 extern int arm_cti_clear_channel(struct arm_cti *self, uint32_t channel);
+extern int arm_cti_set_halt(struct arm_cti *self, uint32_t channel);
+extern int arm_cti_set_dbgrestart(struct arm_cti *self, uint32_t channel);
 extern int arm_cti_cleanup_all(void);
 extern int cti_register_commands(struct command_context *cmd_ctx);
 
