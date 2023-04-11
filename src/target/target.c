@@ -3567,7 +3567,7 @@ COMMAND_HANDLER(handle_mw_command)
 		CMD_ARGC--;
 		CMD_ARGV++;
     }
-    if (physical)
+    if (physical) {
 		fn = target_write_phys_memory;
 	} else {
 		fn = target_write_memory;
