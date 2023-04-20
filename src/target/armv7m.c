@@ -36,9 +36,7 @@
 #include <helper/log.h>
 #include <helper/binarybuffer.h>
 
-#if 0
-#define _DEBUG_INSTRUCTION_EXECUTION_
-#endif
+// #define _DEBUG_INSTRUCTION_EXECUTION_
 
 static const char * const armv7m_exception_strings[] = {
 	"", "Reset", "NMI", "HardFault",
@@ -74,9 +72,9 @@ const int armv7m_msp_reg_map[ARMV7M_NUM_CORE_REGS] = {
  * doesn't include basepri or faultmask registers.
  */
 static const struct {
-	unsigned id;
+	unsigned int id;
 	const char *name;
-	unsigned bits;
+	unsigned int bits;
 	enum reg_type type;
 	const char *group;
 	const char *feature;
@@ -202,7 +200,7 @@ const char *armv7m_exception_string(int number)
 {
 	static char enamebuf[32];
 
-	if ((number < 0) | (number > 511))
+	if (number < 0 || number > 511)
 		return "Invalid exception";
 	if (number < 16)
 		return armv7m_exception_strings[number];
@@ -281,9 +279,7 @@ uint32_t armv7m_map_id_to_regsel(unsigned int arm_reg_id)
 bool armv7m_map_reg_packing(unsigned int arm_reg_id,
 					unsigned int *reg32_id, uint32_t *offset)
 {
-
 	switch (arm_reg_id) {
-
 	case ARMV7M_PRIMASK...ARMV7M_CONTROL:
 		*reg32_id = ARMV7M_PMSK_BPRI_FLTMSK_CTRL;
 		*offset = arm_reg_id - ARMV7M_PRIMASK;
@@ -300,7 +296,6 @@ bool armv7m_map_reg_packing(unsigned int arm_reg_id,
 	default:
 		return false;
 	}
-
 }
 
 static int armv7m_read_core_reg(struct target *target, struct reg *r,
@@ -527,7 +522,7 @@ int armv7m_start_algorithm(struct target *target,
 	}
 
 	/* Store all non-debug execution registers to armv7m_algorithm_info context */
-	for (unsigned i = 0; i < armv7m->arm.core_cache->num_regs; i++) {
+	for (unsigned int i = 0; i < armv7m->arm.core_cache->num_regs; i++) {
 		struct reg *reg = &armv7m->arm.core_cache->reg_list[i];
 		if (!reg->exist)
 			continue;
@@ -593,7 +588,6 @@ int armv7m_start_algorithm(struct target *target,
 
 	if (armv7m_algorithm_info->core_mode != ARM_MODE_ANY &&
 			armv7m_algorithm_info->core_mode != core_mode) {
-
 		/* we cannot set ARM_MODE_HANDLER, so use ARM_MODE_THREAD instead */
 		if (armv7m_algorithm_info->core_mode == ARM_MODE_HANDLER) {
 			armv7m_algorithm_info->core_mode = ARM_MODE_THREAD;
@@ -680,8 +674,7 @@ int armv7m_wait_algorithm(struct target *target,
 			}
 
 			if (reg->size != reg_params[i].size) {
-				LOG_ERROR(
-					"BUG: register '%s' size doesn't match reg_params[i].size",
+				LOG_ERROR("BUG: register '%s' size doesn't match reg_params[i].size",
 					reg_params[i].reg_name);
 				return ERROR_COMMAND_SYNTAX_ERROR;
 			}
@@ -803,8 +796,9 @@ struct reg_cache *armv7m_build_reg_cache(struct target *target)
 		if (feature) {
 			feature->name = armv7m_regs[i].feature;
 			reg_list[i].feature = feature;
-		} else
+		} else {
 			LOG_ERROR("unable to allocate feature list");
+		}
 
 		reg_list[i].reg_data_type = calloc(1, sizeof(struct reg_data_type));
 		if (reg_list[i].reg_data_type)
@@ -908,8 +902,9 @@ int armv7m_checksum_memory(struct target *target,
 
 	int timeout = 20000 * (1 + (count / (1024 * 1024)));
 
-	retval = target_run_algorithm(target, 0, NULL, 2, reg_params, crc_algorithm->address,
-			crc_algorithm->address + (sizeof(cortex_m_crc_code) - 6),
+	retval = target_run_algorithm(target, 0, NULL, 2, reg_params,
+			crc_algorithm->address, /* Algorithm starts at the base address of armv7m_crc.inc */
+			crc_algorithm->address + 0x34, /* Exit_point BKPT at offset 0x34 */
 			timeout, &armv7m_info);
 
 	if (retval == ERROR_OK)
@@ -968,7 +963,7 @@ int armv7m_blank_check_memory(struct target *target,
 	if (num_blocks < blocks_to_check)
 		blocks_to_check = num_blocks;
 
-	struct algo_block *params = malloc((blocks_to_check+1)*sizeof(struct algo_block));
+	struct algo_block *params = malloc((blocks_to_check + 1) * sizeof(struct algo_block));
 	if (!params) {
 		retval = ERROR_FAIL;
 		goto cleanup1;
@@ -978,12 +973,12 @@ int armv7m_blank_check_memory(struct target *target,
 	uint32_t total_size = 0;
 	for (i = 0; i < blocks_to_check; i++) {
 		total_size += blocks[i].size;
-		target_buffer_set_u32(target, (uint8_t *)&(params[i].size),
+		target_buffer_set_u32(target, (uint8_t *)&params[i].size,
 						blocks[i].size / sizeof(uint32_t));
-		target_buffer_set_u32(target, (uint8_t *)&(params[i].address),
+		target_buffer_set_u32(target, (uint8_t *)&params[i].address,
 						blocks[i].address);
 	}
-	target_buffer_set_u32(target, (uint8_t *)&(params[blocks_to_check].size), 0);
+	target_buffer_set_u32(target, (uint8_t *)&params[blocks_to_check].size, 0);
 
 	uint32_t param_size = (blocks_to_check + 1) * sizeof(struct algo_block);
 	if (target_alloc_working_area(target, param_size,
@@ -1034,14 +1029,14 @@ int armv7m_blank_check_memory(struct target *target,
 
 	for (i = 0; i < blocks_to_check; i++) {
 		uint32_t result = target_buffer_get_u32(target,
-					(uint8_t *)&(params[i].result));
+					(uint8_t *)&params[i].result);
 		if (result != 0 && result != 1)
 			break;
 
 		blocks[i].result = result;
 	}
 	if (i && timed_out)
-		LOG_INFO("Slow CPU clock: %d blocks checked, %d remain. Continuing...", i, num_blocks-i);
+		LOG_INFO("Slow CPU clock: %d blocks checked, %d remain. Continuing...", i, num_blocks - i);
 
 	retval = i;		/* return number of blocks really checked */
 

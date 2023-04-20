@@ -2711,7 +2711,7 @@ interface string or for user class interface.
 Display various device information, like hardware version, firmware version, current bus status.
 @end deffn
 
-@deffn {Command} {cmsis-dap cmd} number number ...
+@deffn {Command} {cmsis-dap cmd} number0 number1 ...
 Execute an arbitrary CMSIS-DAP command. Use for adapter testing or for handling
 of an adapter vendor specific command from a Tcl script.
 
@@ -5217,7 +5217,7 @@ and OpenOCD adopts that same model for targets.
 
 A good Tk example is a on screen button.
 Once a button is created a button
-has a name (a path in Tk terms) and that name is useable as a first
+has a name (a path in Tk terms) and that name is usable as a first
 class command. For example in Tk, one can create a button and later
 configure it like this:
 
@@ -12067,11 +12067,17 @@ Cyg_Thread::thread_list, Cyg_Scheduler_Base::current_thread.
 @item ThreadX symbols
 _tx_thread_current_ptr, _tx_thread_created_ptr, _tx_thread_created_count.
 @item FreeRTOS symbols
-@raggedright
+@c The following is taken from recent texinfo to provide compatibility
+@c with ancient versions that do not support @raggedright
+@tex
+\begingroup
+\rightskip0pt plus2em \spaceskip.3333em \xspaceskip.5em\relax
 pxCurrentTCB, pxReadyTasksLists, xDelayedTaskList1, xDelayedTaskList2,
 pxDelayedTaskList, pxOverflowDelayedTaskList, xPendingReadyList,
 uxCurrentNumberOfTasks, uxTopUsedPriority.
-@end raggedright
+\par
+\endgroup
+@end tex
 @item linux symbols
 init_task.
 @item ChibiOS symbols
@@ -12086,10 +12092,17 @@ OSRunning, OSTCBCurPtr, OSTaskDbgListPtr, OSTaskQty.
 @item nuttx symbols
 g_readytorun, g_tasklisttable.
 @item RIOT symbols
-@raggedright
+@c The following is taken from recent texinfo to provide compatibility
+@c with ancient versions that do not support @raggedright
+@tex
+\begingroup
+\rightskip0pt plus2em \spaceskip.3333em \xspaceskip.5em\relax
+pxCurrentTCB, pxReadyTasksLists, xDelayedTaskList1, xDelayedTas
 sched_threads, sched_num_threads, sched_active_pid, max_threads,
 _tcb_name_offset.
-@end raggedright
+\par
+\endgroup
+@end tex
 @item Zephyr symbols
 _kernel, _kernel_openocd_offsets, _kernel_openocd_size_t_size
 @end table
@@ -12766,25 +12779,25 @@ MyForCommand( void *interp,
        return ERROR;
    @}
 
-   // argv[0] = the ascii string just like C
+   /* argv[0] = the ascii string just like C */
 
-   // Execute the start statement.
+   /* Execute the start statement. */
    Execute_AsciiString( interp, argv[1] );
 
-   // Top of loop test
+   /* Top of loop test */
    for(;;)@{
         i = Evaluate_AsciiExpression(interp, argv[2]);
         if( i == 0 )
             break;
 
-        // Execute the body
+        /* Execute the body */
         Execute_AsciiString( interp, argv[3] );
 
-        // Execute the LOOP part
+        /* Execute the LOOP part */
         Execute_AsciiString( interp, argv[4] );
     @}
 
-    // Return no error
+    /* Return no error */
     SetResult( interp, "" );
     return SUCCESS;
 @}
