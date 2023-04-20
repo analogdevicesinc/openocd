@@ -75,7 +75,6 @@ static void mem_ap_deinit_target(struct target *target)
 
 	free(target->private_config);
 	free(target->arch_info);
-	return;
 }
 
 static int mem_ap_arch_state(struct target *target)
@@ -136,15 +135,12 @@ static int mem_ap_examine(struct target *target)
 	struct mem_ap *mem_ap = target->arch_info;
 
 	if (!target_was_examined(target)) {
-		if (mem_ap->ap) {
-			dap_put_ap(mem_ap->ap);
-			mem_ap->ap = NULL;
-		}
-
-		mem_ap->ap = dap_get_ap(mem_ap->dap, mem_ap->ap_num);
 		if (!mem_ap->ap) {
-			LOG_ERROR("Cannot get AP");
-			return ERROR_FAIL;
+			mem_ap->ap = dap_get_ap(mem_ap->dap, mem_ap->ap_num);
+			if (!mem_ap->ap) {
+				LOG_ERROR("Cannot get AP");
+				return ERROR_FAIL;
+			}
 		}
 		target_set_examined(target);
 		target->state = TARGET_UNKNOWN;

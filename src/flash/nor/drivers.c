@@ -41,6 +41,7 @@ extern const struct flash_driver lpc288x_flash;
 extern const struct flash_driver lpc2900_flash;
 extern const struct flash_driver lpcspifi_flash;
 extern const struct flash_driver max32xxx_flash;
+extern const struct flash_driver max32xxx_qspi_flash;
 extern const struct flash_driver mdr_flash;
 extern const struct flash_driver mrvlqspi_flash;
 extern const struct flash_driver msp432_flash;
@@ -121,6 +122,7 @@ static const struct flash_driver * const flash_drivers[] = {
 	&lpc2900_flash,
 	&lpcspifi_flash,
 	&max32xxx_flash,
+	&max32xxx_qspi_flash,
 	&mdr_flash,
 	&mrvlqspi_flash,
 	&msp432_flash,
@@ -164,7 +166,7 @@ static const struct flash_driver * const flash_drivers[] = {
 
 const struct flash_driver *flash_driver_find_by_name(const char *name)
 {
-	for (unsigned i = 0; flash_drivers[i]; i++) {
+	for (unsigned int i = 0; flash_drivers[i]; i++) {
 		if (strcmp(name, flash_drivers[i]->name) == 0)
 			return flash_drivers[i];
 	}
