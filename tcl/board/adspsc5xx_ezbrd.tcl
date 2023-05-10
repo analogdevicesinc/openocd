@@ -80,7 +80,7 @@ proc canfd_config { canfd_base } {
    # for (i=0u; i<(RAM_SIZE/sizeof(uint32_t)); i++)
    # ram[i] = 0x0u;
    for {set i 0} {$i < 256} {incr i} {
-      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_ram + ($i * 4)}] 0x0
+      mem_ap_write_reg [expr {$canfd_ram + ($i * 4)}] 0x0
    }
 
    # /* Initialize the RAM area occupied by some of the CAN registers. */
@@ -99,7 +99,7 @@ proc canfd_config { canfd_base } {
    # i++)
    # pCANFDRegs->RX_IMSK[i] = 0u;
    for {set i 0} {$i < 64} {incr i} {
-      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_rx_imsk0 + ($i * 4)}] 0x0
+      mem_ap_write_reg [expr {$canfd_rx_imsk0 + ($i * 4)}] 0x0
    }
 
    # Initialize additional memory used for internal Serial Tx and Rx MB buffer structures for FD mode
@@ -110,7 +110,7 @@ proc canfd_config { canfd_base } {
    # *pMbRamAddress++ = 0U;
    # }
    for {set i 0} {$i < (168/4)} {incr i} {
-      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_ram_fd_mode + ($i * 4)}] 0x0
+      mem_ap_write_reg [expr {$canfd_ram_fd_mode + ($i * 4)}] 0x0
    }
 
 
@@ -122,7 +122,7 @@ proc canfd_config { canfd_base } {
    # *pMbRamAddress++ = 0U;
    # }
    for {set i 0} {$i < (48/4)} {incr i} {
-      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_ram_norm_mode + ($i * 4)}] 0x0
+      mem_ap_write_reg [expr {$canfd_ram_norm_mode + ($i * 4)}] 0x0
    }
 
    # Initialize additional memory used for internal RAM space used for storing RXFIR contents and some reserved space */
@@ -133,7 +133,7 @@ proc canfd_config { canfd_base } {
    #  *pMbRamAddress++ = 0U;
    # }
    for {set i 0} {$i < (32/4)} {incr i} {
-      $_CHIPNAME.dap writemem $ap_num [expr {$canfd_ram_rxfir + ($i * 4)}] 0x0
+      mem_ap_write_reg [expr {$canfd_ram_rxfir + ($i * 4)}] 0x0
    }
 
     # Disable the unrestricted write access to CANFD memory in Freeze mode */
