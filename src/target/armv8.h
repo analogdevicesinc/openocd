@@ -2,6 +2,9 @@
 
 /***************************************************************************
  *   Copyright (C) 2015 by David Ung                                       *
+ *                                                                         *
+ *   Copyright (C) 2023, Analog Devices Inc                                *
+ *                                                                         *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ARMV8_H
@@ -447,6 +450,7 @@ struct armv8_common {
 	struct armv8_mmu_common armv8_mmu;
 
 	struct arm_cti *cti;
+	struct arm_cti *sys_cti;
 
 	/* last run-control command issued to this target (resume, halt, step) */
 	enum run_control_op last_run_control_op;
