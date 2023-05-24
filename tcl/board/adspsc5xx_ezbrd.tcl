@@ -636,51 +636,54 @@ proc adspsc59x_init_ddr3 { dmc } {
       mww phys $cgu0_div 0x2024482
    }
 
+   # Use mem-ap to interact with PLL registers in order to avoid
+   # transaction stalls when reading and writing
+
    # adi_pwr_WriteDIVCTLLocal()
    # Put PLL in to Bypass Mode - call adi_pwr_ConfigurePLLControlReg()
    # Enable PLL
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN
-   pmmw $cgu0_pllctl 0x8 0
+   memap_mmw $cgu0_pllctl 0x8 0
    # Wait till PLL is enabled
    # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN)) {};
-   set data [memread32_phys $cgu0_stat]
+   set data [mem_ap_read_reg $cgu0_stat]
    while { ![expr {$data & 0x1}] } {
-      set data [memread32_phys $cgu0_stat]
+      set data [mem_ap_read_reg $cgu0_stat]
    }
 
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLBPST
-   pmmw $cgu0_pllctl 0x1 0
+   memap_mmw $cgu0_pllctl 0x1 0
    # Wait till PLL is bypassed
    # while(!(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLBP)) {};
-   set data [memread32_phys $cgu0_stat]
+   set data [mem_ap_read_reg $cgu0_stat]
    while { ![expr {$data & 0x2}] } {
-      set data [memread32_phys $cgu0_stat]
+      set data [mem_ap_read_reg $cgu0_stat]
    }
 
    # Wait until clocks are aligned
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
-   set data [memread32_phys $cgu0_stat]
+   set data [mem_ap_read_reg $cgu0_stat]
    while { [expr {$data & 0x8}] } {
-      set data [memread32_phys $cgu0_stat]
+      set data [mem_ap_read_reg $cgu0_stat]
    }
 
    # Program the CTL register
    # pDevice->pCguRegs->CGU_CTL =  dNewCguCtl;
-   mww phys $cgu0_ctl 0x25000
+   mem_ap_write_reg $cgu0_ctl 0x25000
 
    # Take PLL out of Bypass Mode
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLEN;
-    pmmw $cgu0_pllctl 0x8 0
+    memap_mmw $cgu0_pllctl 0x8 0
 
    # Wait till PLL is enabled
    # while((pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_PLLEN) != BITM_CGU_STAT_PLLEN)
-   set data [memread32_phys $cgu0_stat]
+   set data [mem_ap_read_reg $cgu0_stat]
    while { ![expr {$data & 0x1}] } {
-      set data [memread32_phys $cgu0_stat]
+      set data [mem_ap_read_reg $cgu0_stat]
    }
 
    # pDevice->pCguRegs->CGU_PLLCTL |= BITM_CGU_PLLCTL_PLLBPCL;
-   pmmw $cgu0_pllctl 0x2 0
+   memap_mmw $cgu0_pllctl 0x2 0
 
    # Wait until clocks are aligned
    # while(pDevice->pCguRegs->CGU_STAT & BITM_CGU_STAT_CLKSALGN)
