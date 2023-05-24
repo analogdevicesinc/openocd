@@ -2907,7 +2907,7 @@ static int aarch64_jim_configure(struct target *target, struct jim_getopt_info *
 				if (e != JIM_OK)
 					return e;
 				cti = cti_instance_by_jim_obj(goi->interp, o_cti);
-				if (cti == NULL) {
+				if (!cti) {
 					Jim_SetResultString(goi->interp, "SYS CTI name invalid!", -1);
 					return JIM_ERR;
 				}
@@ -2920,7 +2920,7 @@ static int aarch64_jim_configure(struct target *target, struct jim_getopt_info *
 					return JIM_ERR;
 				}
 
-				if (pc == NULL || pc->cti == NULL) {
+				if (!pc || !pc->sys_cti) {
 					Jim_SetResultString(goi->interp, "SYS CTI not configured", -1);
 					return JIM_ERR;
 				}
