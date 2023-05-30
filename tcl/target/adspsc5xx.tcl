@@ -90,8 +90,8 @@ proc reset_sharcxi_debug_regs { dapname base_addr } {
    set csdbg_emuctl		[expr {$base_addr + 0x10}]
    set csdbg_extdata	[expr {$base_addr + 0x18}]
 
-   $dapname writemem 1 $csdbg_extdata 0
-   $dapname writemem 1 $csdbg_emuctl 0
+   $dapname write_memory $csdbg_extdata 32 0
+   $dapname write_memory $csdbg_emuctl 32 0
 }
 
 # Configure CTIs so Cortex-A5 halt event will halt system peripherals, like watchdog timer
