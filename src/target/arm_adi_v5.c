@@ -2957,19 +2957,5 @@ const struct command_registration dap_instance_commands[] = {
 		.help = "set/get quirks mode for Nuvoton NPCX controllers",
 		.usage = "[enable]",
 	},
-        {
-		.name = "writemem",
-		.jim_handler = jim_dap_writemem,
-		.mode = COMMAND_EXEC,
-		.help = "write memory using MEM-AP",
-		.usage = "ap address value",
-	},
-	{
-		.name = "readmem",
-		.jim_handler = jim_dap_readmem,
-		.mode = COMMAND_EXEC,
-		.help = "read memory using MEM-AP",
-		.usage = "ap address",
-	},
 	COMMAND_REGISTRATION_DONE
 };

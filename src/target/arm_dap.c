@@ -614,20 +614,6 @@ static const struct command_registration dap_subcommand_handlers[] = {
 			"or the ADIv6 root ROM table of current target's DAP",
 		.usage = "[ap_num | 'root']",
 	},
-	{
-		.name = "readmem",
-		.jim_handler = jim_dap_readmem,
-		.mode = COMMAND_EXEC,
-		.help = "read memory using MEM-AP",
-		.usage = "ap address",
-	},
-	{
-		.name = "writemem",
-		.jim_handler = jim_dap_writemem,
-		.mode = COMMAND_EXEC,
-		.help = "write memory using MEM-AP",
-		.usage = "ap address value",
-	},
 	COMMAND_REGISTRATION_DONE
 };
 
