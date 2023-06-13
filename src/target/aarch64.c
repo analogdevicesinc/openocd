@@ -398,12 +398,6 @@ static int aarch64_halt_one(struct target *target, enum halt_mode mode)
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (armv8->sys_cti != NULL) {
-		retval = arm_cti_pulse_channel(armv8->sys_cti, 0);
-		if (retval != ERROR_OK)
-			return retval;
-	}
-
 	if (mode == HALT_SYNC) {
 		retval = aarch64_wait_halt_one(target);
 		if (retval != ERROR_OK) {
@@ -1005,6 +999,13 @@ static int aarch64_debug_entry(struct target *target)
 		retval = dpm->instr_cpsr_sync(dpm);
 	if (retval != ERROR_OK)
 		return retval;
+
+	/* issue halt peripherals if a sys_cti has been registered */
+	if (armv8->sys_cti != NULL) {
+		retval = arm_cti_pulse_channel(armv8->sys_cti, 0);
+		if (retval != ERROR_OK)
+			return retval;
+	}
 
 	/* Examine debug reason */
 	armv8_dpm_report_dscr(dpm, dscr);
