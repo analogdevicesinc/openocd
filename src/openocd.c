@@ -195,7 +195,7 @@ COMMAND_HANDLER(handle_firmware_command)
 {
 	if (CMD_ARGC != 1)
 		return ERROR_COMMAND_SYNTAX_ERROR;
-	
+
 	set_firmware_filename(CMD_ARGV[0]);
 
 	return ERROR_OK;
@@ -347,7 +347,7 @@ static struct command_context *setup_command_handler(Jim_Interp *interp)
 	/* pretty print the ADI OpenOCD version to look like this:
 		"Open On-Chip Debugger " PKGVERSION "OpenOCD " VERSION " (" PKGBLDDATE ")" */
 	char pretty_version[150] = "Open On-Chip Debugger " PKGVERSION " OpenOCD ";
-	
+
 	/* pull out a clean product version (everything up to next '+' or '-') */
 	char version[] = VERSION;
 	int i = strlen(pretty_version);
@@ -366,9 +366,8 @@ static struct command_context *setup_command_handler(Jim_Interp *interp)
 
 	/* terminate the pretty string */
 	pretty_version[i++] = 0;
-	
-	LOG_OUTPUT(OPENOCD_VERSION "\n"
-				"Licensed under GNU GPL v2\n");
+
+	LOG_OUTPUT("%s\nLicensed under GNU GPL v2\n", pretty_version);
 
 	global_cmd_ctx = cmd_ctx;
 
