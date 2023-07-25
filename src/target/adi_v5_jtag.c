@@ -12,9 +12,9 @@
  *
  *   Copyright (C) 2009-2010 by David Brownell
  *
- *   Copyright (C) 2020-2021, Ampere Computing LLC                              *
+ *   Copyright (C) 2020-2021, Ampere Computing LLC                         *
  *                                                                         *
- *   Copyright (C) 2023, Analog Devices Inc                                *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 /**

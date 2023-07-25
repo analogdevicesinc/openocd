@@ -14,7 +14,7 @@
  *   Copyright (C) 2009 Zachary T Welch                                    *
  *   zw@superlucidity.net                                                  *
  *                                                                         *
- *   Copyright (C) 2023, Analog Devices Inc                                *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
