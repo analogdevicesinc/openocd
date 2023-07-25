@@ -25,7 +25,7 @@
  *   Copyright (C) 2011 Andreas Fritiofson                                 *
  *   andreas.fritiofson@gmail.com                                          *
  *                                                                         *
- * 	 Copyright (C) 2023, Analog Devices, Inc.                              *
+ * 	 Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H

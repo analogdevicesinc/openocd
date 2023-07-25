@@ -1,7 +1,6 @@
 # Common routines used by ADI ADSP-SC58x and ADSP-SC57x boards and ADSP-SC59x SOM
 #
-# Copyright (c) 2015-2023 Analog Devices, Inc. All Rights Reserved.
-# This software is proprietary to Analog Devices, Inc. and its licensors.
+# Copyright (C) 2015-2023 Analog Devices, Inc.
 
 proc smpu_config { smpu } {
    # Use SMPU instances to disable accesses to system memory that may not be

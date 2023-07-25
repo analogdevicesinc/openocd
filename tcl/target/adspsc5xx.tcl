@@ -1,7 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Common routines for Analog Devices ADSP-SC5xx
 #
-# Copyright (c) 2015-2023 Analog Devices, Inc. All Rights Reserved.
-# This software is proprietary to Analog Devices, Inc. and its licensors.
+# Copyright (C) 2015-2023 Analog Devices, Inc.
 
 # Unlock the processor
 proc adjc_unlock {adjc} {
