@@ -17,7 +17,7 @@
  *                                                                         *
  *   Copyright (C) 2019-2021, Ampere Computing LLC                         *
  *                                                                         *
- *	 Copyright (C) 2023, Analog Devices, Inc.                              *
+ *	 Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 /**

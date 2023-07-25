@@ -3,7 +3,7 @@
 /***************************************************************************
  *   Copyright (C) 2016 by Matthias Welwarsky                              *
  *                                                                         *
- *   Copyright (C) 2023, Analog Devices Inc                                *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  *                                                                         *
  ***************************************************************************/
 
