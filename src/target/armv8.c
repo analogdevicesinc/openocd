@@ -6,7 +6,7 @@
  *   Copyright (C) 2018 by Liviu Ionescu                                   *
  *   <ilg@livius.net>                                                      *
  *                                                                         *
- *   Copyright (C) 2021 - 2023 by Analog Devices                           *
+ *   Portions Copyright (C) 2021-2023 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 

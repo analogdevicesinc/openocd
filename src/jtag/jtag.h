@@ -7,7 +7,7 @@
 *   Copyright (C) 2007-2010 Øyvind Harboe                                 *
 *   oyvind.harboe@zylin.com                                               *
 *                                                                         *
-*   Copyright (C) 2023, Analog Devices Inc                                *
+*   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
 ***************************************************************************/
 
 #ifndef OPENOCD_JTAG_JTAG_H
