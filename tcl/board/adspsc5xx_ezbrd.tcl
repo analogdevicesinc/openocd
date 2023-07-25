@@ -1,5 +1,6 @@
 # Common routines used by ADI ADSP-SC58x and ADSP-SC57x boards and ADSP-SC59x SOM
 #
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2015-2023 Analog Devices, Inc.
 
 proc smpu_config { smpu } {
