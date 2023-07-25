@@ -24,7 +24,7 @@ of the Open On-Chip Debugger (OpenOCD).
 @item Copyright @copyright{} 2008-2010 Oyvind Harboe @email{oyvind.harboe@@zylin.com}
 @item Copyright @copyright{} 2008 Duane Ellis @email{openocd@@duaneellis.com}
 @item Copyright @copyright{} 2009-2010 David Brownell
-@item Portions Copyright @copyright{} 2015-2023, Analog Devices, Inc.
+@item Portions Copyright @copyright{} 2015-2023 Analog Devices, Inc.
 @end itemize
 
 @quotation
