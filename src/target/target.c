@@ -4241,11 +4241,19 @@ static void write_gmon(uint32_t *samples, uint32_t sample_num, const char *filen
 
 		/* max should be (largest sample + 1)
 		 * Refer to binutils/gprof/hist.c (find_histogram_for_pc) */
-		max++;
+		if (max < UINT32_MAX)
+			max++;
+
+		/* gprof requires (max - min) >= 2 */
+		while ((max - min) < 2) {
+			if (max < UINT32_MAX)
+				max++;
+			else
+				min--;
+		}
 	}
 
-	int address_space = max - min;
-	assert(address_space >= 2);
+	uint32_t address_space = max - min;
 
 	/* FIXME: What is the reasonable number of buckets?
 	 * The profiling result will be more accurate if there are enough buckets. */
@@ -4322,6 +4330,19 @@ COMMAND_HANDLER(handle_profile_command)
 
 	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[0], offset);
 
+	uint32_t start_address = 0;
+	uint32_t end_address = 0;
+	bool with_range = false;
+	if (CMD_ARGC == 4) {
+		with_range = true;
+		COMMAND_PARSE_NUMBER(u32, CMD_ARGV[2], start_address);
+		COMMAND_PARSE_NUMBER(u32, CMD_ARGV[3], end_address);
+		if (start_address > end_address || (end_address - start_address) < 2) {
+			command_print(CMD, "Error: end - start < 2");
+			return ERROR_COMMAND_ARGUMENT_INVALID;
+		}
+	}
+
 	uint32_t *samples = malloc(sizeof(uint32_t) * MAX_PROFILE_SAMPLE_NUM);
 	if (!samples) {
 		LOG_ERROR("No memory to store samples.");
@@ -4372,15 +4393,6 @@ COMMAND_HANDLER(handle_profile_command)
 	if (retval != ERROR_OK) {
 		free(samples);
 		return retval;
-	}
-
-	uint32_t start_address = 0;
-	uint32_t end_address = 0;
-	bool with_range = false;
-	if (CMD_ARGC == 4) {
-		with_range = true;
-		COMMAND_PARSE_NUMBER(u32, CMD_ARGV[2], start_address);
-		COMMAND_PARSE_NUMBER(u32, CMD_ARGV[3], end_address);
 	}
 
 	write_gmon(samples, num_of_samples, CMD_ARGV[1],
