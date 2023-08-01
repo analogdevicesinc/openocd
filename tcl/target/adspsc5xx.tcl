@@ -84,14 +84,14 @@ proc show_rcu_crstat { name val } {
 }
 
 # Reset some debug registers in SHARC XI core debug component
-proc reset_sharcxi_debug_regs { dapname base_addr } {
+proc reset_sharcxi_debug_regs { memap_name base_addr } {
    # Currently we only clear EMUCTL
 
    set csdbg_emuctl		[expr {$base_addr + 0x10}]
    set csdbg_extdata	[expr {$base_addr + 0x18}]
 
-   $dapname write_memory $csdbg_extdata 32 0
-   $dapname write_memory $csdbg_emuctl 32 0
+   $memap_name write_memory $csdbg_extdata 32 0
+   $memap_name write_memory $csdbg_emuctl 32 0
 }
 
 # Configure CTIs so Cortex-A5 halt event will halt system peripherals, like watchdog timer
