@@ -192,9 +192,6 @@ if ICE_2000
 DRIVERFILES += %D%/ice1000.c
 endif
 endif
-if ICE_1500
-DRIVERFILES += %D%/ice1500.c
-endif
 
 
 if CMSIS_DAP_USB
