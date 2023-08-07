@@ -21,7 +21,7 @@ Compiling OpenOCD from git
         --disable-usb-blaster-2 --disable-ft232r --disable-vsllink --enable-jlink \
         --disable-vsllink --disable-xds110 --disable-osbdm --disable-opendous \
         --disable-aice --disable-usbprog --disable-rlink --disable-armjtagew \
-        --enable-maintainer-mode --enable-ice1000 --enable-ice1500 --enable-ice2000 \
+        --enable-maintainer-mode --enable-ice1000 --enable-ice2000 \
         --enable-adi-dbgagent --enable-libusbmux \
         --with-pkgversion="Analog Devices CCES 2.11.1"
     make
@@ -35,7 +35,7 @@ Compiling OpenOCD from source zip (no git submodules)
         --disable-usb-blaster-2 --disable-ft232r --disable-vsllink --enable-jlink \
         --disable-vsllink --disable-xds110 --disable-osbdm --disable-opendous \
         --disable-aice --disable-usbprog --disable-rlink --disable-armjtagew \
-        --enable-maintainer-mode --enable-ice1000 --enable-ice1500 --enable-ice2000 \
+        --enable-maintainer-mode --enable-ice1000 --enable-ice2000 \
         --enable-adi-dbgagent --enable-libusbmux \
         --with-pkgversion="Analog Devices CCES 2.11.1"
     make
