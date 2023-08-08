@@ -15,6 +15,8 @@
  *   zw@superlucidity.net                                                  *
  *                                                                         *
  *   Copyright (C) 2020, Ampere Computing LLC                              *
+ *                                                                         *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
