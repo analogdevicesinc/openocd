@@ -24,6 +24,8 @@
  *                                                                         *
  *   Copyright (C) 2011 Andreas Fritiofson                                 *
  *   andreas.fritiofson@gmail.com                                          *
+ *                                                                         *
+ * 	 Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -106,6 +108,7 @@ extern struct target_type riscv_target;
 extern struct target_type mem_ap_target;
 extern struct target_type esirisc_target;
 extern struct target_type arcv2_target;
+extern struct target_type rvmax_target;
 
 static struct target_type *target_types[] = {
 	&arm7tdmi_target,
@@ -146,6 +149,7 @@ static struct target_type *target_types[] = {
 	&mem_ap_target,
 	&esirisc_target,
 	&arcv2_target,
+	&rvmax_target,
 	&aarch64_target,
 	&mips_mips64_target,
 	NULL,
@@ -197,7 +201,6 @@ static const char *target_strerror_safe(int err)
 }
 
 static const struct jim_nvp nvp_target_event[] = {
-
 	{ .value = TARGET_EVENT_GDB_HALT, .name = "gdb-halt" },
 	{ .value = TARGET_EVENT_HALTED, .name = "halted" },
 	{ .value = TARGET_EVENT_RESUMED, .name = "resumed" },
@@ -504,7 +507,7 @@ struct target *get_target(const char *id)
 	/* It's OK to remove this fallback sometime after August 2010 or so */
 
 	/* no match, try as number */
-	unsigned num;
+	unsigned int num;
 	if (parse_uint(id, &num) != ERROR_OK)
 		return NULL;
 
@@ -567,9 +570,9 @@ int target_poll(struct target *target)
 		return retval;
 
 	if (target->halt_issued) {
-		if (target->state == TARGET_HALTED)
+		if (target->state == TARGET_HALTED) {
 			target->halt_issued = false;
-		else {
+		} else {
 			int64_t t = timeval_ms() - target->halt_issued_time;
 			if (t > DEFAULT_HALT_TIMEOUT) {
 				target->halt_issued = false;
@@ -1045,7 +1048,6 @@ int target_run_flash_async_algorithm(struct target *target,
 	}
 
 	while (count > 0) {
-
 		retval = target_read_u32(target, rp_addr, &rp);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("failed to get read pointer");
@@ -1053,7 +1055,7 @@ int target_run_flash_async_algorithm(struct target *target,
 		}
 
 		LOG_DEBUG("offs 0x%zx count 0x%" PRIx32 " wp 0x%" PRIx32 " rp 0x%" PRIx32,
-			(size_t) (buffer - buffer_orig), count, wp, rp);
+			(size_t)(buffer - buffer_orig), count, wp, rp);
 
 		if (rp == 0) {
 			LOG_ERROR("flash write algorithm aborted by target");
@@ -1272,7 +1274,6 @@ int target_run_read_async_algorithm(struct target *target,
 
 		/* Avoid GDB timeouts */
 		keep_alive();
-
 	}
 
 	if (retval != ERROR_OK) {
@@ -1512,14 +1513,14 @@ int target_gdb_fileio_end(struct target *target, int retcode, int fileio_errno, 
 
 target_addr_t target_address_max(struct target *target)
 {
-	unsigned bits = target_address_bits(target);
+	unsigned int bits = target_address_bits(target);
 	if (sizeof(target_addr_t) * 8 == bits)
-		return (target_addr_t) -1;
+		return (target_addr_t)-1;
 	else
-		return (((target_addr_t) 1) << bits) - 1;
+		return (((target_addr_t)1) << bits) - 1;
 }
 
-unsigned target_address_bits(struct target *target)
+unsigned int target_address_bits(struct target *target)
 {
 	if (target->type->address_bits)
 		return target->type->address_bits(target);
@@ -1768,8 +1769,9 @@ int target_unregister_event_callback(int (*callback)(struct target *target,
 			*p = next;
 			free(c);
 			return ERROR_OK;
-		} else
-			p = &(c->next);
+		}
+
+		p = &(c->next);
 		c = next;
 	}
 
@@ -1878,8 +1880,8 @@ int target_call_trace_callbacks(struct target *target, size_t len, uint8_t *data
 	return ERROR_OK;
 }
 
-static int target_timer_callback_periodic_restart(
-		struct target_timer_callback *cb, int64_t *now)
+static int target_timer_callback_periodic_restart(struct target_timer_callback *cb,
+	int64_t *now)
 {
 	cb->when = *now + cb->time_ms;
 	return ERROR_OK;
@@ -1944,13 +1946,13 @@ static int target_call_timer_callbacks_check_time(int checktime)
 	return ERROR_OK;
 }
 
-int target_call_timer_callbacks()
+int target_call_timer_callbacks(void)
 {
 	return target_call_timer_callbacks_check_time(1);
 }
 
 /* invoke periodic callbacks immediately */
-int target_call_timer_callbacks_now()
+int target_call_timer_callbacks_now(void)
 {
 	return target_call_timer_callbacks_check_time(0);
 }
@@ -2132,9 +2134,8 @@ int target_alloc_working_area(struct target *target, uint32_t size, struct worki
 
 	retval = target_alloc_working_area_try(target, size, area);
 	if (retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE)
-		LOG_WARNING("not enough working area available(requested %"PRIu32")", size);
+		LOG_WARNING("not enough working area available(requested %" PRIu32 ")", size);
 	return retval;
-
 }
 
 static int target_restore_working_area(struct target *target, struct working_area *area)
@@ -2532,9 +2533,7 @@ static int target_read_buffer_default(struct target *target, target_addr_t addre
 
 int target_checksum_memory(struct target *target, target_addr_t address, uint32_t size, uint32_t *crc)
 {
-	uint8_t *buffer;
 	int retval;
-	uint32_t i;
 	uint32_t checksum = 0;
 	if (!target_was_examined(target)) {
 		LOG_ERROR("Target not examined yet");
@@ -2546,30 +2545,9 @@ int target_checksum_memory(struct target *target, target_addr_t address, uint32_
 	}
 
 	retval = target->type->checksum_memory(target, address, size, &checksum);
-	if (retval != ERROR_OK) {
-		buffer = malloc(size);
-		if (!buffer) {
-			LOG_ERROR("error allocating buffer for section (%" PRIu32 " bytes)", size);
-			return ERROR_COMMAND_SYNTAX_ERROR;
-		}
-		retval = target_read_buffer(target, address, size, buffer);
-		if (retval != ERROR_OK) {
-			free(buffer);
-			return retval;
-		}
-
-		/* convert to target endianness */
-		for (i = 0; i < (size/sizeof(uint32_t)); i++) {
-			uint32_t target_data;
-			target_data = target_buffer_get_u32(target, &buffer[i*sizeof(uint32_t)]);
-			target_buffer_set_u32(target, &buffer[i*sizeof(uint32_t)], target_data);
-		}
-
-		retval = image_calculate_checksum(buffer, size, &checksum);
-		free(buffer);
-	}
-
 	*crc = checksum;
+
+	/* Binary compare fallback removed due to catastrophic failures with QSPI driver */
 
 	return retval;
 }
@@ -3033,7 +3011,6 @@ static int handle_target(void *priv)
 	for (struct target *target = all_targets;
 			is_jtag_poll_safe() && target;
 			target = target->next) {
-
 		if (!target_was_examined(target))
 			continue;
 
@@ -3098,14 +3075,14 @@ COMMAND_HANDLER(handle_reg_command)
 
 		unsigned int count = 0;
 		while (cache) {
-			unsigned i;
+			unsigned int i;
 
 			command_print(CMD, "===== %s", cache->name);
 
 			for (i = 0, reg = cache->reg_list;
 					i < cache->num_regs;
 					i++, reg++, count++) {
-				if (reg->exist == false || reg->hidden)
+				if (!reg->exist || reg->hidden)
 					continue;
 				/* only print cached values if they are valid */
 				if (reg->valid) {
@@ -3133,13 +3110,13 @@ COMMAND_HANDLER(handle_reg_command)
 
 	/* access a single register by its ordinal number */
 	if ((CMD_ARGV[0][0] >= '0') && (CMD_ARGV[0][0] <= '9')) {
-		unsigned num;
+		unsigned int num;
 		COMMAND_PARSE_NUMBER(uint, CMD_ARGV[0], num);
 
 		struct reg_cache *cache = target->reg_cache;
 		unsigned int count = 0;
 		while (cache) {
-			unsigned i;
+			unsigned int i;
 			for (i = 0; i < cache->num_regs; i++) {
 				if (count++ == num) {
 					reg = &cache->reg_list[i];
@@ -3239,8 +3216,9 @@ COMMAND_HANDLER(handle_poll_command)
 		bool enable;
 		COMMAND_PARSE_ON_OFF(CMD_ARGV[0], enable);
 		jtag_poll_set_enabled(enable);
-	} else
+	} else {
 		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
 
 	return retval;
 }
@@ -3250,7 +3228,7 @@ COMMAND_HANDLER(handle_wait_halt_command)
 	if (CMD_ARGC > 1)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
-	unsigned ms = DEFAULT_HALT_TIMEOUT;
+	unsigned int ms = DEFAULT_HALT_TIMEOUT;
 	if (1 == CMD_ARGC) {
 		int retval = parse_uint(CMD_ARGV[0], &ms);
 		if (retval != ERROR_OK)
@@ -3287,10 +3265,10 @@ int target_wait_state(struct target *target, enum target_state state, int ms)
 				jim_nvp_value2name_simple(nvp_target_state, state)->name);
 		}
 
-		if (cur-then > 500)
+		if (cur - then > 500)
 			keep_alive();
 
-		if ((cur-then) > ms) {
+		if ((cur - then) > ms) {
 			LOG_ERROR("timed out while waiting for target %s",
 				jim_nvp_value2name_simple(nvp_target_state, state)->name);
 			return ERROR_FAIL;
@@ -3313,7 +3291,7 @@ COMMAND_HANDLER(handle_halt_command)
 		return retval;
 
 	if (CMD_ARGC == 1) {
-		unsigned wait_local;
+		unsigned int wait_local;
 		retval = parse_uint(CMD_ARGV[0], &wait_local);
 		if (retval != ERROR_OK)
 			return ERROR_COMMAND_SYNTAX_ERROR;
@@ -3397,28 +3375,28 @@ COMMAND_HANDLER(handle_step_command)
 }
 
 void target_handle_md_output(struct command_invocation *cmd,
-		struct target *target, target_addr_t address, unsigned size,
-		unsigned count, const uint8_t *buffer)
+		struct target *target, target_addr_t address, unsigned int size,
+		unsigned int count, const uint8_t *buffer)
 {
-	const unsigned line_bytecnt = 32;
-	unsigned line_modulo = line_bytecnt / size;
+	const unsigned int line_bytecnt = 32;
+	unsigned int line_modulo = line_bytecnt / size;
 
 	char output[line_bytecnt * 4 + 1];
-	unsigned output_len = 0;
+	unsigned int output_len = 0;
 
 	const char *value_fmt;
 	switch (size) {
 	case 8:
-		value_fmt = "%16.16"PRIx64" ";
+		value_fmt = "%16.16" PRIx64 " ";
 		break;
 	case 4:
-		value_fmt = "%8.8"PRIx64" ";
+		value_fmt = "%8.8" PRIx64 " ";
 		break;
 	case 2:
-		value_fmt = "%4.4"PRIx64" ";
+		value_fmt = "%4.4" PRIx64 " ";
 		break;
 	case 1:
-		value_fmt = "%2.2"PRIx64" ";
+		value_fmt = "%2.2" PRIx64 " ";
 		break;
 	default:
 		/* "can't happen", caller checked */
@@ -3426,7 +3404,7 @@ void target_handle_md_output(struct command_invocation *cmd,
 		return;
 	}
 
-	for (unsigned i = 0; i < count; i++) {
+	for (unsigned int i = 0; i < count; i++) {
 		if (i % line_modulo == 0) {
 			output_len += snprintf(output + output_len,
 					sizeof(output) - output_len,
@@ -3465,7 +3443,7 @@ COMMAND_HANDLER(handle_md_command)
 	if (CMD_ARGC < 1)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
-	unsigned size = 0;
+	unsigned int size = 0;
 	switch (CMD_NAME[2]) {
 	case 'd':
 		size = 8;
@@ -3490,15 +3468,16 @@ COMMAND_HANDLER(handle_md_command)
 		CMD_ARGC--;
 		CMD_ARGV++;
 		fn = target_read_phys_memory;
-	} else
+	} else {
 		fn = target_read_memory;
+	}
 	if ((CMD_ARGC < 1) || (CMD_ARGC > 2))
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	target_addr_t address;
 	COMMAND_PARSE_ADDRESS(CMD_ARGV[0], address);
 
-	unsigned count = 1;
+	unsigned int count = 1;
 	if (CMD_ARGC == 2)
 		COMMAND_PARSE_NUMBER(uint, CMD_ARGV[1], count);
 
@@ -3524,22 +3503,22 @@ typedef int (*target_write_fn)(struct target *target,
 static int target_fill_mem(struct target *target,
 		target_addr_t address,
 		target_write_fn fn,
-		unsigned data_size,
+		unsigned int data_size,
 		/* value */
 		uint64_t b,
 		/* count */
-		unsigned c)
+		unsigned int c)
 {
 	/* We have to write in reasonably large chunks to be able
 	 * to fill large memory areas with any sane speed */
-	const unsigned chunk_size = 16384;
+	const unsigned int chunk_size = 16384;
 	uint8_t *target_buf = malloc(chunk_size * data_size);
 	if (!target_buf) {
 		LOG_ERROR("Out of memory");
 		return ERROR_FAIL;
 	}
 
-	for (unsigned i = 0; i < chunk_size; i++) {
+	for (unsigned int i = 0; i < chunk_size; i++) {
 		switch (data_size) {
 		case 8:
 			target_buffer_set_u64(target, target_buf + i * data_size, b);
@@ -3560,8 +3539,8 @@ static int target_fill_mem(struct target *target,
 
 	int retval = ERROR_OK;
 
-	for (unsigned x = 0; x < c; x += chunk_size) {
-		unsigned current;
+	for (unsigned int x = 0; x < c; x += chunk_size) {
+		unsigned int current;
 		current = c - x;
 		if (current > chunk_size)
 			current = chunk_size;
@@ -3582,13 +3561,17 @@ COMMAND_HANDLER(handle_mw_command)
 	if (CMD_ARGC < 2)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	bool physical = strcmp(CMD_ARGV[0], "phys") == 0;
+	bool ignore_data_abort = strcmp(CMD_ARGV[0], "ignore-data-abort") == 0;
 	target_write_fn fn;
-	if (physical) {
+	if (physical || ignore_data_abort) {
 		CMD_ARGC--;
 		CMD_ARGV++;
+    }
+    if (physical) {
 		fn = target_write_phys_memory;
-	} else
+	} else {
 		fn = target_write_memory;
+	}
 	if ((CMD_ARGC < 2) || (CMD_ARGC > 3))
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
@@ -3598,12 +3581,12 @@ COMMAND_HANDLER(handle_mw_command)
 	uint64_t value;
 	COMMAND_PARSE_NUMBER(u64, CMD_ARGV[1], value);
 
-	unsigned count = 1;
+	unsigned int count = 1;
 	if (CMD_ARGC == 3)
 		COMMAND_PARSE_NUMBER(uint, CMD_ARGV[2], count);
 
 	struct target *target = get_current_target(CMD_CTX);
-	unsigned wordsize;
+	unsigned int wordsize;
 	switch (CMD_NAME[2]) {
 		case 'd':
 			wordsize = 8;
@@ -3621,7 +3604,14 @@ COMMAND_HANDLER(handle_mw_command)
 			return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	return target_fill_mem(target, address, fn, wordsize, value, count);
+	int retval = target_fill_mem(target, address, fn, wordsize, value, count);
+
+	if (retval == ERROR_TARGET_DATA_ABORT && ignore_data_abort) {
+		LOG_DEBUG("data abort from command '%s' ignored as requested", CMD_NAME);
+		retval = ERROR_OK;
+	}
+
+	return retval;
 }
 
 static COMMAND_HELPER(parse_load_image_command, struct image *image,
@@ -3637,8 +3627,9 @@ static COMMAND_HELPER(parse_load_image_command, struct image *image,
 		COMMAND_PARSE_ADDRESS(CMD_ARGV[1], addr);
 		image->base_address = addr;
 		image->base_address_set = true;
-	} else
+	} else {
 		image->base_address_set = false;
+	}
 
 	image->start_address_set = false;
 
@@ -3703,15 +3694,14 @@ COMMAND_HANDLER(handle_load_image_command)
 
 		if ((image.sections[i].base_address + buf_cnt >= min_address) &&
 				(image.sections[i].base_address < max_address)) {
-
 			if (image.sections[i].base_address < min_address) {
 				/* clip addresses below */
-				offset += min_address-image.sections[i].base_address;
+				offset += min_address - image.sections[i].base_address;
 				length -= offset;
 			}
 
 			if (image.sections[i].base_address + buf_cnt > max_address)
-				length -= (image.sections[i].base_address + buf_cnt)-max_address;
+				length -= (image.sections[i].base_address + buf_cnt) - max_address;
 
 			retval = target_write_buffer(target,
 					image.sections[i].base_address + offset, length, buffer + offset);
@@ -3737,7 +3727,6 @@ COMMAND_HANDLER(handle_load_image_command)
 	image_close(&image);
 
 	return retval;
-
 }
 
 COMMAND_HANDLER(handle_dump_image_command)
@@ -3901,7 +3890,7 @@ static COMMAND_HELPER(handle_verify_image_command_internal, enum verify_mode ver
 							command_print(CMD,
 										  "diff %d address 0x%08x. Was 0x%02x instead of 0x%02x",
 										  diffs,
-										  (unsigned)(t + image.sections[i].base_address),
+										  (unsigned int)(t + image.sections[i].base_address),
 										  data[t],
 										  buffer[t]);
 							if (diffs++ >= 127) {
@@ -3980,10 +3969,11 @@ static int handle_bp_command_list(struct command_invocation *cmd)
 							breakpoint->length, breakpoint->number);
 				command_print(cmd, "\t|--->linked with ContextID: 0x%8.8" PRIx32,
 							breakpoint->asid);
-			} else
+			} else {
 				command_print(cmd, "Breakpoint(IVA): " TARGET_ADDR_FMT ", 0x%x, %u",
 							breakpoint->address,
 							breakpoint->length, breakpoint->number);
+			}
 		}
 
 		breakpoint = breakpoint->next;
@@ -4297,7 +4287,7 @@ static void write_gmon(uint32_t *samples, uint32_t sample_num, const char *filen
 	float sample_rate = sample_num / (duration_ms / 1000.0);
 	write_long(f, sample_rate, target);
 	write_string(f, "seconds");
-	for (i = 0; i < (15-strlen("seconds")); i++)
+	for (i = 0; i < (15 - strlen("seconds")); i++)
 		write_data(f, &zero, 1);
 	write_string(f, "s");
 
@@ -4310,14 +4300,15 @@ static void write_gmon(uint32_t *samples, uint32_t sample_num, const char *filen
 			val = buckets[i];
 			if (val > 65535)
 				val = 65535;
-			data[i * 2] = val&0xff;
+			data[i * 2] = val & 0xff;
 			data[i * 2 + 1] = (val >> 8) & 0xff;
 		}
 		free(buckets);
 		write_data(f, data, num_buckets * 2);
 		free(data);
-	} else
+	} else {
 		free(buckets);
+	}
 
 	fclose(f);
 }
@@ -4567,28 +4558,27 @@ static int target_mem2array(Jim_Interp *interp, struct target *target, int argc,
 			Jim_AppendStrings(interp, Jim_GetResult(interp), "mem2array: cannot read memory", NULL);
 			e = JIM_ERR;
 			break;
-		} else {
-			for (size_t i = 0; i < chunk_len ; i++, idx++) {
-				uint64_t v = 0;
-				switch (width) {
-					case 8:
-						v = target_buffer_get_u64(target, &buffer[i*width]);
-						break;
-					case 4:
-						v = target_buffer_get_u32(target, &buffer[i*width]);
-						break;
-					case 2:
-						v = target_buffer_get_u16(target, &buffer[i*width]);
-						break;
-					case 1:
-						v = buffer[i] & 0x0ff;
-						break;
-				}
-				new_u64_array_element(interp, varname, idx, v);
-			}
-			len -= chunk_len;
-			addr += chunk_len * width;
 		}
+		for (size_t i = 0; i < chunk_len ; i++, idx++) {
+			uint64_t v = 0;
+			switch (width) {
+				case 8:
+					v = target_buffer_get_u64(target, &buffer[i * width]);
+					break;
+				case 4:
+					v = target_buffer_get_u32(target, &buffer[i * width]);
+					break;
+				case 2:
+					v = target_buffer_get_u16(target, &buffer[i * width]);
+					break;
+				case 1:
+					v = buffer[i] & 0x0ff;
+					break;
+			}
+			new_u64_array_element(interp, varname, idx, v);
+		}
+		len -= chunk_len;
+		addr += chunk_len * width;
 	}
 
 	free(buffer);
@@ -4673,12 +4663,12 @@ static int target_jim_read_memory(Jim_Interp *interp, int argc,
 	}
 
 	if (count > 65536) {
-		Jim_SetResultString(interp, "read_memory: too large read request, exeeds 64K elements", -1);
+		Jim_SetResultString(interp, "read_memory: too large read request, exceeds 64K elements", -1);
 		return JIM_ERR;
 	}
 
 	struct command_context *cmd_ctx = current_command_context(interp);
-	assert(cmd_ctx != NULL);
+	assert(cmd_ctx);
 	struct target *target = get_current_target(cmd_ctx);
 
 	const size_t buffersize = 4096;
@@ -5021,7 +5011,7 @@ static int target_jim_write_memory(Jim_Interp *interp, int argc,
 	}
 
 	struct command_context *cmd_ctx = current_command_context(interp);
-	assert(cmd_ctx != NULL);
+	assert(cmd_ctx);
 	struct target *target = get_current_target(cmd_ctx);
 
 	const size_t buffersize = 4096;
@@ -5166,7 +5156,7 @@ static int target_jim_get_reg(Jim_Interp *interp, int argc,
 		return JIM_ERR;
 
 	struct command_context *cmd_ctx = current_command_context(interp);
-	assert(cmd_ctx != NULL);
+	assert(cmd_ctx);
 	const struct target *target = get_current_target(cmd_ctx);
 
 	for (int i = 0; i < length; i++) {
@@ -5310,6 +5300,8 @@ enum target_cfg_param {
 	TCFG_DEFER_EXAMINE,
 	TCFG_GDB_PORT,
 	TCFG_GDB_MAX_CONNECTIONS,
+	TCFG_RESTART_CTI_REG_ADDR,
+	TCFG_RESTART_CTI_CHANNEL,
 };
 
 static struct jim_nvp nvp_config_opts[] = {
@@ -5327,6 +5319,8 @@ static struct jim_nvp nvp_config_opts[] = {
 	{ .name = "-defer-examine",    .value = TCFG_DEFER_EXAMINE },
 	{ .name = "-gdb-port",         .value = TCFG_GDB_PORT },
 	{ .name = "-gdb-max-connections",   .value = TCFG_GDB_MAX_CONNECTIONS },
+	{ .name = "-restart-cti-reg-addr",  .value = TCFG_RESTART_CTI_REG_ADDR },
+	{ .name = "-restart-cti-channel",   .value = TCFG_RESTART_CTI_CHANNEL },
 	{ .name = NULL, .value = -1 }
 };
 
@@ -5368,14 +5362,13 @@ static int target_configure(struct jim_getopt_info *goi, struct target *target)
 				Jim_SetResultFormatted(goi->interp,
 						"not settable: %s", n->name);
 				return JIM_ERR;
-			} else {
+			}
 no_params:
-				if (goi->argc != 0) {
-					Jim_WrongNumArgs(goi->interp,
-							goi->argc, goi->argv,
-							"NO PARAMS");
-					return JIM_ERR;
-				}
+			if (goi->argc != 0) {
+				Jim_WrongNumArgs(goi->interp,
+						goi->argc, goi->argv,
+						"NO PARAMS");
+				return JIM_ERR;
 			}
 			Jim_SetResultString(goi->interp,
 					target_type_name(target), -1);
@@ -5658,6 +5651,35 @@ no_params:
 					goto no_params;
 			}
 			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->gdb_max_connections));
+			break;
+		
+		case TCFG_RESTART_CTI_REG_ADDR:
+			if (goi->isconfigure) {
+				e = jim_getopt_wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				target->restart_cti_reg_addr = (target_addr_t)w;
+				target->restart_use_cti = true;
+			} else {
+				if (goi->argc != 0)
+					goto no_params;
+			}
+			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->restart_cti_reg_addr));
+			/* loop for more */
+			break;
+
+		case TCFG_RESTART_CTI_CHANNEL:
+			if (goi->isconfigure) {
+				e = jim_getopt_wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				target->restart_cti_channel = (int32_t)w;
+			} else {
+				if (goi->argc != 0)
+					goto no_params;
+			}
+			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->restart_cti_channel));
+			/* loop for more */
 			break;
 		}
 	} /* while (goi->argc) */
@@ -6342,7 +6364,7 @@ static int target_create(struct jim_getopt_info *goi)
 	if (target->type->target_create) {
 		e = (*(target->type->target_create))(target, goi->interp);
 		if (e != ERROR_OK) {
-			LOG_DEBUG("target_create failed");
+			LOG_DEBUG("%s failed", __func__);
 			free(target->cmd_name);
 			rtos_destroy(target);
 			free(target->gdb_port_override);
@@ -6422,7 +6444,7 @@ static int jim_target_types(Jim_Interp *interp, int argc, Jim_Obj *const *argv)
 		return JIM_ERR;
 	}
 	Jim_SetResult(interp, Jim_NewListObj(interp, NULL, 0));
-	for (unsigned x = 0; target_types[x]; x++) {
+	for (unsigned int x = 0; target_types[x]; x++) {
 		Jim_ListAppendElement(interp, Jim_GetResult(interp),
 			Jim_NewStringObj(interp, target_types[x]->name, -1));
 	}
@@ -6629,13 +6651,13 @@ COMMAND_HANDLER(handle_fast_load_image_command)
 	image_size = 0x0;
 	retval = ERROR_OK;
 	fastload_num = image.num_sections;
-	fastload = malloc(sizeof(struct fast_load)*image.num_sections);
+	fastload = malloc(sizeof(struct fast_load) * image.num_sections);
 	if (!fastload) {
 		command_print(CMD, "out of memory");
 		image_close(&image);
 		return ERROR_FAIL;
 	}
-	memset(fastload, 0, sizeof(struct fast_load)*image.num_sections);
+	memset(fastload, 0, sizeof(struct fast_load) * image.num_sections);
 	for (unsigned int i = 0; i < image.num_sections; i++) {
 		buffer = malloc(image.sections[i].size);
 		if (!buffer) {
@@ -6660,12 +6682,12 @@ COMMAND_HANDLER(handle_fast_load_image_command)
 				(image.sections[i].base_address < max_address)) {
 			if (image.sections[i].base_address < min_address) {
 				/* clip addresses below */
-				offset += min_address-image.sections[i].base_address;
+				offset += min_address - image.sections[i].base_address;
 				length -= offset;
 			}
 
 			if (image.sections[i].base_address + buf_cnt > max_address)
-				length -= (image.sections[i].base_address + buf_cnt)-max_address;
+				length -= (image.sections[i].base_address + buf_cnt) - max_address;
 
 			fastload[i].address = image.sections[i].base_address + offset;
 			fastload[i].data = malloc(length);
@@ -6730,7 +6752,7 @@ COMMAND_HANDLER(handle_fast_load_command)
 	}
 	if (retval == ERROR_OK) {
 		int64_t after = timeval_ms();
-		command_print(CMD, "Loaded image %f kBytes/s", (float)(size/1024.0)/((float)(after-ms)/1000.0));
+		command_print(CMD, "Loaded image %f kBytes/s", (float)(size / 1024.0) / ((float)(after - ms) / 1000.0));
 	}
 	return retval;
 }
@@ -6788,10 +6810,9 @@ COMMAND_HANDLER(handle_ps_command)
 		command_print(CMD, "%s", display);
 		free(display);
 		return ERROR_OK;
-	} else {
-		LOG_INFO("failed");
-		return ERROR_TARGET_FAILURE;
 	}
+	LOG_INFO("failed");
+	return ERROR_TARGET_FAILURE;
 }
 
 static void binprint(struct command_invocation *cmd, const char *text, const uint8_t *buf, int size)
@@ -7117,21 +7138,21 @@ static const struct command_registration target_exec_command_handlers[] = {
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory word",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "mwh",
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory half-word",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "mwb",
 		.handler = handle_mw_command,
 		.mode = COMMAND_EXEC,
 		.help = "write memory byte",
-		.usage = "['phys'] address value [count]",
+		.usage = "['phys'|'ignore-data-abort'] address value [count]",
 	},
 	{
 		.name = "bp",

@@ -76,7 +76,7 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 		return retval;
 	LOG_DEBUG("header 0x%08" PRIx32 " 0x%08" PRIx32, header.signature, header.revision);
 	if (header.signature != SFDP_MAGIC) {
-		LOG_INFO("no SDFP found");
+		LOG_INFO("no SFDP found");
 		return ERROR_FLASH_BANK_NOT_PROBED;
 	}
 	if (((header.revision >> 24) & 0xFF) != SFDP_ACCESS_PROT) {
@@ -100,7 +100,7 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 		goto err;
 
 	for (k = 0; k < nph; k++) {
-		uint8_t words = (pheaders[k].revision >> 24) & 0xFF;
+		uint32_t words = (pheaders[k].revision >> 24) & 0xFF;
 		uint16_t id = (((pheaders[k].ptr) >> 16) & 0xFF00) | (pheaders[k].revision & 0xFF);
 		uint32_t ptr = pheaders[k].ptr & 0xFFFFFF;
 
@@ -139,6 +139,13 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 			dev->read_cmd = SPIFLASH_READ;
 			dev->pprog_cmd = SPIFLASH_PAGE_PROGRAM;
 			dev->chip_erase_cmd = SPIFLASH_MASS_ERASE;
+
+			/* Get the dual read command and parameters */
+			if (table->fast_addr & (0x1 << 20)) {
+				dev->dread_cmd = (table->fast_1x2 >> 24) & 0xFF;
+				dev->dread_mode = (table->fast_1x2 >> 21) & 0x07;
+				dev->dread_dclk = (table->fast_1x2 >> 16) & 0x1F;
+			}
 
 			/* get device size */
 			if (table->density & (1UL << 31))
@@ -201,8 +208,9 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 					dev->erase_cmd = 0xDC;
 					if (dev->qread_cmd != 0)
 						dev->qread_cmd = 0xEC;
-				} else if (((table->fast_addr >> 17) & 0x3) == 0x1)
+				} else if (((table->fast_addr >> 17) & 0x3) == 0x1) {
 					LOG_INFO("device has to be switched to 4-byte addresses");
+				}
 			}
 		} else if (id == SFDP_4BYTE_ADDR) {
 			struct sfdp_4byte_addr_param *table = (struct sfdp_4byte_addr_param *)ptable;
@@ -220,7 +228,7 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 					dev->pprog_cmd = 0x12;
 
 				/* erase instructions */
-				if ((erase_type == 1) && (table->flags & (1UL << 9)))
+				if (erase_type == 1 && table->flags & (1UL << 9))
 					dev->erase_cmd = (table->erase_t1234 >> 0) & 0xFF;
 				else if ((erase_type == 2) && (table->flags & (1UL << 10)))
 					dev->erase_cmd = (table->erase_t1234 >> 8) & 0xFF;
@@ -228,10 +236,12 @@ int spi_sfdp(struct flash_bank *bank, struct flash_device *dev,
 					dev->erase_cmd = (table->erase_t1234 >> 16) & 0xFF;
 				else if ((erase_type == 4) && (table->flags & (1UL << 12)))
 					dev->erase_cmd = (table->erase_t1234 >> 24) & 0xFF;
-			} else
+			} else {
 				LOG_ERROR("parameter table id=0x%04" PRIx16 " invalid length %d", id, words);
-		} else
+			}
+		} else {
 			LOG_DEBUG("unimplemented parameter table id=0x%04" PRIx16, id);
+		}
 
 		free(ptable);
 		ptable = NULL;

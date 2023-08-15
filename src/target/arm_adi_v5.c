@@ -16,6 +16,8 @@
  *   andreas.fritiofson@gmail.com                                          *
  *                                                                         *
  *   Copyright (C) 2019-2021, Ampere Computing LLC                         *
+ *                                                                         *
+ *	 Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 /**
@@ -94,7 +96,7 @@ static int mem_ap_setup_csw(struct adiv5_ap *ap, uint32_t csw)
 {
 	csw |= ap->csw_default;
 
-	if (csw != ap->csw_value) {
+	if (ap->dap->shared_connection || csw != ap->csw_value) {
 		/* LOG_DEBUG("DAP: Set CSW %x",csw); */
 		int retval = dap_queue_ap_write(ap, MEM_AP_REG_CSW(ap->dap), csw);
 		if (retval != ERROR_OK) {
@@ -108,7 +110,7 @@ static int mem_ap_setup_csw(struct adiv5_ap *ap, uint32_t csw)
 
 static int mem_ap_setup_tar(struct adiv5_ap *ap, target_addr_t tar)
 {
-	if (!ap->tar_valid || tar != ap->tar_value) {
+	if (ap->dap->shared_connection || !ap->tar_valid || tar != ap->tar_value) {
 		/* LOG_DEBUG("DAP: Set TAR %x",tar); */
 		int retval = dap_queue_ap_write(ap, MEM_AP_REG_TAR(ap->dap), (uint32_t)(tar & 0xffffffffUL));
 		if (retval == ERROR_OK && is_64bit_ap(ap)) {

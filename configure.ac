@@ -6,6 +6,15 @@ AC_INIT([openocd], [0.12.0],
 AC_CONFIG_SRCDIR([src/openocd.c])
 AC_CONFIG_AUX_DIR([build-aux])
 
+m4_include([acx.m4])
+ACX_PKGVERSION([PKGVERSION])
+ACX_BUGURL([processor.tools.support@analog.com])
+
+AC_DEFINE_UNQUOTED([PKGVERSION], ["$PKGVERSION"],
+		   [Define to the package version.])dnl
+AC_DEFINE_UNQUOTED([REPORT_BUGS_TO], ["$REPORT_BUGS_TO"],
+		   [Define to the URL or email address for report bugs to.])dnl
+
 m4_include([config_subdir.m4])dnl
 
 # check for makeinfo before calling AM_INIT_AUTOMAKE
@@ -116,6 +125,9 @@ m4_define([ADAPTER_OPT], [m4_translit(ADAPTER_ARG($1), [_], [-])])
 m4_define([USB1_ADAPTERS],
 	[[[ftdi], [MPSSE mode of FTDI based devices], [FTDI]],
 	[[stlink], [ST-Link Programmer], [HLADAPTER_STLINK]],
+	[[ice1000], [Analog Devices ICE-1000], [ICE_1000]],
+	[[ice2000], [Analog Devices ICE-2000], [ICE_2000]],
+	[[adi_dbgagent], [Analog Devices Debug Agent], [ADI_DBGAGENT]],
 	[[ti_icdi], [TI ICDI JTAG Programmer], [HLADAPTER_ICDI]],
 	[[ulink], [Keil ULINK JTAG Programmer], [ULINK]],
 	[[usb_blaster_2], [Altera USB-Blaster II Compatible], [USB_BLASTER_2]],
@@ -760,6 +772,7 @@ AM_CONDITIONAL([USE_HIDAPI], [test "x$use_hidapi" = "xyes"])
 AM_CONDITIONAL([USE_LIBJAYLINK], [test "x$use_libjaylink" = "xyes"])
 AM_CONDITIONAL([RSHIM], [test "x$build_rshim" = "xyes"])
 AM_CONDITIONAL([HAVE_CAPSTONE], [test "x$enable_capstone" != "xno"])
+
 
 AM_CONDITIONAL([INTERNAL_JIMTCL], [test "x$use_internal_jimtcl" = "xyes"])
 AM_CONDITIONAL([INTERNAL_LIBJAYLINK], [test "x$use_internal_libjaylink" = "xyes"])

@@ -191,6 +191,16 @@ COMMAND_HANDLER(handle_add_script_search_dir_command)
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(handle_firmware_command)
+{
+	if (CMD_ARGC != 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	set_firmware_filename(CMD_ARGV[0]);
+
+	return ERROR_OK;
+}
+
 static const struct command_registration openocd_command_handlers[] = {
 	{
 		.name = "version",
@@ -221,6 +231,13 @@ static const struct command_registration openocd_command_handlers[] = {
 		.mode = COMMAND_ANY,
 		.help = "dir to search for config files and scripts",
 		.usage = "<directory>"
+	},
+	{
+		.name = "firmware",
+		.handler = &handle_firmware_command,
+		.mode = COMMAND_CONFIG,
+		.help = "Set the firmware to be loaded.",
+		.usage = "filename"
 	},
 	COMMAND_REGISTRATION_DONE
 };
@@ -327,8 +344,30 @@ static struct command_context *setup_command_handler(Jim_Interp *interp)
 	}
 	LOG_DEBUG("command registration: complete");
 
-	LOG_OUTPUT(OPENOCD_VERSION "\n"
-		"Licensed under GNU GPL v2\n");
+	/* pretty print the ADI OpenOCD version to look like this:
+		"Open On-Chip Debugger " PKGVERSION "OpenOCD " VERSION " (" PKGBLDDATE ")" */
+	char pretty_version[150] = "Open On-Chip Debugger " PKGVERSION " OpenOCD ";
+
+	/* pull out a clean product version (everything up to next '+' or '-') */
+	char version[] = VERSION;
+	int i = strlen(pretty_version);
+	int j = 0;
+	while (i < 150 && version[j] && version[j] != '+' && version[j] != '-')
+	{
+		pretty_version[i++] = version[j++];
+	}
+
+	/* copy the PKGBLDDATE */
+	pretty_version[i++] = ' ';
+	pretty_version[i++] = '(';
+	strcat(pretty_version, PKGBLDDATE);
+	i = strlen(pretty_version);
+	pretty_version[i++] = ')';
+
+	/* terminate the pretty string */
+	pretty_version[i++] = 0;
+
+	LOG_OUTPUT("%s\nLicensed under GNU GPL v2\n", pretty_version);
 
 	global_cmd_ctx = cmd_ctx;
 
@@ -399,9 +438,7 @@ int openocd_main(int argc, char *argv[])
 	if (rtt_init() != ERROR_OK)
 		return EXIT_FAILURE;
 
-	LOG_OUTPUT("For bug reports, read\n\t"
-		"http://openocd.org/doc/doxygen/bugs.html"
-		"\n");
+	LOG_OUTPUT("Report bugs to %s\n", REPORT_BUGS_TO);
 
 	command_context_mode(cmd_ctx, COMMAND_CONFIG);
 	command_set_output_handler(cmd_ctx, configuration_output_handler, NULL);

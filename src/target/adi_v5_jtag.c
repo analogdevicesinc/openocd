@@ -12,7 +12,9 @@
  *
  *   Copyright (C) 2009-2010 by David Brownell
  *
- *   Copyright (C) 2020-2021, Ampere Computing LLC                              *
+ *   Copyright (C) 2020-2021, Ampere Computing LLC                         *
+ *                                                                         *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 /**
@@ -751,7 +753,7 @@ static int jtag_ap_q_bankselect(struct adiv5_ap *ap, unsigned reg)
 
 	if (is_adiv6(dap)) {
 		sel = ap->ap_num | (reg & 0x00000FF0);
-		if (sel == (dap->select & ~0xfull))
+		if (!dap->shared_connection && sel == (dap->select & ~0xfull))
 			return ERROR_OK;
 
 		if (dap->select != DP_SELECT_INVALID)

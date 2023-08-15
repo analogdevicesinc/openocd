@@ -143,6 +143,8 @@ static int gdb_use_target_description = 1;
 /* current processing free-run type, used by file-I/O */
 static char gdb_running_type;
 
+static int gdb_warn_target_extended_remote = 1;
+
 static int gdb_last_signal(struct target *target)
 {
 	switch (target->debug_reason) {
@@ -3568,7 +3570,7 @@ static int gdb_input_inner(struct connection *connection)
 				case '?':
 					gdb_last_signal_packet(connection, packet, packet_size);
 					/* '?' is sent after the eventual '!' */
-					if (!warn_use_ext && !gdb_con->extended_protocol) {
+					if (!warn_use_ext && !gdb_con->extended_protocol && gdb_warn_target_extended_remote) {
 						warn_use_ext = true;
 						LOG_WARNING("Prefer GDB command \"target extended-remote :%s\" instead of \"target remote :%s\"",
 									connection->service->port, connection->service->port);
@@ -4020,6 +4022,16 @@ out:
 	return retval;
 }
 
+COMMAND_HANDLER(handle_gdb_warn_target_extended_remote_command)
+{
+	if (CMD_ARGC != 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	COMMAND_PARSE_ENABLE(CMD_ARGV[0], gdb_warn_target_extended_remote);
+
+	return ERROR_OK;
+}
+
 static const struct command_registration gdb_command_handlers[] = {
 	{
 		.name = "gdb_sync",
@@ -4092,6 +4104,13 @@ static const struct command_registration gdb_command_handlers[] = {
 		.mode = COMMAND_EXEC,
 		.help = "Save the target description file",
 		.usage = "",
+	},
+	{
+		.name = "gdb_warn_target_extended_remote",
+		.handler = handle_gdb_warn_target_extended_remote_command,
+		.mode = COMMAND_ANY,
+		.help = "enable or disable GDB 'Prefer target extended-remote' warning",
+		.usage = "('enable'|'disable')"
 	},
 	COMMAND_REGISTRATION_DONE
 };

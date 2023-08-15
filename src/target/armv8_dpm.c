@@ -648,6 +648,12 @@ static int dpmv8_read_reg(struct arm_dpm *dpm, struct reg *r, unsigned regnum)
 		uint64_t value_64;
 		retval = armv8->read_reg_u64(armv8, regnum, &value_64);
 
+		if (retval == ERROR_TARGET_EXCEPTION_LEVEL) {
+			uint32_t cur_el = armv8_curel_from_core_mode(dpm->arm->core_mode);
+			LOG_WARNING("Unable to read %s register from EL%d.", r->name, cur_el);
+			retval = ERROR_OK;
+		}
+
 		if (retval == ERROR_OK) {
 			r->valid = true;
 			r->dirty = false;

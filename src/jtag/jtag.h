@@ -6,6 +6,8 @@
 *                                                                         *
 *   Copyright (C) 2007-2010 Øyvind Harboe                                 *
 *   oyvind.harboe@zylin.com                                               *
+*                                                                         *
+*   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
 ***************************************************************************/
 
 #ifndef OPENOCD_JTAG_JTAG_H
@@ -131,6 +133,13 @@ struct jtag_tap {
 	uint8_t *cur_instr;
 	/** Bypass register selected */
 	int bypass;
+
+	/*
+	 * If the TAP connection is shared with another instance do not use
+	 * caching for instructions as they could have changed since they
+	 * were last accessed.
+	 */
+	bool shared_connection;
 
 	struct jtag_tap_event_action *event_action;
 

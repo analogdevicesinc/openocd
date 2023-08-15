@@ -3,6 +3,7 @@
 /***************************************************************************
  *   Copyright (C) 2016 by Matthias Welwarsky                              *
  *                                                                         *
+ * 	 Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -69,6 +70,7 @@ struct adiv5_dap *adiv5_get_dap(struct arm_dap_object *obj)
 {
 	return &obj->dap;
 }
+
 struct adiv5_dap *dap_instance_by_jim_obj(Jim_Interp *interp, Jim_Obj *o)
 {
 	struct arm_dap_object *obj = NULL;
@@ -178,6 +180,7 @@ enum dap_cfg_param {
 	CFG_INSTANCE_ID,
 	CFG_ADIV6,
 	CFG_ADIV5,
+	CFG_SHARED_CONNECTION,
 };
 
 static const struct jim_nvp nvp_config_opts[] = {
@@ -187,6 +190,7 @@ static const struct jim_nvp nvp_config_opts[] = {
 	{ .name = "-instance-id",        .value = CFG_INSTANCE_ID },
 	{ .name = "-adiv6",              .value = CFG_ADIV6 },
 	{ .name = "-adiv5",              .value = CFG_ADIV5 },
+	{ .name = "-shared-connection",  .value = CFG_SHARED_CONNECTION },
 	{ .name = NULL, .value = -1 }
 };
 
@@ -271,6 +275,10 @@ static int dap_configure(struct jim_getopt_info *goi, struct arm_dap_object *dap
 			break;
 		case CFG_ADIV5:
 			dap->dap.adi_version = 5;
+			break;
+		case CFG_SHARED_CONNECTION:
+			dap->dap.shared_connection = true;
+			LOG_INFO("Shared DAP connection is enabled");
 			break;
 		default:
 			break;

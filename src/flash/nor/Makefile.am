@@ -10,6 +10,7 @@ noinst_LTLIBRARIES += %D%/libocdflashnor.la
 
 NOR_DRIVERS = \
 	%D%/aduc702x.c \
+	%D%/aducm302x.c \
 	%D%/aducm360.c \
 	%D%/ambiqmicro.c \
 	%D%/at91sam4.c \
@@ -41,6 +42,7 @@ NOR_DRIVERS = \
 	%D%/lpc2900.c \
 	%D%/lpcspifi.c \
 	%D%/max32xxx.c \
+	%D%/max32xxx_qspi.c \
 	%D%/mdr.c \
 	%D%/msp432.c \
 	%D%/mrvlqspi.c \

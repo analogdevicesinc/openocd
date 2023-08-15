@@ -3,6 +3,8 @@
 /***************************************************************************
  *   Copyright (C) 2015 by David Ung                                       *
  *                                                                         *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
+ *                                                                         *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -36,6 +38,7 @@ enum halt_mode {
 struct aarch64_private_config {
 	struct adiv5_private_config adiv5_config;
 	struct arm_cti *cti;
+	struct arm_cti *sys_cti;
 };
 
 static int aarch64_poll(struct target *target);
@@ -142,9 +145,8 @@ static int aarch64_mmu_modify(struct target *target, int enable)
 			if (armv8->armv8_mmu.armv8_cache.flush_all_data_cache)
 				armv8->armv8_mmu.armv8_cache.flush_all_data_cache(target);
 		}
-		if ((aarch64->system_control_reg_curr & 0x1U)) {
+		if (aarch64->system_control_reg_curr & 0x1U)
 			aarch64->system_control_reg_curr &= ~0x1U;
-		}
 	}
 
 	switch (armv8->arm.core_mode) {
@@ -229,12 +231,28 @@ static int aarch64_init_debug_access(struct target *target)
 		retval = arm_cti_write_reg(armv8->cti, CTI_GATE, 0);
 	/* output halt requests to PE on channel 0 event */
 	if (retval == ERROR_OK)
-		retval = arm_cti_write_reg(armv8->cti, CTI_OUTEN0, CTI_CHNL(0));
+		retval = arm_cti_set_halt(armv8->cti, CTI_CHNL(0));
 	/* output restart requests to PE on channel 1 event */
 	if (retval == ERROR_OK)
-		retval = arm_cti_write_reg(armv8->cti, CTI_OUTEN1, CTI_CHNL(1));
+		retval = arm_cti_set_dbgrestart(armv8->cti, CTI_CHNL(1));
 	if (retval != ERROR_OK)
 		return retval;
+
+	if (armv8->sys_cti != NULL) {
+		/* Enable SYS CTI */
+		retval = arm_cti_enable(armv8->sys_cti, true);
+		/* By default, gate all channel events to and from the CTM */
+		if (retval == ERROR_OK)
+			retval = arm_cti_write_reg(armv8->sys_cti, CTI_GATE, 0);
+		/* output halt requests to System Peripheral on channel 0 event */
+		if (retval == ERROR_OK)
+			retval = arm_cti_set_halt(armv8->sys_cti, CTI_CHNL(0));
+		/* output restart requests to System Peripheral on channel 1 event */
+		if (retval == ERROR_OK)
+			retval = arm_cti_set_dbgrestart(armv8->sys_cti, CTI_CHNL(1));
+		if (retval != ERROR_OK)
+			return retval;
+	}
 
 	/* Resync breakpoint registers */
 
@@ -311,7 +329,7 @@ static int aarch64_wait_halt_one(struct target *target)
 
 		if (timeval_ms() > then + 1000) {
 			retval = ERROR_TARGET_TIMEOUT;
-			LOG_DEBUG("target %s timeout, prsr=0x%08"PRIx32, target_name(target), prsr);
+			LOG_DEBUG("target %s timeout, prsr=0x%08" PRIx32, target_name(target), prsr);
 			break;
 		}
 	}
@@ -543,8 +561,9 @@ static int aarch64_poll(struct target *target)
 				break;
 			}
 		}
-	} else
+	} else {
 		target->state = TARGET_RUNNING;
+	}
 
 	return retval;
 }
@@ -679,6 +698,12 @@ static int aarch64_do_restart_one(struct target *target, enum restart_mode mode)
 	if (retval != ERROR_OK)
 		return retval;
 
+	if (armv8->sys_cti != NULL) {
+		retval = arm_cti_pulse_channel(armv8->sys_cti, 1);
+		if (retval != ERROR_OK)
+			return retval;
+	}
+
 	if (mode == RESTART_SYNC) {
 		int64_t then = timeval_ms();
 		for (;;) {
@@ -693,7 +718,7 @@ static int aarch64_do_restart_one(struct target *target, enum restart_mode mode)
 				break;
 
 			if (timeval_ms() > then + 1000) {
-				LOG_ERROR("%s: Timeout waiting for resume"PRIx32, target_name(target));
+				LOG_ERROR("%s: Timeout waiting for resume" PRIx32, target_name(target));
 				retval = ERROR_TARGET_TIMEOUT;
 				break;
 			}
@@ -975,6 +1000,13 @@ static int aarch64_debug_entry(struct target *target)
 	if (retval != ERROR_OK)
 		return retval;
 
+	/* issue halt peripherals if a sys_cti has been registered */
+	if (armv8->sys_cti != NULL) {
+		retval = arm_cti_pulse_channel(armv8->sys_cti, 0);
+		if (retval != ERROR_OK)
+			return retval;
+	}
+
 	/* Examine debug reason */
 	armv8_dpm_report_dscr(dpm, dscr);
 
@@ -1103,7 +1135,7 @@ static int aarch64_step(struct target *target, int current, target_addr_t addres
 		edecr &= ~0x4;
 		/* set EDECR.SS to enter hardware step mode */
 		retval = mem_ap_write_atomic_u32(armv8->debug_ap,
-				armv8->debug_base + CPUV8_DBG_EDECR, (edecr|0x4));
+				armv8->debug_base + CPUV8_DBG_EDECR, (edecr | 0x4));
 	}
 	/* disable interrupts while stepping */
 	if (retval == ERROR_OK && aarch64->isrmasking_mode == AARCH64_ISRMASK_ON)
@@ -1112,7 +1144,7 @@ static int aarch64_step(struct target *target, int current, target_addr_t addres
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (target->smp && (current == 1)) {
+	if (target->smp && current == 1) {
 		/*
 		 * isolate current target so that it doesn't get resumed
 		 * together with the others
@@ -1146,7 +1178,7 @@ static int aarch64_step(struct target *target, int current, target_addr_t addres
 		uint32_t prsr;
 
 		retval = aarch64_check_state_one(target,
-					PRSR_SDR|PRSR_HALT, PRSR_SDR|PRSR_HALT, &stepped, &prsr);
+					PRSR_SDR | PRSR_HALT, PRSR_SDR | PRSR_HALT, &stepped, &prsr);
 		if (retval != ERROR_OK || stepped)
 			break;
 
@@ -1288,7 +1320,7 @@ static int aarch64_set_breakpoint(struct target *target,
 			 *    in that case the length should be changed from 3 to 4 bytes
 			 **/
 			opcode = (breakpoint->length == 4) ? ARMV8_HLT_A1(11) :
-					(uint32_t) (ARMV8_HLT_T1(11) | ARMV8_HLT_T1(11) << 16);
+					(uint32_t)(ARMV8_HLT_T1(11) | ARMV8_HLT_T1(11) << 16);
 
 			if (breakpoint->length == 3)
 				breakpoint->length = 4;
@@ -1381,7 +1413,6 @@ static int aarch64_set_context_breakpoint(struct target *target,
 		brp_list[brp_i].control,
 		brp_list[brp_i].value);
 	return ERROR_OK;
-
 }
 
 static int aarch64_set_hybrid_breakpoint(struct target *target, struct breakpoint *breakpoint)
@@ -1484,7 +1515,7 @@ static int aarch64_unset_breakpoint(struct target *target, struct breakpoint *br
 	}
 
 	if (breakpoint->type == BKPT_HARD) {
-		if ((breakpoint->address != 0) && (breakpoint->asid != 0)) {
+		if (breakpoint->address != 0 && breakpoint->asid != 0) {
 			int brp_i = breakpoint->number;
 			int brp_j = breakpoint->linked_brp;
 			if (brp_i >= aarch64->brp_num) {
@@ -1511,7 +1542,7 @@ static int aarch64_unset_breakpoint(struct target *target, struct breakpoint *br
 					(uint32_t)brp_list[brp_i].value);
 			if (retval != ERROR_OK)
 				return retval;
-			if ((brp_j < 0) || (brp_j >= aarch64->brp_num)) {
+			if (brp_j < 0 || brp_j >= aarch64->brp_num) {
 				LOG_DEBUG("Invalid BRP number in breakpoint");
 				return ERROR_OK;
 			}
@@ -1609,7 +1640,7 @@ static int aarch64_add_breakpoint(struct target *target,
 {
 	struct aarch64_common *aarch64 = target_to_aarch64(target);
 
-	if ((breakpoint->type == BKPT_HARD) && (aarch64->brp_num_available < 1)) {
+	if (breakpoint->type == BKPT_HARD && aarch64->brp_num_available < 1) {
 		LOG_INFO("no hardware breakpoint available");
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 	}
@@ -1625,7 +1656,7 @@ static int aarch64_add_context_breakpoint(struct target *target,
 {
 	struct aarch64_common *aarch64 = target_to_aarch64(target);
 
-	if ((breakpoint->type == BKPT_HARD) && (aarch64->brp_num_available < 1)) {
+	if (breakpoint->type == BKPT_HARD && aarch64->brp_num_available < 1) {
 		LOG_INFO("no hardware breakpoint available");
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 	}
@@ -1641,7 +1672,7 @@ static int aarch64_add_hybrid_breakpoint(struct target *target,
 {
 	struct aarch64_common *aarch64 = target_to_aarch64(target);
 
-	if ((breakpoint->type == BKPT_HARD) && (aarch64->brp_num_available < 1)) {
+	if (breakpoint->type == BKPT_HARD && aarch64->brp_num_available < 1) {
 		LOG_INFO("no hardware breakpoint available");
 		return ERROR_TARGET_RESOURCE_NOT_AVAILABLE;
 	}
@@ -1656,13 +1687,12 @@ static int aarch64_remove_breakpoint(struct target *target, struct breakpoint *b
 {
 	struct aarch64_common *aarch64 = target_to_aarch64(target);
 
-#if 0
-/* It is perfectly possible to remove breakpoints while the target is running */
+/* It is perfectly possible to remove breakpoints while the target is running
 	if (target->state != TARGET_HALTED) {
 		LOG_WARNING("target not halted");
 		return ERROR_TARGET_NOT_HALTED;
 	}
-#endif
+*/
 
 	if (breakpoint->is_set) {
 		aarch64_unset_breakpoint(target, breakpoint);
@@ -1925,14 +1955,13 @@ static int aarch64_assert_reset(struct target *target)
 	LOG_DEBUG(" ");
 
 	/* Issue some kind of warm reset. */
-	if (target_has_event_action(target, TARGET_EVENT_RESET_ASSERT))
+	if (target_has_event_action(target, TARGET_EVENT_RESET_ASSERT)) {
 		target_handle_event(target, TARGET_EVENT_RESET_ASSERT);
-	else if (reset_config & RESET_HAS_SRST) {
+	} else if (reset_config & RESET_HAS_SRST) {
 		bool srst_asserted = false;
 
 		if (target->reset_halt && !(reset_config & RESET_SRST_PULLS_TRST)) {
 			if (target_was_examined(target)) {
-
 				if (reset_config & RESET_SRST_NO_GATING) {
 					/*
 					 * SRST needs to be asserted *before* Reset Catch
@@ -2541,7 +2570,9 @@ static int aarch64_examine_first(struct target *target)
 	uint64_t debug, ttypr;
 	uint32_t cpuid;
 	uint32_t tmp0, tmp1, tmp2, tmp3;
-	debug = ttypr = cpuid = 0;
+	debug = 0;
+	ttypr = 0;
+	cpuid = 0;
 
 	if (!pc)
 		return ERROR_FAIL;
@@ -2579,8 +2610,9 @@ static int aarch64_examine_first(struct target *target)
 			return retval;
 		LOG_DEBUG("Detected core %" PRId32 " dbgbase: " TARGET_ADDR_FMT,
 				target->coreid, armv8->debug_base);
-	} else
+	} else {
 		armv8->debug_base = target->dbgbase;
+	}
 
 	retval = mem_ap_write_atomic_u32(armv8->debug_ap,
 			armv8->debug_base + CPUV8_DBG_OSLAR, 0);
@@ -2635,6 +2667,9 @@ static int aarch64_examine_first(struct target *target)
 
 	armv8->cti = pc->cti;
 
+	if (pc->sys_cti != NULL)
+		armv8->sys_cti = pc->sys_cti;
+
 	retval = aarch64_dpm_setup(aarch64, debug);
 	if (retval != ERROR_OK)
 		return retval;
@@ -2646,7 +2681,7 @@ static int aarch64_examine_first(struct target *target)
 	aarch64->brp_list = calloc(aarch64->brp_num, sizeof(struct aarch64_brp));
 	for (i = 0; i < aarch64->brp_num; i++) {
 		aarch64->brp_list[i].used = 0;
-		if (i < (aarch64->brp_num-aarch64->brp_num_context))
+		if (i < (aarch64->brp_num - aarch64->brp_num_context))
 			aarch64->brp_list[i].type = BRP_NORMAL;
 		else
 			aarch64->brp_list[i].type = BRP_CONTEXT;
@@ -2782,10 +2817,12 @@ static int aarch64_virt2phys(struct target *target, target_addr_t virt,
  */
 enum aarch64_cfg_param {
 	CFG_CTI,
+	CFG_SYSCTI,
 };
 
 static const struct jim_nvp nvp_config_opts[] = {
 	{ .name = "-cti", .value = CFG_CTI },
+	{ .name = "-syscti", .value = CFG_SYSCTI },
 	{ .name = NULL, .value = -1 }
 };
 
@@ -2797,9 +2834,9 @@ static int aarch64_jim_configure(struct target *target, struct jim_getopt_info *
 
 	pc = (struct aarch64_private_config *)target->private_config;
 	if (!pc) {
-			pc = calloc(1, sizeof(struct aarch64_private_config));
-			pc->adiv5_config.ap_num = DP_APSEL_INVALID;
-			target->private_config = pc;
+		pc = calloc(1, sizeof(struct aarch64_private_config));
+		pc->adiv5_config.ap_num = DP_APSEL_INVALID;
+		target->private_config = pc;
 	}
 
 	/*
@@ -2859,6 +2896,36 @@ static int aarch64_jim_configure(struct target *target, struct jim_getopt_info *
 					return JIM_ERR;
 				}
 				Jim_SetResultString(goi->interp, arm_cti_name(pc->cti), -1);
+			}
+			break;
+		}
+
+		case CFG_SYSCTI: {
+			if (goi->isconfigure) {
+				Jim_Obj *o_cti;
+				struct arm_cti *cti;
+				e = jim_getopt_obj(goi, &o_cti);
+				if (e != JIM_OK)
+					return e;
+				cti = cti_instance_by_jim_obj(goi->interp, o_cti);
+				if (!cti) {
+					Jim_SetResultString(goi->interp, "SYS CTI name invalid!", -1);
+					return JIM_ERR;
+				}
+				pc->sys_cti = cti;
+			} else {
+				if (goi->argc != 0) {
+					Jim_WrongNumArgs(goi->interp,
+							goi->argc, goi->argv,
+							"NO PARAMS");
+					return JIM_ERR;
+				}
+
+				if (!pc || !pc->sys_cti) {
+					Jim_SetResultString(goi->interp, "SYS CTI not configured", -1);
+					return JIM_ERR;
+				}
+				Jim_SetResultString(goi->interp, arm_cti_name(pc->sys_cti), -1);
 			}
 			break;
 		}
@@ -3019,7 +3086,7 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 		return retval;
 	if (l & ~0xf) {
 		LOG_ERROR("%s: %s %d out of range", __func__,
-			"coprocessor", (int) l);
+			"coprocessor", (int)l);
 		return JIM_ERR;
 	}
 	cpnum = l;
@@ -3029,7 +3096,7 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 		return retval;
 	if (l & ~0x7) {
 		LOG_ERROR("%s: %s %d out of range", __func__,
-			"op1", (int) l);
+			"op1", (int)l);
 		return JIM_ERR;
 	}
 	op1 = l;
@@ -3039,7 +3106,7 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 		return retval;
 	if (l & ~0xf) {
 		LOG_ERROR("%s: %s %d out of range", __func__,
-			"CRn", (int) l);
+			"CRn", (int)l);
 		return JIM_ERR;
 	}
 	crn = l;
@@ -3049,7 +3116,7 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 		return retval;
 	if (l & ~0xf) {
 		LOG_ERROR("%s: %s %d out of range", __func__,
-			"CRm", (int) l);
+			"CRm", (int)l);
 		return JIM_ERR;
 	}
 	crm = l;
@@ -3059,14 +3126,14 @@ static int jim_mcrmrc(Jim_Interp *interp, int argc, Jim_Obj * const *argv)
 		return retval;
 	if (l & ~0x7) {
 		LOG_ERROR("%s: %s %d out of range", __func__,
-			"op2", (int) l);
+			"op2", (int)l);
 		return JIM_ERR;
 	}
 	op2 = l;
 
 	value = 0;
 
-	if (is_mcr == true) {
+	if (is_mcr) {
 		retval = Jim_GetLong(interp, argv[6], &l);
 		if (retval != JIM_OK)
 			return retval;
