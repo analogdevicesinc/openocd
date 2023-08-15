@@ -1,0 +1,39 @@
+================
+Building OpenOCD
+================
+
+For generic instructions on how to build OpenOCD, see the README and INSTALL files.
+
+These instructions are used by Analog Devices, Inc. to build OpenOCD and
+can be used to reproduce the Analog Devices, Inc. release of OpenOCD.
+
+OpenOCD Dependencies
+--------------------
+
+See the README file for a list of OpenOCD build dependencies (Building Openocd / OpenOCD Dependencies).
+
+Compiling OpenOCD from git
+--------------------------
+
+    export CFLAGS="-fcommon -O2 -Wno-error"; CPPFLAGS="-fcommon -O2 -Wno-error"
+    ./bootstrap
+    ./configure --disable-ftdi --disable-stlink --disable-ti-icdi --disable-ulink \
+        --disable-usb-blaster-2 --disable-ft232r --disable-vsllink --enable-jlink \
+        --disable-vsllink --disable-xds110 --disable-osbdm --disable-opendous \
+        --disable-aice --disable-usbprog --disable-rlink --disable-armjtagew \
+        --enable-maintainer-mode --enable-ice1000 --enable-ice2000 \
+        --enable-adi-dbgagent"
+    make
+
+Compiling OpenOCD from source zip (no git submodules)
+-----------------------------------------------------
+
+    export CFLAGS="-fcommon -O2 -Wno-error"; CPPFLAGS="-fcommon -O2 -Wno-error"
+    ./bootstrap nosubmodule
+    ./configure --disable-ftdi --disable-stlink --disable-ti-icdi --disable-ulink \
+        --disable-usb-blaster-2 --disable-ft232r --disable-vsllink --enable-jlink \
+        --disable-vsllink --disable-xds110 --disable-osbdm --disable-opendous \
+        --disable-aice --disable-usbprog --disable-rlink --disable-armjtagew \
+        --enable-maintainer-mode --enable-ice1000 --enable-ice2000 \
+        --enable-adi-dbgagent"
+    make

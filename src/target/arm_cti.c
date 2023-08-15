@@ -3,6 +3,8 @@
 /***************************************************************************
  *   Copyright (C) 2016 by Matthias Welwarsky                              *
  *                                                                         *
+ *                                                                         *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -23,6 +25,8 @@ struct arm_cti {
 	char *name;
 	struct adiv5_mem_ap_spot spot;
 	struct adiv5_ap *ap;
+	int halt_outen;
+	int dbgrestart_outen;
 };
 
 static LIST_HEAD(all_cti);
@@ -155,6 +159,16 @@ int arm_cti_clear_channel(struct arm_cti *self, uint32_t channel)
 		return ERROR_COMMAND_ARGUMENT_INVALID;
 
 	return arm_cti_write_reg(self, CTI_APPCLEAR, CTI_CHNL(channel));
+}
+
+int arm_cti_set_halt(struct arm_cti *self, uint32_t value)
+{
+	return arm_cti_write_reg(self, self->halt_outen, value);
+}
+
+int arm_cti_set_dbgrestart(struct arm_cti *self, uint32_t value)
+{
+	return arm_cti_write_reg(self, self->dbgrestart_outen, value);
 }
 
 static uint32_t cti_regs[28];
@@ -416,18 +430,66 @@ static const struct command_registration cti_instance_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
+enum cti_cfg_param {
+	CFG_HALT_OUTEN,
+	CFG_DBGRESTART_OUTEN
+};
+
+static const struct jim_nvp nvp_config_opts[] = {
+	{ .name = "-halt-outen", .value = CFG_HALT_OUTEN },
+	{ .name = "-dbgrestart-outen", .value = CFG_DBGRESTART_OUTEN },
+	{ .name = NULL, .value = -1 }
+};
+
 static int cti_configure(struct jim_getopt_info *goi, struct arm_cti *cti)
 {
+	// Set default values for halt outen and dbgrestart outen values
+	cti->halt_outen = CTI_OUTEN(0);
+	cti->dbgrestart_outen = CTI_OUTEN(1);
+
 	/* parse config or cget options ... */
 	while (goi->argc > 0) {
 		int e = adiv5_jim_mem_ap_spot_configure(&cti->spot, goi);
 
-		if (e == JIM_CONTINUE)
-			Jim_SetResultFormatted(goi->interp, "unknown option '%s'",
-				Jim_String(goi->argv[0]));
+		if (e == JIM_CONTINUE) {
+			Jim_SetEmptyResult(goi->interp);
 
+			struct jim_nvp *n;
+			jim_wide w;
+			e = jim_nvp_name2value_obj(goi->interp, nvp_config_opts,
+						goi->argv[0], &n);
+
+			e = jim_getopt_obj(goi, NULL);
+			if (e != JIM_OK)
+				return JIM_ERR;
+
+			switch (n->value) {
+			case CFG_HALT_OUTEN:
+				e = jim_getopt_wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				if (w < 0 || w > CTI_OUTEN_MAX_NUM) {
+					Jim_SetResultString(goi->interp, "-halt-outen is invalid", -1);
+					return JIM_ERR;
+				}
+				cti->halt_outen = CTI_OUTEN((uint32_t)w);
+				break;
+
+			case CFG_DBGRESTART_OUTEN:
+				e = jim_getopt_wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				if (w < 0 || w > CTI_OUTEN_MAX_NUM) {
+					Jim_SetResultString(goi->interp, "-dbgrestart-outen is invalid", -1);
+					return JIM_ERR;
+				}
+				cti->dbgrestart_outen = CTI_OUTEN((uint32_t)w);
+				break;
+			}
+		}
 		if (e != JIM_OK)
 			return JIM_ERR;
+
 	}
 
 	if (!cti->spot.dap) {

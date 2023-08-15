@@ -15,6 +15,8 @@
  *   zw@superlucidity.net                                                  *
  *                                                                         *
  *   Copyright (C) 2020, Ampere Computing LLC                              *
+ *                                                                         *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -142,6 +144,16 @@ extern struct adapter_driver stlink_dap_adapter_driver;
 #if BUILD_RSHIM == 1
 extern struct adapter_driver rshim_dap_adapter_driver;
 #endif
+#if BUILD_ICE_1000 == 1
+extern struct adapter_driver ice1000_adapter_driver;
+#endif
+#if BUILD_ICE_2000 == 1
+extern struct adapter_driver ice2000_adapter_driver;
+#endif
+#if BUILD_ADI_DBGAGENT == 1
+extern struct adapter_driver dbgagent_adapter_driver;
+#endif
+
 #if BUILD_AM335XGPIO == 1
 extern struct adapter_driver am335xgpio_adapter_driver;
 #endif
@@ -261,6 +273,15 @@ struct adapter_driver *adapter_drivers[] = {
 #endif
 #if BUILD_RSHIM == 1
 		&rshim_dap_adapter_driver,
+#endif
+#if BUILD_ICE_1000 == 1
+		&ice1000_adapter_driver,
+#endif
+#if BUILD_ICE_2000 == 1
+		&ice2000_adapter_driver,
+#endif
+#if BUILD_ADI_DBGAGENT == 1
+		&dbgagent_adapter_driver,
 #endif
 #if BUILD_AM335XGPIO == 1
 		&am335xgpio_adapter_driver,

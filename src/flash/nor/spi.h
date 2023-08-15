@@ -20,6 +20,9 @@
 struct flash_device {
 	const char *name;
 	uint8_t read_cmd;
+	uint8_t dread_cmd;
+	uint8_t dread_mode;
+	uint8_t dread_dclk;
 	uint8_t qread_cmd;
 	uint8_t pprog_cmd;
 	uint8_t erase_cmd;
@@ -64,9 +67,9 @@ extern const struct flash_device flash_devices[];
 
 /* fields in SPI flash status register */
 #define	SPIFLASH_BSY		0
-#define SPIFLASH_BSY_BIT	(1 << SPIFLASH_BSY)	/* WIP Bit of SPI SR */
+#define SPIFLASH_BSY_BIT	(0x1 << SPIFLASH_BSY)	/* WIP Bit of SPI SR */
 #define	SPIFLASH_WE			1
-#define SPIFLASH_WE_BIT		(1 << SPIFLASH_WE)	/* WEL Bit of SPI SR */
+#define SPIFLASH_WE_BIT		(0x1 << SPIFLASH_WE)	/* WEL Bit of SPI SR */
 
 /* SPI Flash Commands */
 #define SPIFLASH_READ_ID		0x9F /* Read Flash Identification */

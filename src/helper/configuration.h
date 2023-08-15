@@ -31,4 +31,7 @@ FILE *open_file_from_path(const char *file, const char *mode);
 char *find_file(const char *name);
 char *get_home_dir(const char *append_path);
 
+int set_firmware_filename(const char *name);
+char *get_firmware_filename(void);
+
 #endif /* OPENOCD_HELPER_CONFIGURATION_H */

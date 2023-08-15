@@ -8,6 +8,8 @@
  *   spen@spen-soft.co.uk                                                  *
  *                                                                         *
  *   Copyright (C) 2019-2021, Ampere Computing LLC                         *
+ *                                                                         *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ARM_ADI_V5_H
@@ -396,6 +398,12 @@ struct adiv5_dap {
 
 	/* ADIv6 only field indicating ROM Table address size */
 	unsigned int asize;
+
+	/* If the DAP connection is shared with another instance do not use caching
+	 * for DP_SELECT, TAR and CSW values as they could have changed since they
+	 * they were last accessed.
+	 */
+	bool shared_connection;
 };
 
 /**

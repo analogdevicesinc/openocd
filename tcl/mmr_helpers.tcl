@@ -69,7 +69,6 @@ proc show_mmr_bitfield { MSB LSB VAL FIELDNAME FIELDVALUES } {
     } else {
 	set sval ""
     }
-    echo [format "%-15s: %d (0x%0*x) %s" $FIELDNAME $nval $width $nval $sval ]
 }
 
 # Give: ADDR - address of the register.

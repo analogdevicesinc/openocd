@@ -22,6 +22,8 @@ static char **config_file_names;
 static size_t num_script_dirs;
 static char **script_search_dirs;
 
+static char *firmware_file_name;
+
 void add_script_search_dir(const char *dir)
 {
 	num_script_dirs++;
@@ -175,4 +177,18 @@ char *get_home_dir(const char *append_path)
 		home_path = alloc_printf("%s", home);
 
 	return home_path;
+}
+
+int set_firmware_filename(const char *filename)
+{
+	firmware_file_name = strdup(filename);
+	if (firmware_file_name)
+		return ERROR_OK;
+	else
+		return ERROR_FAIL;
+}
+
+char *get_firmware_filename(void)
+{
+	return firmware_file_name;
 }

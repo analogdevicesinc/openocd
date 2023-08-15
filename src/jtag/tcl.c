@@ -13,6 +13,8 @@
  *                                                                         *
  *   Copyright (C) 2009 Zachary T Welch                                    *
  *   zw@superlucidity.net                                                  *
+ *                                                                         *
+ *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -460,6 +462,7 @@ static int jim_newtap_expected_id(struct jim_nvp *n, struct jim_getopt_info *goi
 #define NTAP_OPT_EXPECTED_ID 5
 #define NTAP_OPT_VERSION   6
 #define NTAP_OPT_BYPASS    7
+#define NTAP_OPT_SHARED_CONNECTION 8
 
 static int jim_newtap_ir_param(struct jim_nvp *n, struct jim_getopt_info *goi,
 	struct jtag_tap *tap)
@@ -523,6 +526,7 @@ static int jim_newtap_cmd(struct jim_getopt_info *goi)
 		{ .name = "-expected-id",       .value = NTAP_OPT_EXPECTED_ID },
 		{ .name = "-ignore-version",       .value = NTAP_OPT_VERSION },
 		{ .name = "-ignore-bypass",       .value = NTAP_OPT_BYPASS },
+		{ .name = "-shared-connection",     .value = NTAP_OPT_SHARED_CONNECTION },
 		{ .name = NULL,       .value = -1 },
 	};
 
@@ -611,6 +615,10 @@ static int jim_newtap_cmd(struct jim_getopt_info *goi)
 		    case NTAP_OPT_BYPASS:
 			    tap->ignore_bypass = true;
 			    break;
+			case NTAP_OPT_SHARED_CONNECTION:
+				tap->shared_connection = true;
+				LOG_INFO("%s: Shared TAP connection is enabled", tap->tapname);
+				break;
 		}	/* switch (n->value) */
 	}	/* while (goi->argc) */
 
