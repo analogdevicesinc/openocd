@@ -2396,6 +2396,11 @@ static void ice1000_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay
 		LOG_ERROR("%s SWD read register failed", adi_cable_name());
 }
 
+static int ice_reset(int trst, int srst)
+{
+	return ERROR_OK;
+}
+
 COMMAND_HANDLER(ice2000_handle_voltage_command)
 {
 	uint32_t voltage;
@@ -2471,6 +2476,7 @@ struct adapter_driver ice1000_adapter_driver = {
 	.speed = ice1000_speed,
 	.khz = ice1000_khz,
 	.speed_div = ice1000_speed_div,
+	.reset = ice_reset,
 
 	.jtag_ops = &ice1000_interface,
 	.swd_ops = &ice_swd,
@@ -2509,6 +2515,7 @@ struct adapter_driver ice2000_adapter_driver = {
 	.speed = ice2000_speed,
 	.khz = ice2000_khz,
 	.speed_div = ice2000_speed_div,
+	.reset = ice_reset,
 
 	.jtag_ops = &ice2000_interface,
 	.swd_ops = &ice_swd,
