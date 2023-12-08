@@ -2099,8 +2099,7 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 		if (cmd == NULL)
 		{
-			LOG_ERROR("malloc(%lu) fails",
-					  (sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
+			LOG_ERROR("malloc(%ld) fails", (long int)((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx));
 			return ERROR_FAIL;
 		}
 
@@ -2143,8 +2142,7 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
 			if (datPtr == NULL)
 			{
-				LOG_ERROR("realloc(%ld) fails",
-					sizeof (dat_dat) * new_sz);
+				LOG_ERROR("realloc(%ld) fails", (long int)(sizeof (dat_dat) * new_sz));
 				return ERROR_FAIL;
 			}
 			tap_info->dat = datPtr;
@@ -2396,8 +2394,21 @@ static void ice1000_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay
 		LOG_ERROR("%s SWD read register failed", adi_cable_name());
 }
 
-static int ice_reset(int trst, int srst)
+/* (1) assert or (0) deassert reset lines */
+static int adi_ice_reset(int trst, int srst)
 {
+	// trst is active low
+	if (trst == 1)
+	{
+		do_host_cmd(HOST_SET_TRST, 0, 0);
+	}
+	else if (trst == 0)
+	{
+		do_host_cmd(HOST_SET_TRST, 1, 0);
+	}
+
+	// srst is not connected so do nothing
+
 	return ERROR_OK;
 }
 
@@ -2456,7 +2467,7 @@ static const struct command_registration ice1000_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-static const struct swd_driver ice_swd = {
+static const struct swd_driver adi_ice_swd = {
 	.init = ice1000_swd_init,
 	.switch_seq = ice1000_swd_switch_seq,
 	.read_reg = ice1000_swd_read_reg,
@@ -2476,10 +2487,10 @@ struct adapter_driver ice1000_adapter_driver = {
 	.speed = ice1000_speed,
 	.khz = ice1000_khz,
 	.speed_div = ice1000_speed_div,
-	.reset = ice_reset,
+	.reset = adi_ice_reset,
 
 	.jtag_ops = &ice1000_interface,
-	.swd_ops = &ice_swd,
+	.swd_ops = &adi_ice_swd,
 };
 
 static const struct command_registration ice2000_command_handlers[] = {
@@ -2515,8 +2526,8 @@ struct adapter_driver ice2000_adapter_driver = {
 	.speed = ice2000_speed,
 	.khz = ice2000_khz,
 	.speed_div = ice2000_speed_div,
-	.reset = ice_reset,
+	.reset = adi_ice_reset,
 
 	.jtag_ops = &ice2000_interface,
-	.swd_ops = &ice_swd,
+	.swd_ops = &adi_ice_swd,
 };
