@@ -924,7 +924,13 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 			ice1000_swd_switch_seq(JTAG_TO_SWD);
 		else
 			ice1000_swd_switch_seq(SWD_TO_JTAG);
-		ice1000_swd_run_queue();
+			
+		ret = ice1000_swd_run_queue();
+		if (ret != ERROR_OK)
+		{
+			LOG_ERROR("Unable to change transport modes.");
+			return ret;
+		}
 	}
 
 	return ERROR_OK;
@@ -2397,18 +2403,9 @@ static void ice1000_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay
 /* (1) assert or (0) deassert reset lines */
 static int adi_ice_reset(int trst, int srst)
 {
-	// trst is active low
-	if (trst == 1)
-	{
-		do_host_cmd(HOST_SET_TRST, 0, 0);
-	}
-	else if (trst == 0)
-	{
-		do_host_cmd(HOST_SET_TRST, 1, 0);
-	}
-
-	// srst is not connected so do nothing
-
+    /* SWD requires this function or one similar
+	   do nothing because we toggle TRST on connection
+	*/
 	return ERROR_OK;
 }
 
