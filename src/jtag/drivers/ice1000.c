@@ -2223,7 +2223,7 @@ static int ice1000_swd_queue_idle_cycles(uint32_t len)
 static int ice1000_swd_run_queue(void)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
-	uint8_t *buf;
+	uint8_t *scan_buf;
 	int i, retval;
 
 	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80
@@ -2234,22 +2234,22 @@ static int ice1000_swd_run_queue(void)
 	   8 idle cycles to ensure that data is clocked through the AP. */
 	ice1000_swd_queue_idle_cycles(8);
 
-	buf = NULL;
-	perform_scan(&buf);
+	scan_buf = NULL;
+	perform_scan(&scan_buf);
 
 	retval = ERROR_OK;
 
 	for (i = 0; i <= tap_info->cur_dat; i++)
 	{
-		uint8_t *buffer;
+		uint8_t *rx_buf;
 		struct swd_packet *packet = tap_info->dat[i].ptr;
 
-		buffer = get_recv_data(packet->length, tap_info->rcv_dat, buf);
-		int ack = buf_get_u32(buffer, packet->ack_pos, 3);
+		rx_buf = get_recv_data(packet->length, tap_info->rcv_dat, scan_buf);
+		int ack = buf_get_u32(rx_buf, packet->ack_pos, 3);
 
 		if (ack != SWD_ACK_OK)
 		{
-			free(buffer);
+			free(rx_buf);
 			LOG_ERROR("SWD ack not OK: %d %s", ack,
 					  ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK");
 			retval = ERROR_FAIL;
@@ -2257,12 +2257,12 @@ static int ice1000_swd_run_queue(void)
 		}
 		else if (packet->in)
 		{
-			uint32_t data = buf_get_u32(buffer, packet->data_pos, 32);
-			int parity = buf_get_u32(buffer, packet->parity_pos, 1);
+			uint32_t data = buf_get_u32(rx_buf, packet->data_pos, 32);
+			int parity = buf_get_u32(rx_buf, packet->parity_pos, 1);
 
 			if (parity != parity_u32(data))
 			{
-				free(buffer);
+				free(rx_buf);
 				LOG_ERROR("SWD Read data parity mismatch");
 				retval = ERROR_FAIL;
 				break;
@@ -2274,11 +2274,11 @@ static int ice1000_swd_run_queue(void)
 			}
 		}
 
-		free(buffer);
+		free(rx_buf);
 		tap_info->rcv_dat++;
 	}
 
-	free(buf);
+	free(scan_buf);
 	if (tap_info->pairs)
 	{
 		free(tap_info->cmd);
