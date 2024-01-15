@@ -2319,6 +2319,7 @@ static int ice1000_swd_switch_seq(enum swd_special_seq seq)
 	return retval;
 }
 
+/* run queue if it will pass over the trigger_scanlen boundary */
 static int ice1000_swd_ensure_space(unsigned int bits)
 {
 	int retval = ERROR_OK;
@@ -2329,13 +2330,24 @@ static int ice1000_swd_ensure_space(unsigned int bits)
 	return retval;
 }
 
+/* SWDIO sequence
+ ___     ___     ___     ___     
+|   |___|   |___|   |___|   |___|
+  |   |   |   |   |   |   |   |
+  | APnDP |   |   | parity|   |
+  |      RnW  |   |      Stop |
+ start        A[2:3]         Park
+  
+*/
+
 static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint32_t ap_delay_clk)
 {
 	uint8_t data_parity_trn[DIV_ROUND_UP(32 + 1, 8)];
 	struct swd_packet *packet;
 	int retval;
 
-	retval = ice1000_swd_ensure_space(8 + 38 + ap_delay_clk);
+	/* run queue if adding anything else will run past the high water mark */
+	retval = ice1000_swd_ensure_space(8 + 38 + ap_delay_clk); // request header (8), TRN/ACK/RDATA/Parity/TRN (38)
 	if (retval != ERROR_OK)
 		return retval;
 
@@ -2356,14 +2368,14 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 		packet->data_pos = 3;
 		packet->parity_pos = 35;
 		packet->in = dst;
-		packet->length = 1 + 3 + 32 + 1 + 1;
+		packet->length = 1 + 3 + 32 + 1 + 1; // TRN, 3-bits of ACK, RDATA[31:0], parity, TRN
 
 		retval = ice1000_swd_queue_packet(packet);
 	} else {
 		/* Queue a write transaction */
 		packet->out = false;
 		packet->ack_pos = 0;
-		packet->length = 1 + 3 + 1;
+		packet->length = 1 + 3 + 1; // TRN, 3-bits of ACK, TRN
 
 		retval = ice1000_swd_queue_packet(packet);
 
