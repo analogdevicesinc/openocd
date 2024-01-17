@@ -212,6 +212,17 @@ static const uint32_t avail_freqs_1000[MAX_FREQ_1000] = { 1000000, 2000000, 5000
 static const uint8_t freq_set_2000[MAX_FREQ_2000] = { 45, 22, 8, 4, 2, 1, 0 };
 static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000000, 9000000, 15000000, 23000000, 46000000 };
 
+/* SWD defines */
+#define REQUEST_SIZE	8
+#define TRN_SIZE		1
+#define ACK_SIZE		3
+#define RDATA_SIZE		32
+#define PARITY_SIZE		1
+#define COMPLETE_TRANSACTION_SIZE	(REQUEST_SIZE + TRN_SIZE + ACK_SIZE + RDATA_SIZE + PARITY_SIZE + TRN_SIZE)
+#define PARITY_POS		35
+#define ACK_POS			0
+#define DATA_POS		3
+
 /*
  * Internal Macros
  */
@@ -1494,6 +1505,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_scan = &tap_info->pairs[idx];
 	}
 
+	// begin where we left off to set our tms/tdi pairs
 	bit_set = tap_info->bit_pos;
 
 	if (out)
@@ -1549,6 +1561,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		}
 	}
 
+	// keep track of where we left off
 	tap_info->cur_idx = idx;
 	tap_info->bit_pos = bit_set;
 
@@ -2119,8 +2132,10 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 		tap_scan = tap_info->pairs;
 		tap_scan->tms = 0;
 		tap_scan->tdi = 0;
-		idx = tap_info->cur_idx = 1;	/* first pair is 0 ??? */
+		idx = tap_info->cur_idx = 1;	/* first pair is 0 for tms and tdi */
 		tap_scan++;
+
+		/* zero out tdi/tms so we can OR in our actual data */
 		tap_scan->tdi = 0;
 		tap_scan->tms = 0;
 	}
@@ -2330,16 +2345,7 @@ static int ice1000_swd_ensure_space(unsigned int bits)
 	return retval;
 }
 
-/* SWDIO sequence
- ___     ___     ___     ___     
-|   |___|   |___|   |___|   |___|
-  |   |   |   |   |   |   |   |
-  | APnDP |   |   | parity|   |
-  |      RnW  |   |      Stop |
- start        A[2:3]         Park
-  
-*/
-
+/* Fill out request header and write/read */
 static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint32_t ap_delay_clk)
 {
 	uint8_t data_parity_trn[DIV_ROUND_UP(32 + 1, 8)];
@@ -2347,7 +2353,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 	int retval;
 
 	/* run queue if adding anything else will run past the high water mark */
-	retval = ice1000_swd_ensure_space(8 + 38 + ap_delay_clk); // request header (8), TRN/ACK/RDATA/Parity/TRN (38)
+	retval = ice1000_swd_ensure_space(COMPLETE_TRANSACTION_SIZE + ap_delay_clk);
 	if (retval != ERROR_OK)
 		return retval;
 
@@ -2364,18 +2370,18 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 	if (cmd & SWD_CMD_RNW) {
         /* Queue a read transaction */
 		packet->out = false;
-		packet->ack_pos = 0;
-		packet->data_pos = 3;
-		packet->parity_pos = 35;
+		packet->ack_pos = ACK_POS;
+		packet->data_pos = DATA_POS;
+		packet->parity_pos = PARITY_POS;
 		packet->in = dst;
-		packet->length = 1 + 3 + 32 + 1 + 1; // TRN, 3-bits of ACK, RDATA[31:0], parity, TRN
+		packet->length = TRN_SIZE + ACK_SIZE + RDATA_SIZE + PARITY_SIZE + TRN_SIZE;
 
 		retval = ice1000_swd_queue_packet(packet);
 	} else {
 		/* Queue a write transaction */
 		packet->out = false;
 		packet->ack_pos = 0;
-		packet->length = 1 + 3 + 1; // TRN, 3-bits of ACK, TRN
+		packet->length = TRN_SIZE + ACK_SIZE + TRN_SIZE;
 
 		retval = ice1000_swd_queue_packet(packet);
 
