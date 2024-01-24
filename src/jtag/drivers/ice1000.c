@@ -2246,7 +2246,8 @@ static int ice1000_swd_run_queue(void)
 		return ERROR_OK;
 
 	/* A transaction must be followed by another transaction or at least
-	   8 idle cycles to ensure that data is clocked through the AP. */
+	   8 idle cycles to ensure that data is clocked through the AP. 
+	   Since a scan is done next, we know the idle cycles are now needed */
 	ice1000_swd_queue_idle_cycles(8);
 
 	scan_buf = NULL;
@@ -2259,6 +2260,7 @@ static int ice1000_swd_run_queue(void)
 		uint8_t *rx_buf;
 		struct swd_packet *packet = tap_info->dat[i].ptr;
 
+		/* check ACK for read or write */
 		rx_buf = get_recv_data(packet->length, tap_info->rcv_dat, scan_buf);
 		int ack = buf_get_u32(rx_buf, packet->ack_pos, 3);
 
@@ -2272,6 +2274,7 @@ static int ice1000_swd_run_queue(void)
 		}
 		else if (packet->in)
 		{
+			/* get the data that was read */
 			uint32_t data = buf_get_u32(rx_buf, packet->data_pos, 32);
 			int parity = buf_get_u32(rx_buf, packet->parity_pos, 1);
 
