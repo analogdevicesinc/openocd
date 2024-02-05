@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011 - 2023 by Analog Devices, Inc.                     *
+*   Copyright (C) 2011 - 2024 by Analog Devices, Inc.                     *
 *   Based on ice100.c of UrJTAG                                           *
 *   Jie Zhang  <jie.zhang@analog.com>                                     *
 *                                                                         *
@@ -932,15 +932,15 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 
 	if (strcmp (cable_name, "ICE-1000") == 0 || strcmp (cable_name, "ICE-2000") == 0) {
 		if (swd_mode)
-			ice1000_swd_switch_seq(JTAG_TO_SWD);
-		else
-			ice1000_swd_switch_seq(SWD_TO_JTAG);
-			
-		ret = ice1000_swd_run_queue();
-		if (ret != ERROR_OK)
 		{
-			LOG_ERROR("Unable to change transport modes.");
-			return ret;
+			ice1000_swd_switch_seq(JTAG_TO_SWD);
+			
+			ret = ice1000_swd_run_queue();
+			if (ret != ERROR_OK)
+			{
+				LOG_ERROR("Unable to change transport modes.");
+				return ret;
+			}
 		}
 	}
 
@@ -1185,9 +1185,11 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 #endif
 
 	buf = (uint8_t *)calloc(DIV_ROUND_UP(len, 8), 1);
-
 	if (buf == NULL)
-		LOG_ERROR("malloc(%d) fails", DIV_ROUND_UP(len, 8));
+	{
+		LOG_ERROR("calloc(%d) fails", DIV_ROUND_UP(len, 8));
+		return NULL;
+	}
 
 	if (idx_dat < 0)
 	{
@@ -1228,42 +1230,45 @@ static int ice1000_tap_execute(void)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t *buf;
-	int i, retval;
+	int i, retval = ERROR_OK;
 
 	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80
 		&& tap_info->cur_dat == -1)
 		return ERROR_OK;
 
 	buf = NULL;
-	perform_scan(&buf);
-
-	retval = ERROR_OK;
-
-	for (i = 0; i <= tap_info->cur_dat; i++)
+	retval = perform_scan(&buf);
+	if ((retval == ERROR_OK) && (buf != NULL))
 	{
-		uint8_t *buffer;
-		struct scan_command *command = tap_info->dat[i].ptr;
+		for (i = 0; i <= tap_info->cur_dat; i++)
+		{
+			uint8_t *buffer;
+			struct scan_command *command = tap_info->dat[i].ptr;
 
-		buffer = get_recv_data(jtag_scan_size(command), tap_info->rcv_dat, buf);
-		tap_info->rcv_dat++;
-		if (jtag_read_buffer(buffer, command) != ERROR_OK)
-			return ERROR_JTAG_QUEUE_FAILED;
+			buffer = get_recv_data(jtag_scan_size(command), tap_info->rcv_dat, buf);
+			if (buffer == NULL)
+				return ERROR_JTAG_QUEUE_FAILED;
 
-		free(buffer);
+			tap_info->rcv_dat++;
+			if (jtag_read_buffer(buffer, command) != ERROR_OK)
+				return ERROR_JTAG_QUEUE_FAILED;
+
+			free(buffer);
+		}
+
+		free(buf);
+		if (tap_info->pairs)
+		{
+			free(tap_info->cmd);
+			tap_info->pairs = NULL;
+			tap_info->cmd = NULL;
+		}
+		tap_info->total = 0;
+		tap_info->cur_idx = 0;
+		tap_info->bit_pos = 0x80;
+		tap_info->cur_dat = -1;
+		tap_info->rcv_dat = -1;
 	}
-
-	free(buf);
-	if (tap_info->pairs)
-	{
-		free(tap_info->cmd);
-		tap_info->pairs = NULL;
-		tap_info->cmd = NULL;
-	}
-	tap_info->total = 0;
-	tap_info->cur_idx = 0;
-	tap_info->bit_pos = 0x80;
-	tap_info->cur_dat = -1;
-	tap_info->rcv_dat = -1;
 
 	return retval;
 }
@@ -2101,8 +2106,7 @@ static int ice1000_swd_init(void)
 	return ERROR_OK;
 }
 
-/* If DATA != NULL, this is for out. Otherwise, this is for in. */
-
+/* memory allocated for cmd will be freed in ice1000_swd_run_queue */
 static int ice1000_swd_queue_packet(struct swd_packet *packet)
 {
 	uint32_t i, bit_set;
@@ -2230,6 +2234,7 @@ static int ice1000_swd_queue_idle_cycles(uint32_t len)
 
 	retval = ice1000_swd_queue_data_out(buffer, len);
 
+	/* the contents of buffer are copied elsewhere so it can be freed here */
 	free(buffer);
 
 	return retval;
@@ -2239,7 +2244,7 @@ static int ice1000_swd_run_queue(void)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t *scan_buf;
-	int i, retval;
+	int i, retval = ERROR_OK;
 
 	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80
 		&& tap_info->cur_dat == -1)
@@ -2251,52 +2256,69 @@ static int ice1000_swd_run_queue(void)
 	ice1000_swd_queue_idle_cycles(8);
 
 	scan_buf = NULL;
-	perform_scan(&scan_buf);
+	retval = perform_scan(&scan_buf);
 
-	retval = ERROR_OK;
-
-	for (i = 0; i <= tap_info->cur_dat; i++)
+	if ((retval == ERROR_OK) && (scan_buf != NULL))
 	{
-		uint8_t *rx_buf;
-		struct swd_packet *packet = tap_info->dat[i].ptr;
-
-		/* check ACK for read or write */
-		rx_buf = get_recv_data(packet->length, tap_info->rcv_dat, scan_buf);
-		int ack = buf_get_u32(rx_buf, packet->ack_pos, 3);
-
-		if (ack != SWD_ACK_OK)
+		for (i = 0; i <= tap_info->cur_dat; i++)
 		{
-			free(rx_buf);
-			LOG_ERROR("SWD ack not OK: %d %s", ack,
-					  ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK");
-			retval = ERROR_FAIL;
-			break;
-		}
-		else if (packet->in)
-		{
-			/* get the data that was read */
-			uint32_t data = buf_get_u32(rx_buf, packet->data_pos, 32);
-			int parity = buf_get_u32(rx_buf, packet->parity_pos, 1);
+			uint8_t *rx_buf;
+			struct swd_packet *packet = tap_info->dat[i].ptr;
 
-			if (parity != parity_u32(data))
+			/* check ACK for read or write */
+			rx_buf = get_recv_data(packet->length, tap_info->rcv_dat, scan_buf);
+			if (rx_buf == NULL)
 			{
-				free(rx_buf);
-				LOG_ERROR("SWD Read data parity mismatch");
+				LOG_ERROR("No recv data acquired");
 				retval = ERROR_FAIL;
 				break;
 			}
-			else
+
+			int ack = buf_get_u32(rx_buf, packet->ack_pos, 3);
+
+			if (ack != SWD_ACK_OK)
 			{
-				uint32_t *p = packet->in;
-				*p = data;
+				free(rx_buf);
+				LOG_ERROR("SWD ack not OK: %d %s", ack,
+						ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK");
+				retval = ERROR_FAIL;
+				break;
 			}
+			else if (packet->in)
+			{
+				/* get the data that was read */
+				uint32_t data = buf_get_u32(rx_buf, packet->data_pos, 32);
+				int parity = buf_get_u32(rx_buf, packet->parity_pos, 1);
+
+				if (parity != parity_u32(data))
+				{
+					free(rx_buf);
+					LOG_ERROR("SWD Read data parity mismatch");
+					retval = ERROR_FAIL;
+					break;
+				}
+				else
+				{
+					uint32_t *p = packet->in;
+					*p = data;
+				}
+			}
+
+			free(rx_buf);
+			tap_info->rcv_dat++;
 		}
 
-		free(rx_buf);
-		tap_info->rcv_dat++;
+		free(scan_buf);
 	}
 
-	free(scan_buf);
+	/* free all packets that were allocated */
+	for (i = 0; i <= tap_info->cur_dat; i++)
+	{
+		struct swd_packet *packet = tap_info->dat[i].ptr;
+		free(packet);
+		tap_info->dat[i].ptr = NULL;
+	}
+
 	if (tap_info->pairs)
 	{
 		free(tap_info->cmd);
@@ -2308,6 +2330,7 @@ static int ice1000_swd_run_queue(void)
 	tap_info->bit_pos = 0x80;
 	tap_info->cur_dat = -1;
 	tap_info->rcv_dat = -1;
+	
 
 	return retval;
 }
@@ -2351,15 +2374,17 @@ static int ice1000_swd_ensure_space(unsigned int bits)
 /* Fill out request header and write/read */
 static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint32_t ap_delay_clk)
 {
-	uint8_t data_parity_trn[DIV_ROUND_UP(32 + 1, 8)];
+	uint8_t data_parity_trn[DIV_ROUND_UP(RDATA_SIZE + PARITY_SIZE, 8)];
 	struct swd_packet *packet;
 	int retval;
+	int i = 0;
 
 	/* run queue if adding anything else will run past the high water mark */
 	retval = ice1000_swd_ensure_space(COMPLETE_TRANSACTION_SIZE + ap_delay_clk);
 	if (retval != ERROR_OK)
 		return retval;
 
+	/* all allocated packets are freed in ice1000_swd_run_queue */
 	packet = calloc(sizeof(struct swd_packet), 1);
 	if (packet == NULL)
 		return ERROR_FAIL;
@@ -2368,7 +2393,22 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 
 	retval = ice1000_swd_queue_data_out(&cmd, 8);
 	if (retval != ERROR_OK)
+	{
+		num_tap_pairs *tap_info = &cable_params.tap_info;
+
+		/* free current packet */
+		free(packet);
+
+		/* free all packets that were allocated previously */
+		for (i = 0; i <= tap_info->cur_dat; i++)
+		{
+			packet = tap_info->dat[i].ptr;
+			free(packet);
+			tap_info->dat[i].ptr = NULL;	
+		}
+
 		return retval;
+	}
 
 	if (cmd & SWD_CMD_RNW) {
         /* Queue a read transaction */
@@ -2396,7 +2436,20 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 	}
 
 	if (retval != ERROR_OK)
+	{
+		num_tap_pairs *tap_info = &cable_params.tap_info;
+
+		/* free all packets that were allocated previously */
+		for (i = 0; i <= tap_info->cur_dat; i++)
+		{
+			packet = tap_info->dat[i].ptr;
+			free(packet);
+			tap_info->dat[i].ptr = NULL;
+		}
+
 		return retval;
+	}
+		
 
 	/* Insert idle cycles after AP accesses to avoid WAIT */
 	if (cmd & SWD_CMD_APNDP)
