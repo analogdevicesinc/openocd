@@ -454,10 +454,10 @@ static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
 	ir_test_length = DIV_ROUND_UP(test_data_length + total_ir_length, 8);
 
 	ir_test_in = malloc(ir_test_length);
-	if (ir_test_in == NULL)
+	if (!ir_test_in)
 		return ERROR_FAIL;
 	ir_test_out = malloc(ir_test_length);
-	if (ir_test_out == NULL)
+	if (!ir_test_out)
 	{
 		free(ir_test_in);
 		return ERROR_FAIL;
@@ -641,7 +641,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 
 		section_size = firmware->sections[i].size;
 		section_buffer = malloc(section_size);
-		if (section_buffer == NULL)
+		if (!section_buffer)
 		{
 			LOG_ERROR("error allocating buffer for section (%d bytes)",
 					  firmware->sections[i].size);
@@ -954,7 +954,7 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (tap_info->pairs == NULL)
+	if (!tap_info->pairs)
 	{
 		unsigned char *cmd;
 		int32_t new_sz = cable_params.default_scanlen;
@@ -962,7 +962,7 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		int i, j;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
@@ -1185,7 +1185,7 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 #endif
 
 	buf = (uint8_t *)calloc(DIV_ROUND_UP(len, 8), 1);
-	if (buf == NULL)
+	if (!buf)
 	{
 		LOG_ERROR("calloc(%d) fails", DIV_ROUND_UP(len, 8));
 		return NULL;
@@ -1230,7 +1230,7 @@ static int ice1000_tap_execute(void)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t *buf;
-	int i, retval = ERROR_OK;
+	int i, retval;
 
 	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80
 		&& tap_info->cur_dat == -1)
@@ -1238,7 +1238,7 @@ static int ice1000_tap_execute(void)
 
 	buf = NULL;
 	retval = perform_scan(&buf);
-	if ((retval == ERROR_OK) && (buf != NULL))
+	if ((retval == ERROR_OK) && buf)
 	{
 		for (i = 0; i <= tap_info->cur_dat; i++)
 		{
@@ -1246,7 +1246,7 @@ static int ice1000_tap_execute(void)
 			struct scan_command *command = tap_info->dat[i].ptr;
 
 			buffer = get_recv_data(jtag_scan_size(command), tap_info->rcv_dat, buf);
-			if (buffer == NULL)
+			if (!buffer)
 				return ERROR_JTAG_QUEUE_FAILED;
 
 			tap_info->rcv_dat++;
@@ -1449,16 +1449,16 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	int32_t idx;
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (in == NULL)
+	if (!in)
 		LOG_WARNING("NO IN DATA!!!%s", out ? " BUT there is out data!" : "");
 
-	if (tap_info->pairs == NULL)
+	if (!tap_info->pairs)
 	{	/* really should never get here, but must not crash system. Would be rude */
 		int32_t new_sz = cable_params.default_scanlen + 4;
 		unsigned char *cmd;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
@@ -1489,7 +1489,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 		new_sz = tap_info->total + byte_cnt + 8;
 		cmd = realloc(tap_info->cmd, (sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("realloc(%ld) fails",
 				(long int)(sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
@@ -1527,7 +1527,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
 			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
-			if (datPtr == NULL)
+			if (!datPtr)
 			{
 				LOG_ERROR("realloc(%ld) fails",
 					(long int)(sizeof (dat_dat) * new_sz));
@@ -1546,7 +1546,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	   TMS will always be zero except the last bit! */
 	for (i = 0; i < num_bits; i++)
 	{
-		if (command != NULL)
+		if (command)
 		{
 			tap_scan->tdi |= (in[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
 			if (i == num_bits - 1)
@@ -1778,7 +1778,7 @@ static int ice1000_execute_queue(void)
 #endif
 
 	/* TODO add blink */
-	while (cmd != NULL)
+	while (cmd)
 	{
 		if (ice1000_execute_command(cmd) != ERROR_OK)
 			retval = ERROR_JTAG_QUEUE_FAILED;
@@ -1955,7 +1955,7 @@ static int perform_scan(uint8_t **rdata)
 			len -= tap_info->dat[0].idx;
 
 		out = malloc(len);
-		if (out == NULL)
+		if (!out)
 		{
 			LOG_ERROR("malloc(%ld) fails", (long int)len);
 			return ERROR_FAIL;
@@ -1966,7 +1966,7 @@ static int perform_scan(uint8_t **rdata)
 	else
 	{	/* no data, so allocate for just header */
 		out = malloc(cable_params.tap_pair_start_idx + 16);
-		if (out == NULL)
+		if (!out)
 		{
 			LOG_ERROR("malloc(%d) fails", cable_params.tap_pair_start_idx + 16);
 			return ERROR_FAIL;
@@ -2114,13 +2114,13 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 	int32_t idx;
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (tap_info->pairs == NULL)
+	if (!tap_info->pairs)
 	{
 		int32_t new_sz = cable_params.default_scanlen;
 		unsigned char *cmd;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("malloc(%ld) fails", (long int)((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx));
 			return ERROR_FAIL;
@@ -2165,7 +2165,7 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
 			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
-			if (datPtr == NULL)
+			if (!datPtr)
 			{
 				LOG_ERROR("realloc(%ld) fails", (long int)(sizeof (dat_dat) * new_sz));
 				return ERROR_FAIL;
@@ -2226,9 +2226,9 @@ static int ice1000_swd_queue_idle_cycles(uint32_t len)
 	int retval;
 
 	buffer = calloc(DIV_ROUND_UP(len, 8), 1);
-	if (buffer == NULL)
+	if (!buffer)
 	{
-		LOG_ERROR("malloc(%"PRIu32") fails", DIV_ROUND_UP(len, 8));
+		LOG_ERROR("calloc(%"PRIu32") fails", DIV_ROUND_UP(len, 8));
 		return ERROR_FAIL;
 	}
 
@@ -2244,7 +2244,7 @@ static int ice1000_swd_run_queue(void)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t *scan_buf;
-	int i, retval = ERROR_OK;
+	int i, retval;
 
 	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80
 		&& tap_info->cur_dat == -1)
@@ -2258,7 +2258,7 @@ static int ice1000_swd_run_queue(void)
 	scan_buf = NULL;
 	retval = perform_scan(&scan_buf);
 
-	if ((retval == ERROR_OK) && (scan_buf != NULL))
+	if ((retval == ERROR_OK) && scan_buf)
 	{
 		for (i = 0; i <= tap_info->cur_dat; i++)
 		{
@@ -2267,7 +2267,7 @@ static int ice1000_swd_run_queue(void)
 
 			/* check ACK for read or write */
 			rx_buf = get_recv_data(packet->length, tap_info->rcv_dat, scan_buf);
-			if (rx_buf == NULL)
+			if (!rx_buf)
 			{
 				LOG_ERROR("No recv data acquired");
 				retval = ERROR_FAIL;
@@ -2386,7 +2386,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 
 	/* all allocated packets are freed in ice1000_swd_run_queue */
 	packet = calloc(sizeof(struct swd_packet), 1);
-	if (packet == NULL)
+	if (!packet)
 		return ERROR_FAIL;
 
 	cmd |= SWD_CMD_START | SWD_CMD_PARK;
