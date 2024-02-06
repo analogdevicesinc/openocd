@@ -2419,6 +2419,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 		packet->in = dst;
 		packet->length = TRN_SIZE + ACK_SIZE + RDATA_SIZE + PARITY_SIZE + TRN_SIZE;
 
+		/* packet is freed later in ice1000_swd_run_queue */
 		retval = ice1000_swd_queue_packet(packet);
 	} else {
 		/* Queue a write transaction */
@@ -2426,6 +2427,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 		packet->ack_pos = 0;
 		packet->length = TRN_SIZE + ACK_SIZE + TRN_SIZE;
 
+		/* packet is freed later in ice1000_swd_run_queue */
 		retval = ice1000_swd_queue_packet(packet);
 
 		buf_set_u32(data_parity_trn, 0, 32, data);
