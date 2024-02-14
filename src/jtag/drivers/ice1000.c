@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2011-2023 Analog Devices, Inc.                          *
+*   Copyright (C) 2011 - 2024 by Analog Devices, Inc.                     *
 *   Based on ice100.c of UrJTAG                                           *
 *   Jie Zhang  <jie.zhang@analog.com>                                     *
 *                                                                         *
@@ -24,6 +24,7 @@
 #endif
 
 #include <jtag/interface.h>
+#include <jtag/swd.h>
 #include <target/image.h>
 #include <helper/log.h>
 #include <helper/configuration.h>
@@ -43,6 +44,26 @@ typedef struct
 	uint8_t tms;			/* TMS data */
 	uint8_t tdi;			/* TDI data */
 } tap_pairs;
+
+/* swd_packet can be used to describe a read packet, a write packet,
+   an acknowledge response or a data phase. */
+struct swd_packet
+{
+	/* IN or OUT */
+	bool is_out;
+	/* bit position of ACK */
+	int ack_pos;
+	/* bit position of data */
+	int data_pos;
+	/* bit position of parity if it's an IN */
+	int parity_pos;
+	/* buffer for the data OUT */
+	const uint8_t *out;
+	/* buffer for the data IN */
+	void *in;
+	/* data length in bits */
+	uint32_t length;
+};
 
 /* For collecting data */
 typedef struct
@@ -114,6 +135,11 @@ static uint8_t *get_recv_data(int32_t, int32_t, uint8_t *);
 static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data,
 									int32_t wr_data, uint32_t data);
+static int ice1000_swd_switch_seq(enum swd_special_seq seq);
+static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint32_t ap_delay_clk);
+static void ice1000_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_delay_clk);
+static void ice1000_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay_clk);
+static int ice1000_swd_run_queue(void);
 
 /*
  * Debug Macros
@@ -185,6 +211,17 @@ static const uint32_t avail_freqs_1000[MAX_FREQ_1000] = { 1000000, 2000000, 5000
 #define MAX_FREQ_2000	7
 static const uint8_t freq_set_2000[MAX_FREQ_2000] = { 45, 22, 8, 4, 2, 1, 0 };
 static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000000, 9000000, 15000000, 23000000, 46000000 };
+
+/* SWD defines */
+#define REQUEST_SIZE	8
+#define TRN_SIZE		1
+#define ACK_SIZE		3
+#define RDATA_SIZE		32
+#define PARITY_SIZE		1
+#define COMPLETE_TRANSACTION_SIZE	(REQUEST_SIZE + TRN_SIZE + ACK_SIZE + RDATA_SIZE + PARITY_SIZE + TRN_SIZE)
+#define PARITY_POS		35
+#define ACK_POS			0
+#define DATA_POS		3
 
 /*
  * Internal Macros
@@ -278,7 +315,7 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 
 
 static params_t cable_params;
-
+static bool swd_mode;
 
 /*
  * System Interface Functions
@@ -404,6 +441,10 @@ static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
 	int i;
 	int idx;
 
+    /* FIXME  find a way to do delay test for SWD mode */
+    if (swd_mode)
+		return ERROR_OK;
+
 	total_ir_length = 0;
 	tap = jtag_tap_next_enabled(NULL);
 	for (; tap != NULL; tap = jtag_tap_next_enabled(tap))
@@ -413,10 +454,10 @@ static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
 	ir_test_length = DIV_ROUND_UP(test_data_length + total_ir_length, 8);
 
 	ir_test_in = malloc(ir_test_length);
-	if (ir_test_in == NULL)
+	if (!ir_test_in)
 		return ERROR_FAIL;
 	ir_test_out = malloc(ir_test_length);
-	if (ir_test_out == NULL)
+	if (!ir_test_out)
 	{
 		free(ir_test_in);
 		return ERROR_FAIL;
@@ -600,7 +641,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 
 		section_size = firmware->sections[i].size;
 		section_buffer = malloc(section_size);
-		if (section_buffer == NULL)
+		if (!section_buffer)
 		{
 			LOG_ERROR("error allocating buffer for section (%d bytes)",
 					  firmware->sections[i].size);
@@ -835,8 +876,8 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		/* Turn on the voltage regulators */
 		do_host_cmd(HOST_SET_2000_VOLTAGE, 1, 0);
 
-		/* set interface mode to JTAG */
-		do_host_cmd(HOST_SET_INTERFACE_MODE, 0, 0);
+		/* set interface mode */
+		do_host_cmd(HOST_SET_INTERFACE_MODE, swd_mode ? 1 : 0, 0);
 
 		/* If user has not set the voltage, default it to 3.3V. */
 		if (cable_params.cur_voltage == 0)
@@ -857,8 +898,8 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	}
 	else if (strcmp (cable_name, "ICE-1000") == 0)
 	{
-		/* set interface mode to JTAG */
-		do_host_cmd(HOST_SET_INTERFACE_MODE, 0, 0);
+		/* set interface mode */
+		do_host_cmd(HOST_SET_INTERFACE_MODE, swd_mode ? 1 : 0, 0);
 
 		ice1000_set_freq(avail_freqs_1000[0]);
 	}
@@ -889,6 +930,20 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
 	cable_params.num_rcv_hdr_bytes = cable_params.tap_pair_start_idx;
 
+	if (strcmp (cable_name, "ICE-1000") == 0 || strcmp (cable_name, "ICE-2000") == 0) {
+		if (swd_mode)
+		{
+			ice1000_swd_switch_seq(JTAG_TO_SWD);
+			
+			ret = ice1000_swd_run_queue();
+			if (ret != ERROR_OK)
+			{
+				LOG_ERROR("Unable to change transport modes.");
+				return ret;
+			}
+		}
+	}
+
 	return ERROR_OK;
 }
 
@@ -899,7 +954,7 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (tap_info->pairs == NULL)
+	if (!tap_info->pairs)
 	{
 		unsigned char *cmd;
 		int32_t new_sz = cable_params.default_scanlen;
@@ -907,7 +962,7 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		int i, j;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
@@ -1130,9 +1185,11 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 #endif
 
 	buf = (uint8_t *)calloc(DIV_ROUND_UP(len, 8), 1);
-
-	if (buf == NULL)
-		LOG_ERROR("malloc(%d) fails", DIV_ROUND_UP(len, 8));
+	if (!buf)
+	{
+		LOG_ERROR("calloc(%d) fails", DIV_ROUND_UP(len, 8));
+		return NULL;
+	}
 
 	if (idx_dat < 0)
 	{
@@ -1180,35 +1237,42 @@ static int ice1000_tap_execute(void)
 		return ERROR_OK;
 
 	buf = NULL;
-	perform_scan(&buf);
-
-	retval = ERROR_OK;
-
-	for (i = 0; i <= tap_info->cur_dat; i++)
+	retval = perform_scan(&buf);
+	if ((retval == ERROR_OK) && buf)
 	{
-		uint8_t *buffer;
-		struct scan_command *command = tap_info->dat[i].ptr;
+		for (i = 0; i <= tap_info->cur_dat; i++)
+		{
+			uint8_t *buffer;
+			struct scan_command *command = tap_info->dat[i].ptr;
 
-		buffer = get_recv_data(jtag_scan_size(command), tap_info->rcv_dat, buf);
-		tap_info->rcv_dat++;
-		if (jtag_read_buffer(buffer, command) != ERROR_OK)
-			return ERROR_JTAG_QUEUE_FAILED;
+			buffer = get_recv_data(jtag_scan_size(command), tap_info->rcv_dat, buf);
+			if (!buffer) {
+				LOG_ERROR("Receive data buffer is empty");
+				return ERROR_JTAG_QUEUE_FAILED;
+			}
 
-		free(buffer);
+			tap_info->rcv_dat++;
+			if (jtag_read_buffer(buffer, command) != ERROR_OK) {
+				LOG_ERROR("Cannot read JTAG buffer");
+				return ERROR_JTAG_QUEUE_FAILED;
+			}
+
+			free(buffer);
+		}
+
+		free(buf);
+		if (tap_info->pairs)
+		{
+			free(tap_info->cmd);
+			tap_info->pairs = NULL;
+			tap_info->cmd = NULL;
+		}
+		tap_info->total = 0;
+		tap_info->cur_idx = 0;
+		tap_info->bit_pos = 0x80;
+		tap_info->cur_dat = -1;
+		tap_info->rcv_dat = -1;
 	}
-
-	free(buf);
-	if (tap_info->pairs)
-	{
-		free(tap_info->cmd);
-		tap_info->pairs = NULL;
-		tap_info->cmd = NULL;
-	}
-	tap_info->total = 0;
-	tap_info->cur_idx = 0;
-	tap_info->bit_pos = 0x80;
-	tap_info->cur_dat = -1;
-	tap_info->rcv_dat = -1;
 
 	return retval;
 }
@@ -1389,16 +1453,16 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	int32_t idx;
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (in == NULL)
+	if (!in)
 		LOG_WARNING("NO IN DATA!!!%s", out ? " BUT there is out data!" : "");
 
-	if (tap_info->pairs == NULL)
+	if (!tap_info->pairs)
 	{	/* really should never get here, but must not crash system. Would be rude */
 		int32_t new_sz = cable_params.default_scanlen + 4;
 		unsigned char *cmd;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
@@ -1429,7 +1493,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 		new_sz = tap_info->total + byte_cnt + 8;
 		cmd = realloc(tap_info->cmd, (sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("realloc(%ld) fails",
 				(long int)(sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
@@ -1450,6 +1514,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_scan = &tap_info->pairs[idx];
 	}
 
+	// begin where we left off to set our tms/tdi pairs
 	bit_set = tap_info->bit_pos;
 
 	if (out)
@@ -1466,7 +1531,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
 			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
-			if (datPtr == NULL)
+			if (!datPtr)
 			{
 				LOG_ERROR("realloc(%ld) fails",
 					(long int)(sizeof (dat_dat) * new_sz));
@@ -1485,7 +1550,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	   TMS will always be zero except the last bit! */
 	for (i = 0; i < num_bits; i++)
 	{
-		if (command != NULL)
+		if (command)
 		{
 			tap_scan->tdi |= (in[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
 			if (i == num_bits - 1)
@@ -1505,6 +1570,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		}
 	}
 
+	// keep track of where we left off
 	tap_info->cur_idx = idx;
 	tap_info->bit_pos = bit_set;
 
@@ -1716,7 +1782,7 @@ static int ice1000_execute_queue(void)
 #endif
 
 	/* TODO add blink */
-	while (cmd != NULL)
+	while (cmd)
 	{
 		if (ice1000_execute_command(cmd) != ERROR_OK)
 			retval = ERROR_JTAG_QUEUE_FAILED;
@@ -1893,7 +1959,7 @@ static int perform_scan(uint8_t **rdata)
 			len -= tap_info->dat[0].idx;
 
 		out = malloc(len);
-		if (out == NULL)
+		if (!out)
 		{
 			LOG_ERROR("malloc(%ld) fails", (long int)len);
 			return ERROR_FAIL;
@@ -1904,7 +1970,7 @@ static int perform_scan(uint8_t **rdata)
 	else
 	{	/* no data, so allocate for just header */
 		out = malloc(cable_params.tap_pair_start_idx + 16);
-		if (out == NULL)
+		if (!out)
 		{
 			LOG_ERROR("malloc(%d) fails", cable_params.tap_pair_start_idx + 16);
 			return ERROR_FAIL;
@@ -2037,6 +2103,394 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	return ERROR_OK;
 }
 
+static int ice1000_swd_init(void)
+{
+	LOG_INFO("%s SWD mode enabled", adi_cable_name());
+	swd_mode = true;
+	return ERROR_OK;
+}
+
+/* memory allocated for cmd will be freed in ice1000_swd_run_queue */
+static int ice1000_swd_queue_packet(struct swd_packet *packet)
+{
+	uint32_t i, bit_set;
+	tap_pairs *tap_scan;
+	int32_t idx;
+	num_tap_pairs *tap_info = &cable_params.tap_info;
+
+	if (!tap_info->pairs)
+	{
+		int32_t new_sz = cable_params.default_scanlen;
+		unsigned char *cmd;
+
+		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
+		if (!cmd)
+		{
+			LOG_ERROR("malloc(%ld) fails", (long int)((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx));
+			return ERROR_FAIL;
+		}
+
+		tap_info->cur_dat = -1;
+		tap_info->rcv_dat = -1;
+		tap_info->bit_pos = 0x80;
+		tap_info->total = new_sz;
+		tap_info->cmd = cmd;
+		tap_info->pairs = (tap_pairs *)(cmd + cable_params.tap_pair_start_idx);
+
+		tap_scan = tap_info->pairs;
+		tap_scan->tms = 0;
+		tap_scan->tdi = 0;
+		idx = tap_info->cur_idx = 1;	/* first pair is 0 for tms and tdi */
+		tap_scan++;
+
+		/* zero out tdi/tms so we can OR in our actual data */
+		tap_scan->tdi = 0;
+		tap_scan->tms = 0;
+	}
+	else
+	{
+		idx = tap_info->cur_idx;
+		tap_scan = &tap_info->pairs[idx];
+	}
+
+	bit_set = tap_info->bit_pos;
+
+	if (!packet->is_out)
+	{
+		if (tap_info->rcv_dat == -1)
+		{
+			tap_info->rcv_dat = 0;
+		}
+		tap_info->cur_dat++;
+		if (tap_info->cur_dat >= tap_info->num_dat)
+		{
+			int32_t new_sz;
+			dat_dat *datPtr;
+
+			new_sz = tap_info->num_dat + DAT_SZ_INC;
+			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
+			if (!datPtr)
+			{
+				LOG_ERROR("realloc(%ld) fails", (long int)(sizeof (dat_dat) * new_sz));
+				return ERROR_FAIL;
+			}
+			tap_info->dat = datPtr;
+			tap_info->num_dat = new_sz;
+
+		}
+		tap_info->dat[tap_info->cur_dat].idx = idx;
+		tap_info->dat[tap_info->cur_dat].pos = bit_set;
+		tap_info->dat[tap_info->cur_dat].ptr = packet;
+	}
+
+
+	for (i = 0; i < packet->length; i++)
+	{
+		if (packet->is_out)
+			tap_scan->tms |= (packet->out[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
+		else
+			tap_scan->tdi |= bit_set;
+
+		bit_set >>= 1;
+		if (!bit_set)
+		{
+			bit_set = 0x80;
+			idx++;
+			tap_scan++;
+			tap_scan->tdi = 0;
+			tap_scan->tms = 0;
+		}
+	}
+
+	tap_info->cur_idx = idx;
+	tap_info->bit_pos = bit_set;
+
+	return ERROR_OK;
+}
+
+static int ice1000_swd_queue_data_out(const uint8_t *out, uint32_t len)
+{
+	struct swd_packet packet;
+	int retval;
+
+	memset(&packet, 0, sizeof(packet));
+
+	packet.is_out = true;
+	packet.out = out;
+	packet.length = len;
+
+	retval = ice1000_swd_queue_packet(&packet);
+
+	return retval;
+}
+
+static int ice1000_swd_queue_idle_cycles(uint32_t len)
+{
+	uint8_t *buffer;
+	int retval;
+
+	buffer = calloc(DIV_ROUND_UP(len, 8), 1);
+	if (!buffer)
+	{
+		LOG_ERROR("calloc(%"PRIu32") fails", DIV_ROUND_UP(len, 8));
+		return ERROR_FAIL;
+	}
+
+	retval = ice1000_swd_queue_data_out(buffer, len);
+
+	/* the contents of buffer are copied elsewhere so it can be freed here */
+	free(buffer);
+
+	return retval;
+}
+
+static int ice1000_swd_run_queue(void)
+{
+	num_tap_pairs *tap_info = &cable_params.tap_info;
+	uint8_t *scan_buf;
+	int i, retval;
+
+	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80
+		&& tap_info->cur_dat == -1)
+		return ERROR_OK;
+
+	/* A transaction must be followed by another transaction or at least
+	   8 idle cycles to ensure that data is clocked through the AP. 
+	   Since a scan is done next, we know the idle cycles are now needed */
+	ice1000_swd_queue_idle_cycles(8);
+
+	scan_buf = NULL;
+	retval = perform_scan(&scan_buf);
+
+	if ((retval == ERROR_OK) && scan_buf)
+	{
+		for (i = 0; i <= tap_info->cur_dat; i++)
+		{
+			uint8_t *rx_buf;
+			struct swd_packet *packet = tap_info->dat[i].ptr;
+
+			/* check ACK for read or write */
+			rx_buf = get_recv_data(packet->length, tap_info->rcv_dat, scan_buf);
+			if (!rx_buf)
+			{
+				LOG_ERROR("No recv data acquired");
+				retval = ERROR_FAIL;
+				break;
+			}
+
+			int ack = buf_get_u32(rx_buf, packet->ack_pos, 3);
+
+			if (ack != SWD_ACK_OK)
+			{
+				free(rx_buf);
+				LOG_ERROR("SWD ack not OK: %d %s", ack,
+						ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK");
+				retval = ERROR_FAIL;
+				break;
+			}
+			else if (packet->in)
+			{
+				/* get the data that was read */
+				uint32_t data = buf_get_u32(rx_buf, packet->data_pos, 32);
+				int parity = buf_get_u32(rx_buf, packet->parity_pos, 1);
+
+				if (parity != parity_u32(data))
+				{
+					free(rx_buf);
+					LOG_ERROR("SWD Read data parity mismatch");
+					retval = ERROR_FAIL;
+					break;
+				}
+				else
+				{
+					uint32_t *p = packet->in;
+					*p = data;
+				}
+			}
+
+			free(rx_buf);
+			tap_info->rcv_dat++;
+		}
+
+		free(scan_buf);
+	}
+
+	/* free all packets that were allocated */
+	for (i = 0; i <= tap_info->cur_dat; i++)
+	{
+		if (tap_info->dat[i].ptr) {
+			free((struct swd_packet*)tap_info->dat[i].ptr);
+			tap_info->dat[i].ptr = NULL;
+		}
+	}
+
+	if (tap_info->pairs)
+	{
+		free(tap_info->cmd);
+		tap_info->pairs = NULL;
+		tap_info->cmd = NULL;
+	}
+	tap_info->total = 0;
+	tap_info->cur_idx = 0;
+	tap_info->bit_pos = 0x80;
+	tap_info->cur_dat = -1;
+	tap_info->rcv_dat = -1;
+	
+
+	return retval;
+}
+
+static int ice1000_swd_switch_seq(enum swd_special_seq seq)
+{
+	int retval;
+
+	switch (seq) {
+	case LINE_RESET:
+		LOG_DEBUG("SWD line reset");
+		retval = ice1000_swd_queue_data_out(swd_seq_line_reset, swd_seq_line_reset_len);
+		break;
+	case JTAG_TO_SWD:
+		LOG_DEBUG("JTAG-to-SWD");
+		retval = ice1000_swd_queue_data_out(swd_seq_jtag_to_swd, swd_seq_jtag_to_swd_len);
+		break;
+	case SWD_TO_JTAG:
+		LOG_DEBUG("SWD-to-JTAG");
+		retval = ice1000_swd_queue_data_out(swd_seq_swd_to_jtag, swd_seq_swd_to_jtag_len);
+		break;
+	default:
+		LOG_ERROR("Sequence %d not supported", seq);
+		retval = ERROR_FAIL;
+	}
+
+	return retval;
+}
+
+/* run queue if it will pass over the trigger_scanlen boundary */
+static int ice1000_swd_ensure_space(unsigned int bits)
+{
+	int retval = ERROR_OK;
+
+	if (cable_params.tap_info.cur_idx + DIV_ROUND_UP(bits, 8) >= cable_params.trigger_scanlen)
+		retval = ice1000_swd_run_queue();
+
+	return retval;
+}
+
+/* Fill out request header and write/read */
+static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint32_t ap_delay_clk)
+{
+	uint8_t data_parity_trn[DIV_ROUND_UP(RDATA_SIZE + PARITY_SIZE, 8)];
+	struct swd_packet *packet;
+	int retval;
+	int i = 0;
+
+	/* run queue if adding anything else will run past the high water mark */
+	retval = ice1000_swd_ensure_space(COMPLETE_TRANSACTION_SIZE + ap_delay_clk);
+	if (retval != ERROR_OK)
+		return retval;
+
+	/* all allocated packets are freed in ice1000_swd_run_queue */
+	packet = calloc(sizeof(struct swd_packet), 1);
+	if (!packet)
+		return ERROR_FAIL;
+
+	cmd |= SWD_CMD_START | SWD_CMD_PARK;
+
+	retval = ice1000_swd_queue_data_out(&cmd, 8);
+	if (retval != ERROR_OK)
+	{
+		num_tap_pairs *tap_info = &cable_params.tap_info;
+
+		/* free current packet */
+		free(packet);
+
+		/* free all packets that were allocated previously */
+		for (i = 0; i <= tap_info->cur_dat; i++)
+		{
+			if (tap_info->dat[i].ptr) {
+				free((struct swd_packet*)tap_info->dat[i].ptr);
+				tap_info->dat[i].ptr = NULL;
+			}
+		}
+
+		return retval;
+	}
+
+	if (cmd & SWD_CMD_RNW) {
+        /* Queue a read transaction */
+		packet->out = false;
+		packet->ack_pos = ACK_POS;
+		packet->data_pos = DATA_POS;
+		packet->parity_pos = PARITY_POS;
+		packet->in = dst;
+		packet->length = TRN_SIZE + ACK_SIZE + RDATA_SIZE + PARITY_SIZE + TRN_SIZE;
+
+		/* packet is freed later in ice1000_swd_run_queue */
+		retval = ice1000_swd_queue_packet(packet);
+	} else {
+		/* Queue a write transaction */
+		packet->out = false;
+		packet->ack_pos = 0;
+		packet->length = TRN_SIZE + ACK_SIZE + TRN_SIZE;
+
+		/* packet is freed later in ice1000_swd_run_queue */
+		retval = ice1000_swd_queue_packet(packet);
+
+		buf_set_u32(data_parity_trn, 0, 32, data);
+		buf_set_u32(data_parity_trn, 32, 1, parity_u32(data));
+
+		if (retval == ERROR_OK)
+			retval = ice1000_swd_queue_data_out(data_parity_trn, 32 + 1);
+	}
+
+	if (retval != ERROR_OK) {
+		num_tap_pairs *tap_info = &cable_params.tap_info;
+
+		/* free all packets that were allocated previously */
+		for (i = 0; i <= tap_info->cur_dat; i++)
+		{
+			if (tap_info->dat[i].ptr) {
+				free((struct swd_packet*)tap_info->dat[i].ptr);
+				tap_info->dat[i].ptr = NULL;
+			}
+		}
+
+		return retval;
+	}
+		
+
+	/* Insert idle cycles after AP accesses to avoid WAIT */
+	if (cmd & SWD_CMD_APNDP)
+		retval = ice1000_swd_queue_idle_cycles(ap_delay_clk);
+
+	return retval;
+}
+
+static void ice1000_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_delay_clk)
+{
+	int retval;
+	retval = ice1000_swd_queue_cmd(cmd, NULL, value, ap_delay_clk);
+	if (retval != ERROR_OK)
+		LOG_ERROR("%s SWD write register failed", adi_cable_name());
+}
+
+static void ice1000_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay_clk)
+{
+	int retval;
+	retval = ice1000_swd_queue_cmd(cmd, value, 0, ap_delay_clk);
+	if (retval != ERROR_OK)
+		LOG_ERROR("%s SWD read register failed", adi_cable_name());
+}
+
+/* (1) assert or (0) deassert reset lines */
+static int adi_ice_reset(int trst, int srst)
+{
+    /* SWD requires this function or one similar
+	   do nothing because we toggle TRST on connection
+	*/
+	return ERROR_OK;
+}
+
 COMMAND_HANDLER(ice2000_handle_voltage_command)
 {
 	uint32_t voltage;
@@ -2092,9 +2546,19 @@ static const struct command_registration ice1000_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
+static const struct swd_driver adi_ice_swd = {
+	.init = ice1000_swd_init,
+	.switch_seq = ice1000_swd_switch_seq,
+	.read_reg = ice1000_swd_read_reg,
+	.write_reg = ice1000_swd_write_reg,
+	.run = ice1000_swd_run_queue,
+};
+
+static const char * const ice_transports[] = { "jtag", "swd", NULL };
+
 struct adapter_driver ice1000_adapter_driver = {
 	.name = "ice1000",
-	.transports = jtag_only,
+	.transports = ice_transports,
 	.commands = ice1000_command_handlers,
 
 	.init = ice1000_init,
@@ -2102,8 +2566,10 @@ struct adapter_driver ice1000_adapter_driver = {
 	.speed = ice1000_speed,
 	.khz = ice1000_khz,
 	.speed_div = ice1000_speed_div,
+	.reset = adi_ice_reset,
 
 	.jtag_ops = &ice1000_interface,
+	.swd_ops = &adi_ice_swd,
 };
 
 static const struct command_registration ice2000_command_handlers[] = {
@@ -2131,7 +2597,7 @@ static struct jtag_interface ice2000_interface = {
 
 struct adapter_driver ice2000_adapter_driver = {
 	.name = "ice2000",
-	.transports = jtag_only,
+	.transports = ice_transports,	
 	.commands = ice2000_command_handlers,
 
 	.init = ice2000_init,
@@ -2139,6 +2605,8 @@ struct adapter_driver ice2000_adapter_driver = {
 	.speed = ice2000_speed,
 	.khz = ice2000_khz,
 	.speed_div = ice2000_speed_div,
+	.reset = adi_ice_reset,
 
 	.jtag_ops = &ice2000_interface,
+	.swd_ops = &adi_ice_swd,
 };
