@@ -1246,12 +1246,16 @@ static int ice1000_tap_execute(void)
 			struct scan_command *command = tap_info->dat[i].ptr;
 
 			buffer = get_recv_data(jtag_scan_size(command), tap_info->rcv_dat, buf);
-			if (!buffer)
+			if (!buffer) {
+				LOG_ERROR("Receive data buffer is empty");
 				return ERROR_JTAG_QUEUE_FAILED;
+			}
 
 			tap_info->rcv_dat++;
-			if (jtag_read_buffer(buffer, command) != ERROR_OK)
+			if (jtag_read_buffer(buffer, command) != ERROR_OK) {
+				LOG_ERROR("Cannot read JTAG buffer");
 				return ERROR_JTAG_QUEUE_FAILED;
+			}
 
 			free(buffer);
 		}
