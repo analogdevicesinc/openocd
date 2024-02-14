@@ -2314,9 +2314,10 @@ static int ice1000_swd_run_queue(void)
 	/* free all packets that were allocated */
 	for (i = 0; i <= tap_info->cur_dat; i++)
 	{
-		struct swd_packet *packet = tap_info->dat[i].ptr;
-		free(packet);
-		tap_info->dat[i].ptr = NULL;
+		if (tap_info->dat[i].ptr) {
+			free((struct swd_packet*)tap_info->dat[i].ptr);
+			tap_info->dat[i].ptr = NULL;
+		}
 	}
 
 	if (tap_info->pairs)
@@ -2402,9 +2403,10 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 		/* free all packets that were allocated previously */
 		for (i = 0; i <= tap_info->cur_dat; i++)
 		{
-			packet = tap_info->dat[i].ptr;
-			free(packet);
-			tap_info->dat[i].ptr = NULL;	
+			if (tap_info->dat[i].ptr) {
+				free((struct swd_packet*)tap_info->dat[i].ptr);
+				tap_info->dat[i].ptr = NULL;
+			}
 		}
 
 		return retval;
@@ -2437,16 +2439,16 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 			retval = ice1000_swd_queue_data_out(data_parity_trn, 32 + 1);
 	}
 
-	if (retval != ERROR_OK)
-	{
+	if (retval != ERROR_OK) {
 		num_tap_pairs *tap_info = &cable_params.tap_info;
 
 		/* free all packets that were allocated previously */
 		for (i = 0; i <= tap_info->cur_dat; i++)
 		{
-			packet = tap_info->dat[i].ptr;
-			free(packet);
-			tap_info->dat[i].ptr = NULL;
+			if (tap_info->dat[i].ptr) {
+				free((struct swd_packet*)tap_info->dat[i].ptr);
+				tap_info->dat[i].ptr = NULL;
+			}
 		}
 
 		return retval;
