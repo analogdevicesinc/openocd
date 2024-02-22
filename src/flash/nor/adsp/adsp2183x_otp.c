@@ -723,7 +723,7 @@ static const struct command_registration adsp2183x_exec_command_handlers[] = {
 
 static const struct command_registration adsp2183x_command_handlers[] = {
 	{
-		.name	= "adsp2183x",
+		.name	= "adsp2183x_otp",
 		.mode	= COMMAND_ANY,
 		.help	= "adsp2183x flash command group",
 		.usage	= "",
