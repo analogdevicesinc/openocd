@@ -139,14 +139,23 @@ static int adsp83x_init(struct flash_bank *bank)
 	// get status from buffer to determine result of algorithm initialization
 	retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
 
-	// Resume running algorithm with parameters
-	xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+	if (retval != ERROR_OK)
+	{
+		/* Close down algo */
+		(void)adsp83x_quit(bank);
+		return retval;
+	}
+	else
+	{
+		// Resume running algorithm with parameters
+		xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
 
 	/*
 	 * At this point, the algorithm is running on the target and
 	 * ready to receive commands and data to flash the target
 	 */
-
+	}
+	
 	return retval;
 }
 
@@ -270,8 +279,6 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 				xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
 			}
 		}
-		/* Regardless of errors, try to close down algo */
-		//(void)adsp83x_quit(bank);
 
 	}
 
@@ -513,9 +520,6 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 				xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
 			}
 		}
-
-		/* Regardless of errors, try to close down algo */
-		//(void)adsp83x_quit(bank);
 
 	}
 
@@ -1082,6 +1086,17 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 		// get status from buffer to determine result of programming
 		retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
 
+		if (retval != ERROR_OK)
+		{
+			/* Close down algo */
+			(void)adsp83x_quit(bank);
+			return retval;
+		}
+		else
+		{
+			// Resume running algorithm with parameters
+			xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
+		}
 	}
 
 	return retval;
