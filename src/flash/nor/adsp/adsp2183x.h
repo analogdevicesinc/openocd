@@ -1,5 +1,5 @@
 /* SPDX-License Identifier: GPL-2.0-or-later
-	Copyright (C) 2022-2024 Analog Devices, Inc. */
+	Copyright (C) 2022-2023 Analog Devices, Inc. */
 
 
 struct custom_algorithm {
@@ -9,10 +9,9 @@ struct custom_algorithm {
 	unsigned long parameter_address;  /* Values derived from algorithm for data buffer */
 	unsigned long buffer_address;	  /*  address and algo parameter address (g_cfg)*/
 	unsigned long size;
-	bool reset_handler_found;
 };
 
-#define RESET_HANDLER_MAGIC_VALUE 0x8CFFEC21
+#define PARAMETER_FILE_COUNT 3
 
 #define BYTE_COUNT 8
 #define ALGO_READY 0xFFFFFFFF
