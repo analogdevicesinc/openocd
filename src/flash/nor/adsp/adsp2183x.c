@@ -20,11 +20,13 @@
 struct adsp2183x_flash_bank {
 	bool probed;				/*! Has the flash device been probed? */
 	uint32_t available_space;	/*! Used for sanity checking against memory leaks */
-	uint32_t sector_length;
 	struct working_area *working_area;
 	struct xtensa_algorithm xtensa_info;
 	struct flash_device	dev;
 	struct custom_algorithm adsp2183x_algorithm;
+	uint32_t sectorsize;
+	uint32_t size_in_bytes;
+
 };
 
 static int adsp83x_quit(struct flash_bank *bank)
@@ -155,7 +157,7 @@ static int adsp83x_init(struct flash_bank *bank)
 	 * ready to receive commands and data to flash the target
 	 */
 	}
-	
+
 	return retval;
 }
 
@@ -207,7 +209,7 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 		for (unsigned counter = first; counter <= last; counter++)
 		{
 			/* Calculate the address based on the counter and configured sector size */
-			address = counter*adsp2183x_flash_info->dev.sectorsize;
+			address = counter*adsp2183x_flash_info->sectorsize;
 
 			// Need to halt before reads/writes
 			retval = target_halt(target);
@@ -331,10 +333,10 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		}
 
 		/* First write any bytes if the specified offset if not on the sector size boundary */
-		if (0 != (current_address % adsp2183x_flash_info->dev.sectorsize))
+		if (0 != (current_address % adsp2183x_flash_info->sectorsize))
 		{
 						/* Calculate the write size to use, the modulo remainder of the page size  (unless the specified count is smaller) */
-			write_size = adsp2183x_flash_info->dev.sectorsize - (current_address % adsp2183x_flash_info->dev.sectorsize);
+			write_size = adsp2183x_flash_info->sectorsize - (current_address % adsp2183x_flash_info->sectorsize);
 			if (write_size > count)
 			{
 				write_size = count;
@@ -429,14 +431,14 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			/* If the remaining bytes is less than the flash sectot size,
 			*  size is just the remaining bytes...
 			*/
-			if ((count - buffer_index) < adsp2183x_flash_info->dev.sectorsize)
+			if ((count - buffer_index) < adsp2183x_flash_info->sectorsize)
 			{
 				write_size = count - buffer_index;
 			}
 			/* Otherwise size is the page size (max size that can be written in one command) */
 			else
 			{
-				write_size = adsp2183x_flash_info->dev.sectorsize;
+				write_size = adsp2183x_flash_info->sectorsize;
 			}
 
 			// Need to halt before reads/writes
@@ -834,6 +836,8 @@ static int adsp2183x_probe(struct flash_bank *bank)
 		sectors[sector].is_protected = 0;
 	}
 
+	adsp2183x_flash_info->size_in_bytes = bank->size;
+	adsp2183x_flash_info->sectorsize = adsp2183x_flash_info->dev.sectorsize;
 	bank->sectors = sectors;
 	adsp2183x_flash_info->probed = true;
 
@@ -853,13 +857,59 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 {
 	int retval;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+	struct flash_sector *sectors = NULL;
+	struct target *target = bank->target;
 
 	if (adsp2183x_flash_info->probed) {
-		retval = ERROR_OK;
+		return ERROR_OK;
 	}
-	else {
-		retval = adsp2183x_probe(bank);
+
+	LOG_INFO("Setting up ADSP2183X flash area...");
+
+	if (!target_was_examined(target)) {
+		LOG_ERROR("Target not examined yet");
+		return ERROR_TARGET_NOT_EXAMINED;
 	}
+
+	target_free_all_working_areas(target);
+
+	/* Output available working memory on target */
+	uint32_t available_space = target_get_working_area_avail(target);
+	LOG_INFO("Target has %uB of available space.", available_space);
+	adsp2183x_flash_info->available_space = available_space;
+
+	// Get start address for target side algorithm
+	adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address = target->working_area_phys;
+
+	// poll target to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
+
+	/* Fill the bank info based on the discovered device info */
+	bank->num_sectors = (bank->size / adsp2183x_flash_info->sectorsize);
+
+	/* Create and fill the sectors array */
+	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
+	if (!sectors)
+	{
+		LOG_ERROR("Not enough memory available for sectors array.");
+		return ERROR_FAIL;
+	}
+
+	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {
+		sectors[sector].offset = sector * adsp2183x_flash_info->sectorsize;
+		sectors[sector].size = adsp2183x_flash_info->sectorsize;
+		sectors[sector].is_erased = -1;
+		sectors[sector].is_protected = 0;
+	}
+
+	bank->sectors = sectors;
+	adsp2183x_flash_info->probed = true;
 
 	return retval;
 }
@@ -891,23 +941,22 @@ static int adsp2183x_protect(struct flash_bank *bank, int set,
 */
 static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
-	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
-
-	if (adsp2183x_flash_info->probed == false) {
-		command_print(cmd, "ADSP-2183X spi flash not yet probed.");
-		return ERROR_FLASH_BANK_NOT_PROBED;
+	int retval = adsp2183x_probe(bank);
+	if (retval != ERROR_OK)
+	{
+		return retval;
 	}
 
 	command_print(cmd, "ADSP-2183X spi flash\n"
 			"Size: 0x%X\n",
-			adsp2183x_flash_info->sector_length);
+			bank->size);
 
 	return ERROR_OK;
 }
 
 /**
  * Usage:
- * flash bank <name> adsp2183x <base_addr> 0 0 0 <target> parameter_address buffer_address entry_point_address algorithm_file
+ * flash bank <name> adsp2183x <base_addr> 0 0 0 <target> sector_size algorithm_file param_file
 */
 FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 {
@@ -917,12 +966,17 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 	char tempStr[3];
 	uint8_t convertedHex;
 	FILE* algo_file;
+	FILE* parameter_file;
+	bool insideComment = true;
+	char line[256];
+    char parameter_file_data[3][9];  // Assuming each hex value is of length 8
+    int count = 0;
 
 	/* Check the correct number of arguments have been provided */
-	if (CMD_ARGC != 10) {
+	if (CMD_ARGC != 9) {
 		LOG_ERROR("Invalid number of flash bank arguments. Usage:\n"
 			"flash bank <name> adsp2183x <base_addr> 0 0 0 <target> "
-			"parameter_address buffer_address entry_point_address algorithm_file");
+			"sector_size algorithm_file parameter_file");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
@@ -936,10 +990,10 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 	bank->driver_priv = adsp2183x_flash_info;
 
     // Opening file in reading mode
-    algo_file = fopen(CMD_ARGV[9], "r");
+    algo_file = fopen(CMD_ARGV[7], "r");
 
     if (NULL == algo_file) {
-        LOG_ERROR("File %s can't be opened \n", CMD_ARGV[9]);
+        LOG_ERROR("File %s can't be opened \n", CMD_ARGV[7]);
 		return -1;
     }
 
@@ -967,13 +1021,45 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
     // Closing the file
     fclose(algo_file);
 
-	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
-	adsp2183x_flash_info->adsp2183x_algorithm.parameter_address = (unsigned long)tempParse;
-	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[7], tempParse);
-	adsp2183x_flash_info->adsp2183x_algorithm.buffer_address = (unsigned long)tempParse;
+	// Opening file in reading mode
+    parameter_file = fopen(CMD_ARGV[8], "r");
 
-	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[8], tempParse);
-	adsp2183x_flash_info->adsp2183x_algorithm.reset_handler_addr = (unsigned long)tempParse;
+    if (NULL == parameter_file) {
+        LOG_ERROR("File %s can't be opened \n", CMD_ARGV[8]);
+		return -1;
+    }
+
+    // Loop through each line in the file
+    while (fgets(line, sizeof(line), parameter_file) != NULL) {
+        // Assuming the hex values are written one per line
+        // You may need to adjust the logic based on the actual file structure
+        if (strstr(line, "*/") != NULL) {
+            insideComment = false;
+			continue;
+        }
+
+		if(!insideComment) {
+        	// Copy the last 8 characters (hex value) to the array
+        	if (sscanf(line, "%8s", parameter_file_data[count]) == 1) {
+            	count++;
+
+            	// Break the loop if we have found the correct number of elements
+            	if (count == PARAMETER_FILE_COUNT) {
+                	break;
+            	}
+       		}
+		}
+    }
+
+    // Close the file
+    fclose(parameter_file);
+
+	adsp2183x_flash_info->adsp2183x_algorithm.parameter_address = strtoul(parameter_file_data[0], NULL, 16);
+	adsp2183x_flash_info->adsp2183x_algorithm.buffer_address = strtoul(parameter_file_data[1], NULL, 16);
+	adsp2183x_flash_info->adsp2183x_algorithm.reset_handler_addr = strtoul(parameter_file_data[2], NULL, 16);
+
+	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
+	adsp2183x_flash_info->sectorsize = tempParse;
 
 	return ERROR_OK;
 }
@@ -1116,7 +1202,7 @@ static const struct command_registration adsp2183x_exec_command_handlers[] = {
 
 static const struct command_registration adsp2183x_command_handlers[] = {
 	{
-		.name	= "adsp2183x",
+		.name	= "adsp2183x_spi",
 		.mode	= COMMAND_ANY,
 		.help	= "adsp2183x flash command group",
 		.usage	= "",
