@@ -1,5 +1,5 @@
 /* SPDX-License Identifier: GPL-2.0-or-later
-	Copyright (C) 2022-2023 Analog Devices, Inc. */
+	Copyright (C) 2022-2024 Analog Devices, Inc. */
 
 
 struct custom_algorithm {
