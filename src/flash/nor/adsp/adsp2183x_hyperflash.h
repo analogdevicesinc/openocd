@@ -1,15 +1,14 @@
 /* SPDX-License Identifier: GPL-2.0-or-later
-	Copyright (C) 2022-2023 Analog Devices, Inc. */
+	Copyright (C) 2022-2024 Analog Devices, Inc. */
 
 
 struct custom_algorithm {
-	uint8_t *adsp83x_spi_algo;
+	uint8_t *adsp83x_algo;
 	unsigned long algo_start_address;
 	unsigned long reset_handler_addr;
 	unsigned long parameter_address;  /* Values derived from algorithm for data buffer */
 	unsigned long buffer_address;	  /*  address and algo parameter address (g_cfg)*/
 	unsigned long size;
-	bool reset_handler_found;
 };
 
 #define SECTOR_SIZE 0x40000
@@ -20,6 +19,8 @@ struct custom_algorithm {
 
 #define ALGO_TIMEOUT_KEEP_ALIVE 500
 #define ALGO_TIMEOUT_MAX 10000
+
+#define PARAMETER_FILE_COUNT 3
 
 enum FLASH_COMMANDS
 {
@@ -46,9 +47,6 @@ enum FLASH_COMMANDS
  *  Should strike the balance between extra calculation required vs quicker
  *  transfers.
 */
-#define SPI_WORD_TRANSFER_THRESHOLD		(16u)
-
-#define MAX_TX_RX_TRANSFER 0xFFFF
 
 /* Flash helper algorithm parameter block struct */
 #define ADSP83X_STATUS_OFFSET 0x0C
