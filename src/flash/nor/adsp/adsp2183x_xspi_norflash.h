@@ -11,6 +11,9 @@ struct custom_algorithm {
 	unsigned long size;
 };
 
+#define SECTOR_SIZE 0x40000
+#define SECTOR_COUNT 0x100
+
 #define BYTE_COUNT 8
 #define ALGO_READY 0xFFFFFFFF
 

@@ -14,10 +14,10 @@
 #include <helper/binarybuffer.h>
 #include <target/xtensa/xtensa_chip.h>
 #include <target/xtensa/xtensa.h>
-#include "adsp2183x_hyperflash.h"
+#include "adsp2183x_xspi_norflash.h"
 
 /* Internal data structure to allow additional options for flash device */
-struct adsp2183x_hyperflash_bank {
+struct adsp2183x_xspi_norflash_bank {
 	bool probed;				/*! Has the flash device been probed? */
 	uint32_t available_space;	/*! Used for sanity checking against memory leaks */
 	struct working_area *working_area;
@@ -30,7 +30,7 @@ struct adsp2183x_hyperflash_bank {
 static int adsp83x_quit(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info = bank->driver_priv;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info = bank->driver_priv;
 	int retval;
 
 	/* Regardless of the algo's status, attempt to halt the target */
@@ -41,10 +41,10 @@ static int adsp83x_quit(struct flash_bank *bank)
 
 	/* Now confirm target halted and clean up from flash helper algorithm */
 	retval = target_wait_algorithm(target, 0, NULL, 0, NULL, 0, ALGO_TIMEOUT_MAX,
-				&adsp2183x_hyperflash_info->xtensa_info);
+				&adsp2183x_xspi_norflash_info->xtensa_info);
 
-	target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-	adsp2183x_hyperflash_info->working_area = NULL;
+	target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+	adsp2183x_xspi_norflash_info->working_area = NULL;
 
 	return retval;
 }
@@ -82,38 +82,38 @@ static int adsp83x_wait_algo_done(struct flash_bank *bank, uint32_t params_addr)
 static int adsp83x_init(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info = bank->driver_priv;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info = bank->driver_priv;
 	int retval;
 
 	/* Check for working area to use for flash helper algorithm */
-	adsp2183x_hyperflash_info->working_area = NULL;
+	adsp2183x_xspi_norflash_info->working_area = NULL;
 
-	retval = target_alloc_working_area(target, adsp2183x_hyperflash_info->available_space,
-				&adsp2183x_hyperflash_info->working_area);
+	retval = target_alloc_working_area(target, adsp2183x_xspi_norflash_info->available_space,
+				&adsp2183x_xspi_norflash_info->working_area);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Working address is not correctly allocated");
 		return retval;
 	}
 
 	/* Write flash helper algorithm into target memory */
-	retval = target_write_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.algo_start_address,
-				adsp2183x_hyperflash_info->adsp2183x_algorithm.size, adsp2183x_hyperflash_info->adsp2183x_algorithm.adsp83x_algo);
+	retval = target_write_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.algo_start_address,
+				adsp2183x_xspi_norflash_info->adsp2183x_algorithm.size, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.adsp83x_algo);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Failed to load flash helper algorithm");
-		target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-		adsp2183x_hyperflash_info->working_area = NULL;
+		target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+		adsp2183x_xspi_norflash_info->working_area = NULL;
 		return retval;
 	}
 
 	/* Initialize the Xtensa specific info to run the algorithm */
-	adsp2183x_hyperflash_info->xtensa_info.core_mode = XT_MODE_ANY;
+	adsp2183x_xspi_norflash_info->xtensa_info.core_mode = XT_MODE_ANY;
 
 	/* Begin executing the flash helper algorithm */
 	retval = target_start_algorithm(target, 0, NULL, 0, NULL,
-				adsp2183x_hyperflash_info->adsp2183x_algorithm.reset_handler_addr, 0, &adsp2183x_hyperflash_info->xtensa_info);
+				adsp2183x_xspi_norflash_info->adsp2183x_algorithm.reset_handler_addr, 0, &adsp2183x_xspi_norflash_info->xtensa_info);
 	if (retval != ERROR_OK) {
-		target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-		adsp2183x_hyperflash_info->working_area = NULL;
+		target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+		adsp2183x_xspi_norflash_info->working_area = NULL;
 		LOG_ERROR("Failure starting the algorithm");
 		return retval;
 	}
@@ -122,8 +122,8 @@ static int adsp83x_init(struct flash_bank *bank)
 	retval = target_halt(target);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Target is not halted!");
-		target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-		adsp2183x_hyperflash_info->working_area = NULL;
+		target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+		adsp2183x_xspi_norflash_info->working_area = NULL;
 		return retval;
 	}
 
@@ -131,13 +131,13 @@ static int adsp83x_init(struct flash_bank *bank)
 	retval = target_poll(target);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Unable to poll target");
-		target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-		adsp2183x_hyperflash_info->working_area = NULL;
+		target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+		adsp2183x_xspi_norflash_info->working_area = NULL;
 		return retval;
 	}
 
 	// get status from buffer to determine result of algorithm initialization
-	retval = adsp83x_wait_algo_done(bank, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address);
+	retval = adsp83x_wait_algo_done(bank, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address);
 
 	if (retval != ERROR_OK)
 	{
@@ -171,12 +171,12 @@ static int adsp83x_init(struct flash_bank *bank)
 static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned int last)
 {
 	struct target *target = bank->target;
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info = bank->driver_priv;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info = bank->driver_priv;
 	struct adsp83x_algo_params algo_params;
 
 	int retval;
 
-	if (adsp2183x_hyperflash_info->probed != true)
+	if (adsp2183x_xspi_norflash_info->probed != true)
 	{
 		LOG_ERROR("Cannot erase flash as target has not been probed. Please probe target first.");
 		retval = ERROR_FLASH_BANK_NOT_PROBED;
@@ -191,8 +191,8 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 		retval = target_poll(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to poll target");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return ERROR_FAIL;
 		}
 
@@ -207,14 +207,14 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 		for (unsigned counter = first; counter <= last; counter++)
 		{
 			/* Calculate the address based on the counter and configured sector size */
-			address = counter*adsp2183x_hyperflash_info->sectorsize;
+			address = counter*adsp2183x_xspi_norflash_info->sectorsize;
 
 			// Need to halt before reads/writes
 			retval = target_halt(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Target is not halted!");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -222,8 +222,8 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 			retval = target_poll(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to poll target");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -240,13 +240,13 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 			buf_set_u32(algo_params.address, 0, 32, address);
 			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
 
-			retval = target_write_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address,
+			retval = target_write_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address,
 					sizeof(algo_params), (uint8_t *)&algo_params);
 
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to write algorithm parameters");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -258,14 +258,14 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 				retval = target_poll(target);
 				if (retval != ERROR_OK) {
 					LOG_ERROR("Unable to poll target");
-					target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-					adsp2183x_hyperflash_info->working_area = NULL;
+					target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+					adsp2183x_xspi_norflash_info->working_area = NULL;
 					return retval;
 				}
 			}
 
 			// get status from buffer to determine result of programming
-			retval = adsp83x_wait_algo_done(bank, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address);
+			retval = adsp83x_wait_algo_done(bank, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address);
 
 			if (retval != ERROR_OK)
 			{
@@ -299,7 +299,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 	uint32_t offset, uint32_t count)
 {
 	struct target *target = bank->target;
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info = bank->driver_priv;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info = bank->driver_priv;
 	struct adsp83x_algo_params algo_params;
 	int retval;
 	unsigned write_size = 0;
@@ -316,8 +316,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		retval = target_poll(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to poll target");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return ERROR_FAIL;
 		}
 
@@ -330,10 +330,10 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		}
 
 		/* First write any bytes if the specified offset if not on the sector size boundary */
-		if (0 != (current_address % adsp2183x_hyperflash_info->sectorsize))
+		if (0 != (current_address % adsp2183x_xspi_norflash_info->sectorsize))
 		{
 						/* Calculate the write size to use, the modulo remainder of the page size  (unless the specified count is smaller) */
-			write_size = adsp2183x_hyperflash_info->sectorsize - (current_address % adsp2183x_hyperflash_info->sectorsize);
+			write_size = adsp2183x_xspi_norflash_info->sectorsize - (current_address % adsp2183x_xspi_norflash_info->sectorsize);
 			if (write_size > count)
 			{
 				write_size = count;
@@ -343,8 +343,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			retval = target_halt(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Target is not halted!");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -352,8 +352,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			retval = target_poll(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to poll target");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -367,7 +367,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			buf_set_u32(algo_params.command, 0, 32, PROGRAM_COMMAND);
 
 			/* Put next block of data to flash into buffer */
-			retval = target_write_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.buffer_address,
+			retval = target_write_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.buffer_address,
 			write_size, &buffer[buffer_index]);
 
 
@@ -377,13 +377,13 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
 
 			/* Put next block of data to flash into buffer */
-			retval = target_write_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address,
+			retval = target_write_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address,
 					sizeof(algo_params), (uint8_t *)&algo_params);
 
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to write data to target memory");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -395,14 +395,14 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 				retval = target_poll(target);
 				if (retval != ERROR_OK) {
 					LOG_ERROR("Unable to poll target");
-					target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-					adsp2183x_hyperflash_info->working_area = NULL;
+					target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+					adsp2183x_xspi_norflash_info->working_area = NULL;
 					return retval;
 				}
 			}
 
 			// get status from buffer to determine result of programming
-			retval = adsp83x_wait_algo_done(bank, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address);
+			retval = adsp83x_wait_algo_done(bank, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address);
 
 			if (retval != ERROR_OK)
 			{
@@ -428,22 +428,22 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			/* If the remaining bytes is less than the flash sectot size,
 			*  size is just the remaining bytes...
 			*/
-			if ((count - buffer_index) < adsp2183x_hyperflash_info->sectorsize)
+			if ((count - buffer_index) < adsp2183x_xspi_norflash_info->sectorsize)
 			{
 				write_size = count - buffer_index;
 			}
 			/* Otherwise size is the page size (max size that can be written in one command) */
 			else
 			{
-				write_size = adsp2183x_hyperflash_info->sectorsize;
+				write_size = adsp2183x_xspi_norflash_info->sectorsize;
 			}
 
 			// Need to halt before reads/writes
 			retval = target_halt(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Target is not halted!");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -451,8 +451,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			retval = target_poll(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to poll target");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -466,7 +466,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			buf_set_u32(algo_params.command, 0, 32, PROGRAM_COMMAND);
 
 			/* Put next block of data to flash into buffer */
-			retval = target_write_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.buffer_address,
+			retval = target_write_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.buffer_address,
 			write_size, &buffer[buffer_index]);
 
 
@@ -477,13 +477,13 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
 
 			/* Put next block of data to flash into buffer */
-			retval = target_write_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address,
+			retval = target_write_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address,
 					sizeof(algo_params), (uint8_t *)&algo_params);
 
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to write data to target memory");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 
@@ -495,14 +495,14 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 				retval = target_poll(target);
 				if (retval != ERROR_OK) {
 					LOG_ERROR("Unable to poll target");
-					target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-					adsp2183x_hyperflash_info->working_area = NULL;
+					target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+					adsp2183x_xspi_norflash_info->working_area = NULL;
 					return retval;
 				}
 			}
 
 			// get status from buffer to determine result of programming
-			retval = adsp83x_wait_algo_done(bank, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address);
+			retval = adsp83x_wait_algo_done(bank, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address);
 
 			if (retval != ERROR_OK)
 			{
@@ -542,7 +542,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 {
 
 	struct target *target = bank->target;
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info = bank->driver_priv;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info = bank->driver_priv;
 	struct adsp83x_algo_params algo_params;
 	int retval;
 
@@ -550,8 +550,8 @@ static int adsp2183x_read(struct flash_bank *bank,
 	retval = target_poll(target);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Unable to poll target");
-		target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-		adsp2183x_hyperflash_info->working_area = NULL;
+		target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+		adsp2183x_xspi_norflash_info->working_area = NULL;
 		return ERROR_FAIL;
 	}
 
@@ -568,7 +568,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 	while (count)
 	{
 		/* Maximum read size*/
-		uint32_t read_size = adsp2183x_hyperflash_info->sectorsize;
+		uint32_t read_size = adsp2183x_xspi_norflash_info->sectorsize;
 
 		/* Then if the actual count is smaller than the theoretical max, use the count */
 		if (count <= read_size)
@@ -580,8 +580,8 @@ static int adsp2183x_read(struct flash_bank *bank,
 		retval = target_halt(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Target is not halted!");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return retval;
 		}
 
@@ -589,8 +589,8 @@ static int adsp2183x_read(struct flash_bank *bank,
 		retval = target_poll(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to poll target");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return retval;
 		}
 
@@ -614,13 +614,13 @@ static int adsp2183x_read(struct flash_bank *bank,
 		buf_set_u32(algo_params.length, 0, 32, read_size);
 		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
 
-		retval = target_write_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address,
+		retval = target_write_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address,
 				sizeof(algo_params), (uint8_t *)&algo_params);
 
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to read data from target memory");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return retval;
 		}
 
@@ -632,14 +632,14 @@ static int adsp2183x_read(struct flash_bank *bank,
 			retval = target_poll(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to poll target");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 		}
 
 		/* Put next block of data from flash into buffer */
-		retval = target_read_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.buffer_address,
+		retval = target_read_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.buffer_address,
 		read_size, &buffer[read_bytes]);
 
 		if (retval != ERROR_OK)
@@ -650,7 +650,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 		}
 
 		// get status from buffer to determine result of programming
-		retval = adsp83x_wait_algo_done(bank, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address);
+		retval = adsp83x_wait_algo_done(bank, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address);
 
 		if (retval != ERROR_OK)
 		{
@@ -682,7 +682,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 static int adsp2183x_probe(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info = bank->driver_priv;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info = bank->driver_priv;
 	struct flash_sector *sectors = NULL;
 	int retval;
 
@@ -698,17 +698,17 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	/* Output available working memory on target */
 	uint32_t available_space = target_get_working_area_avail(target);
 	LOG_INFO("Target has %uB of available space.", available_space);
-	adsp2183x_hyperflash_info->available_space = available_space;
+	adsp2183x_xspi_norflash_info->available_space = available_space;
 
 	// Get start address for target side algorithm
-	adsp2183x_hyperflash_info->adsp2183x_algorithm.algo_start_address = target->working_area_phys;
+	adsp2183x_xspi_norflash_info->adsp2183x_algorithm.algo_start_address = target->working_area_phys;
 
 	// poll target to update state
 	retval = target_poll(target);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Unable to poll target");
-		target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-		adsp2183x_hyperflash_info->working_area = NULL;
+		target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+		adsp2183x_xspi_norflash_info->working_area = NULL;
 		return ERROR_FAIL;
 	}
 
@@ -719,8 +719,8 @@ static int adsp2183x_probe(struct flash_bank *bank)
 		retval = target_halt(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Target is not halted!");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return retval;
 		}
 
@@ -728,8 +728,8 @@ static int adsp2183x_probe(struct flash_bank *bank)
 		retval = target_poll(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to poll target");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return ERROR_FAIL;
 	}
 		target->running_alg = false;
@@ -739,7 +739,7 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	}
 
 	/* Fill the bank info based on the discovered device info */
-	bank->num_sectors = (bank->size / adsp2183x_hyperflash_info->sectorsize);
+	bank->num_sectors = (bank->size / adsp2183x_xspi_norflash_info->sectorsize);
 
 	/* Create and fill the sectors array */
 	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
@@ -750,14 +750,14 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	}
 
 	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {
-		sectors[sector].offset = sector * adsp2183x_hyperflash_info->sectorsize;
-		sectors[sector].size = adsp2183x_hyperflash_info->sectorsize;
+		sectors[sector].offset = sector * adsp2183x_xspi_norflash_info->sectorsize;
+		sectors[sector].size = adsp2183x_xspi_norflash_info->sectorsize;
 		sectors[sector].is_erased = -1;
 		sectors[sector].is_protected = 0;
 	}
 
 	bank->sectors = sectors;
-	adsp2183x_hyperflash_info->probed = true;
+	adsp2183x_xspi_norflash_info->probed = true;
 
 	return ERROR_OK;
 }
@@ -774,11 +774,11 @@ static int adsp2183x_probe(struct flash_bank *bank)
 static int adsp2183x_auto_probe(struct flash_bank *bank)
 {
 	int retval;
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info = bank->driver_priv;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info = bank->driver_priv;
 	struct flash_sector *sectors = NULL;
 	struct target *target = bank->target;
 
-	if (adsp2183x_hyperflash_info->probed) {
+	if (adsp2183x_xspi_norflash_info->probed) {
 		return ERROR_OK;
 	}
 
@@ -794,22 +794,22 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 	/* Output available working memory on target */
 	uint32_t available_space = target_get_working_area_avail(target);
 	LOG_INFO("Target has %uB of available space.", available_space);
-	adsp2183x_hyperflash_info->available_space = available_space;
+	adsp2183x_xspi_norflash_info->available_space = available_space;
 
 	// Get start address for target side algorithm
-	adsp2183x_hyperflash_info->adsp2183x_algorithm.algo_start_address = target->working_area_phys;
+	adsp2183x_xspi_norflash_info->adsp2183x_algorithm.algo_start_address = target->working_area_phys;
 
 	// poll target to update state
 	retval = target_poll(target);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Unable to poll target");
-		target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-		adsp2183x_hyperflash_info->working_area = NULL;
+		target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+		adsp2183x_xspi_norflash_info->working_area = NULL;
 		return ERROR_FAIL;
 	}
 
 	/* Fill the bank info based on the discovered device info */
-	bank->num_sectors = (bank->size / adsp2183x_hyperflash_info->sectorsize);
+	bank->num_sectors = (bank->size / adsp2183x_xspi_norflash_info->sectorsize);
 
 	/* Create and fill the sectors array */
 	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
@@ -820,14 +820,14 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 	}
 
 	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {
-		sectors[sector].offset = sector * adsp2183x_hyperflash_info->sectorsize;
-		sectors[sector].size = adsp2183x_hyperflash_info->sectorsize;
+		sectors[sector].offset = sector * adsp2183x_xspi_norflash_info->sectorsize;
+		sectors[sector].size = adsp2183x_xspi_norflash_info->sectorsize;
 		sectors[sector].is_erased = -1;
 		sectors[sector].is_protected = 0;
 	}
 
 	bank->sectors = sectors;
-	adsp2183x_hyperflash_info->probed = true;
+	adsp2183x_xspi_norflash_info->probed = true;
 
 	return retval;
 }
@@ -854,6 +854,7 @@ static int adsp2183x_protect(struct flash_bank *bank, int set,
  *
  * @param	bank		Pointer to the flash bank to print get info about
  * @param   cmd         Pointer to the command invocation
+ * @param	buf_size	The maximum size of the provided buffer. Should not overflow buffer.
  *
  * @returns	ERROR_OK if successful otherwise the relevant code.
 */
@@ -871,16 +872,16 @@ static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation
 			"Size: 0x%X\n",
 			bank->size);
 
-	return ERROR_OK;
+	return retval;
 }
 
 /**
  * Usage:
  * flash bank <name> adsp2183x <base_addr> 0 0 0 <target> sector_size algorithm_file param_file
 */
-FLASH_BANK_COMMAND_HANDLER(adsp2183x_hyperflash_bank_command)
+FLASH_BANK_COMMAND_HANDLER(adsp2183x_xspi_norflash_bank_command)
 {
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info;
 	int byteCount = 0;
 	uint32_t tempParse;
 	char tempStr[3];
@@ -896,21 +897,21 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_hyperflash_bank_command)
 	if (CMD_ARGC != 9) {
 		LOG_ERROR("Invalid number of flash bank arguments. Usage:\n"
 			"flash bank <name> adsp2183x <base_addr> 0 0 0 <target> "
-			"parameter_address buffer_address entry_point_address algorithm_file");
+			"sector_size algorithm_file parameter_file");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	adsp2183x_hyperflash_info = malloc(sizeof(struct adsp2183x_hyperflash_bank));
-	if (!adsp2183x_hyperflash_info) {
+	adsp2183x_xspi_norflash_info = malloc(sizeof(struct adsp2183x_xspi_norflash_bank));
+	if (!adsp2183x_xspi_norflash_info) {
 		LOG_ERROR("Not enough memory for local driver information.");
 		return ERROR_FAIL;
 	}
 
-	adsp2183x_hyperflash_info->probed = false;
-	bank->driver_priv = adsp2183x_hyperflash_info;
+	adsp2183x_xspi_norflash_info->probed = false;
+	bank->driver_priv = adsp2183x_xspi_norflash_info;
 
     // Opening file in reading mode
-    algo_file = fopen(CMD_ARGV[9], "r");
+    algo_file = fopen(CMD_ARGV[7], "r");
 
     if (NULL == algo_file) {
         LOG_ERROR("File %s can't be opened \n", CMD_ARGV[7]);
@@ -919,9 +920,9 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_hyperflash_bank_command)
 
      /* Size of file */
     fseek(algo_file, 0, SEEK_END);
-   	adsp2183x_hyperflash_info->adsp2183x_algorithm.size = ftell(algo_file);
+   	adsp2183x_xspi_norflash_info->adsp2183x_algorithm.size = ftell(algo_file);
     fseek(algo_file, 0, SEEK_SET);
-	adsp2183x_hyperflash_info->adsp2183x_algorithm.adsp83x_algo = malloc(sizeof(uint8_t) * adsp2183x_hyperflash_info->adsp2183x_algorithm.size);
+	adsp2183x_xspi_norflash_info->adsp2183x_algorithm.adsp83x_algo = malloc(sizeof(uint8_t) * adsp2183x_xspi_norflash_info->adsp2183x_algorithm.size);
 	// Get 2 characters at a time to form byte. Convert byte and
 	// store into algorithm buffer
     do {
@@ -930,7 +931,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_hyperflash_bank_command)
 		if(tempStr[0] != '\n' && tempStr[0] != '\r') {
 			tempStr[1] = fgetc(algo_file);
 			convertedHex = strtoul((const char *)tempStr, NULL, 16);
-			adsp2183x_hyperflash_info->adsp2183x_algorithm.adsp83x_algo[byteCount] = convertedHex;
+			adsp2183x_xspi_norflash_info->adsp2183x_algorithm.adsp83x_algo[byteCount] = convertedHex;
 			byteCount++;
 		}
         // Checking if character is not EOF.
@@ -940,13 +941,45 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_hyperflash_bank_command)
     // Closing the file
     fclose(algo_file);
 
-	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
-	adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address = (unsigned long)tempParse;
-	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[7], tempParse);
-	adsp2183x_hyperflash_info->adsp2183x_algorithm.buffer_address = (unsigned long)tempParse;
 
-	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[8], tempParse);
-	adsp2183x_hyperflash_info->adsp2183x_algorithm.reset_handler_addr = (unsigned long)tempParse;
+	// Opening file in reading mode
+    parameter_file = fopen(CMD_ARGV[8], "r");
+
+    if (NULL == parameter_file) {
+        LOG_ERROR("File %s can't be opened \n", CMD_ARGV[8]);
+		return -1;
+    }
+
+    // Loop through each line in the file
+    while (fgets(line, sizeof(line), parameter_file) != NULL) {
+        // Search for end of comment within parameter file
+        if (strstr(line, "*/") != NULL) {
+            insideComment = false;
+			continue;
+        }
+
+		if(!insideComment) {
+        	// Copy the last 8 characters (hex value) to the array
+        	if (sscanf(line, "%8s", parameter_file_data[count]) == 1) {
+            	count++;
+
+            	// Break the loop if we have found the correct number of elements
+            	if (count == PARAMETER_FILE_COUNT) {
+                	break;
+            	}
+       		}
+		}
+    }
+
+    // Close the file
+    fclose(parameter_file);
+
+	adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address = strtoul(parameter_file_data[0], NULL, 16);
+	adsp2183x_xspi_norflash_info->adsp2183x_algorithm.buffer_address = strtoul(parameter_file_data[1], NULL, 16);
+	adsp2183x_xspi_norflash_info->adsp2183x_algorithm.reset_handler_addr = strtoul(parameter_file_data[2], NULL, 16);
+
+	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
+	adsp2183x_xspi_norflash_info->sectorsize = tempParse;
 
 	return ERROR_OK;
 }
@@ -960,7 +993,7 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 {
 	struct flash_bank *bank;
 	struct target *target;
-	struct adsp2183x_hyperflash_bank *adsp2183x_hyperflash_info;
+	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info;
 	struct adsp83x_algo_params algo_params;
 	int retval;
 
@@ -976,9 +1009,9 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 	}
 
 	target = bank->target;
-	adsp2183x_hyperflash_info = bank->driver_priv;
+	adsp2183x_xspi_norflash_info = bank->driver_priv;
 
-	if (adsp2183x_hyperflash_info->probed != true)
+	if (adsp2183x_xspi_norflash_info->probed != true)
 	{
 		LOG_ERROR("Cannot erase flash as target has not been probed. Please probe target first.");
 		retval = ERROR_FLASH_BANK_NOT_PROBED;
@@ -989,8 +1022,8 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 		retval = target_poll(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to poll target");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return ERROR_FAIL;
 		}
 
@@ -1006,8 +1039,8 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 		retval = target_halt(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Target is not halted!");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return retval;
 		}
 
@@ -1015,8 +1048,8 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 		retval = target_poll(target);
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to poll target");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return retval;
 		}
 
@@ -1032,13 +1065,13 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 		// write algo parameters
 		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
 
-		retval = target_write_buffer(target, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address,
+		retval = target_write_buffer(target, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address,
 					sizeof(algo_params), (uint8_t *)&algo_params);
 
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to write algorithm parameters");
-			target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-			adsp2183x_hyperflash_info->working_area = NULL;
+			target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+			adsp2183x_xspi_norflash_info->working_area = NULL;
 			return retval;
 		}
 
@@ -1050,14 +1083,14 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 			retval = target_poll(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to poll target");
-				target_free_working_area(target, adsp2183x_hyperflash_info->working_area);
-				adsp2183x_hyperflash_info->working_area = NULL;
+				target_free_working_area(target, adsp2183x_xspi_norflash_info->working_area);
+				adsp2183x_xspi_norflash_info->working_area = NULL;
 				return retval;
 			}
 		}
 
 		// get status from buffer to determine result of programming
-		retval = adsp83x_wait_algo_done(bank, adsp2183x_hyperflash_info->adsp2183x_algorithm.parameter_address);
+		retval = adsp83x_wait_algo_done(bank, adsp2183x_xspi_norflash_info->adsp2183x_algorithm.parameter_address);
 
 		if (retval != ERROR_OK)
 		{
@@ -1090,7 +1123,7 @@ static const struct command_registration adsp2183x_exec_command_handlers[] = {
 
 static const struct command_registration adsp2183x_command_handlers[] = {
 	{
-		.name	= "adsp2183x_hyperflash",
+		.name	= "adsp2183x_xspi_norflash",
 		.mode	= COMMAND_ANY,
 		.help	= "adsp2183x flash command group",
 		.usage	= "",
@@ -1099,10 +1132,10 @@ static const struct command_registration adsp2183x_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-const struct flash_driver adsp2183x_hyperflash = {
-	.name				= "adsp2183x_hyperflash",
+const struct flash_driver adsp2183x_xspi_norflash = {
+	.name				= "adsp2183x_xspi_norflash",
 	.commands			= adsp2183x_command_handlers,
-	.flash_bank_command	= adsp2183x_hyperflash_bank_command,
+	.flash_bank_command	= adsp2183x_xspi_norflash_bank_command,
 	.erase				= adsp2183x_erase,
 	.protect			= adsp2183x_protect,
 	.write				= adsp2183x_write,
