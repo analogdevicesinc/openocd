@@ -286,12 +286,12 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 
 /**
  * Write the 'count' number of bytes from the buffer at the offset specified
- * for xspi hyperflash using the flash bank provided.
+ * for xspi nor flash using the flash bank provided.
  *
  * @param	bank	Pointer to the flash bank to use
- * @param	buffer	Data to write to the xspi hyperflash
+ * @param	buffer	Data to write to the xspi nor flash
  * @param	offset	Offset from base to write to
- * @param	count	Number of bytes to write to xspi hyperflash
+ * @param	count	Number of bytes to write to xspi nor flash
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
 */
@@ -526,14 +526,14 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 
 /**
  * Read the 'count' number of bytes from the buffer at the offset specified
- * in the xspi hyperflash area using the flash bank provided. If called when device has
+ * in the xspi nor flash area using the flash bank provided. If called when device has
  * already been probed, previously filled fields will be discard and probe
  * procedure will be done again.
  *
  * @param	bank	Pointer to the flash bank to use
- * @param	buffer	Buffer to read data from the xspi hyperflash area into
+ * @param	buffer	Buffer to read data from the xspi nor flash area into
  * @param	offset	Offset from base to read from
- * @param	count	Number of bytes to read from xspi hyperflash area
+ * @param	count	Number of bytes to read from xspi nor flash area
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
 */
@@ -545,6 +545,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 	struct adsp2183x_xspi_norflash_bank *adsp2183x_xspi_norflash_info = bank->driver_priv;
 	struct adsp83x_algo_params algo_params;
 	int retval;
+	int counter = 0;
 
 	// poll target to update state
 	retval = target_poll(target);
@@ -627,6 +628,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 		// Resume running algorithm with parameters
 		xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
 
+
 		// poll target to update state and wait for algorithm to hit breakpoint to halt target
 		while(target->state != TARGET_HALTED) {
 			retval = target_poll(target);
@@ -665,6 +667,12 @@ static int adsp2183x_read(struct flash_bank *bank,
 			count -= read_size;
 			// Resume running algorithm with parameters
 			xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
+			counter++;
+			//if(counter > 0) {
+			//	LOG_ERROR("Count1 %u.", count);
+			//	LOG_ERROR("Count1 %u.", read_bytes);
+			//	return 1;
+			//}
 		}
 	}
 
@@ -672,7 +680,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 }
 
 /**
- * Probe the xspi hyperflash area to set up the target side algorithm and update the bank
+ * Probe the xspi nor flash area to set up the target side algorithm and update the bank
  * appropriately.
  *
  * @param	bank	Pointer to the flash bank to use and write to
@@ -782,7 +790,7 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 		return ERROR_OK;
 	}
 
-	LOG_INFO("Setting up ADSP2183X xSPI Hyper Flash area...");
+	LOG_INFO("Setting up ADSP2183X xSPI NOR flash area...");
 
 	if (!target_was_examined(target)) {
 		LOG_ERROR("Target not examined yet");
@@ -833,7 +841,7 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 }
 
 /**
-* Not yet supported for xspi hyperflash.
+* Not yet supported for xspi nor flash.
 */
 static int adsp2183x_protect_check(struct flash_bank *bank)
 {
@@ -841,7 +849,7 @@ static int adsp2183x_protect_check(struct flash_bank *bank)
 }
 
 /**
-* Not yet supported for xspi hyperflash.
+* Not yet supported for xspi nor flash.
 */
 static int adsp2183x_protect(struct flash_bank *bank, int set,
 	unsigned int first, unsigned int last)
@@ -868,7 +876,7 @@ static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation
 		return retval;
 	}
 
-	command_print(cmd, "ADSP-2183X hyper flash\n"
+	command_print(cmd, "ADSP-2183X xspi nor flash\n"
 			"Size: 0x%X\n",
 			bank->size);
 
@@ -985,7 +993,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_xspi_norflash_bank_command)
 }
 
 /**
- * Erase whole memory on xSPI hyperflash device.
+ * Erase whole memory on xSPI nor flash device.
  * Usage:
  * adsp2183x mase_erase bank_id
 */
