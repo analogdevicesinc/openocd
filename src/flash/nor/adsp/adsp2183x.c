@@ -144,7 +144,6 @@ static int adsp2183x_init(struct flash_bank *bank)
 	{
 		/* Close down algo */
 		(void)adsp83x_quit(bank);
-		return retval;
 	}
 	else
 	{
@@ -695,17 +694,11 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 
 	switch (bank->bank_number)
 	{
-		case OTP_FLASH_BANK:
-			LOG_INFO("Setting up ADSP2183X OTP area...");
-			break;
 		case SPI_FLASH_BANK:
 			LOG_INFO("Setting up ADSP2183X SPI flash area...");
 			break;
 		case XSPI_HYPERFLASH_BANK:
 			LOG_INFO("Setting up ADSP2183X xSPI hyperflash area...");
-			break;
-		case XSPI_NORFLASH_BANK:
-			LOG_INFO("Setting up ADSP2183X xSPI NOR flash area...");
 			break;
 		default:
 			LOG_INFO("Unknown flash bank");
@@ -982,6 +975,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 {
 	struct adsp2183x_flash_bank *adsp2183x_flash_info;
 	int byteCount = 0;
+	int count = 0;
 	uint32_t tempParse;
 	char tempStr[3];
 	uint8_t convertedHex;
@@ -990,7 +984,6 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 	bool insideComment = true;
 	char line[256];
     char parameter_file_data[3][9];  // Assuming each hex value is of length 8
-    int count = 0;
 
 	/* Check the correct number of arguments have been provided */
 	if (CMD_ARGC != 9) {
@@ -1005,9 +998,6 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 		LOG_ERROR("Not enough memory for local driver information.");
 		return ERROR_FAIL;
 	}
-
-	adsp2183x_flash_info->probed = false;
-	bank->driver_priv = adsp2183x_flash_info;
 
     // Opening file in reading mode
     algo_file = fopen(CMD_ARGV[7], "r");
@@ -1079,6 +1069,9 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 
 	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
 	adsp2183x_flash_info->sectorsize = tempParse;
+
+	adsp2183x_flash_info->probed = false;
+	bank->driver_priv = adsp2183x_flash_info;
 
 	return ERROR_OK;
 }
@@ -1234,34 +1227,11 @@ static const struct command_registration adsp2183x_command_handlers[] = {
 		.usage	= "",
 		.chain	= adsp2183x_exec_command_handlers,
 	},
-	{
-		.name	= "adsp2183x_xspi_norflash",
-		.mode	= COMMAND_ANY,
-		.help	= "adsp2183x flash command group",
-		.usage	= "",
-		.chain	= adsp2183x_exec_command_handlers,
-	},
 	COMMAND_REGISTRATION_DONE
 };
 
 const struct flash_driver adsp2183x_flash = {
 	.name				= "adsp2183x",
-	.commands			= adsp2183x_command_handlers,
-	.flash_bank_command	= adsp2183x_flash_bank_command,
-	.erase				= adsp2183x_erase,
-	.protect			= adsp2183x_protect,
-	.write				= adsp2183x_write,
-	.read				= adsp2183x_read,
-	.probe				= adsp2183x_probe,
-	.auto_probe			= adsp2183x_auto_probe,
-	.erase_check		= default_flash_blank_check,
-	.protect_check		= adsp2183x_protect_check,
-	.info				= adsp2183x_get_info,
-	.free_driver_priv	= default_flash_free_driver_priv,
-};
-
-const struct flash_driver adsp2183x_xspi_norflash = {
-	.name				= "adsp2183x_xspi_norflash",
 	.commands			= adsp2183x_command_handlers,
 	.flash_bank_command	= adsp2183x_flash_bank_command,
 	.erase				= adsp2183x_erase,

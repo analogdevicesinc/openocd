@@ -13,10 +13,9 @@ struct custom_algorithm {
 
 enum MEM_REGIONS
 {
-	OTP_FLASH_BANK = 0,
 	SPI_FLASH_BANK = 1,
 	XSPI_HYPERFLASH_BANK = 2,
-	XSPI_NORFLASH_BANK = 3,
+	FLASH_BANK_COUNT = 3
 };
 
 #define PARAMETER_FILE_COUNT 3
