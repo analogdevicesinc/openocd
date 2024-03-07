@@ -782,7 +782,7 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 		return ERROR_OK;
 	}
 
-	LOG_INFO("Setting up ADSP2183X xSPI Hyper Flash area...");
+	LOG_INFO("Setting up ADSP2183X xSPI Hyperflash area...");
 
 	if (!target_was_examined(target)) {
 		LOG_ERROR("Target not examined yet");
@@ -1097,6 +1097,22 @@ static const struct command_registration adsp2183x_command_handlers[] = {
 		.chain	= adsp2183x_exec_command_handlers,
 	},
 	COMMAND_REGISTRATION_DONE
+};
+
+const struct flash_driver adsp2183x_xspi_norflash = {
+	.name				= "adsp2183x_xspi_norflash",
+	.commands			= adsp2183x_command_handlers,
+	.flash_bank_command	= adsp2183x_hyperflash_bank_command,
+	.erase				= adsp2183x_erase,
+	.protect			= adsp2183x_protect,
+	.write				= adsp2183x_write,
+	.read				= adsp2183x_read,
+	.probe				= adsp2183x_probe,
+	.auto_probe			= adsp2183x_auto_probe,
+	.erase_check		= default_flash_blank_check,
+	.protect_check		= adsp2183x_protect_check,
+	.info				= adsp2183x_get_info,
+	.free_driver_priv	= default_flash_free_driver_priv,
 };
 
 const struct flash_driver adsp2183x_hyperflash = {
