@@ -26,7 +26,6 @@ struct adsp2183x_flash_bank {
 	struct custom_algorithm adsp2183x_algorithm;
 	uint32_t sectorsize;
 	uint32_t size_in_bytes;
-
 };
 
 static int adsp83x_quit(struct flash_bank *bank)
@@ -81,7 +80,7 @@ static int adsp83x_wait_algo_done(struct flash_bank *bank, uint32_t params_addr)
 }
 
 
-static int adsp83x_init(struct flash_bank *bank)
+static int adsp2183x_init(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
@@ -99,7 +98,7 @@ static int adsp83x_init(struct flash_bank *bank)
 
 	/* Write flash helper algorithm into target memory */
 	retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address,
-				adsp2183x_flash_info->adsp2183x_algorithm.size, adsp2183x_flash_info->adsp2183x_algorithm.adsp83x_spi_algo);
+				adsp2183x_flash_info->adsp2183x_algorithm.size, adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Failed to load flash helper algorithm");
 		target_free_working_area(target, adsp2183x_flash_info->working_area);
@@ -150,13 +149,14 @@ static int adsp83x_init(struct flash_bank *bank)
 	else
 	{
 		// Resume running algorithm with parameters
-		xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+		xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
 
 	/*
 	 * At this point, the algorithm is running on the target and
 	 * ready to receive commands and data to flash the target
 	 */
 	}
+
 
 	return retval;
 }
@@ -174,7 +174,7 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 {
 	struct target *target = bank->target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
-	struct adsp83x_algo_params algo_params;
+	struct adsp2183x_algo_params algo_params;
 
 	int retval;
 
@@ -201,7 +201,7 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 		// Check if algorithm is running, if not run it
 		if(target->state != TARGET_DEBUG_RUNNING)
 		{
-			retval = adsp83x_init(bank);
+			retval = adsp2183x_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
 		}
@@ -281,7 +281,6 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 				xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
 			}
 		}
-
 	}
 
 	return retval;
@@ -289,7 +288,7 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 
 /**
  * Write the 'count' number of bytes from the buffer at the offset specified
- * for spi flash using the flash bank provided.
+ * for memory region using the flash bank provided.
  *
  * @param	bank	Pointer to the flash bank to use
  * @param	buffer	Data to write to the spi flash
@@ -303,7 +302,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 {
 	struct target *target = bank->target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
-	struct adsp83x_algo_params algo_params;
+	struct adsp2183x_algo_params algo_params;
 	int retval;
 	unsigned write_size = 0;
 	unsigned buffer_index = 0;
@@ -327,7 +326,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		// Check if algorithm is running, if not run it
 		if(target->state != TARGET_DEBUG_RUNNING)
 		{
-			retval = adsp83x_init(bank);
+			retval = adsp2183x_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
 		}
@@ -522,7 +521,6 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 				xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
 			}
 		}
-
 	}
 
 	return retval;
@@ -530,14 +528,14 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 
 /**
  * Read the 'count' number of bytes from the buffer at the offset specified
- * in the spi flash area using the flash bank provided. If called when device has
+ * in the corresponding memory region using the flash bank provided. If called when device has
  * already been probed, previously filled fields will be discard and probe
  * procedure will be done again.
  *
  * @param	bank	Pointer to the flash bank to use
- * @param	buffer	Buffer to read data from the spi flash area into
+ * @param	buffer	Buffer to read data from the memory region into
  * @param	offset	Offset from base to read from
- * @param	count	Number of bytes to read from spi flash area
+ * @param	count	Number of bytes to read from memory region
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
 */
@@ -547,7 +545,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 
 	struct target *target = bank->target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
-	struct adsp83x_algo_params algo_params;
+	struct adsp2183x_algo_params algo_params;
 	int retval;
 
 	// poll target to update state
@@ -562,17 +560,17 @@ static int adsp2183x_read(struct flash_bank *bank,
 	// Check if algorithm is running, if not run it
 	if(target->state != TARGET_DEBUG_RUNNING)
 	{
-		retval = adsp83x_init(bank);
+		retval = adsp2183x_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
 	}
 
-	/* Max read has to be smaller than both max SPI transfer size and available space on target */
+	/* Make sure read is not larger than buffer size to be passed */
 	uint32_t read_bytes = 0;
 	while (count)
 	{
 		/* Maximum read size*/
-		uint32_t read_size = MAX_TX_RX_TRANSFER;
+		uint32_t read_size = adsp2183x_flash_info->sectorsize;
 
 		/* Then if the actual count is smaller than the theoretical max, use the count */
 		if (count < read_size)
@@ -608,7 +606,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 		assert(count >= read_size);
 
 
-		uint32_t address = bank->base + offset + read_bytes;
+		uint32_t address = offset + read_bytes;
 
 		// hardcode to issue read command to algorithm
 		buf_set_u32(algo_params.command, 0, 32, READ_COMMAND);
@@ -676,7 +674,94 @@ static int adsp2183x_read(struct flash_bank *bank,
 }
 
 /**
- * Probe the spi flash area to set up the target side algorithm and update the bank
+ * Called by some other commands before proceeding with their main function to
+ * ensure device is properly probed and known. Mostly a wrapper from the probe
+ * function with a stored probe state.
+ *
+ * @param	bank	Pointer to the flash bank to use and write to
+ *
+ * @returns	ERROR_OK if successful otherwise the relevant code.
+*/
+static int adsp2183x_auto_probe(struct flash_bank *bank)
+{
+	int retval;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+	struct flash_sector *sectors = NULL;
+	struct target *target = bank->target;
+
+	if (adsp2183x_flash_info->probed) {
+		return ERROR_OK;
+	}
+
+	switch (bank->bank_number)
+	{
+		case OTP_FLASH_BANK:
+			LOG_INFO("Setting up ADSP2183X OTP area...");
+			break;
+		case SPI_FLASH_BANK:
+			LOG_INFO("Setting up ADSP2183X SPI flash area...");
+			break;
+		case XSPI_HYPERFLASH_BANK:
+			LOG_INFO("Setting up ADSP2183X xSPI hyperflash area...");
+			break;
+		case XSPI_NORFLASH_BANK:
+			LOG_INFO("Setting up ADSP2183X xSPI NOR flash area...");
+			break;
+		default:
+			LOG_INFO("Unknown flash bank");
+			return ERROR_FAIL;
+	}
+
+	if (!target_was_examined(target)) {
+		LOG_ERROR("Target not examined yet");
+		return ERROR_TARGET_NOT_EXAMINED;
+	}
+
+	target_free_all_working_areas(target);
+
+	/* Output available working memory on target */
+	uint32_t available_space = target_get_working_area_avail(target);
+	LOG_INFO("Target has %uB of available space.", available_space);
+	adsp2183x_flash_info->available_space = available_space;
+
+	// Get start address for target side algorithm
+	adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address = target->working_area_phys;
+
+	// poll target to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
+
+	/* Fill the bank info based on the discovered device info */
+	bank->num_sectors = (bank->size / adsp2183x_flash_info->sectorsize);
+
+	/* Create and fill the sectors array */
+	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
+	if (!sectors)
+	{
+		LOG_ERROR("Not enough memory available for sectors array.");
+		return ERROR_FAIL;
+	}
+
+	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {
+		sectors[sector].offset = sector * adsp2183x_flash_info->sectorsize;
+		sectors[sector].size = adsp2183x_flash_info->sectorsize;
+		sectors[sector].is_erased = -1;
+		sectors[sector].is_protected = 0;
+	}
+
+	bank->sectors = sectors;
+	adsp2183x_flash_info->probed = true;
+
+	return retval;
+}
+
+/**
+ * Probe the memory region to set up the target side algorithm and update the bank
  * appropriately.
  *
  * @param	bank	Pointer to the flash bank to use and write to
@@ -688,9 +773,14 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	struct target *target = bank->target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
 	struct flash_sector *sectors = NULL;
-	struct adsp83x_algo_params algo_params;
+	struct adsp2183x_algo_params algo_params;
 	int retval;
 	uint32_t jedec_id = 0u;
+
+	if (bank->bank_number != SPI_FLASH_BANK)
+	{
+		return adsp2183x_auto_probe(bank);
+	}
 
 	LOG_INFO("Setting up ADSP2183X flash area...");
 
@@ -721,7 +811,7 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	// Check if algorithm is running, if not run it
 	if(target->state != TARGET_DEBUG_RUNNING)
 	{
-		retval = adsp83x_init(bank);
+		retval = adsp2183x_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
 	}
@@ -845,76 +935,6 @@ static int adsp2183x_probe(struct flash_bank *bank)
 }
 
 /**
- * Called by some other commands before proceeding with their main function to
- * ensure device is properly probed and known. Mostly a wrapper from the probe
- * function with a stored probe state.
- *
- * @param	bank	Pointer to the flash bank to use and write to
- *
- * @returns	ERROR_OK if successful otherwise the relevant code.
-*/
-static int adsp2183x_auto_probe(struct flash_bank *bank)
-{
-	int retval;
-	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
-	struct flash_sector *sectors = NULL;
-	struct target *target = bank->target;
-
-	if (adsp2183x_flash_info->probed) {
-		return ERROR_OK;
-	}
-
-	LOG_INFO("Setting up ADSP2183X flash area...");
-
-	if (!target_was_examined(target)) {
-		LOG_ERROR("Target not examined yet");
-		return ERROR_TARGET_NOT_EXAMINED;
-	}
-
-	target_free_all_working_areas(target);
-
-	/* Output available working memory on target */
-	uint32_t available_space = target_get_working_area_avail(target);
-	LOG_INFO("Target has %uB of available space.", available_space);
-	adsp2183x_flash_info->available_space = available_space;
-
-	// Get start address for target side algorithm
-	adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address = target->working_area_phys;
-
-	// poll target to update state
-	retval = target_poll(target);
-	if (retval != ERROR_OK) {
-		LOG_ERROR("Unable to poll target");
-		target_free_working_area(target, adsp2183x_flash_info->working_area);
-		adsp2183x_flash_info->working_area = NULL;
-		return ERROR_FAIL;
-	}
-
-	/* Fill the bank info based on the discovered device info */
-	bank->num_sectors = (bank->size / adsp2183x_flash_info->sectorsize);
-
-	/* Create and fill the sectors array */
-	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
-	if (!sectors)
-	{
-		LOG_ERROR("Not enough memory available for sectors array.");
-		return ERROR_FAIL;
-	}
-
-	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {
-		sectors[sector].offset = sector * adsp2183x_flash_info->sectorsize;
-		sectors[sector].size = adsp2183x_flash_info->sectorsize;
-		sectors[sector].is_erased = -1;
-		sectors[sector].is_protected = 0;
-	}
-
-	bank->sectors = sectors;
-	adsp2183x_flash_info->probed = true;
-
-	return retval;
-}
-
-/**
 * Not yet supported for spi flash.
 */
 static int adsp2183x_protect_check(struct flash_bank *bank)
@@ -1001,8 +1021,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
     fseek(algo_file, 0, SEEK_END);
    	adsp2183x_flash_info->adsp2183x_algorithm.size = ftell(algo_file);
     fseek(algo_file, 0, SEEK_SET);
-	adsp2183x_flash_info->adsp2183x_algorithm.adsp83x_spi_algo = malloc(sizeof(uint8_t) * adsp2183x_flash_info->adsp2183x_algorithm.size);
-
+	adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo = malloc(sizeof(uint8_t) * adsp2183x_flash_info->adsp2183x_algorithm.size);
 	// Get 2 characters at a time to form byte. Convert byte and
 	// store into spi algorithm buffer
     do {
@@ -1011,7 +1030,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 		if(tempStr[0] != '\n' && tempStr[0] != '\r') {
 			tempStr[1] = fgetc(algo_file);
 			convertedHex = strtoul((const char *)tempStr, NULL, 16);
-			adsp2183x_flash_info->adsp2183x_algorithm.adsp83x_spi_algo[byteCount] = convertedHex;
+			adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo[byteCount] = convertedHex;
 			byteCount++;
 		}
         // Checking if character is not EOF.
@@ -1074,7 +1093,7 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 	struct flash_bank *bank;
 	struct target *target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info;
-	struct adsp83x_algo_params algo_params;
+	struct adsp2183x_algo_params algo_params;
 	int retval;
 
 	if (CMD_ARGC != 1)
@@ -1110,7 +1129,7 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 		// Check if algorithm is running, if not run it
 		if(target->state != TARGET_DEBUG_RUNNING)
 		{
-			retval = adsp83x_init(bank);
+			retval = adsp2183x_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
 		}
@@ -1208,11 +1227,57 @@ static const struct command_registration adsp2183x_command_handlers[] = {
 		.usage	= "",
 		.chain	= adsp2183x_exec_command_handlers,
 	},
+	{
+		.name	= "adsp2183x_hyperflash",
+		.mode	= COMMAND_ANY,
+		.help	= "adsp2183x flash command group",
+		.usage	= "",
+		.chain	= adsp2183x_exec_command_handlers,
+	},
+	{
+		.name	= "adsp2183x_xspi_norflash",
+		.mode	= COMMAND_ANY,
+		.help	= "adsp2183x flash command group",
+		.usage	= "",
+		.chain	= adsp2183x_exec_command_handlers,
+	},
 	COMMAND_REGISTRATION_DONE
 };
 
 const struct flash_driver adsp2183x_flash = {
 	.name				= "adsp2183x",
+	.commands			= adsp2183x_command_handlers,
+	.flash_bank_command	= adsp2183x_flash_bank_command,
+	.erase				= adsp2183x_erase,
+	.protect			= adsp2183x_protect,
+	.write				= adsp2183x_write,
+	.read				= adsp2183x_read,
+	.probe				= adsp2183x_probe,
+	.auto_probe			= adsp2183x_auto_probe,
+	.erase_check		= default_flash_blank_check,
+	.protect_check		= adsp2183x_protect_check,
+	.info				= adsp2183x_get_info,
+	.free_driver_priv	= default_flash_free_driver_priv,
+};
+
+const struct flash_driver adsp2183x_xspi_norflash = {
+	.name				= "adsp2183x_xspi_norflash",
+	.commands			= adsp2183x_command_handlers,
+	.flash_bank_command	= adsp2183x_flash_bank_command,
+	.erase				= adsp2183x_erase,
+	.protect			= adsp2183x_protect,
+	.write				= adsp2183x_write,
+	.read				= adsp2183x_read,
+	.probe				= adsp2183x_probe,
+	.auto_probe			= adsp2183x_auto_probe,
+	.erase_check		= default_flash_blank_check,
+	.protect_check		= adsp2183x_protect_check,
+	.info				= adsp2183x_get_info,
+	.free_driver_priv	= default_flash_free_driver_priv,
+};
+
+const struct flash_driver adsp2183x_hyperflash = {
+	.name				= "adsp2183x_hyperflash",
 	.commands			= adsp2183x_command_handlers,
 	.flash_bank_command	= adsp2183x_flash_bank_command,
 	.erase				= adsp2183x_erase,

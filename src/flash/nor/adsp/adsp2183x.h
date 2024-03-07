@@ -3,12 +3,20 @@
 
 
 struct custom_algorithm {
-	uint8_t *adsp83x_spi_algo;
+	uint8_t *adsp2183x_algo;
 	unsigned long algo_start_address;
 	unsigned long reset_handler_addr;
 	unsigned long parameter_address;  /* Values derived from algorithm for data buffer */
 	unsigned long buffer_address;	  /*  address and algo parameter address (g_cfg)*/
 	unsigned long size;
+};
+
+enum MEM_REGIONS
+{
+	OTP_FLASH_BANK = 0,
+	SPI_FLASH_BANK = 1,
+	XSPI_HYPERFLASH_BANK = 2,
+	XSPI_NORFLASH_BANK = 3,
 };
 
 #define PARAMETER_FILE_COUNT 3
@@ -40,19 +48,11 @@ enum FLASH_COMMANDS
 #define DEBUG_EXECUTION 1
 /******************************/
 
-/* Sets the threshold at which word-transfers should be used over bytes.
- *  Should strike the balance between extra calculation required vs quicker
- *  transfers.
-*/
-#define SPI_WORD_TRANSFER_THRESHOLD		(16u)
-
-#define MAX_TX_RX_TRANSFER 0xFFFF
-
 /* Flash helper algorithm parameter block struct */
 #define ADSP83X_STATUS_OFFSET 0x0C
 #define ADSP83X_READID_OFFSET 0x14
 
-struct adsp83x_algo_params {
+struct adsp2183x_algo_params {
 	uint8_t address[4];
 	uint8_t length[4];
 	uint8_t command[4];

@@ -5,7 +5,6 @@
 	g_buffer1 address
 	reset_handler address
 */
-
-200107C0
-200107E0
-200000F0
+20009ea0
+20009ec0
+200000f0
