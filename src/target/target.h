@@ -25,6 +25,7 @@
 #include <helper/list.h>
 #include "helper/replacements.h"
 #include "helper/system.h"
+#include <helper/types.h>
 #include <jim.h>
 
 struct reg;
