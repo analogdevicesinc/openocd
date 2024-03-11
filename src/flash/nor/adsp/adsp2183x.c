@@ -1214,14 +1214,7 @@ static const struct command_registration adsp2183x_exec_command_handlers[] = {
 
 static const struct command_registration adsp2183x_command_handlers[] = {
 	{
-		.name	= "adsp2183x_spi",
-		.mode	= COMMAND_ANY,
-		.help	= "adsp2183x flash command group",
-		.usage	= "",
-		.chain	= adsp2183x_exec_command_handlers,
-	},
-	{
-		.name	= "adsp2183x_hyperflash",
+		.name	= "adsp2183x",
 		.mode	= COMMAND_ANY,
 		.help	= "adsp2183x flash command group",
 		.usage	= "",
@@ -1232,22 +1225,6 @@ static const struct command_registration adsp2183x_command_handlers[] = {
 
 const struct flash_driver adsp2183x_flash = {
 	.name				= "adsp2183x",
-	.commands			= adsp2183x_command_handlers,
-	.flash_bank_command	= adsp2183x_flash_bank_command,
-	.erase				= adsp2183x_erase,
-	.protect			= adsp2183x_protect,
-	.write				= adsp2183x_write,
-	.read				= adsp2183x_read,
-	.probe				= adsp2183x_probe,
-	.auto_probe			= adsp2183x_auto_probe,
-	.erase_check		= default_flash_blank_check,
-	.protect_check		= adsp2183x_protect_check,
-	.info				= adsp2183x_get_info,
-	.free_driver_priv	= default_flash_free_driver_priv,
-};
-
-const struct flash_driver adsp2183x_hyperflash = {
-	.name				= "adsp2183x_hyperflash",
 	.commands			= adsp2183x_command_handlers,
 	.flash_bank_command	= adsp2183x_flash_bank_command,
 	.erase				= adsp2183x_erase,
