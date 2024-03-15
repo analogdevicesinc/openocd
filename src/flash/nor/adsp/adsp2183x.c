@@ -333,7 +333,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		/* First write any bytes if the specified offset if not on the sector size boundary */
 		if (0 != (current_address % adsp2183x_flash_info->sectorsize))
 		{
-			/* Calculate the write size to use, the modulo remainder of the page size  (unless the specified count is smaller) */
+						/* Calculate the write size to use, the modulo remainder of the page size  (unless the specified count is smaller) */
 			write_size = adsp2183x_flash_info->sectorsize - (current_address % adsp2183x_flash_info->sectorsize);
 			if (write_size > count)
 			{
@@ -426,7 +426,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		/* Write remaining data */
 		while (count - buffer_index)
 		{
-			/* If the remaining bytes is less than the flash sector size,
+			/* If the remaining bytes is less than the flash sectot size,
 			*  size is just the remaining bytes...
 			*/
 			if ((count - buffer_index) < adsp2183x_flash_info->sectorsize)
@@ -571,7 +571,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 		/* Maximum read size*/
 		uint32_t read_size = adsp2183x_flash_info->sectorsize;
 
-		/* Then if the actual count is smaller than the sector size, use the count */
+		/* Then if the actual count is smaller than the theoretical max, use the count */
 		if (count < read_size)
 		{
 			read_size = count;
@@ -960,8 +960,8 @@ static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation
 		return retval;
 	}
 
-	command_print(cmd, "ADSP-2183X spi flash\n"
-			"Size: 0x%X\n",
+	command_print(cmd, "ADSP-2183X %s\n"
+			"Size: 0x%X\n", bank->name,
 			bank->size);
 
 	return ERROR_OK;
