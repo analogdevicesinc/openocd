@@ -15,6 +15,7 @@
 #include "config.h"
 #endif
 
+#include <jtag/jtag.h>      /* Added to avoid include loop in commands.h */
 #include "bitbang.h"
 #include <jtag/interface.h>
 #include <jtag/commands.h>
@@ -278,9 +279,18 @@ static int bitbang_scan(bool ir_scan, enum scan_type type, uint8_t *buffer,
 	return ERROR_OK;
 }
 
-int bitbang_execute_queue(void)
+static void bitbang_sleep(unsigned int microseconds)
 {
-	struct jtag_command *cmd = jtag_command_queue;	/* currently processed command */
+	if (bitbang_interface->sleep) {
+		bitbang_interface->sleep(microseconds);
+	} else {
+		jtag_sleep(microseconds);
+	}
+}
+
+int bitbang_execute_queue(struct jtag_command *cmd_queue)
+{
+	struct jtag_command *cmd = cmd_queue;	/* currently processed command */
 	int scan_size;
 	enum scan_type type;
 	uint8_t *buffer;
@@ -351,7 +361,9 @@ int bitbang_execute_queue(void)
 				break;
 			case JTAG_SLEEP:
 				LOG_DEBUG_IO("sleep %" PRIu32, cmd->cmd.sleep->us);
-				jtag_sleep(cmd->cmd.sleep->us);
+				if (bitbang_interface->flush && (bitbang_interface->flush() != ERROR_OK))
+					return ERROR_FAIL;
+				bitbang_sleep(cmd->cmd.sleep->us);
 				break;
 			case JTAG_TMS:
 				retval = bitbang_execute_tms(cmd);
@@ -525,7 +537,19 @@ static void bitbang_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_delay
 		bitbang_swd_exchange(false, &cmd, 0, 8);
 
 		bitbang_interface->swdio_drive(false);
-		bitbang_swd_exchange(true, trn_ack_data_parity_trn, 0, 1 + 3 + 1);
+		bitbang_swd_exchange(true, trn_ack_data_parity_trn, 0, 1 + 3);
+
+		/* Avoid a glitch on SWDIO when changing the direction to output.
+		 * To keep performance penalty minimal, pre-write the first data
+		 * bit to SWDIO GPIO output buffer while clocking the turnaround bit.
+		 * Following swdio_drive(true) outputs the pre-written value
+		 * and the same value is rewritten by the next swd_write()
+		 * instead of glitching SWDIO
+		 * HiZ/pull-up --------------> 0 -------------> 1
+		 *           swdio_drive(true)   swd_write(0,1)
+		 * in case of data bit 0 = 1
+		 */
+		bitbang_swd_exchange(false, trn_ack_data_parity_trn, 1 + 3 + 1, 1);
 		bitbang_interface->swdio_drive(true);
 		bitbang_swd_exchange(false, trn_ack_data_parity_trn, 1 + 3 + 1, 32 + 1);
 
