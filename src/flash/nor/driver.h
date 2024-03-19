@@ -238,7 +238,9 @@ struct flash_driver {
 const struct flash_driver *flash_driver_find_by_name(const char *name);
 
 extern const struct flash_driver aduc702x_flash;
+extern const struct flash_driver aducm302x_flash;
 extern const struct flash_driver aducm360_flash;
+extern const struct flash_driver aducm4x50_flash;
 extern const struct flash_driver ambiqmicro_flash;
 extern const struct flash_driver at91sam3_flash;
 extern const struct flash_driver at91sam4_flash;
@@ -269,6 +271,7 @@ extern const struct flash_driver lpc288x_flash;
 extern const struct flash_driver lpc2900_flash;
 extern const struct flash_driver lpcspifi_flash;
 extern const struct flash_driver max32xxx_flash;
+extern const struct flash_driver max32xxx_qspi_flash;
 extern const struct flash_driver mdr_flash;
 extern const struct flash_driver mrvlqspi_flash;
 extern const struct flash_driver msp432_flash;
