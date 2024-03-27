@@ -1,5 +1,5 @@
 /***************************************************************************
-*   Copyright (C) 2021-2023 Analog Devices, Inc.                          *
+*   Copyright (C) 2021-2024 Analog Devices, Inc.                          *
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
 *   it under the terms of the GNU General Public License as published by  *
@@ -322,7 +322,7 @@ if (cable_params.use_usbmux)
 	}
 	else
 	{
-		ret = jtag_libusb_open(vids, pids, &dev, NULL);
+		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
 		if (ret != ERROR_OK)
 			return ret;
 
@@ -669,7 +669,7 @@ static int dbgagent_execute_reset(struct jtag_command *cmd)
 	}
 
 	do_host_cmd(HOST_SET_TRST, cmd->cmd.reset->trst ? 0 : 1, 0);
-	
+
 	return ERROR_OK;
 }
 
@@ -1103,9 +1103,8 @@ static int dbgagent_execute_command(struct jtag_command *cmd)
 	return retval;
 }
 
-static int dbgagent_execute_queue(void)
+static int dbgagent_execute_queue(struct jtag_command *cmd_queue)
 {
-	struct jtag_command *cmd = jtag_command_queue;
 	int retval = ERROR_OK;
 
 #ifdef _WIN32
@@ -1147,11 +1146,9 @@ if (cable_params.mux_handle)
 #endif
 
 	/* TODO add blink */
-	while (cmd != NULL)
-	{
+	for (struct jtag_command *cmd = cmd_queue; cmd; cmd = cmd->next) {
 		if (dbgagent_execute_command(cmd) != ERROR_OK)
 			retval = ERROR_JTAG_QUEUE_FAILED;
-		cmd = cmd->next;
 	}
 
 	if (retval != ERROR_OK)
@@ -1244,7 +1241,7 @@ static int perform_scan(uint8_t **rdata)
 	uint32_t rem_len;
 	uint32_t scan_status_bytes = 3;		/* number of bytes letting us know if the scan was successful */
 	uint32_t out_inc = 0;
-		
+
 	/* Data is scan as 32 bit words, so boundaries are adjusted here */
 	if (tap_info->bit_pos != 0x80) /* meaning no dangling bits? */
 	{	/* yes, so straighten out! */
@@ -1264,7 +1261,7 @@ static int perform_scan(uint8_t **rdata)
 		tap_info->pairs[cur_len].tms = 0;
 		tap_info->pairs[cur_len].tdi = 0;
 	}
-	
+
 	tap_info->cur_idx = cur_len;
 	rem_len = cur_len * sizeof (tap_pairs);
 
@@ -1315,11 +1312,11 @@ static int perform_scan(uint8_t **rdata)
 			{
 				out[idx_out+i] = pData[i];
 			}
-			out_inc = (cur_len/2);	
+			out_inc = (cur_len/2);
 		}
 		else
 		{
-			out_inc = (cur_len/2) + scan_status_bytes;	
+			out_inc = (cur_len/2) + scan_status_bytes;
 		}
 
 		rem_len -= cur_len;
@@ -1514,5 +1511,5 @@ struct adapter_driver dbgagent_adapter_driver = {
 	.khz = dbgagent_khz,
 	.speed_div = dbgagent_speed_div,
 
-	.jtag_ops = &dbgagent_interface,	
+	.jtag_ops = &dbgagent_interface,
 };

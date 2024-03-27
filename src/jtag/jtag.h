@@ -14,6 +14,7 @@
 #define OPENOCD_JTAG_JTAG_H
 
 #include <helper/binarybuffer.h>
+#include <helper/command.h>
 #include <helper/log.h>
 #include <helper/replacements.h>
 
@@ -116,7 +117,7 @@ struct jtag_tap {
 	uint32_t idcode; /**< device identification code */
 	/** not all devices have idcode,
 	 * we'll discover this during chain examination */
-	bool hasidcode;
+	bool has_idcode;
 
 	/** Array of expected identification codes */
 	uint32_t *expected_ids;
@@ -132,7 +133,10 @@ struct jtag_tap {
 	/** current instruction */
 	uint8_t *cur_instr;
 	/** Bypass register selected */
-	int bypass;
+	bool bypass;
+
+	/** Bypass instruction value */
+	uint64_t ir_bypass_value;
 
 	/*
 	 * If the TAP connection is shared with another instance do not use
@@ -611,6 +615,6 @@ void jtag_poll_unmask(bool saved);
 
 #include <jtag/minidriver.h>
 
-int jim_jtag_newtap(Jim_Interp *interp, int argc, Jim_Obj *const *argv);
+__COMMAND_HANDLER(handle_jtag_newtap);
 
 #endif /* OPENOCD_JTAG_JTAG_H */
