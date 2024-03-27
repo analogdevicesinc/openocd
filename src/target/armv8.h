@@ -90,11 +90,20 @@ enum {
 	ARMV8_FPCR,
 
 	ARMV8_ELR_EL1 = 68,
-	ARMV8_SPSR_EL1,
-	ARMV8_ELR_EL2,
-	ARMV8_SPSR_EL2,
-	ARMV8_ELR_EL3,
-	ARMV8_SPSR_EL3,
+	ARMV8_ESR_EL1 = 69,
+	ARMV8_SPSR_EL1 = 70,
+
+	ARMV8_ELR_EL2 = 71,
+	ARMV8_ESR_EL2 = 72,
+	ARMV8_SPSR_EL2 = 73,
+	ARMV8_ELR_EL3 = 74,
+	ARMV8_ESR_EL3 = 75,
+	ARMV8_SPSR_EL3 = 76,
+
+	/* Pseudo registers defined by GDB to remove the pauth signature. */
+	ARMV8_PAUTH_DMASK = 77,
+	ARMV8_PAUTH_CMASK = 78,
+
 	ARMV8_DBGAUTHSTATUS_EL1,
 	ARMV8_DBGCLAIMCLR_EL1,
 	ARMV8_DBGCLAIMSET_EL1,
@@ -119,10 +128,9 @@ enum {
 	ARMV8_MDCCINT_EL1,
 	ARMV8_MDCCSR_EL0,
 	ARMV8_MDSCR_EL1,
-	
+
 	ARMV8_TPIDR_EL0,
 	ARMV8_TPIDRRO_EL0,
-	ARMV8_ESR_EL1,
 	ARMV8_FAR_EL1,
 	ARMV8_VBAR_EL1,
 	ARMV8_SCTLR_EL1,
@@ -135,7 +143,6 @@ enum {
 	ARMV8_ISR_EL1,
 	ARMV8_TPIDR_EL1,
 
-	ARMV8_ESR_EL2,
 	ARMV8_FAR_EL2,
 	ARMV8_VBAR_EL2,
 	ARMV8_SCTLR_EL2,
@@ -151,7 +158,6 @@ enum {
 	ARMV8_VDISR_EL2,
 	ARMV8_VSESR_EL2,
 
-	ARMV8_ESR_EL3,
 	ARMV8_FAR_EL3,
 	ARMV8_VBAR_EL3,
 	ARMV8_SCTLR_EL3,
@@ -343,7 +349,7 @@ enum {
 	ARMV8_ERXMISC0_EL1,
 	ARMV8_ERXMISC1_EL1,
 	ARMV8_ERXSTATUS_EL1,
-	
+
 	ARMV8_LAST_REG,
 };
 
@@ -446,10 +452,14 @@ struct armv8_common {
 	uint8_t pa_size;
 	uint32_t page_size;
 	uint64_t ttbr_base;
+	bool is_armv8r;
 
 	struct armv8_mmu_common armv8_mmu;
 
 	struct arm_cti *cti;
+
+	/* True if OpenOCD provides pointer auth related info to GDB */
+	bool enable_pauth;
 	struct arm_cti *sys_cti;
 
 	/* last run-control command issued to this target (resume, halt, step) */
