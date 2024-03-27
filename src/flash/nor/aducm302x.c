@@ -691,7 +691,7 @@ FLASH_BANK_COMMAND_HANDLER(aducm4x50_flash_bank_command)
 	return ERROR_OK;
 }
 
-struct flash_driver aducm302x_flash = {
+const struct flash_driver aducm302x_flash = {
 	.name = "aducm302x",
 	.usage = NULL,
 	.commands = NULL,
@@ -708,7 +708,7 @@ struct flash_driver aducm302x_flash = {
 	.free_driver_priv = default_flash_free_driver_priv,
 };
 
-struct flash_driver aducm4x50_flash = {
+const struct flash_driver aducm4x50_flash = {
 	.name = "aducm4x50",
 	.usage = NULL,
 	.commands = NULL,

@@ -1139,7 +1139,7 @@ static const struct command_registration max32xxx_qspi_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-struct flash_driver max32xxx_qspi_flash = {
+const struct flash_driver max32xxx_qspi_flash = {
 	.name = "max32xxx_qspi",
 	.commands = max32xxx_qspi_command_handlers,
 	.flash_bank_command = max32xxx_qspi_flash_bank_command,

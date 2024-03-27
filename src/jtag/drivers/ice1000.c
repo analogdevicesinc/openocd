@@ -781,7 +781,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	}
 	else
 	{
-		ret = jtag_libusb_open(vids, pids, &dev, NULL);
+		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
 		if (ret != ERROR_OK)
 			return ret;
 
@@ -934,7 +934,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		if (swd_mode)
 		{
 			ice1000_swd_switch_seq(JTAG_TO_SWD);
-			
+
 			ret = ice1000_swd_run_queue();
 			if (ret != ERROR_OK)
 			{
@@ -1735,9 +1735,8 @@ static int ice1000_execute_command(struct jtag_command *cmd)
 	return retval;
 }
 
-static int ice1000_execute_queue(void)
+static int ice1000_execute_queue(struct jtag_command *cmd_queue)
 {
-	struct jtag_command *cmd = jtag_command_queue;
 	int retval = ERROR_OK;
 
 #ifdef _WIN32
@@ -1782,11 +1781,9 @@ static int ice1000_execute_queue(void)
 #endif
 
 	/* TODO add blink */
-	while (cmd)
-	{
+	for (struct jtag_command *cmd = cmd_queue; cmd; cmd = cmd->next) {
 		if (ice1000_execute_command(cmd) != ERROR_OK)
 			retval = ERROR_JTAG_QUEUE_FAILED;
-		cmd = cmd->next;
 	}
 
 	if (retval != ERROR_OK)
@@ -2255,7 +2252,7 @@ static int ice1000_swd_run_queue(void)
 		return ERROR_OK;
 
 	/* A transaction must be followed by another transaction or at least
-	   8 idle cycles to ensure that data is clocked through the AP. 
+	   8 idle cycles to ensure that data is clocked through the AP.
 	   Since a scan is done next, we know the idle cycles are now needed */
 	ice1000_swd_queue_idle_cycles(8);
 
@@ -2335,7 +2332,7 @@ static int ice1000_swd_run_queue(void)
 	tap_info->bit_pos = 0x80;
 	tap_info->cur_dat = -1;
 	tap_info->rcv_dat = -1;
-	
+
 
 	return retval;
 }
@@ -2457,7 +2454,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 
 		return retval;
 	}
-		
+
 
 	/* Insert idle cycles after AP accesses to avoid WAIT */
 	if (cmd & SWD_CMD_APNDP)
@@ -2597,7 +2594,7 @@ static struct jtag_interface ice2000_interface = {
 
 struct adapter_driver ice2000_adapter_driver = {
 	.name = "ice2000",
-	.transports = ice_transports,	
+	.transports = ice_transports,
 	.commands = ice2000_command_handlers,
 
 	.init = ice2000_init,

@@ -865,12 +865,6 @@ proc ft232r_restore_serial args {
 	eval ft232r restore_serial $args
 }
 
-lappend _telnet_autocomplete_skip "aice serial"
-proc "aice serial" {args} {
-	echo "DEPRECATED! use 'adapter serial' not 'aice serial'"
-	eval adapter serial $args
-}
-
 lappend _telnet_autocomplete_skip cmsis_dap_serial
 proc cmsis_dap_serial args {
 	echo "DEPRECATED! use 'adapter serial' not 'cmsis_dap_serial'"
@@ -1112,6 +1106,172 @@ proc "am335xgpio led_on_state" {state} {
 		default
 			{return -code 1 -level 1 "am335xgpio led_on_state: syntax error"}
 	}
+}
+
+lappend _telnet_autocomplete_skip "cmsis_dap_backend"
+proc "cmsis_dap_backend" {backend} {
+	echo "DEPRECATED! use 'cmsis-dap backend', not 'cmsis_dap_backend'"
+	eval cmsis-dap backend $backend
+}
+
+lappend _telnet_autocomplete_skip "cmsis_dap_vid_pid"
+proc "cmsis_dap_vid_pid" {args} {
+	echo "DEPRECATED! use 'cmsis-dap vid_pid', not 'cmsis_dap_vid_pid'"
+	eval cmsis-dap vid_pid $args
+}
+
+lappend _telnet_autocomplete_skip "cmsis_dap_usb"
+proc "cmsis_dap_usb" {args} {
+	echo "DEPRECATED! use 'cmsis-dap usb', not 'cmsis_dap_usb'"
+	eval cmsis-dap usb $args
+}
+
+lappend _telnet_autocomplete_skip "kitprog_init_acquire_psoc"
+proc "kitprog_init_acquire_psoc" {} {
+	echo "DEPRECATED! use 'kitprog init_acquire_psoc', not 'kitprog_init_acquire_psoc'"
+	eval kitprog init_acquire_psoc
+}
+
+lappend _telnet_autocomplete_skip "pld device"
+proc "pld device" {driver tap_name {opt 0}} {
+	echo "DEPRECATED! use 'pld create ...', not 'pld device ...'"
+	if {[string is integer -strict $opt]} {
+		if {$opt == 0} {
+			eval pld create [lindex [split $tap_name .] 0].pld $driver -chain-position $tap_name
+		} else {
+			eval pld create [lindex [split $tap_name .] 0].pld $driver -chain-position $tap_name -no_jstart
+		}
+	} else {
+		eval pld create [lindex [split $tap_name .] 0].pld $driver -chain-position $tap_name -family $opt
+	}
+}
+
+lappend _telnet_autocomplete_skip "ipdbg -start"
+proc "ipdbg -start" {args} {
+	echo "DEPRECATED! use 'ipdbg create-hub' and 'chip.ipdbghub ipdbg start ...', not 'ipdbg -start ...'"
+	set tap_name ""
+	set pld_name ""
+	set tool_num "1"
+	set port_num "4242"
+	set idx 0
+	set num_args [llength $args]
+	while {$idx < $num_args} {
+		set arg [lindex $args $idx]
+		switch -- $arg {
+			"-tap" {
+				incr idx
+				if {$idx >= $num_args || [string index [lindex $args $idx] 0] == "-"} {
+					echo "no TAP name given"
+					return
+				}
+				set tap_name [lindex $args $idx]
+			}
+			"-pld" {
+				incr idx
+				if {$idx >= $num_args || [string index [lindex $args $idx] 0] == "-"} {
+					echo "no PLD name given"
+					return
+				}
+				set pld_name [lindex $args $idx]
+			}
+			"-tool" {
+				if {[expr {$idx + 1}] < $num_args && [string index [lindex $args [expr {$idx + 1}]] 0] != "-"} {
+					set tool_num [lindex $args [expr {$idx + 1}]]
+					set args [lreplace $args [expr {$idx + 1}] [expr {$idx + 1}]]
+					incr num_args -1
+				}
+				set args [lreplace $args $idx $idx]
+				incr num_args -1
+				incr idx -1
+			}
+			"-port" {
+				if {[expr {$idx + 1}] < $num_args && [string index [lindex $args [expr {$idx + 1}]] 0] != "-"} {
+					set port_num [lindex $args [expr {$idx + 1}]]
+					set args [lreplace $args [expr {$idx + 1}] [expr {$idx + 1}]]
+					incr num_args -1
+				}
+				set args [lreplace $args $idx $idx]
+				incr num_args -1
+				incr idx -1
+			}
+			"-hub" {
+				set args [lreplace $args $idx $idx "-ir" ]
+			}
+			default {
+#				don't touch remaining arguments
+			}
+		}
+		incr idx
+	}
+
+	set hub_name ""
+	if {$tap_name != ""} {
+		set hub_name [lindex [split $tap_name .] 0].ipdbghub
+	} elseif {$pld_name != ""} {
+		set hub_name [lindex [split $pld_name .] 0].ipdbghub
+	} else {
+		echo "parsing arguments failed: no tap and no pld given."
+		return
+	}
+
+	echo "name: $hub_name"
+	echo "ipdbg create-hub $hub_name $args"
+
+	catch {eval ipdbg create-hub $hub_name $args}
+
+	eval $hub_name ipdbg start -tool $tool_num -port $port_num
+}
+
+lappend _telnet_autocomplete_skip "ipdbg -stop"
+proc "ipdbg -stop" {args} {
+	echo "DEPRECATED! use 'chip.ipdbghub ipdbg stop ...', not 'ipdbg -stop ...'"
+	set tap_name ""
+	set pld_name ""
+	set tool_num "1"
+	set idx 0
+	set num_args [llength $args]
+	while {$idx < $num_args} {
+		set arg [lindex $args $idx]
+		switch -- $arg {
+			"-tap" {
+				incr idx
+				if {$idx >= $num_args || [string index [lindex $args $idx] 0] == "-"} {
+					echo "no TAP name given"
+					return
+				}
+				set tap_name [lindex $args $idx]
+			}
+			"-pld" {
+				incr idx
+				if {$idx >= $num_args || [string index [lindex $args $idx] 0] == "-"} {
+					echo "no PLD name given"
+					return
+				}
+				set pld_name [lindex $args $idx]
+			}
+			"-tool" {
+				if {[expr {$idx + 1}] < $num_args && [string index [lindex $args [expr {$idx + 1}]] 0] != "-"} {
+					set tool_num [lindex $args [expr {$idx + 1}]]
+				}
+			}
+			default {
+#				don't touch remaining arguments
+			}
+		}
+		incr idx
+	}
+
+	set hub_name ""
+	if {$tap_name != ""} {
+		set hub_name [lindex [split $tap_name .] 0].ipdbghub
+	} elseif {$pld_name != ""} {
+		set hub_name [lindex [split $pld_name .] 0].ipdbghub
+	} else {
+		echo "parsing arguments failed: no tap and no pld given."
+		return
+	}
+
+	eval $hub_name ipdbg stop -tool $tool_num
 }
 
 # END MIGRATION AIDS
