@@ -1,6 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 
 /***************************************************************************
+ *   ADSPSC83x Target Support for OpenOCD                                  *
+ *   Portions Copyright (C) 2022-2023 Analog Devices, Inc.                 *
+ *                                                                         *
  *   Generic Xtensa target                                                 *
  *   Copyright (C) 2020-2022 Cadence Design Systems, Inc.                  *
  *   Copyright (C) 2019 Espressif Systems Ltd.                             *
@@ -33,7 +36,9 @@
 #define XT_INS_BREAKN_BE(IMM4)                  (0x0FD2 | (((IMM4) & 0xF) << 12))
 #define XT_INS_BREAKN(X, IMM4)                  (XT_ISBE(X) ? XT_INS_BREAKN_BE(IMM4) : XT_INS_BREAKN_LE(IMM4))
 
-#define XT_ISNS_SZ_MAX                          3
+#define XT_BRK_INSN_3BYTE                       3
+#define XT_BRK_INSN_2BYTE                       2
+#define XT_ISNS_SZ_MAX                          5
 
 /* PS register bits (LX) */
 #define XT_PS_RING(_v_)                         ((uint32_t)((_v_) & 0x3) << 6)
@@ -185,6 +190,19 @@ struct xtensa_config {
 	struct xtensa_local_mem_config dram;
 	struct xtensa_local_mem_config sram;
 	struct xtensa_local_mem_config srom;
+	struct xtensa_local_mem_config l2ram;
+	/* Using ranges here because of the different spi range options.
+	 * We have a block of memory that can consist of multiple spi flash
+	 * types so it's best to define the range and how you access it */
+	struct xtensa_local_mem_config spi_range1;
+	struct xtensa_local_mem_config spi_range2;
+	struct xtensa_local_mem_config spi_range3;
+	struct xtensa_local_mem_config sysmmr;
+	struct xtensa_local_mem_config dram_mp;
+	struct xtensa_local_mem_config iram_mp;
+	struct xtensa_local_mem_config dram_arm;
+	struct xtensa_local_mem_config iram_arm;
+	struct xtensa_local_mem_config srom_arm;
 };
 
 typedef uint32_t xtensa_insn_t;
@@ -219,7 +237,7 @@ struct xtensa_sw_breakpoint {
 	/* original insn */
 	uint8_t insn[XT_ISNS_SZ_MAX];
 	/* original insn size */
-	uint8_t insn_sz;	/* 2 or 3 bytes */
+	uint8_t insn_sz;	/* 2, 3, or 5 bytes */
 };
 
 /**
@@ -284,7 +302,7 @@ struct xtensa {
 	uint32_t nx_stop_cause;
 	uint32_t nx_reg_idx[XT_NX_REG_IDX_NUM];
 	struct xtensa_keyval_info_s scratch_ars[XT_AR_SCRATCH_NUM];
-	bool regs_fetched;	/* true after first register fetch completed successfully */
+	bool regs_fetched;      /* true after first register fetch completed successfully */
 };
 
 static inline struct xtensa *target_to_xtensa(struct target *target)

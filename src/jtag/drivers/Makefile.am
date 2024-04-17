@@ -203,8 +203,6 @@ if ICE_2000
 DRIVERFILES += %D%/ice1000.c
 endif
 endif
-
-
 if CMSIS_DAP_USB
 DRIVERFILES += %D%/cmsis_dap_usb_bulk.c
 if !CMSIS_DAP_HID

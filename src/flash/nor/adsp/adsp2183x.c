@@ -1,0 +1,1127 @@
+/* SPDX-License Identifier: GPL-2.0-or-later
+	Copyright (C) 2022-2024 Analog Devices, Inc. */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "spi/adsp_spi.h"
+#include <helper/time_support.h>
+#include <helper/bits.h>
+#include <target/algorithm.h>
+#include <target/image.h>
+#include "../spi.h"
+#include "helper/binarybuffer.h"
+#include <target/xtensa/xtensa_chip.h>
+#include <target/xtensa/xtensa.h>
+#include "adsp2183x.h"
+
+/* Internal data structure to allow additional options for flash device */
+struct adsp2183x_flash_bank {
+	bool probed;				/*! Has the flash device been probed? */
+	uint32_t available_space;	/*! Used for sanity checking against memory leaks */
+	uint32_t sector_length;
+	struct working_area *working_area;
+	struct xtensa_algorithm xtensa_info;
+	struct flash_device	dev;
+	struct custom_algorithm adsp2183x_algorithm;
+};
+
+static int adsp83x_quit(struct flash_bank *bank)
+{
+	struct target *target = bank->target;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+	int retval;
+
+	/* Regardless of the algo's status, attempt to halt the target */
+	retval = target_halt(target);
+	if (retval != ERROR_OK) {
+		return retval;
+	}
+
+	/* Now confirm target halted and clean up from flash helper algorithm */
+	retval = target_wait_algorithm(target, 0, NULL, 0, NULL, 0, ALGO_TIMEOUT_MAX,
+				&adsp2183x_flash_info->xtensa_info);
+
+	target_free_working_area(target, adsp2183x_flash_info->working_area);
+	adsp2183x_flash_info->working_area = NULL;
+
+	return retval;
+}
+
+static int adsp83x_wait_algo_done(struct flash_bank *bank, uint32_t params_addr)
+{
+	struct target *target = bank->target;
+	uint32_t status_addr = params_addr + ADSP83X_STATUS_OFFSET;
+	uint32_t status = ALGO_READY;
+	long long start_ms;
+	long long elapsed_ms;
+	int retval = ERROR_OK;
+
+	start_ms = timeval_ms();
+	while (status == ALGO_READY) {
+		retval = target_read_u32(target, status_addr, &status);
+		if (retval != ERROR_OK)
+			return retval;
+
+		elapsed_ms = timeval_ms() - start_ms;
+		if (elapsed_ms > ALGO_TIMEOUT_KEEP_ALIVE)
+			keep_alive();
+		if (elapsed_ms > ALGO_TIMEOUT_MAX)
+			break;
+	};
+
+	if (status != 0) {
+		return ERROR_FAIL;
+	}
+
+	return ERROR_OK;
+}
+
+
+static int adsp83x_init(struct flash_bank *bank)
+{
+	struct target *target = bank->target;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+	int retval;
+
+	/* Check for working area to use for flash helper algorithm */
+	adsp2183x_flash_info->working_area = NULL;
+
+	retval = target_alloc_working_area(target, adsp2183x_flash_info->available_space,
+				&adsp2183x_flash_info->working_area);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Working address is not correctly allocated");
+		return retval;
+	}
+
+	/* Write flash helper algorithm into target memory */
+	retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address,
+				adsp2183x_flash_info->adsp2183x_algorithm.size, adsp2183x_flash_info->adsp2183x_algorithm.adsp83x_spi_algo);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Failed to load flash helper algorithm");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return retval;
+	}
+
+	/* Initialize the Xtensa specific info to run the algorithm */
+	adsp2183x_flash_info->xtensa_info.core_mode = XT_MODE_ANY;
+
+	/* Begin executing the flash helper algorithm */
+	retval = target_start_algorithm(target, 0, NULL, 0, NULL,
+				adsp2183x_flash_info->adsp2183x_algorithm.reset_handler_addr, 0, &adsp2183x_flash_info->xtensa_info);
+	if (retval != ERROR_OK) {
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		LOG_ERROR("Failure starting the algorithm");
+		return retval;
+	}
+
+	// Need to halt before reads/writes
+	retval = target_halt(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Target is not halted!");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return retval;
+	}
+
+	// poll target -to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return retval;
+	}
+
+	// get status from buffer to determine result of algorithm initialization
+	retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
+
+	// Resume running algorithm with parameters
+	xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+
+	/*
+	 * At this point, the algorithm is running on the target and
+	 * ready to receive commands and data to flash the target
+	 */
+
+	return retval;
+}
+
+/**
+ * Erase the specified sectors within the flash
+ *
+ * @param	bank	Pointer to the flash bank to use
+ * @param	first	The number of the first sector to erase
+ * @param	last	The number of the last sector to erase
+ *
+ * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
+*/
+static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned int last)
+{
+	struct target *target = bank->target;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+	struct adsp83x_algo_params algo_params;
+
+	int retval;
+
+	if (adsp2183x_flash_info->probed != true)
+	{
+		LOG_ERROR("Cannot erase flash as target has not been probed. Please probe target first.");
+		retval = ERROR_FLASH_BANK_NOT_PROBED;
+	}
+	/* All good to proceed */
+	else
+	{
+		LOG_INFO("Erasing sectors %u to %u (inclusive) in flash", first, last);
+		uint32_t address;
+
+		// poll target to update state
+		retval = target_poll(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to poll target");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return ERROR_FAIL;
+		}
+
+		// Check if algorithm is running, if not run it
+		if(target->state != TARGET_DEBUG_RUNNING)
+		{
+			retval = adsp83x_init(bank);
+			if (retval != ERROR_OK)
+				return retval;
+		}
+
+		for (unsigned counter = first; counter <= last; counter++)
+		{
+			/* Calculate the address based on the counter and configured sector size */
+			address = counter*adsp2183x_flash_info->dev.sectorsize;
+
+			// Need to halt before reads/writes
+			retval = target_halt(target);
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Target is not halted!");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			// poll target to update state
+			retval = target_poll(target);
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Unable to poll target");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			/* Check device is halted and has been probed first */
+			if (TARGET_HALTED != target->state) {
+				LOG_ERROR("Cannot read from flash. Target is not halted!");
+				return ERROR_TARGET_NOT_HALTED;
+			}
+
+			// hardcode to issue read command to algorithm
+			buf_set_u32(algo_params.command, 0, 32, SECTOR_ERASE_COMMAND);
+
+			// write algo parameters
+			buf_set_u32(algo_params.address, 0, 32, address);
+			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+
+			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
+					sizeof(algo_params), (uint8_t *)&algo_params);
+
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Unable to write algorithm parameters");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			// Resume running algorithm with parameters
+			xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+
+			// poll target to update state and wait for algorithm to hit breakpoint to halt target
+			while(target->state != TARGET_HALTED) {
+				retval = target_poll(target);
+				if (retval != ERROR_OK) {
+					LOG_ERROR("Unable to poll target");
+					target_free_working_area(target, adsp2183x_flash_info->working_area);
+					adsp2183x_flash_info->working_area = NULL;
+					return retval;
+				}
+			}
+
+			// get status from buffer to determine result of programming
+			retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
+
+			if (retval != ERROR_OK)
+			{
+				/* Close down algo */
+				(void)adsp83x_quit(bank);
+				return retval;
+			}
+			else
+			{
+				// Resume running algorithm with parameters
+				xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
+			}
+		}
+		/* Regardless of errors, try to close down algo */
+		//(void)adsp83x_quit(bank);
+
+	}
+
+	return retval;
+}
+
+/**
+ * Write the 'count' number of bytes from the buffer at the offset specified
+ * for spi flash using the flash bank provided.
+ *
+ * @param	bank	Pointer to the flash bank to use
+ * @param	buffer	Data to write to the spi flash
+ * @param	offset	Offset from base to write to
+ * @param	count	Number of bytes to write to spi flash
+ *
+ * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
+*/
+static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
+	uint32_t offset, uint32_t count)
+{
+	struct target *target = bank->target;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+	struct adsp83x_algo_params algo_params;
+	int retval;
+	unsigned write_size = 0;
+	unsigned buffer_index = 0;
+	uint32_t current_address = offset;
+
+	if (offset + count > bank->size) {
+		LOG_ERROR("Write would go beyond end of supported flash size.");
+		retval = ERROR_FLASH_DST_OUT_OF_BANK;
+	}
+	/* All good to proceed */
+	else {
+		// poll target to update state
+		retval = target_poll(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to poll target");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return ERROR_FAIL;
+		}
+
+		// Check if algorithm is running, if not run it
+		if(target->state != TARGET_DEBUG_RUNNING)
+		{
+			retval = adsp83x_init(bank);
+			if (retval != ERROR_OK)
+				return retval;
+		}
+
+		/* First write any bytes if the specified offset if not on the sector size boundary */
+		if (0 != (current_address % adsp2183x_flash_info->dev.sectorsize))
+		{
+						/* Calculate the write size to use, the modulo remainder of the page size  (unless the specified count is smaller) */
+			write_size = adsp2183x_flash_info->dev.sectorsize - (current_address % adsp2183x_flash_info->dev.sectorsize);
+			if (write_size > count)
+			{
+				write_size = count;
+			}
+
+			// Need to halt before reads/writes
+			retval = target_halt(target);
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Target is not halted!");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			// poll target to update state
+			retval = target_poll(target);
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Unable to poll target");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			/* Check device is halted and has been probed first */
+			if (TARGET_HALTED != target->state) {
+				LOG_ERROR("Cannot read from flash. Target is not halted!");
+				return ERROR_TARGET_NOT_HALTED;
+			}
+
+			// Issue program command to algorithm
+			buf_set_u32(algo_params.command, 0, 32, PROGRAM_COMMAND);
+
+			/* Put next block of data to flash into buffer */
+			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address,
+			write_size, &buffer[buffer_index]);
+
+
+			// write algo parameters
+			buf_set_u32(algo_params.address, 0, 32, current_address);
+			buf_set_u32(algo_params.length, 0, 32, write_size);
+			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+
+			/* Put next block of data to flash into buffer */
+			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
+					sizeof(algo_params), (uint8_t *)&algo_params);
+
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Unable to write data to target memory");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			// Resume running algorithm with parameters
+			xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+
+			// poll target to update state and wait for algorithm to hit breakpoint to halt target
+			while(target->state != TARGET_HALTED) {
+				retval = target_poll(target);
+				if (retval != ERROR_OK) {
+					LOG_ERROR("Unable to poll target");
+					target_free_working_area(target, adsp2183x_flash_info->working_area);
+					adsp2183x_flash_info->working_area = NULL;
+					return retval;
+				}
+			}
+
+			// get status from buffer to determine result of programming
+			retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
+
+			if (retval != ERROR_OK)
+			{
+				/* Close down algo */
+				(void)adsp83x_quit(bank);
+				return retval;
+			}
+			else
+			{
+				/* Increment the index and address */
+				current_address += write_size;
+				buffer_index += write_size;
+				// Resume running algorithm with parameters
+				xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
+			}
+
+			LOG_INFO("Written %u/%u bytes. Current address is 0x%08X", buffer_index, count, current_address);
+		}
+
+		/* Write remaining data */
+		while (count - buffer_index)
+		{
+			/* If the remaining bytes is less than the flash sectot size,
+			*  size is just the remaining bytes...
+			*/
+			if ((count - buffer_index) < adsp2183x_flash_info->dev.sectorsize)
+			{
+				write_size = count - buffer_index;
+			}
+			/* Otherwise size is the page size (max size that can be written in one command) */
+			else
+			{
+				write_size = adsp2183x_flash_info->dev.sectorsize;
+			}
+
+			// Need to halt before reads/writes
+			retval = target_halt(target);
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Target is not halted!");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			// poll target to update state
+			retval = target_poll(target);
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Unable to poll target");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			/* Check device is halted and has been probed first */
+			if (TARGET_HALTED != target->state) {
+				LOG_ERROR("Cannot read from flash. Target is not halted!");
+				return ERROR_TARGET_NOT_HALTED;
+			}
+
+			// Issue program command to algorithm
+			buf_set_u32(algo_params.command, 0, 32, PROGRAM_COMMAND);
+
+			/* Put next block of data to flash into buffer */
+			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address,
+			write_size, &buffer[buffer_index]);
+
+
+			// write algo parameters
+
+			buf_set_u32(algo_params.address, 0, 32, current_address);
+			buf_set_u32(algo_params.length, 0, 32, write_size);
+			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+
+			/* Put next block of data to flash into buffer */
+			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
+					sizeof(algo_params), (uint8_t *)&algo_params);
+
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Unable to write data to target memory");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+
+			// Resume running algorithm with parameters
+			xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+
+			// poll target to update state and wait for algorithm to hit breakpoint to halt target
+			while(target->state != TARGET_HALTED) {
+				retval = target_poll(target);
+				if (retval != ERROR_OK) {
+					LOG_ERROR("Unable to poll target");
+					target_free_working_area(target, adsp2183x_flash_info->working_area);
+					adsp2183x_flash_info->working_area = NULL;
+					return retval;
+				}
+			}
+
+			// get status from buffer to determine result of programming
+			retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
+
+			if (retval != ERROR_OK)
+			{
+				/* Close down algo */
+				(void)adsp83x_quit(bank);
+				return retval;
+			}
+			else
+			{
+				/* Increment the index and address */
+				current_address += write_size;
+				buffer_index += write_size;
+				// Resume running algorithm with parameters
+				xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
+			}
+		}
+
+		/* Regardless of errors, try to close down algo */
+		//(void)adsp83x_quit(bank);
+
+	}
+
+	return retval;
+}
+
+/**
+ * Read the 'count' number of bytes from the buffer at the offset specified
+ * in the spi flash area using the flash bank provided. If called when device has
+ * already been probed, previously filled fields will be discard and probe
+ * procedure will be done again.
+ *
+ * @param	bank	Pointer to the flash bank to use
+ * @param	buffer	Buffer to read data from the spi flash area into
+ * @param	offset	Offset from base to read from
+ * @param	count	Number of bytes to read from spi flash area
+ *
+ * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
+*/
+static int adsp2183x_read(struct flash_bank *bank,
+	uint8_t *buffer, uint32_t offset, uint32_t count)
+{
+
+	struct target *target = bank->target;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+	struct adsp83x_algo_params algo_params;
+	int retval;
+
+	// poll target to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
+
+	// Check if algorithm is running, if not run it
+	if(target->state != TARGET_DEBUG_RUNNING)
+	{
+		retval = adsp83x_init(bank);
+		if (retval != ERROR_OK)
+			return retval;
+	}
+
+	/* Max read has to be smaller than both max SPI transfer size and available space on target */
+	uint32_t read_bytes = 0;
+	while (count)
+	{
+		/* Maximum read size*/
+		uint32_t read_size = MAX_TX_RX_TRANSFER;
+
+		/* Then if the actual count is smaller than the theoretical max, use the count */
+		if (count < read_size)
+		{
+			read_size = count;
+		}
+
+		// Need to halt before reads/writes
+		retval = target_halt(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Target is not halted!");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return retval;
+		}
+
+		// poll target to update state
+		retval = target_poll(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to poll target");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return retval;
+		}
+
+		/* Check device is halted and has been probed first */
+		if (TARGET_HALTED != target->state) {
+			LOG_ERROR("Cannot read from flash. Target is not halted!");
+			return ERROR_TARGET_NOT_HALTED;
+		}
+
+		/* Check we're not going reading more than we should */
+		assert(count >= read_size);
+
+
+		uint32_t address = bank->base + offset + read_bytes;
+
+		// hardcode to issue read command to algorithm
+		buf_set_u32(algo_params.command, 0, 32, READ_COMMAND);
+
+		// write algo parameters
+		buf_set_u32(algo_params.address, 0, 32, address);
+		buf_set_u32(algo_params.length, 0, 32, read_size);
+		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+
+		retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
+				sizeof(algo_params), (uint8_t *)&algo_params);
+
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to read data from target memory");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return retval;
+		}
+
+		// Resume running algorithm with parameters
+		xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+
+		// poll target to update state and wait for algorithm to hit breakpoint to halt target
+		while(target->state != TARGET_HALTED) {
+			retval = target_poll(target);
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Unable to poll target");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+		}
+
+		/* Put next block of data from flash into buffer */
+		retval = target_read_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address,
+		read_size, &buffer[read_bytes]);
+
+		if (retval != ERROR_OK)
+		{
+			/* Close down algo */
+			(void)adsp83x_quit(bank);
+			return retval;
+		}
+
+		// get status from buffer to determine result of programming
+		retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
+
+		if (retval != ERROR_OK)
+		{
+			/* Close down algo */
+			(void)adsp83x_quit(bank);
+			return retval;
+		}
+		else
+		{
+		/* Increment the index and address */
+			read_bytes += read_size;
+			count -= read_size;
+			// Resume running algorithm with parameters
+			xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
+		}
+	}
+
+	return retval;
+}
+
+/**
+ * Probe the spi flash area to set up the target side algorithm and update the bank
+ * appropriately.
+ *
+ * @param	bank	Pointer to the flash bank to use and write to
+ *
+ * @returns	ERROR_OK if successful otherwise the relevant code.
+*/
+static int adsp2183x_probe(struct flash_bank *bank)
+{
+	struct target *target = bank->target;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+	struct flash_sector *sectors = NULL;
+	struct adsp83x_algo_params algo_params;
+	int retval;
+	uint32_t jedec_id = 0u;
+
+	LOG_INFO("Setting up ADSP2183X flash area...");
+
+	if (!target_was_examined(target)) {
+		LOG_ERROR("Target not examined yet");
+		return ERROR_TARGET_NOT_EXAMINED;
+	}
+
+	target_free_all_working_areas(target);
+
+	/* Output available working memory on target */
+	uint32_t available_space = target_get_working_area_avail(target);
+	LOG_INFO("Target has %uB of available space.", available_space);
+	adsp2183x_flash_info->available_space = available_space;
+
+	// Get start address for target side algorithm
+	adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address = target->working_area_phys;
+
+	// poll target to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
+
+	// Check if algorithm is running, if not run it
+	if(target->state != TARGET_DEBUG_RUNNING)
+	{
+		retval = adsp83x_init(bank);
+		if (retval != ERROR_OK)
+			return retval;
+	}
+
+	// Need to halt before reads/writes
+	retval = target_halt(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Target is not halted!");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
+
+	// poll target to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
+
+	// hardcode to issue read command to algorithm
+	buf_set_u32(algo_params.command, 0, 32, READ_ID_CODE_COMMAND);
+
+	// write algo parameters
+	buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+
+	retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
+				sizeof(algo_params), (uint8_t *)&algo_params);
+
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to write algorithm parameters");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return retval;
+	}
+
+	// Resume running algorithm with parameters
+	xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+
+	// poll target to update state and wait for algorithm to hit breakpoint to halt target
+	while(target->state != TARGET_HALTED) {
+		retval = target_poll(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to poll target");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return retval;
+		}
+	}
+
+	retval = target_read_u32(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address + ADSP83X_READID_OFFSET, &jedec_id);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return retval;
+	}
+
+	LOG_DEBUG("Got SPI Flash device ID: 0x%08X", jedec_id);
+
+	bool found_device = false;
+	for (const struct flash_device *pFlashDevice = flash_devices; pFlashDevice->name != NULL ; pFlashDevice++)
+	{
+		if (pFlashDevice->device_id == jedec_id)
+		{
+			adsp2183x_flash_info->dev = *pFlashDevice;
+			found_device = true;
+			break;
+		}
+	}
+
+	// get status from buffer to determine result of programming
+	retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
+
+	if (retval != ERROR_OK)
+	{
+		/* Close down algo */
+		(void)adsp83x_quit(bank);
+		return retval;
+	}
+	else
+	{
+		// Resume running algorithm with parameters
+		xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
+	}
+
+	if (!found_device)
+	{
+		LOG_ERROR("No matching SPI Flash definition found for read Device ID: 0x%08X.", jedec_id);
+		return ERROR_FLASH_OPER_UNSUPPORTED;
+	}
+
+	LOG_INFO("Discovered SPI Flash: %s", adsp2183x_flash_info->dev.name);
+
+	/* Fill the bank info based on the discovered device info */
+	bank->size = adsp2183x_flash_info->dev.size_in_bytes;
+	bank->num_sectors = (adsp2183x_flash_info->dev.size_in_bytes / adsp2183x_flash_info->dev.sectorsize);
+	/* Create and fill the sectors array */
+	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
+	if (!sectors)
+	{
+		LOG_ERROR("Not enough memory available for sectors array.");
+		return ERROR_FAIL;
+	}
+
+	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {
+		sectors[sector].offset = sector * adsp2183x_flash_info->dev.sectorsize;
+		sectors[sector].size = adsp2183x_flash_info->dev.sectorsize;
+		sectors[sector].is_erased = -1;
+		sectors[sector].is_protected = 0;
+	}
+
+	bank->sectors = sectors;
+	adsp2183x_flash_info->probed = true;
+
+	return ERROR_OK;
+}
+
+/**
+ * Called by some other commands before proceeding with their main function to
+ * ensure device is properly probed and known. Mostly a wrapper from the probe
+ * function with a stored probe state.
+ *
+ * @param	bank	Pointer to the flash bank to use and write to
+ *
+ * @returns	ERROR_OK if successful otherwise the relevant code.
+*/
+static int adsp2183x_auto_probe(struct flash_bank *bank)
+{
+	int retval;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+
+	if (adsp2183x_flash_info->probed) {
+		retval = ERROR_OK;
+	}
+	else {
+		retval = adsp2183x_probe(bank);
+	}
+
+	return retval;
+}
+
+/**
+* Not yet supported for spi flash.
+*/
+static int adsp2183x_protect_check(struct flash_bank *bank)
+{
+	return ERROR_FLASH_OPER_UNSUPPORTED;
+}
+
+/**
+* Not yet supported for spi flash.
+*/
+static int adsp2183x_protect(struct flash_bank *bank, int set,
+	unsigned int first, unsigned int last)
+{
+	return ERROR_FLASH_OPER_UNSUPPORTED;
+}
+
+/**
+ * Copy the flash device info into the provided buffer.
+ *
+ * @param	bank		Pointer to the flash bank to print get info about
+ * @param   cmd         Pointer to the command invocation
+ *
+ * @returns	ERROR_OK if successful otherwise the relevant code.
+*/
+static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation *cmd)
+{
+	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
+
+	if (adsp2183x_flash_info->probed == false) {
+		command_print(cmd, "ADSP-2183X spi flash not yet probed.");
+		return ERROR_FLASH_BANK_NOT_PROBED;
+	}
+
+	command_print(cmd, "ADSP-2183X spi flash\n"
+			"Size: 0x%X\n",
+			adsp2183x_flash_info->sector_length);
+
+	return ERROR_OK;
+}
+
+/**
+ * Usage:
+ * flash bank <name> adsp2183x <base_addr> 0 0 0 <target> parameter_address buffer_address entry_point_address algorithm_file
+*/
+FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
+{
+	struct adsp2183x_flash_bank *adsp2183x_flash_info;
+	int byteCount = 0;
+	uint32_t tempParse;
+	char tempStr[3];
+	uint8_t convertedHex;
+	FILE* algo_file;
+
+	/* Check the correct number of arguments have been provided */
+	if (CMD_ARGC != 10) {
+		LOG_ERROR("Invalid number of flash bank arguments. Usage:\n"
+			"flash bank <name> adsp2183x <base_addr> 0 0 0 <target> "
+			"parameter_address buffer_address entry_point_address algorithm_file");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
+
+	adsp2183x_flash_info = malloc(sizeof(struct adsp2183x_flash_bank));
+	if (!adsp2183x_flash_info) {
+		LOG_ERROR("Not enough memory for local driver information.");
+		return ERROR_FAIL;
+	}
+
+	adsp2183x_flash_info->probed = false;
+	bank->driver_priv = adsp2183x_flash_info;
+
+    // Opening file in reading mode
+    algo_file = fopen(CMD_ARGV[9], "r");
+
+    if (NULL == algo_file) {
+        LOG_ERROR("File %s can't be opened \n", CMD_ARGV[9]);
+		return -1;
+    }
+
+     /* Size of file */
+    fseek(algo_file, 0, SEEK_END);
+   	adsp2183x_flash_info->adsp2183x_algorithm.size = ftell(algo_file);
+    fseek(algo_file, 0, SEEK_SET);
+	adsp2183x_flash_info->adsp2183x_algorithm.adsp83x_spi_algo = malloc(sizeof(uint8_t) * adsp2183x_flash_info->adsp2183x_algorithm.size);
+
+	// Get 2 characters at a time to form byte. Convert byte and
+	// store into spi algorithm buffer
+    do {
+        tempStr[0] = fgetc(algo_file);
+		// read/skip over LF (UNIX) and CR (Windows)
+		if(tempStr[0] != '\n' && tempStr[0] != '\r') {
+			tempStr[1] = fgetc(algo_file);
+			convertedHex = strtoul((const char *)tempStr, NULL, 16);
+			adsp2183x_flash_info->adsp2183x_algorithm.adsp83x_spi_algo[byteCount] = convertedHex;
+			byteCount++;
+		}
+        // Checking if character is not EOF.
+        // If it is EOF stop reading.
+    } while (tempStr[1] != EOF);
+
+    // Closing the file
+    fclose(algo_file);
+
+	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
+	adsp2183x_flash_info->adsp2183x_algorithm.parameter_address = (unsigned long)tempParse;
+	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[7], tempParse);
+	adsp2183x_flash_info->adsp2183x_algorithm.buffer_address = (unsigned long)tempParse;
+
+	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[8], tempParse);
+	adsp2183x_flash_info->adsp2183x_algorithm.reset_handler_addr = (unsigned long)tempParse;
+
+	return ERROR_OK;
+}
+
+/**
+ * Erase whole memory on SPI flash device.
+ * Usage:
+ * adsp2183x mase_erase bank_id
+*/
+COMMAND_HANDLER(adsp2183x_mass_erase_handler)
+{
+	struct flash_bank *bank;
+	struct target *target;
+	struct adsp2183x_flash_bank *adsp2183x_flash_info;
+	struct adsp83x_algo_params algo_params;
+	int retval;
+
+	if (CMD_ARGC != 1)
+	{
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
+
+	retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
+	if (ERROR_OK != retval)
+	{
+		return retval;
+	}
+
+	target = bank->target;
+	adsp2183x_flash_info = bank->driver_priv;
+
+	if (adsp2183x_flash_info->probed != true)
+	{
+		LOG_ERROR("Cannot erase flash as target has not been probed. Please probe target first.");
+		retval = ERROR_FLASH_BANK_NOT_PROBED;
+	}
+	else
+	{
+		// poll target to update state
+		retval = target_poll(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to poll target");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return ERROR_FAIL;
+		}
+
+		// Check if algorithm is running, if not run it
+		if(target->state != TARGET_DEBUG_RUNNING)
+		{
+			retval = adsp83x_init(bank);
+			if (retval != ERROR_OK)
+				return retval;
+		}
+
+		// Need to halt before reads/writes
+		retval = target_halt(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Target is not halted!");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return retval;
+		}
+
+		// poll target to update state
+		retval = target_poll(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to poll target");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return retval;
+		}
+
+		/* Check device is halted and has been probed first */
+		if (TARGET_HALTED != target->state) {
+			LOG_ERROR("Cannot read from flash. Target is not halted!");
+			return ERROR_TARGET_NOT_HALTED;
+		}
+
+		// hardcode to issue read command to algorithm
+		buf_set_u32(algo_params.command, 0, 32, MASS_ERASE_COMMAND);
+
+		// write algo parameters
+		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+
+		retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
+					sizeof(algo_params), (uint8_t *)&algo_params);
+
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to write algorithm parameters");
+			target_free_working_area(target, adsp2183x_flash_info->working_area);
+			adsp2183x_flash_info->working_area = NULL;
+			return retval;
+		}
+
+		// Resume running algorithm with parameters
+		xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
+
+		// poll target to update state and wait for algorithm to hit breakpoint to halt target
+		while(target->state != TARGET_HALTED) {
+			retval = target_poll(target);
+			if (retval != ERROR_OK) {
+				LOG_ERROR("Unable to poll target");
+				target_free_working_area(target, adsp2183x_flash_info->working_area);
+				adsp2183x_flash_info->working_area = NULL;
+				return retval;
+			}
+		}
+
+		// get status from buffer to determine result of programming
+		retval = adsp83x_wait_algo_done(bank, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address);
+
+	}
+
+	return retval;
+
+}
+
+static const struct command_registration adsp2183x_exec_command_handlers[] = {
+	{
+		.name		= "mass_erase",
+		.handler	= adsp2183x_mass_erase_handler,
+		.mode		= COMMAND_EXEC,
+		.usage		= "bank_id",
+		.help		= "Mass erase entire flash device.",
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+static const struct command_registration adsp2183x_command_handlers[] = {
+	{
+		.name	= "adsp2183x",
+		.mode	= COMMAND_ANY,
+		.help	= "adsp2183x flash command group",
+		.usage	= "",
+		.chain	= adsp2183x_exec_command_handlers,
+	},
+	COMMAND_REGISTRATION_DONE
+};
+
+const struct flash_driver adsp2183x_flash = {
+	.name				= "adsp2183x",
+	.commands			= adsp2183x_command_handlers,
+	.flash_bank_command	= adsp2183x_flash_bank_command,
+	.erase				= adsp2183x_erase,
+	.protect			= adsp2183x_protect,
+	.write				= adsp2183x_write,
+	.read				= adsp2183x_read,
+	.probe				= adsp2183x_probe,
+	.auto_probe			= adsp2183x_auto_probe,
+	.erase_check		= default_flash_blank_check,
+	.protect_check		= adsp2183x_protect_check,
+	.info				= adsp2183x_get_info,
+	.free_driver_priv	= default_flash_free_driver_priv,
+};
