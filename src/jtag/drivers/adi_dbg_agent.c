@@ -1,21 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
-*   Copyright (C) 2021-2024 Analog Devices, Inc.                          *
-*                                                                         *
-*   This program is free software; you can redistribute it and/or modify  *
-*   it under the terms of the GNU General Public License as published by  *
-*   the Free Software Foundation; either version 2 of the License, or     *
-*   (at your option) any later version.                                   *
-*                                                                         *
-*   This program is distributed in the hope that it will be useful,       *
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-*   GNU General Public License for more details.                          *
-*                                                                         *
-*   You should have received a copy of the GNU General Public License     *
-*   along with this program; if not, write to the                         *
-*   Free Software Foundation, Inc.,                                       *
-*   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
-***************************************************************************/
+ *   Copyright (C) 2021-2024 Analog Devices, Inc.                          *
+ ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -277,7 +264,7 @@ static params_t cable_params;
 extern struct adapter_driver *adapter_driver;
 static const char *adi_cable_name(void)
 {
-	if (adapter_driver == NULL)
+	if (!adapter_driver)
 		return "";
 
 	if (strcmp(adapter_driver->name, "dbgagent") == 0)
@@ -415,7 +402,7 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (tap_info->pairs == NULL)
+	if (!tap_info->pairs)
 	{
 		unsigned char *cmd;
 		int32_t new_sz = cable_params.default_scanlen;
@@ -423,7 +410,7 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		int i, j;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
@@ -568,7 +555,7 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 
 	buf = (uint8_t *)calloc(DIV_ROUND_UP(len, 8), 1);
 
-	if (buf == NULL)
+	if (!buf)
 		LOG_ERROR("malloc(%d) fails", DIV_ROUND_UP(len, 8));
 
 	if (idx_dat < 0)
@@ -827,16 +814,16 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	int32_t idx;
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (in == NULL)
+	if (!in)
 		LOG_WARNING("NO IN DATA!!!%s", out ? " BUT there is out data!" : "");
 
-	if (tap_info->pairs == NULL)
+	if (!tap_info->pairs)
 	{	/* really should never get here, but must not crash system. Would be rude */
 		int32_t new_sz = cable_params.default_scanlen + 4;
 		unsigned char *cmd;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
@@ -867,7 +854,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 		new_sz = tap_info->total + byte_cnt + 8;
 		cmd = realloc(tap_info->cmd, (sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
+		if (!cmd)
 		{
 			LOG_ERROR("realloc(%ld) fails",
 				(long int)(sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
@@ -904,7 +891,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
 			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
-			if (datPtr == NULL)
+			if (!datPtr)
 			{
 				LOG_ERROR("realloc(%ld) fails",
 					(long int)(sizeof (dat_dat) * new_sz));
@@ -1274,7 +1261,7 @@ static int perform_scan(uint8_t **rdata)
 			len -= tap_info->dat[0].idx;
 
 		out = malloc(len);
-		if (out == NULL)
+		if (!out)
 		{
 			LOG_ERROR("malloc(%ld) fails", (long int)len);
 			return ERROR_FAIL;
@@ -1285,7 +1272,7 @@ static int perform_scan(uint8_t **rdata)
 	else
 	{	/* no data, so allocate for just header */
 		out = malloc(cable_params.tap_pair_start_idx + 16);
-		if (out == NULL)
+		if (!out)
 		{
 			LOG_ERROR("malloc(%d) fails", cable_params.tap_pair_start_idx + 16);
 			return ERROR_FAIL;

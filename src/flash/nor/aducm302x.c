@@ -1,21 +1,8 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 /***************************************************************************
  *   Flash drivers for Analog Devices ADuCM302x and ADuCM4x50              *
- *   Copyright (C) 2014, 2016, 2023 Analog Devices, Inc.                         *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.           *
+ *   Copyright (C) 2014, 2016, 2023-2024 Analog Devices, Inc.              *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -184,7 +171,7 @@ static int aducm302x_probe(struct flash_bank *bank)
 	aducm302x_info->pagesize = 2048;
 	bank->num_sectors = bank->size / aducm302x_info->pagesize;
 	bank->sectors = malloc(bank->num_sectors * sizeof(struct flash_sector));
-	if (bank->sectors == NULL) {
+	if (!bank->sectors) {
 		LOG_ERROR("malloc failed");
 		return ERROR_FAIL;
 	}
@@ -645,7 +632,7 @@ FLASH_BANK_COMMAND_HANDLER(aducm302x_flash_bank_command)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	aducm302x_info = calloc(sizeof(struct aducm302x_flash_bank), 1);
-	if (aducm302x_info == NULL) {
+	if (!aducm302x_info) {
 		LOG_ERROR("calloc failed");
 		return ERROR_FAIL;
 	}
@@ -672,7 +659,7 @@ FLASH_BANK_COMMAND_HANDLER(aducm4x50_flash_bank_command)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	aducm302x_info = calloc(sizeof(struct aducm302x_flash_bank), 1);
-	if (aducm302x_info == NULL) {
+	if (!aducm302x_info) {
 		LOG_ERROR("calloc failed");
 		return ERROR_FAIL;
 	}
