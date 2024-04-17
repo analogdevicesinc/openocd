@@ -9,6 +9,10 @@ noinst_LTLIBRARIES += %D%/libocdflashnor.la
 	$(NORHEADERS)
 
 NOR_DRIVERS = \
+	%D%/adsp/adspsc59x.c \
+	%D%/adsp/spi/adsp_spi.c \
+	%D%/adsp/spi/adsp_spi_dbg.c \
+	%D%/adsp/spi/adsp_spi_device.c \
 	%D%/aduc702x.c \
 	%D%/aducm302x.c \
 	%D%/aducm360.c \

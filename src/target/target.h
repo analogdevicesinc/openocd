@@ -15,6 +15,8 @@
  *                                                                         *
  *   Copyright (C) ST-Ericsson SA 2011                                     *
  *   michel.jaouen@stericsson.com : smp minimum support                    *
+ *                                                                         *
+ *   Portions Copyright (C) 2023-2024 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_TARGET_H
@@ -211,6 +213,7 @@ struct target {
 	bool restart_use_cti;
 	target_addr_t restart_cti_reg_addr;
 	int restart_cti_channel;
+	int halt_cti_channel;
 };
 
 struct target_list {

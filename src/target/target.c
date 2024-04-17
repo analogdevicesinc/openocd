@@ -25,7 +25,7 @@
  *   Copyright (C) 2011 Andreas Fritiofson                                 *
  *   andreas.fritiofson@gmail.com                                          *
  *                                                                         *
- * 	 Portions Copyright (C) 2023 Analog Devices, Inc.                      *
+ * 	 Portions Copyright (C) 2023-2024 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -2103,10 +2103,6 @@ static int target_free_working_area_restore(struct target *target, struct workin
 			area->size, area->address);
 
 	/* mark user pointer invalid */
-	/* TODO: Is this really safe? It points to some previous caller's memory.
-	 * How could we know that the area pointer is still in that place and not
-	 * some other vital data? What's the purpose of this, anyway? */
-	*area->user = NULL;
 	area->user = NULL;
 
 	target_merge_working_areas(target);
@@ -2136,7 +2132,6 @@ static void target_free_all_working_areas_restore(struct target *target, int res
 			if (restore)
 				target_restore_working_area(target, c);
 			c->free = true;
-			*c->user = NULL; /* Same as above */
 			c->user = NULL;
 		}
 		c = c->next;
@@ -4869,6 +4864,7 @@ enum target_cfg_param {
 	TCFG_GDB_MAX_CONNECTIONS,
 	TCFG_RESTART_CTI_REG_ADDR,
 	TCFG_RESTART_CTI_CHANNEL,
+	TCFG_HALT_CTI_CHANNEL,
 };
 
 static struct jim_nvp nvp_config_opts[] = {
@@ -4888,6 +4884,7 @@ static struct jim_nvp nvp_config_opts[] = {
 	{ .name = "-gdb-max-connections",   .value = TCFG_GDB_MAX_CONNECTIONS },
 	{ .name = "-restart-cti-reg-addr",  .value = TCFG_RESTART_CTI_REG_ADDR },
 	{ .name = "-restart-cti-channel",   .value = TCFG_RESTART_CTI_CHANNEL },
+	{ .name = "-halt-cti-channel", .value = TCFG_HALT_CTI_CHANNEL },
 	{ .name = NULL, .value = -1 }
 };
 
@@ -5246,6 +5243,19 @@ no_params:
 					goto no_params;
 			}
 			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->restart_cti_channel));
+			/* loop for more */
+			break;
+		case TCFG_HALT_CTI_CHANNEL:
+			if (goi->isconfigure) {
+				e = jim_getopt_wide(goi, &w);
+				if (e != JIM_OK)
+					return e;
+				target->halt_cti_channel = (int32_t)w;
+			} else {
+				if (goi->argc != 0)
+					goto no_params;
+			}
+			Jim_SetResult(goi->interp, Jim_NewIntObj(goi->interp, target->halt_cti_channel));
 			/* loop for more */
 			break;
 		}
