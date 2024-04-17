@@ -181,6 +181,7 @@ static const struct jim_nvp nvp_target_event[] = {
 	{ .value = TARGET_EVENT_EXAMINE_START, .name = "examine-start" },
 	{ .value = TARGET_EVENT_EXAMINE_FAIL, .name = "examine-fail" },
 	{ .value = TARGET_EVENT_EXAMINE_END, .name = "examine-end" },
+	{ .value = TARGET_EVENT_EXAMINE_FIRST, .name = "examine-first" },
 
 	{ .value = TARGET_EVENT_DEBUG_HALTED, .name = "debug-halted" },
 	{ .value = TARGET_EVENT_DEBUG_RESUMED, .name = "debug-resumed" },
