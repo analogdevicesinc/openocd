@@ -13,6 +13,8 @@
  *                                                                         *
  *   Cortex-M3(tm) TRM, ARM DDI 0337E (r1p1) and 0337G (r2p0)              *
  *                                                                         *
+ * 	 Portions Copyright (C) 2023-2024 Analog Devices, Inc.                 *
+ *                                                                         *
  ***************************************************************************/
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -2520,6 +2522,9 @@ int cortex_m_examine(struct target *target)
 
 	if (!target_was_examined(target)) {
 		target_set_examined(target);
+
+		/* allow for custom code before we access anything else */
+		target_call_event_callbacks(target, TARGET_EVENT_EXAMINE_FIRST);
 
 		/* Read from Device Identification Registers */
 		retval = target_read_u32(target, CPUID, &cpuid);
