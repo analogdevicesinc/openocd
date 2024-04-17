@@ -550,4 +550,5 @@ const struct flash_driver aducm360_flash = {
 	.probe = aducm360_probe,
 	.auto_probe = aducm360_probe,
 	.erase_check = default_flash_blank_check,
+	.free_driver_priv = default_flash_free_driver_priv,
 };

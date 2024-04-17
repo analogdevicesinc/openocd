@@ -304,6 +304,10 @@ proc adspsc5xx_init_ddr3 { dmc } {
    mww phys $dmc_mr1 0x00000006
    # *pREG_DMC0_MR2 = 0x00000008;
    mww phys $dmc_mr2 0x00000008
+
+   # *pREG_DMC0_DLLCTL = 0x00000948;
+   mww phys $dmc_dllctl 0x00000948
+
    # *pREG_DMC0_CTL = 0x00000405;
    mww phys $dmc_ctl 0x00000405
 
@@ -313,9 +317,6 @@ proc adspsc5xx_init_ddr3 { dmc } {
    while { [expr {$data & 4}] == 0 } {
       set data [memread32_phys $dmc_stat]
    }
-
-   # *pREG_DMC0_DLLCTL = 0x00000948;
-   mww phys $dmc_dllctl 0x00000948
 
    # Workaround for silicon anomaly 20000037
    # Dummy read
@@ -420,6 +421,10 @@ proc adspsc5xx_init_ddr2 { } {
    mww phys $dmc_emr1 0x00000004
    # *pREG_DMC0_EMR2 = 0x00000000;
    mww phys $dmc_emr2 0x00000000
+
+   # *pREG_DMC0_DLLCTL = 0x00000948;
+   mww phys $dmc_dllctl 0x00000948
+
    # *pREG_DMC0_CTL = 0x00000404;
    mww phys $dmc_ctl 0x00000404
 
@@ -429,9 +434,6 @@ proc adspsc5xx_init_ddr2 { } {
    while { [expr {$data & 4}] == 0 } {
       set data [memread32_phys $dmc_stat]
    }
-
-   # *pREG_DMC0_DLLCTL = 0x00000948;
-   mww phys $dmc_dllctl 0x00000948
 
    # Workaround for silicon anomaly 20000037
    # Dummy read
