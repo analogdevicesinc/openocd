@@ -129,6 +129,15 @@ ATTRS{idVendor}=="0640", ATTRS{idProduct}=="002d", MODE="660", GROUP="plugdev", 
 # Hitex Cortino
 ATTRS{idVendor}=="0640", ATTRS{idProduct}=="0032", MODE="660", GROUP="plugdev", TAG+="uaccess"
 
+# Analog Devices ICE and Debug boards
+ATTRS{idVendor}=="064b", ATTRS{idProduct}=="0283", MODE="660", GROUP="plugdev", TAG+="uaccess"
+ATTRS{idVendor}=="064b", ATTRS{idProduct}=="0617", MODE="660", GROUP="plugdev", TAG+="uaccess"
+ATTRS{idVendor}=="064b", ATTRS{idProduct}=="2500", MODE="660", GROUP="plugdev", TAG+="uaccess"
+ATTRS{idVendor}=="064b", ATTRS{idProduct}=="2503", MODE="660", GROUP="plugdev", TAG+="uaccess"
+ATTRS{idVendor}=="064b", ATTRS{idProduct}=="2504", MODE="660", GROUP="plugdev", TAG+="uaccess"
+ATTRS{idVendor}=="064b", ATTRS{idProduct}=="2507", MODE="660", GROUP="plugdev", TAG+="uaccess"
+ATTRS{idVendor}=="064b", ATTRS{idProduct}=="2508", MODE="660", GROUP="plugdev", TAG+="uaccess"
+
 # Altera USB Blaster
 ATTRS{idVendor}=="09fb", ATTRS{idProduct}=="6001", MODE="660", GROUP="plugdev", TAG+="uaccess"
 # Altera USB Blaster2
