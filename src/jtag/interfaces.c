@@ -152,6 +152,9 @@ struct adapter_driver *adapter_drivers[] = {
 #if BUILD_ICE_1000 == 1
 		&ice1000_adapter_driver,
 #endif
+#if BUILD_ICE_1500 == 1
+		&ice1500_adapter_driver,
+#endif
 #if BUILD_ICE_2000 == 1
 		&ice2000_adapter_driver,
 #endif
