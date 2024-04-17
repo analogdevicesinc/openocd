@@ -5626,6 +5626,8 @@ The following target events are defined:
 @* Occurs early in the halt process
 @item @b{examine-start}
 @* Before target examine is called.
+@item @b{examine-first}
+@* First thing called once target examined flag is set (Cortex M only).
 @item @b{examine-end}
 @* After target examine is called with no errors.
 @item @b{examine-fail}
