@@ -698,9 +698,10 @@ static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation
 {
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
 
-	if (!adsp2183x_otp_info->probed) {
-		command_print(cmd, "ADSP-2183X SPI Flash not yet probed.");
-		return ERROR_FLASH_BANK_NOT_PROBED;
+	int retval = adsp2183x_probe(bank);
+	if (retval != ERROR_OK)
+	{
+		return retval;
 	}
 
 	command_print(cmd, "ADSP-2183X OTP\n"
@@ -723,7 +724,7 @@ static const struct command_registration adsp2183x_exec_command_handlers[] = {
 
 static const struct command_registration adsp2183x_command_handlers[] = {
 	{
-		.name	= "adsp2183x",
+		.name	= "adsp2183x_otp",
 		.mode	= COMMAND_ANY,
 		.help	= "adsp2183x flash command group",
 		.usage	= "",
