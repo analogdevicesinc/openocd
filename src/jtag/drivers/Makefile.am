@@ -193,6 +193,12 @@ if CMSIS_DAP_HID
 DRIVERFILES += %D%/cmsis_dap_usb_hid.c
 DRIVERFILES += %D%/cmsis_dap.c
 endif
+if CMSIS_DAP_USB
+DRIVERFILES += %D%/cmsis_dap_usb_bulk.c
+if !CMSIS_DAP_HID
+DRIVERFILES += %D%/cmsis_dap.c
+endif
+endif
 if ADI_DBGAGENT
 DRIVERFILES += %D%/adi_dbg_agent.c
 endif
@@ -203,11 +209,8 @@ if ICE_2000
 DRIVERFILES += %D%/ice1000.c
 endif
 endif
-if CMSIS_DAP_USB
-DRIVERFILES += %D%/cmsis_dap_usb_bulk.c
-if !CMSIS_DAP_HID
-DRIVERFILES += %D%/cmsis_dap.c
-endif
+if ICE_1500
+DRIVERFILES += %D%/ice1500.c
 endif
 if IMX_GPIO
 DRIVERFILES += %D%/imx_gpio.c

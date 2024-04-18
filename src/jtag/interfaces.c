@@ -16,7 +16,7 @@
  *                                                                         *
  *   Copyright (C) 2020, Ampere Computing LLC                              *
  *                                                                         *
- *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
+ *   Portions Copyright (C) 2023,2024 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -151,6 +151,9 @@ struct adapter_driver *adapter_drivers[] = {
 #endif
 #if BUILD_ICE_1000 == 1
 		&ice1000_adapter_driver,
+#endif
+#if BUILD_ICE_1500 == 1
+		&ice1500_adapter_driver,
 #endif
 #if BUILD_ICE_2000 == 1
 		&ice2000_adapter_driver,
