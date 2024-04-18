@@ -382,6 +382,7 @@ extern struct adapter_driver ftdi_adapter_driver;
 extern struct adapter_driver gw16012_adapter_driver;
 extern struct adapter_driver hl_adapter_driver;
 extern struct adapter_driver ice1000_adapter_driver;
+extern struct adapter_driver ice1500_adapter_driver;
 extern struct adapter_driver ice2000_adapter_driver;
 extern struct adapter_driver imx_gpio_adapter_driver;
 extern struct adapter_driver jlink_adapter_driver;
