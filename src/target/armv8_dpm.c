@@ -683,7 +683,7 @@ static int dpmv8_read_reg(struct arm_dpm *dpm, struct reg *r, unsigned regnum)
 	}
 
 	if (retval != ERROR_OK)
-		LOG_ERROR("Failed to read %s register", r->name);
+		LOG_DEBUG("Failed to read %s register", r->name);
 
 	return retval;
 }
@@ -725,7 +725,7 @@ static int dpmv8_write_reg(struct arm_dpm *dpm, struct reg *r, unsigned regnum)
 	}
 
 	if (retval != ERROR_OK)
-		LOG_ERROR("Failed to write %s register", r->name);
+		LOG_DEBUG("Failed to write %s register", r->name);
 
 	return retval;
 }
