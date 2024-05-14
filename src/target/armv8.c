@@ -535,9 +535,13 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_SPSR_EL2, 0), &value_64, 2);
 		break;
 	case ARMV8_SPSR_EL3:
-		retval = dpm->instr_read_data_r0(dpm,
-				ARMV8_MRS(SYSTEM_SPSR_EL3, 0), &value);
-		value_64 = value;
+		if (curel < SYSTEM_CUREL_EL3) {
+			LOG_DEBUG("SPSR_EL3 not accessible in EL%u", curel);
+			retval = ERROR_FAIL;
+			break;
+		}
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_SPSR_EL3, 0), &value_64);
 		break;
 	case ARMV8_PAUTH_CMASK:
 	case ARMV8_PAUTH_DMASK:
@@ -1573,9 +1577,13 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 				ARMV8_MSR_GP(SYSTEM_SPSR_EL2, 0), value);
 		break;
 	case ARMV8_SPSR_EL3:
-		value = value_64;
+		if (curel < SYSTEM_CUREL_EL3) {
+			LOG_DEBUG("SPSR_EL3 not accessible in EL%u", curel);
+			retval = ERROR_FAIL;
+			break;
+		}
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_SPSR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_SPSR_EL3, 0), value_64);
 		break;
 	case ARMV8_FAR_EL1:
 		value = value_64;
@@ -3574,7 +3582,7 @@ static const struct {
 	{ ARMV8_SPSR_EL2, "SPSR_EL2", 32, ARMV8_64_EL2H, REG_TYPE_UINT32, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_ELR_EL3, "ELR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_CODE_PTR, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_ESR_EL3, "ESR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
-	{ ARMV8_SPSR_EL3, "SPSR_EL3", 32, ARMV8_64_EL3H, REG_TYPE_UINT32, "Debug", "net.sourceforge.openocd.debug", NULL},
+	{ ARMV8_SPSR_EL3, "SPSR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "Debug", "net.sourceforge.openocd.debug", NULL},
 
 	{ ARMV8_PAUTH_DMASK, "pauth_dmask", 64, ARM_MODE_ANY, REG_TYPE_UINT64, NULL, "org.gnu.gdb.aarch64.pauth", NULL},
 	{ ARMV8_PAUTH_CMASK, "pauth_cmask", 64, ARM_MODE_ANY, REG_TYPE_UINT64, NULL, "org.gnu.gdb.aarch64.pauth", NULL},
