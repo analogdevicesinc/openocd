@@ -472,8 +472,13 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_CTR, 0), &value_64, 0);
 		break;
 	case ARMV8_ESR_EL1:
-		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ESR_EL1, 0), &value_64, 1);
+		if (curel < SYSTEM_CUREL_EL1) {
+			LOG_DEBUG("ESR_EL1 not accessible in EL%u", curel);
+			retval = ERROR_FAIL;
+			break;
+		}
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_ESR_EL1, 0), &value_64);
 		break;
 	case ARMV8_ESR_EL2:
 		if (curel < SYSTEM_CUREL_EL2) {
@@ -1523,9 +1528,13 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 				ARMV8_MSR_GP(SYSTEM_CTR, 0), value);
 		break;
 	case ARMV8_ESR_EL1:
-		value = value_64;
+		if (curel < SYSTEM_CUREL_EL1) {
+			LOG_DEBUG("ESR_EL1 not accessible in EL%u", curel);
+			retval = ERROR_FAIL;
+			break;
+		}
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ESR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ESR_EL1, 0), value_64);
 		break;
 	case ARMV8_ESR_EL2:
 		if (curel < SYSTEM_CUREL_EL2) {
@@ -3613,7 +3622,7 @@ static const struct {
 	{ ARMV8_FPCR, "fpcr", 32, ARM_MODE_ANY, REG_TYPE_UINT32, "simdfp", "org.gnu.gdb.aarch64.fpu", NULL},
 
 	{ ARMV8_ELR_EL1, "ELR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_CODE_PTR, "Debug", "net.sourceforge.openocd.debug", NULL},
-	{ ARMV8_ESR_EL1, "ESR_EL1", 32, ARMV8_64_EL1H, REG_TYPE_UINT32, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_ESR_EL1, "ESR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_SPSR_EL1, "SPSR_EL1", 32, ARMV8_64_EL1H, REG_TYPE_UINT32, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_ELR_EL2, "ELR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_CODE_PTR, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_ESR_EL2, "ESR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
