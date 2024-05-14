@@ -471,8 +471,13 @@ static int armv8_read_reg(struct armv8_common *armv8, int regnum, uint64_t *regv
 				ARMV8_MRS(SYSTEM_ESR_EL1, 0), &value_64, 1);
 		break;
 	case ARMV8_ESR_EL2:
-		retval = instr_read_data_r0_64(dpm,
-				ARMV8_MRS(SYSTEM_ESR_EL2, 0), &value_64, 2);
+		if (curel < SYSTEM_CUREL_EL2) {
+			LOG_DEBUG("ESR_EL2 not accessible in EL%u", curel);
+			retval = ERROR_FAIL;
+			break;
+		}
+		retval = dpm->instr_read_data_r0_64(dpm,
+				ARMV8_MRS(SYSTEM_ESR_EL2, 0), &value_64);
 		break;
 	case ARMV8_ESR_EL3:
 		if (curel < SYSTEM_CUREL_EL3) {
@@ -1508,9 +1513,13 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 				ARMV8_MSR_GP(SYSTEM_ESR_EL1, 0), value);
 		break;
 	case ARMV8_ESR_EL2:
-		value = value_64;
+		if (curel < SYSTEM_CUREL_EL2) {
+			LOG_DEBUG("ESR_EL2 not accessible in EL%u", curel);
+			retval = ERROR_FAIL;
+			break;
+		}
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ESR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ESR_EL2, 0), value_64);
 		break;
 	case ARMV8_ESR_EL3:
 		if (curel < SYSTEM_CUREL_EL3) {
@@ -3588,7 +3597,7 @@ static const struct {
 	{ ARMV8_ESR_EL1, "ESR_EL1", 32, ARMV8_64_EL1H, REG_TYPE_UINT32, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_SPSR_EL1, "SPSR_EL1", 32, ARMV8_64_EL1H, REG_TYPE_UINT32, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_ELR_EL2, "ELR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_CODE_PTR, "Debug", "net.sourceforge.openocd.debug", NULL},
-	{ ARMV8_ESR_EL2, "ESR_EL2", 32, ARMV8_64_EL2H, REG_TYPE_UINT32, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
+	{ ARMV8_ESR_EL2, "ESR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
 	{ ARMV8_SPSR_EL2, "SPSR_EL2", 32, ARMV8_64_EL2H, REG_TYPE_UINT32, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_ELR_EL3, "ELR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_CODE_PTR, "Debug", "net.sourceforge.openocd.debug", NULL},
 	{ ARMV8_ESR_EL3, "ESR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "SystemControlAndConfig", "net.sourceforge.openocd.sysconfig", NULL},
