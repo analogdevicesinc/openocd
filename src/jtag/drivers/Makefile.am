@@ -61,13 +61,6 @@ DIST_SUBDIRS += %D%/libjaylink
 endif
 endif
 
-if USE_LIBUSBMUX
-SUBDIRS += %D%/libusbmux
-DIST_SUBDIRS += %D%/libusbmux
-%C%_libocdjtagdrivers_la_LIBADD += %D%/libusbmux/src/libusbmux.la
-%C%_libocdjtagdrivers_la_CPPFLAGS += -I$(builddir)/%D%/libusbmux/inc
-endif
-
 if BITBANG
 DRIVERFILES += %D%/bitbang.c
 endif
@@ -211,6 +204,9 @@ endif
 endif
 if ICE_1500
 DRIVERFILES += %D%/ice1500.c
+endif
+if USE_USBMUX
+DRIVERFILES += %D%/usbmux.c
 endif
 if IMX_GPIO
 DRIVERFILES += %D%/imx_gpio.c

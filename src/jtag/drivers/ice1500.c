@@ -11,7 +11,7 @@
 #include <helper/configuration.h>
 #include "libusb_helper.h"
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 #include "usbmux.h"
 #endif
 
@@ -69,7 +69,7 @@ typedef struct
 	int32_t r_buf_sz;				/* USB Read Buffer Size */
 	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
 	bool use_usbmux;				/* If true, use USB MUX for USB communication */
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 	HANDLE mux_handle;				/* USB MUX handle */
 #endif
 } params_t;
@@ -164,7 +164,7 @@ static const int valid_freq_set[MAX_FREQ_1500] = { 1000, 5000 };
  * Internal Macros
  */
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 #define adi_usb_read_or_ret(buf, len)										\
 	do {																	\
 		if (cable_params.use_usbmux)										\
@@ -288,13 +288,12 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	int i, ret;
 
 	dev = NULL;
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 	cable_params.mux_handle = NULL;
 #endif
 
-if (cable_params.use_usbmux)
-	{
-#ifdef _WIN32
+	if (cable_params.use_usbmux) {
+#ifdef _ADI_USB_MUX_
 		ret = usbmux_open(&cable_params.mux_handle, USB_CONNECTION_TIMEOUT);
 		if (ret)
 		{
@@ -339,7 +338,7 @@ if (cable_params.use_usbmux)
 			dev = NULL;
 		}
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 		if (cable_params.mux_handle)
 		{
 			usbmux_close(cable_params.mux_handle);
@@ -514,7 +513,7 @@ static int ice1500_quit(void)
 		libusb_close(cable_params.usb_handle);
 	}
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
 	{
 		usbmux_close(cable_params.mux_handle);
@@ -1108,7 +1107,7 @@ static int ice1500_execute_queue(struct jtag_command *cmd)
 {
 	int retval = ERROR_OK;
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 #define USB_MUX_MAX_LOCK_ATTEMPTS 50
 if (cable_params.mux_handle)
 	{
@@ -1159,7 +1158,7 @@ if (cable_params.mux_handle)
 
 	if (retval != ERROR_OK)
 	{
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 		if (cable_params.mux_handle)
 		{
 			// release USB lock
@@ -1171,7 +1170,7 @@ if (cable_params.mux_handle)
 
 	retval = ice1500_tap_execute();
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
 	{
 		// release USB lock
