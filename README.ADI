@@ -22,7 +22,7 @@ Compiling OpenOCD from git
         --disable-vsllink --disable-xds110 --disable-osbdm --disable-opendous \
         --disable-aice --disable-usbprog --disable-rlink --disable-armjtagew \
         --enable-maintainer-mode --enable-ice1000 --enable-ice1500 --enable-ice2000 \
-        --enable-adi-dbgagent --enable-libusbmux
+        --enable-adi-dbgagent --enable-usbmux
     make
 
 Compiling OpenOCD from source zip (no git submodules)
@@ -35,5 +35,5 @@ Compiling OpenOCD from source zip (no git submodules)
         --disable-vsllink --disable-xds110 --disable-osbdm --disable-opendous \
         --disable-aice --disable-usbprog --disable-rlink --disable-armjtagew \
         --enable-maintainer-mode --enable-ice1000 --enable-ice1500 --enable-ice2000 \
-        --enable-adi-dbgagent --enable-libusbmux
+        --enable-adi-dbgagent --enable-usbmux
     make

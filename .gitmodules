@@ -7,6 +7,3 @@
 [submodule "src/jtag/drivers/libjaylink"]
 	path = src/jtag/drivers/libjaylink
 	url = https://gitlab.zapb.de/libjaylink/libjaylink.git
-[submodule "src/jtag/drivers/libusbmux"]
-	path = src/jtag/drivers/libusbmux
-	url = ssh://git@bitbucket.analog.com:7999/dte-dst/libusbmux.git
