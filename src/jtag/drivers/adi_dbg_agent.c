@@ -72,7 +72,7 @@ typedef struct
 	int32_t r_buf_sz;				/* USB Read Buffer Size */
 	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
 	bool use_usbmux;				/* If true, use USB MUX for USB communication */
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 	HANDLE mux_handle;				/* USB MUX handle */
 #endif
 } params_t;
@@ -165,7 +165,7 @@ static uint16_t dbgagent_pid[MAX_USB_IDS + 1] = { 0 };
  * Internal Macros
  */
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 #define adi_usb_read_or_ret(buf, len)										\
 	do {																	\
 		if (cable_params.use_usbmux)										\
@@ -289,13 +289,12 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	int i, ret;
 
 	dev = NULL;
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 	cable_params.mux_handle = NULL;
 #endif
 
-if (cable_params.use_usbmux)
-	{
-#ifdef _WIN32
+	if (cable_params.use_usbmux) {
+#ifdef _ADI_USB_MUX_
 		ret = usbmux_open(&cable_params.mux_handle, USB_CONNECTION_TIMEOUT);
 		if (ret)
 		{
@@ -306,9 +305,7 @@ if (cable_params.use_usbmux)
 		LOG_ERROR("USB MUX is not supported on this host.");
 		return ERROR_FAIL;
 #endif
-	}
-	else
-	{
+	} else {
 		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
 		if (ret != ERROR_OK)
 			return ret;
@@ -340,7 +337,7 @@ if (cable_params.use_usbmux)
 			dev = NULL;
 		}
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 		if (cable_params.mux_handle)
 		{
 			usbmux_close(cable_params.mux_handle);
@@ -509,7 +506,7 @@ static int dbgagent_quit(void)
 		libusb_close(cable_params.usb_handle);
 	}
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
 	{
 		usbmux_close(cable_params.mux_handle);
@@ -1094,7 +1091,7 @@ static int dbgagent_execute_queue(struct jtag_command *cmd_queue)
 {
 	int retval = ERROR_OK;
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 #define USB_MUX_MAX_LOCK_ATTEMPTS 50
 if (cable_params.mux_handle)
 	{
@@ -1140,7 +1137,7 @@ if (cable_params.mux_handle)
 
 	if (retval != ERROR_OK)
 	{
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 		if (cable_params.mux_handle)
 		{
 			// release USB lock
@@ -1152,7 +1149,7 @@ if (cable_params.mux_handle)
 
 	retval = dbgagent_tap_execute();
 
-#ifdef _WIN32
+#ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
 	{
 		// release USB lock
