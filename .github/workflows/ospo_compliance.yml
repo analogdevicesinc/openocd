@@ -1,0 +1,35 @@
+# Copyright (C) 2024 Analog Devices, Inc.
+
+name: OSPO Compliance Scan
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - adi-main
+      - feature-ospo-scan
+env:
+  complianceProjectName: "openocd"
+
+jobs:
+  ospo_scan:
+    runs-on: [self-hosted, "docker"]
+    outputs:
+      complianceProjectVersion: ${{ env.complianceProjectVersion }}
+    steps:
+      - name: Checkout Code
+        id: checkout_code
+        uses: actions/checkout@v4
+
+      - name: OSPO Scan
+        id: ospo_scan
+        uses: adi-innersource/ospo-scan-action@v1
+        env:
+          BLACKDUCK_API_TOKEN: ${{ secrets.BLACKDUCK_API_TOKEN }}
+        with:
+          complianceProjectName: ${{ env.complianceProjectName }}
+          snippetMatching: true
+
+      - name: Cleanup workspace
+        if: always()
+        uses: adi-innersource/cleanup-workspace-action@v1
