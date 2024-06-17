@@ -5,9 +5,7 @@ name: OSPO Compliance Scan
 on:
   workflow_dispatch:
   push:
-    branches:
-      - adi-main
-      - feature-ospo-scan
+    branches: [ "adi-main", "milestone/**" ]
 env:
   complianceProjectName: "openocd"
 
