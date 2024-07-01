@@ -82,7 +82,7 @@ jobs:
 
       - name: Generate ARTIFACT_NAME
         run: |
-          echo "ARTIFACT_NAME=openocd-${{ github.ref_name }}-${{ matrix.platform.name }}.zip" | tr '/' '-' >> $GITHUB_ENV
+          echo "ARTIFACT_NAME=openocd-${{ github.ref_name }}-${{ matrix.platform.name }}" | tr '/' '-' >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
