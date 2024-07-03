@@ -4,8 +4,7 @@
 
 on:
   push:
-    branches: [ "**/**" ]
-
+    branches: [ "**/**", "!adi-main", "!milestone/**" ]
   workflow_dispatch:
 
 concurrency:
