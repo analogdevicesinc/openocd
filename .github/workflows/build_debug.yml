@@ -23,6 +23,7 @@ jobs:
         password: ${{ secrets.DOCKER_TOKEN }}
       options: '--entrypoint /bin/bash'
     strategy:
+      fail-fast: false
       matrix:
         platform: [
           {
