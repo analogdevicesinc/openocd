@@ -1,0 +1,129 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# Copyright (C) 2024 Analog Devices, Inc.
+
+on:
+  push:
+    tags:
+      - '[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+'
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+name: OpenOCD Release
+
+jobs:
+  build:
+    runs-on: [self-hosted, openocd]
+    container:
+      image: ${{ vars.DOCKER_IMAGE }}
+      credentials:
+        username: ${{ vars.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+      options: '--entrypoint /bin/bash'
+    strategy:
+      matrix:
+        platform: [
+          {
+            name: "Linux64",
+            configure_options: "--prefix=`pwd`/output/openocd",
+            pkg_cfg_path: ""
+          },
+          {
+            name: "Windows",
+            configure_options: "--prefix=`pwd`/output/openocd --host=x86_64-w64-mingw32",
+            pkg_cfg_path: "/usr/x86_64-w64-mingw32/lib/pkgconfig"
+          },
+          {
+            name: "Windows-usbmux",
+            configure_options: "--prefix=`pwd`/output/openocd --enable-usbmux --host=x86_64-w64-mingw32",
+            pkg_cfg_path: "/usr/x86_64-w64-mingw32/lib/pkgconfig"
+          }
+        ]
+        build: [
+          {
+            name: "release",
+            compiler_flags: "-O2 -Wno-error",
+          },
+          {
+            name: "debug",
+            compiler_flags: "-g -Wno-error",
+          }
+        ]
+    steps:
+      - name: Apply container owner mismatch workaround
+        run: |
+          # FIXME: The owner UID of the GITHUB_WORKSPACE directory may not
+          #        match the container user UID because of the way GitHub
+          #         Actions runner is implemented. Remove this workaround when
+          #        GitHub comes up with a fundamental fix for this problem.
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
+
+      - name: Cleanup Workspace
+        run: |
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+
+      - name: Checkout ${{ matrix.platform.name }} - ${{ matrix.build.name }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Get Tag
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Package Version
+        run: |
+          PKG_VERSION="Analog Devices ${{ env.TAG_NAME }}"
+          echo "CPKGVERSION=${{ matrix.platform.configure_options }} --with-pkgversion=\"${PKG_VERSION}\"" >> $GITHUB_ENV
+
+      - name: Build ${{ matrix.platform.name }} - ${{ matrix.build.name }}
+        env:
+          CPPFLAGS: ${{ matrix.build.compiler_flags }}
+          CFLAGS: ${{ matrix.build.compiler_flags }}
+          PKG_CONFIG_PATH: ${{ matrix.platform.pkg_cfg_path }}
+        run: |
+          ./bootstrap
+          ./configure ${{ matrix.platform.configure_options }} ${{ env.CPKGVERSION }}
+          make -j4
+
+      - name: Install to local folder
+        run: |
+          make install
+
+      - name: Generate ARTIFACT_NAME
+        run: |
+          echo "ARTIFACT_NAME=openocd-${{ env.TAG_NAME }}-${{ matrix.platform.name }}-${{ matrix.build.name }}" | tr '/' '-' >> $GITHUB_ENV
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: "output"
+          retention-days: 2
+
+      - name: Download artifact in order to push it to artifactory
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+
+      - name: Zip downloaded files
+        run: zip -qq -r ${{ env.ARTIFACT_NAME }}.zip openocd/
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+            JF_URL: ${{ vars.ARTIFACTORY_URL }}
+            JF_USER: ${{ secrets.JF_USER }}
+            JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+
+      - name: Run JFrog CLI
+        run: |
+          # Ping the server
+          jf rt ping
+          jf rt u "${{ env.ARTIFACT_NAME }}.zip" "dte-products/standalone/openocd/${{ github.ref_name }}/${{ env.ARTIFACT_NAME }}.zip"
