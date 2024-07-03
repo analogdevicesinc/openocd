@@ -432,12 +432,11 @@ static int rvmax_debug_entry(struct target *target)
 	struct rvmax_common *rvmax = target_to_rvmax(target);
 	uint32_t addr = rvmax->core_regs[RVMAX_REG_NPC];
 
-	if (addr >= RVMAX_RAM_START) {
-		if (breakpoint_find(target, addr)) {
-			/* Halted on a breakpoint, step back to permit executing the instruction there */
-			retval = rvmax_set_core_reg(&rvmax->core_cache->reg_list[RVMAX_REG_NPC],
+	if (breakpoint_find(target, addr)) {
+		/* Halted on a breakpoint, step back to permit executing the instruction there */
+		retval = rvmax_set_core_reg(&rvmax->core_cache->reg_list[RVMAX_REG_NPC],
 							 (uint8_t *)&addr);
-		}
+		target->debug_reason = DBG_REASON_BREAKPOINT;
 	}
 
 	return retval;
