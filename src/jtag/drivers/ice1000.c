@@ -94,6 +94,7 @@ typedef struct
 	int32_t r_buf_sz;				/* USB Read Buffer Size */
 	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
 	bool use_usbmux;				/* If true, use USB MUX for USB communication */
+	bool reset_hw_on_connection;    /* If true, do a complete hardware reset at end of init */
 #ifdef _ADI_USB_MUX_
 	HANDLE mux_handle;				/* USB MUX handle */
 #endif
@@ -156,14 +157,17 @@ static int ice1000_swd_run_queue(void);
 #define DAT_SZ							0x8000	/* size allocated for reading data */
 #define DAT_SZ_INC						0x40	/* size to increase if data full */
 
+#define RESET_TARGET_DURATION			140     /* Reset target duration of 140 ms */
+
 /* USB Emulator Commands */
 #define HOST_GET_FW_VERSION				0x01	/* get the firmware version */
-#define HOST_REQUEST_RX_DATA			0x02	/* host request to transmit data */
+#define HOST_REQUEST_RX_DATA			0x02	/* host request to receive data */
 #define HOST_REQUEST_TX_DATA			0x04	/* host request to transmit data */
-#define HOST_GET_SINGLE_REG				0x08	/* set a JTAG register */
+#define HOST_GET_SINGLE_REG				0x08	/* get a JTAG register */
 #define HOST_SET_SINGLE_REG				0x09	/* set a JTAG register */
 #define HOST_PROGRAM_FLASH				0x0C	/* program flash */
 #define HOST_HARD_RESET_JTAG_CTRLR		0x0E	/* do a hard reset on JTAG controller */
+#define HOST_HARD_RESET_KIT				0x14    /* do a hardware reset */
 #define HOST_SET_TRST					0x1F	/* changes TRST Line state */
 #define HOST_GET_TRST					0x20	/* gets TRST Line state */
 #define HOST_DO_SELECTIVE_RAW_SCAN		0x21	/* Return only data needed */
@@ -300,7 +304,9 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 #endif
 
 
-static params_t cable_params;
+static params_t cable_params = {
+	.reset_hw_on_connection = false,
+};
 static bool swd_mode;
 
 /*
@@ -929,6 +935,9 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 			}
 		}
 	}
+
+	if (cable_params.reset_hw_on_connection)
+		do_host_cmd(HOST_HARD_RESET_KIT, RESET_TARGET_DURATION, 0);
 
 	return ERROR_OK;
 }
@@ -2495,6 +2504,16 @@ COMMAND_HANDLER(ice2000_handle_voltage_command)
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(ice2000_reset_hw_on_connection)
+{
+	if (CMD_ARGC > 0)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	cable_params.reset_hw_on_connection = true;
+
+	return ERROR_OK;
+}
+
 COMMAND_HANDLER(ice1000_use_usbmux)
 {
 	bool use_usbmux;
@@ -2568,6 +2587,13 @@ static const struct command_registration ice2000_command_handlers[] = {
 		.handler = &ice1000_use_usbmux,
 		.mode = COMMAND_CONFIG,
 		.usage = "use_usbmux ['true'|'false']",
+	},
+
+	{
+		.name = "reset_hw",
+		.handler = &ice2000_reset_hw_on_connection,
+		.mode = COMMAND_CONFIG,
+		.usage = "reset_hw",
 	},
 
 	COMMAND_REGISTRATION_DONE
