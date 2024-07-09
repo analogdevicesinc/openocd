@@ -8,23 +8,20 @@ struct custom_algorithm {
 	unsigned long reset_handler_addr;
 	unsigned long parameter_address;  /* Values derived from algorithm for data buffer */
 	unsigned long buffer_address;	  /*  address and algo parameter address (g_cfg)*/
+	unsigned long version;
 	unsigned long size;
 };
 
-enum MEM_REGIONS
-{
-	SPI_FLASH_BANK = 1,
-	XSPI_HYPERFLASH_BANK = 2,
-	FLASH_BANK_COUNT = 3
-};
+#define PARAMETER_FILE_COUNT 5
 
-#define PARAMETER_FILE_COUNT 3
+#define SPI_NAME "adsp2183x.spi"
 
 #define BYTE_COUNT 8
 #define ALGO_READY 0xFFFFFFFF
 
 #define ALGO_TIMEOUT_KEEP_ALIVE 500
-#define ALGO_TIMEOUT_MAX 10000
+#define ALGO_TIMEOUT_MAX 20000
+#define ALGO_TIMEOUT_MAX_MASS_ERASE 500000
 
 enum FLASH_COMMANDS
 {
