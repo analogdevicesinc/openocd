@@ -13,8 +13,10 @@
 #include <helper/replacements.h>
 
 #include "armv7a.h"
+#include "algorithm.h"
 #include "armv7a_mmu.h"
 #include "arm_disassembler.h"
+#include "breakpoints.h"
 
 #include "register.h"
 #include <helper/binarybuffer.h>
@@ -206,6 +208,251 @@ static int armv7a_l2x_cache_init(struct target *target, uint32_t base, uint32_t 
 		}
 	}
 	return JIM_OK;
+}
+
+static int armv7a_set_core_reg(struct reg *reg, uint8_t *buf)
+{
+	struct arm_reg *armv7a_reg = reg->arch_info;
+	struct target *target = armv7a_reg->target;
+
+	if (target->state != TARGET_HALTED)
+		return ERROR_TARGET_NOT_HALTED;
+
+	buf_cpy(buf, reg->value, reg->size);
+	reg->dirty = true;
+	reg->valid = true;
+
+	return ERROR_OK;
+}
+
+/** Runs a Thumb algorithm in the target. */
+int armv7a_run_algorithm(struct target *target,
+	int num_mem_params, struct mem_param *mem_params,
+	int num_reg_params, struct reg_param *reg_params,
+	target_addr_t entry_point, target_addr_t exit_point,
+	unsigned int timeout_ms, void *arch_info)
+{
+	int retval;
+
+	retval = armv7a_start_algorithm(target,
+			num_mem_params, mem_params,
+			num_reg_params, reg_params,
+			entry_point, exit_point,
+			arch_info);
+
+	if (retval == ERROR_OK)
+		retval = armv7a_wait_algorithm(target,
+				num_mem_params, mem_params,
+				num_reg_params, reg_params,
+				exit_point, timeout_ms,
+				arch_info);
+
+	return retval;
+}
+
+/** Starts a Thumb algorithm in the target. */
+int armv7a_start_algorithm(struct target *target,
+		int num_mem_params, struct mem_param *mem_params,
+		int num_reg_params, struct reg_param *reg_params,
+		target_addr_t entry_point, target_addr_t exit_point,
+		void *arch_info)
+{
+	struct arm *arm = target_to_arm(target);
+	struct arm_algorithm *arm_algorithm_info = arch_info;
+	enum arm_state core_state = arm->core_state;
+	uint32_t cpsr;
+	int exit_breakpoint_size = 0;
+	int i;
+	int retval = ERROR_OK;
+
+	LOG_DEBUG("Running algorithm");
+
+	if (arm_algorithm_info->common_magic != ARMV7_COMMON_MAGIC) {
+		LOG_ERROR("current target isn't an ARMV7 target");
+		return ERROR_TARGET_INVALID;
+	}
+
+	if (target->state != TARGET_HALTED) {
+		LOG_TARGET_ERROR(target, "not halted (run target algo)");
+		return ERROR_TARGET_NOT_HALTED;
+	}
+
+	if (!is_arm_mode(arm->core_mode)) {
+		LOG_ERROR("not a valid arm core mode - communication failure?");
+		return ERROR_FAIL;
+	}
+
+	for (i = 0; i <= arm->core_cache->num_regs; i++) {
+		struct reg *r = &arm->core_cache->reg_list[i];
+		if (!r->exist)
+			continue;
+
+		if (!r->valid)
+			arm->read_core_reg(target, r, i,
+				arm_algorithm_info->core_mode);
+
+		if (!r->valid)
+			LOG_TARGET_WARNING(target, "Storing invalid register %s", r->name);
+	}
+	cpsr = buf_get_u32(arm->cpsr->value, 0, 32);
+
+	for (i = 0; i < num_mem_params; i++) {
+		if (mem_params[i].direction == PARAM_IN)
+			continue;
+		retval = target_write_buffer(target, mem_params[i].address, mem_params[i].size,
+				mem_params[i].value);
+		if (retval != ERROR_OK)
+			return retval;
+	}
+
+	for (i = 0; i < num_reg_params; i++) {
+		if (reg_params[i].direction == PARAM_IN)
+			continue;
+
+		struct reg *reg = register_get_by_name(arm->core_cache, reg_params[i].reg_name, false);
+		if (!reg) {
+			LOG_ERROR("BUG: register '%s' not found", reg_params[i].reg_name);
+			return ERROR_COMMAND_SYNTAX_ERROR;
+		}
+
+		if (reg->size != reg_params[i].size) {
+			LOG_ERROR("BUG: register '%s' size doesn't match reg_params[i].size",
+				reg_params[i].reg_name);
+			return ERROR_COMMAND_SYNTAX_ERROR;
+		}
+
+		retval = armv7a_set_core_reg(reg, reg_params[i].value);
+		if (retval != ERROR_OK)
+			return retval;
+	}
+
+	arm->core_state = arm_algorithm_info->core_state;
+	if (arm->core_state == ARM_STATE_ARM) {
+		exit_breakpoint_size = 4;
+	} else if (arm->core_state == ARM_STATE_THUMB) {
+		exit_breakpoint_size = 2;
+	} else {
+		LOG_ERROR("BUG: can't execute algorithms when not in ARM or Thumb state");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
+
+	if (arm_algorithm_info->core_mode != ARM_MODE_ANY) {
+		LOG_DEBUG("setting core_mode: 0x%2.2x",
+			arm_algorithm_info->core_mode);
+		buf_set_u32(arm->cpsr->value, 0, 5,
+			arm_algorithm_info->core_mode);
+		arm->cpsr->dirty = true;
+		arm->cpsr->valid = true;
+	}
+
+	/* terminate using a hardware or (ARMv5+) software breakpoint */
+	if (exit_point) {
+		retval = breakpoint_add(target, exit_point,
+				exit_breakpoint_size, BKPT_SOFT);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("can't add SW breakpoint to terminate algorithm");
+			return ERROR_TARGET_FAILURE;
+		}
+	}
+
+	retval = target_resume(target, 0, entry_point, 1, 1);
+	if (retval != ERROR_OK)
+		return retval;
+
+	if (exit_point)
+		breakpoint_remove(target, exit_point);
+
+	arm_set_cpsr(arm, cpsr);
+	arm->cpsr->dirty = true;
+
+	arm->core_state = core_state;
+
+	return retval;
+}
+
+/** Waits for an algorithm in the target. */
+int armv7a_wait_algorithm(struct target *target,
+	int num_mem_params, struct mem_param *mem_params,
+	int num_reg_params, struct reg_param *reg_params,
+	target_addr_t exit_point, unsigned int timeout_ms,
+	void *arch_info)
+{
+	struct armv7a_common *armv7a = target_to_armv7a(target);
+	struct armv7a_algorithm *armv7a_algorithm_info = arch_info;
+	int retval = ERROR_OK;
+
+	/* NOTE: armv7a_run_algorithm requires that each algorithm uses a software breakpoint
+	 * at the exit point */
+
+	if (armv7a_algorithm_info->common_magic != ARMV7_COMMON_MAGIC) {
+		LOG_ERROR("current target isn't an ARMV7 target");
+		return ERROR_TARGET_INVALID;
+	}
+
+	retval = target_wait_state(target, TARGET_HALTED, timeout_ms);
+	/* If the target fails to halt due to the breakpoint, force a halt */
+	if (retval != ERROR_OK || target->state != TARGET_HALTED) {
+		retval = target_halt(target);
+		if (retval != ERROR_OK)
+			return retval;
+		retval = target_wait_state(target, TARGET_HALTED, 500);
+		if (retval != ERROR_OK)
+			return retval;
+		return ERROR_TARGET_TIMEOUT;
+	}
+
+	if (exit_point) {
+		/* PC value has been cached in cortex_m_debug_entry() */
+		uint32_t pc = buf_get_u32(armv7a->arm.pc->value, 0, 32);
+		if (pc != exit_point) {
+			LOG_DEBUG("failed algorithm halted at 0x%" PRIx32 ", expected 0x%" TARGET_PRIxADDR,
+					  pc, exit_point);
+			return ERROR_TARGET_ALGO_EXIT;
+		}
+	}
+
+	/* Read memory values to mem_params[] */
+	for (int i = 0; i < num_mem_params; i++) {
+		if (mem_params[i].direction != PARAM_OUT) {
+			retval = target_read_buffer(target, mem_params[i].address,
+					mem_params[i].size,
+					mem_params[i].value);
+			if (retval != ERROR_OK)
+				return retval;
+		}
+	}
+
+	/* Copy core register values to reg_params[] */
+	for (int i = 0; i < num_reg_params; i++) {
+		if (reg_params[i].direction != PARAM_OUT) {
+			struct reg *reg = register_get_by_name(armv7a->arm.core_cache,
+					reg_params[i].reg_name,
+					false);
+
+			if (!reg) {
+				LOG_ERROR("BUG: register '%s' not found", reg_params[i].reg_name);
+				return ERROR_COMMAND_SYNTAX_ERROR;
+			}
+
+			if (reg->size != reg_params[i].size) {
+				LOG_ERROR("BUG: register '%s' size doesn't match reg_params[i].size",
+					reg_params[i].reg_name);
+				return ERROR_COMMAND_SYNTAX_ERROR;
+			}
+
+			buf_set_u32(reg_params[i].value, 0, 32, buf_get_u32(reg->value, 0, 32));
+		}
+	}
+
+	for (int i = armv7a->arm.core_cache->num_regs - 1; i >= 0; i--) {
+		struct reg *reg = &armv7a->arm.core_cache->reg_list[i];
+		if (!reg->exist)
+			continue;
+	}
+
+	armv7a->arm.core_mode = armv7a_algorithm_info->core_mode;
+
+	return retval;
 }
 
 /* FIXME: remove it */
@@ -558,6 +805,41 @@ int armv7a_arch_state(struct target *target)
 
 	if (arm->core_mode == ARM_MODE_ABT)
 		armv7a_show_fault_registers(target);
+
+	return ERROR_OK;
+}
+
+int armv7a_maybe_skip_bkpt_inst(struct target *target, bool *bkpt_inst_found)
+{
+	struct armv7a_common *armv7a = target_to_armv7a(target);
+	struct reg *r = armv7a->arm.pc;
+	bool result = false;
+
+
+	/* if we halted last time due to a bkpt instruction
+	 * then we have to manually step over it, otherwise
+	 * the core will break again */
+
+	if (target->debug_reason == DBG_REASON_BREAKPOINT) {
+		uint16_t op;
+		uint32_t pc = buf_get_u32(r->value, 0, 32);
+
+		pc &= ~1;
+		if (target_read_u16(target, pc, &op) == ERROR_OK) {
+			// Look for BKPT #0 ARM assembly instruction
+			if ((op & 0xFF00) == BKPT0_OPCODE) {
+				pc += ((armv7a->arm.core_state == ARM_STATE_ARM) ? 4 : 2);
+				buf_set_u32(r->value, 0, 32, pc);
+				r->dirty = true;
+				r->valid = true;
+				result = true;
+				LOG_DEBUG("Skipping over BKPT instruction");
+			}
+		}
+	}
+
+	if (bkpt_inst_found)
+		*bkpt_inst_found = result;
 
 	return ERROR_OK;
 }
