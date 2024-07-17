@@ -1,9 +1,9 @@
-/* SPDX-License Identifier: GPL-2.0-or-later
-	Copyright (C) 2022-2024 Analog Devices, Inc. */
+/* SPDX-License-Identifier: GPL-2.0+ */
+/* Copyright (C) 2024 Analog Devices, Inc. */
 
 
 struct custom_algorithm {
-	uint8_t *adsp2183x_algo;
+	uint8_t *adspsc59x_algo;
 	unsigned long algo_start_address;
 	unsigned long reset_handler_addr;
 	unsigned long parameter_address;  /* Values derived from algorithm for data buffer */
@@ -14,7 +14,7 @@ struct custom_algorithm {
 
 #define PARAMETER_FILE_COUNT 5
 
-#define SPI_NAME "adsp2183x.spi"
+#define SPI_NAME "adspsc59x.spi"
 
 #define BYTE_COUNT 8
 #define ALGO_READY 0xFFFFFFFF
@@ -24,12 +24,12 @@ struct custom_algorithm {
 #define ALGO_TIMEOUT_MAX_MASS_ERASE 500000
 
 enum FLASH_COMMANDS {
-    READ_COMMAND = 1,
-    PROGRAM_COMMAND = 2,
-    LOCK_COMMAND = 3,
-    MASS_ERASE_COMMAND = 4,
-    SECTOR_ERASE_COMMAND = 5,
-    READ_ID_CODE_COMMAND = 6
+	READ_COMMAND = 1,
+	PROGRAM_COMMAND = 2,
+	LOCK_COMMAND = 3,
+	MASS_ERASE_COMMAND = 4,
+	SECTOR_ERASE_COMMAND = 5,
+	READ_ID_CODE_COMMAND = 6
 };
 
 /*** xtensa resume handling ***/
@@ -44,10 +44,10 @@ enum FLASH_COMMANDS {
 /******************************/
 
 /* Flash helper algorithm parameter block struct */
-#define ADSP83X_STATUS_OFFSET 0x0C
-#define ADSP83X_READID_OFFSET 0x14
+#define ADSPSC59X_STATUS_OFFSET 0x0C
+#define ADSPSC59X_READID_OFFSET 0x14
 
-struct adsp2183x_algo_params {
+struct adspsc59x_algo_params {
 	uint8_t address[4];
 	uint8_t length[4];
 	uint8_t command[4];

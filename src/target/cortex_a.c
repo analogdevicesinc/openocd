@@ -834,6 +834,7 @@ static int cortex_a_internal_restore(struct target *target, int current,
 	struct arm *arm = &armv7a->arm;
 	int retval;
 	uint32_t resume_pc;
+	bool bkpt_inst_found = false;
 
 	if (!debug_execution)
 		target_free_all_working_areas(target);
@@ -861,10 +862,18 @@ static int cortex_a_internal_restore(struct target *target, int current,
 
 	/* current = 1: continue on current pc, otherwise continue at <address> */
 	resume_pc = buf_get_u32(arm->pc->value, 0, 32);
-	if (!current)
+	if (!current) {
 		resume_pc = *address;
-	else
+	} else {
 		*address = resume_pc;
+		// If we want to step past breakpoints for internal flash algorithm resume
+		if (handle_breakpoints && debug_execution) {
+			/* Move PC value past breakpoint so it is not hit again */
+			armv7a_maybe_skip_bkpt_inst(target, &bkpt_inst_found);
+			if (bkpt_inst_found)
+				resume_pc = buf_get_u32(arm->pc->value, 0, 32);
+		}
+	}
 
 	/* Make sure that the Armv7 gdb thumb fixups does not
 	 * kill the return address
@@ -907,21 +916,6 @@ static int cortex_a_internal_restore(struct target *target, int current,
 
 	/* registers are now invalid */
 	register_cache_invalidate(arm->core_cache);
-
-
-	/*
-	// the front-end may request us not to handle breakpoints
-	if (handle_breakpoints) {
-		// Single step past breakpoint at current address
-		breakpoint = breakpoint_find(target, resume_pc);
-		if (breakpoint) {
-			LOG_DEBUG("unset breakpoint at 0x%8.8x", breakpoint->address);
-			cortex_m3_unset_breakpoint(target, breakpoint);
-			cortex_m3_single_step_core(target);
-			cortex_m3_set_breakpoint(target, breakpoint);
-		}
-	}
-	*/
 
 	return retval;
 }
@@ -3429,7 +3423,9 @@ struct target_type cortexa_target = {
 	.checksum_memory = arm_checksum_memory,
 	.blank_check_memory = arm_blank_check_memory,
 
-	.run_algorithm = armv4_5_run_algorithm,
+	.run_algorithm = armv7a_run_algorithm,
+	.start_algorithm = armv7a_start_algorithm,
+	.wait_algorithm = armv7a_wait_algorithm,
 
 	.add_breakpoint = cortex_a_add_breakpoint,
 	.add_context_breakpoint = cortex_a_add_context_breakpoint,
