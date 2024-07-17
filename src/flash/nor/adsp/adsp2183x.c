@@ -139,9 +139,9 @@ static int wait_for_breakpoint_and_check_status(struct flash_bank *bank, long lo
 		xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
 
 	/*
-	 * At this point, the algorithm is running on the target and
-	 * ready to receive commands and data to flash the target
-	 */
+	* At this point, the algorithm is running on the target and
+	* ready to receive commands and data to flash the target
+	*/
 	}
 
 	return retval;
@@ -223,7 +223,8 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 	if (!adsp2183x_flash_info->probed) {
 		LOG_ERROR("Cannot erase flash as target has not been probed. Please probe target first.");
 		retval = ERROR_FLASH_BANK_NOT_PROBED;
-	}	else {
+	} else {
+		/* All good to proceed */
 		LOG_INFO("Erasing sectors %u to %u (inclusive) in flash", first, last);
 		uint32_t address;
 
@@ -288,6 +289,8 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 			retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 			if (retval != ERROR_OK) {
+				/* Close down algo */
+				(void)adsp83x_quit(bank);
 				LOG_ERROR_ALGO_PARAMS(algo_params);
 				return retval;
 			}
@@ -322,9 +325,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 	if (offset + count > bank->size) {
 		LOG_ERROR("Write would go beyond end of supported flash size.");
 		retval = ERROR_FLASH_DST_OUT_OF_BANK;
-	}
-	/* All good to proceed */
-	else {
+	} else {
+		/* All good to proceed */
 		// poll target to update state
 		retval = target_poll(target);
 		if (retval != ERROR_OK) {
@@ -402,6 +404,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 			if (retval != ERROR_OK) {
+				/* Close down algo */
+				(void)adsp83x_quit(bank);
 				LOG_ERROR_ALGO_PARAMS(algo_params);
 				return retval;
 			}
@@ -479,6 +483,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 			if (retval != ERROR_OK) {
+				/* Close down algo */
+				(void)adsp83x_quit(bank);
 				LOG_ERROR_ALGO_PARAMS(algo_params);
 				return retval;
 			}
@@ -591,7 +597,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 		// Resume running algorithm with parameters
 		xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
 		// poll target to update state and wait for algorithm to hit breakpoint to halt target
-		while(target->state != TARGET_HALTED) {
+		while (target->state != TARGET_HALTED) {
 			retval = target_poll(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to poll target");
@@ -603,6 +609,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 		/* Put next block of data from flash into buffer */
 		retval = target_read_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address,
 		read_size, &buffer[read_bytes]);
+
 		if (retval != ERROR_OK) {
 			LOG_ERROR_ALGO_PARAMS(algo_params);
 			/* Close down algo */
@@ -613,6 +620,8 @@ static int adsp2183x_read(struct flash_bank *bank,
 		retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 		if (retval != ERROR_OK) {
+			/* Close down algo */
+			(void)adsp83x_quit(bank);
 			LOG_ERROR_ALGO_PARAMS(algo_params);
 			return retval;
 		}
@@ -641,9 +650,8 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 	struct flash_sector *sectors = NULL;
 	struct target *target = bank->target;
 
-	if (adsp2183x_flash_info->probed) {
+	if (adsp2183x_flash_info->probed)
 		return ERROR_OK;
-	}
 
 	LOG_INFO("Setting up flash area for %s...", bank->name);
 

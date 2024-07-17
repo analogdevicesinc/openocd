@@ -21,6 +21,8 @@ enum {
 
 #define ARMV7_COMMON_MAGIC 0x0A450999U
 
+#define BKPT0_OPCODE 0xBE00
+
 /* VA to PA translation operations opc2 values*/
 #define V2PCWPR  0
 #define V2PCWPW  1
@@ -129,6 +131,12 @@ static inline bool is_armv7a(struct armv7a_common *armv7a)
 	return armv7a->common_magic == ARMV7_COMMON_MAGIC;
 }
 
+struct armv7a_algorithm {
+	unsigned int common_magic;
+	enum arm_mode core_mode;
+	enum arm_state core_state;
+};
+
 
 /* register offsets from armv7a.debug_base */
 
@@ -188,6 +196,26 @@ int armv7a_init_arch_info(struct target *target, struct armv7a_common *armv7a);
 int armv7a_handle_cache_info_command(struct command_invocation *cmd,
 		struct armv7a_cache_common *armv7a_cache);
 int armv7a_read_ttbcr(struct target *target);
+
+int armv7a_run_algorithm(struct target *target,
+		int num_mem_params, struct mem_param *mem_params,
+		int num_reg_params, struct reg_param *reg_params,
+		target_addr_t entry_point, target_addr_t exit_point,
+		unsigned int timeout_ms, void *arch_info);
+
+int armv7a_start_algorithm(struct target *target,
+		int num_mem_params, struct mem_param *mem_params,
+		int num_reg_params, struct reg_param *reg_params,
+		target_addr_t entry_point, target_addr_t exit_point,
+		void *arch_info);
+
+int armv7a_wait_algorithm(struct target *target,
+		int num_mem_params, struct mem_param *mem_params,
+		int num_reg_params, struct reg_param *reg_params,
+		target_addr_t exit_point, unsigned int timeout_ms,
+		void *arch_info);
+
+int armv7a_maybe_skip_bkpt_inst(struct target *target, bool *bkpt_inst_found);
 
 extern const struct command_registration armv7a_command_handlers[];
 

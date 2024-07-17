@@ -12,6 +12,7 @@ NOR_DRIVERS = \
 	%D%/adsp/adsp2183x.c \
 	%D%/adsp/adsp2183x_otp.c \
 	%D%/adsp/adspsc59x.c \
+	%D%/adsp/adspsc59x_dma.c \
 	%D%/adsp/spi/adsp_spi.c \
 	%D%/adsp/spi/adsp_spi_dbg.c \
 	%D%/adsp/spi/adsp_spi_device.c \
