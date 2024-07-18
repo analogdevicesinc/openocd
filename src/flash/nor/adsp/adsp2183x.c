@@ -16,6 +16,8 @@
 #include <target/xtensa/xtensa.h>
 #include "adsp2183x.h"
 
+#define SPI_MAX_READ_COUNT 0xFFFF
+
 #define LOG_ERROR_ALGO_PARAMS(algo_params) \
 	LOG_ERROR("Address offset: %08X " \
 				"Length in bytes: %08X " \
@@ -540,7 +542,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 	uint32_t read_bytes = 0;
 	while (count) {
 		/* Maximum read size*/
-		uint32_t read_size = adsp2183x_flash_info->sectorsize;
+		uint32_t read_size = SPI_MAX_READ_COUNT;
 
 		/* Then if the actual count is smaller than the theoretical max, use the count */
 		if (count < read_size)
