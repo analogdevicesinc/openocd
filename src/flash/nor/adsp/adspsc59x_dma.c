@@ -807,7 +807,7 @@ static int adspsc59x_probe(struct flash_bank *bank)
 	LOG_DEBUG("Got SPI Flash device ID: 0x%08X", jedec_id);
 
 	bool found_device = false;
-	for (const struct flash_device *pFlashDevice = flash_devices; !pFlashDevice->name; pFlashDevice++) {
+	for (const struct flash_device *pFlashDevice = flash_devices; pFlashDevice->name; pFlashDevice++) {
 		if (pFlashDevice->device_id == jedec_id) {
 			adspsc59x_flash_info->dev = *pFlashDevice;
 			found_device = true;
