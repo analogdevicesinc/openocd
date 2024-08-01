@@ -462,6 +462,8 @@ struct armv8_common {
 	bool enable_pauth;
 	struct arm_cti *sys_cti;
 
+	bool sticky_reset;
+
 	/* last run-control command issued to this target (resume, halt, step) */
 	enum run_control_op last_run_control_op;
 
