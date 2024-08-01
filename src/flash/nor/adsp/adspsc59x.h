@@ -14,7 +14,7 @@ struct custom_algorithm {
 
 #define PARAMETER_FILE_COUNT 5
 
-#define SPI_NAME "adspsc59x.spi"
+#define SPI_NAME_594 "adspsc594.spi"
 
 #define BYTE_COUNT 8
 #define ALGO_READY 0xFFFFFFFF
