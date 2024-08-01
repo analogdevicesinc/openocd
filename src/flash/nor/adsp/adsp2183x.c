@@ -826,6 +826,25 @@ static int adsp2183x_probe(struct flash_bank *bank)
 		return retval;
 	}
 
+	// Need to halt before reads/writes
+	retval = target_halt(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Target is not halted!");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
+
+	// poll target to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
+
+
 	retval = target_read_u32(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address + ADSP83X_READID_OFFSET, &jedec_id);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Unable to poll target");
@@ -837,7 +856,7 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	LOG_DEBUG("Got SPI Flash device ID: 0x%08X", jedec_id);
 
 	bool found_device = false;
-	for (const struct flash_device *pFlashDevice = flash_devices; !pFlashDevice->name; pFlashDevice++) {
+	for (const struct flash_device *pFlashDevice = flash_devices; pFlashDevice->name; pFlashDevice++) {
 		if (pFlashDevice->device_id == jedec_id) {
 			adsp2183x_flash_info->dev = *pFlashDevice;
 			found_device = true;
