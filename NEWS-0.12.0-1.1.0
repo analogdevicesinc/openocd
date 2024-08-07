@@ -1,0 +1,96 @@
+This file includes highlights of the changes made in the OpenOCD
+source archive release.
+
+JTAG Layer:
+	* Analog Devices Debug Agent adapter driver
+	* Analog Devices ICE-1000/ICE-2000 adapter driver
+	* Analog Devices ICE-1500 adapter driver
+	* USBMUX for heterogenous debug of ADSP-SC598
+
+Boundary Scan:
+
+Target Layer:
+	* Cortex-M: support for accessing parts in low power mode
+	* Added examine-first event which is issued when the target is marked as examined
+	* RVMAX support
+	* Xtensa: support Xtensa NX architecture
+
+Flash Layer:
+	* Analog Devices ADSP-2183x, ADSP-SC59x target algorithm support
+	* Analog Devices ADUCM3202x support
+	* Max32xxx QSPI support
+
+Board, Target, and Interface Configuration Scripts:
+	* Analog Devices Debug Agent adapter config
+	* Analog Devices ICE-1000 adapter config
+	* Analog Devices ICE-1500 adapter config
+	* Analog Devices ICE-2000 adapter config
+	* Analog Devices ADSP-2183x target config
+	* Analog Devices ADSP-SC57x target config
+	* Analog Devices ADSP-SC58x target config
+	* Analog Devices ADSP-SC59x target config
+	* Analog Devices ADSP-SC59x_A55 target config
+	* Analog Devices ADSP-SC83x target config
+	* Analog Devices ADUCM36x target config
+	* MAX32520 target config
+	* MAX32570 target config
+	* MAX32572 target config
+	* MAX32650 target config
+	* MAX32655 target config
+	* MAX32655_RISCV target config
+	* MAX32660 target config
+	* MAX32660 target config
+	* MAX32665 target config
+	* MAX32665_NSRST target config
+	* MAX32670 target config
+	* MAX32672 target config
+	* MAX32675 target config
+	* MAX32680 target config
+	* MAX32680_RISCV target config
+	* MAX32690 target config
+	* MAX32690_RISCV target config
+	* MAX78000 target config
+	* MAX78000_NSRST target config
+	* MAX78000_RISCV target config
+	* MAX78002 target config
+	* MAX78002_RISCV target config
+	* ADSP-21835W_EV_EZKIT board config
+	* ADSP-21835W_EV_SOM board config
+	* ADSP-SC573_EZKIT board config
+	* ADSP-SC584_EZBRD board config
+	* ADSP-SC589_EZBRD board config
+	* ADSP-SC594_SOM board config
+	* ADSP-SC594_SOM_CONSUMER board config
+	* ADSP-SC598_SOM board config
+	* ADSP-SC835W_EV_EZKIT board config
+	* ADSP-SC835W_EV_SOM board config
+	* ADSP-2183x flash algorithms
+	* ADSP-59x flash algorithm
+	* ISSI25LP512M flash config
+	* MX66U1G45G flash config
+	* S26KL512S flash config
+
+Server Layer:
+
+RTOS:
+
+Documentation:
+
+Build and Release:
+	* Update jimtcl to version 0.82
+	* New configure flag '--enable-usbmux' for heterogenous support for ADSP-SC598
+
+
+This release also contains a number of other important functional and
+cosmetic bugfixes. For more details about what has changed since the
+last release, see the git repository history:
+
+https://github.com/analogdevicesinc/openocd/release-0.12.0-1.1.0
+
+
+For older NEWS, see the NEWS files associated with each release
+(i.e. NEWS-<version>).
+
+For more information about contributing test reports, bug fixes, or new
+features and device support, please read the new Developer Manual (or
+the BUGS and PATCHES.txt files in the source archive).
