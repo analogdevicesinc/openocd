@@ -91,20 +91,9 @@ jobs:
         run: |
           echo "ARTIFACT_NAME=openocd-${{ github.ref_name }}-${{ matrix.platform.name }}-${{ matrix.build.name }}" | tr '/' '-' >> $GITHUB_ENV
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: "output"
-          retention-days: 2
-
-      - name: Download artifact in order to push it to artifactory
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-
-      - name: Zip downloaded files
-        run: zip -qq -r ${{ env.ARTIFACT_NAME }}.zip openocd/
+      - name: Zip files
+        run:
+          cd output && zip -qq -r ../${{ env.ARTIFACT_NAME }}.zip openocd/
 
       - name: Setup JFrog CLI
         uses: jfrog/setup-jfrog-cli@v4
