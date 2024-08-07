@@ -35,5 +35,5 @@ jobs:
 
       - name: checkpatch
         run: |
-          git diff origin/adi-main -- . :^tcl > diff.patch
+          git diff origin/adi-main -- . ':^tcl' ':^catalog-info.yaml' > diff.patch
           tools/scripts/checkpatch.pl --max-line-length=200 --no-signoff --mailback -v --ignore MACRO_ARG_REUSE --ignore UNNECESSARY_PARENTHESES --ignore IF_0 --ignore IF_1 --ignore CONSTANT_COMPARISON --ignore CAMELCASE diff.patch

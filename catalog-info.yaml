@@ -1,0 +1,62 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: openocd
+  title: OpenOCD
+  description: |
+    OpenOCD, the Open On-Chip Debugger, is an open-source tool used for on-chip debugging,
+    in-system programming, boundary scan testing and flash support.
+    * Includes custom support for ADI parts
+  version: main
+  classification: software
+  license:
+    - GPL-2.0-or-later
+  annotations:
+    backstage.io/edit-url: https://github.com/adi-partners/codefusion-studio/blob/main/catalog-info.yaml
+    backstage.io/source-location: url:https://github.com/adi-innersource/openocd
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - openocd
+  links:
+    - url: https://openocd.org/pages/documentation.html
+      title: Project Documentation
+      icon: web
+spec:
+  owner: user:default/cwentwo
+  type: library
+  lifecycle: release
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: OpenOCD 0.12.0-1.1.0
+  version: 0.12.0-1.1.0
+  name: openocd-0.12.0-1.1.0
+  description: |
+    OpenOCD, the Open On-Chip Debugger, is an open-source tool used for on-chip
+    debugging, in-system programming, boundary scan testing and flash support.
+
+    * Includes custom support for ADI parts
+  classification: software
+  license:
+    - GPL-2.0-or-later
+  links:
+    - url: https://openocd.org/pages/documentation.html
+      title: Project Documentation
+      icon: web
+  tags:
+    - openocd
+  annotations:
+    backstage.io/managed-by-location: url:https://github.com/adi-partners/codefusion-studio/tree/software-catalog/catalog-info.yaml
+    backstage.io/managed-by-origin-location: url:https://github.com/adi-partners/codefusion-studio/blob/software-catalog/catalog-info.yaml
+    backstage.io/view-url: https://github.com/adi-partners/codefusion-studio/tree/software-catalog/catalog-info.yaml
+    backstage.io/edit-url: https://github.com/adi-partners/codefusion-studio/blob/main/catalog-info.yaml
+    backstage.io/source-location: url:https://github.com/adi-innersource/openocd.git
+    backstage.io/techdocs-ref: dir:.
+    hub.blackduck/project-name: openocd
+    hub.blackduck/project-version: adi-main
+spec:
+  type: library
+  lifecycle: release
+  owner: user:default/hmau
+  subcomponentOf: component:default/openocd

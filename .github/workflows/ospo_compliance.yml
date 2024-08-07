@@ -1,33 +1,50 @@
-# Copyright (C) 2024 Analog Devices, Inc.
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) 2022, 2024 Analog Devices, Inc.
 
 name: OSPO Compliance Scan
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "adi-main", "milestone/**", "release/**" ]
+    branches:
+      - adi-main
+      - milestone/**
+      - release/**
+  workflow_dispatch:
 env:
   complianceProjectName: "openocd"
+  entityName: "openocd-0.12.0-1.1.0"
 
 jobs:
-  ospo_scan:
-    runs-on: [self-hosted, "docker"]
+  ospo-compliance-scan:
+    name: OSPO Compliance Scan
     outputs:
       complianceProjectVersion: ${{ env.complianceProjectVersion }}
+    runs-on: [self-hosted, docker]
     steps:
-      - name: Checkout Code
-        id: checkout_code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: OSPO Scan
-        id: ospo_scan
+      - name: OSPO Scan Action
         uses: adi-innersource/ospo-scan-action@v1
         env:
-          BLACKDUCK_API_TOKEN: ${{ secrets.BLACKDUCK_API_TOKEN }}
+          BLACKDUCK_AUTH_TOKEN: ${{ secrets.BLACKDUCK_AUTH_TOKEN }}
         with:
           complianceProjectName: ${{ env.complianceProjectName }}
-          snippetMatching: true
 
-      - name: Cleanup workspace
-        if: always()
-        uses: adi-innersource/cleanup-workspace-action@v1
+  ospo-compliance-collateral:
+    name: OSPO Compliance Collateral
+    runs-on: [self-hosted, docker]
+    container: ${{ vars.ARTIFACTORY_BASE }}/node-runner:develop
+    needs: ospo-compliance-scan
+    steps:
+      - name: OSPO Collateral Action
+        uses: adi-innersource/ospo-collateral-action@v1
+        env:
+          AWS_REGION: ${{ secrets.PROD_LICENSE_AWS_REGION }}
+          AWS_S3_BUCKET: ${{ secrets.PROD_LICENSE_AWS_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.PROD_LICENSE_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_LICENSE_AWS_SECRET_ACCESS_KEY }}
+          BLACKDUCK_AUTH_TOKEN: ${{ secrets.BLACKDUCK_AUTH_TOKEN }}
+        with:
+          entityName: ${{ env.entityName }}
+          entityVersion: ${{ needs.ospo-compliance-scan.outputs.complianceProjectVersion }}
