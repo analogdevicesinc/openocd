@@ -14,8 +14,6 @@ struct custom_algorithm {
 
 #define PARAMETER_FILE_COUNT 5
 
-#define SPI_NAME "adsp2183x.spi"
-
 #define BYTE_COUNT 8
 #define ALGO_READY 0xFFFFFFFF
 
@@ -24,12 +22,9 @@ struct custom_algorithm {
 #define ALGO_TIMEOUT_MAX_MASS_ERASE 500000
 
 enum FLASH_COMMANDS {
-    READ_COMMAND = 1,
-    PROGRAM_COMMAND = 2,
-    LOCK_COMMAND = 3,
-    MASS_ERASE_COMMAND = 4,
-    SECTOR_ERASE_COMMAND = 5,
-    READ_ID_CODE_COMMAND = 6
+	READ_COMMAND = 1,
+	PROGRAM_COMMAND = 2,
+	LOCK_COMMAND = 3,
 };
 
 /*** xtensa resume handling ***/
