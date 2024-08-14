@@ -14,90 +14,24 @@
 #include "helper/binarybuffer.h"
 #include <target/xtensa/xtensa_chip.h>
 #include <target/xtensa/xtensa.h>
-
-static const uint8_t adsp83x_otp_algo[] = {
-#include "contrib/loaders/flash/adsp83x/otp/2183x_otp.inc"
-};
+#include "adsp2183x_otp.h"
 
 #define ROUNDUP(value, limit) (value + limit - (value % limit))
 
-#define ERROR_STRING_OTP_SUCCESS "No error. Success."
-#define ERROR_STRING_OTP_FAILURE "Generic Failure in OTP algorithm."
-#define ERROR_STRING_OTP_INT_FAILURE "Failed to register interrupt handler."
-#define ERROR_STRING_OTP_INVALID_HANDLE "The given OTP handle is NULL or invalid."
-#define ERROR_STRING_OTP_SEMAPHORE_FAILED "Semaphore related failure occurred."
-#define ERROR_STRING_OTP_READ_FAILURE "OTP Read failure."
-#define ERROR_STRING_OTP_PROG_FAILURE "OTP Program failure."
-#define ERROR_STRING_OTP_ALREADY_PROGRAMMED "OTP ALready Programmed."
-#define ERROR_STRING_OTP_PROGRAMMED_WRONG "OTP Programmed Incorrectly."
-#define ERROR_STRING_OTP_INVALID_CONFIG "Invalid Configuration."
-#define ERROR_STRING_OTP_INVALID_ENUM "Invalid ENUM."
-#define ERROR_STRING_OTP_SECURITY_FAILURE "Security Failure."
-#define ERROR_STRING_OTP_BOUNDARY_ERROR "OTP memory boundary error."
+#define LOG_ERROR_ALGO_PARAMS(algo_params) \
+	LOG_ERROR("Address offset: %08X " \
+				"Length in bytes: %08X " \
+				"Flash command: %08X " \
+				"Status: %08X " \
+				"Readiness: %08X " \
+				"Device ID: %08X ", \
+				*(uint32_t *)algo_params.address, \
+				*(uint32_t *)algo_params.length, \
+				*(uint32_t *)algo_params.command, \
+				*(uint32_t *)algo_params.status, \
+				*(uint32_t *)algo_params.ready, \
+				*(uint32_t *)algo_params.device_id)
 
-#define OTP_SIZE 0x490
-
-#define ALGO_RESET_HANDLER 0x20020130
-
-// Values derived from algorithm for data buffer address and algo parameter address (g_cfg)
-#define ALGO_PARAMETER_ADDRESS 0x2002B600;
-#define ALGO_BUFFER_ADDRESS 0x2002B620;
-
-#define BYTE_COUNT 8
-
-#define ALGO_READY 0xFFFFFFFF
-
-#define ALGO_TIMEOUT_KEEP_ALIVE 500
-#define ALGO_TIMEOUT_MAX 10000
-
-#define OTP_READ_COMMAND 1
-#define OTP_PROGRAM_COMMAND 2
-#define OTP_LOCK_COMMAND 3
-
-#define OTP_PROGRAM_DELAY 5
-
-/*** xtensa resume handling ***/
-#define USE_ADDRESS_VAL 0
-#define USE_PC_VAL 1
-
-#define HANDLE_BREAKPOINTS 0
-#define SKIP_BREAKPOINTS 1
-
-#define NO_DEBUG_EXECUTION 0
-#define DEBUG_EXECUTION 1
-/******************************/
-
-/*!
- *  \enum ADI_OTP_RESULT
- *   Enumeration used by the service to indicate the return status of requested operation.
- */
-typedef enum
-{
-  ADI_OTP_SUCCESS = 0,
-  ADI_OTP_FAILURE,
-  ADI_OTP_INT_FAILURE,
-  ADI_OTP_INVALID_HANDLE,
-  ADI_OTP_SEMAPHORE_FAILED,
-  ADI_OTP_READ_FAILURE,
-  ADI_OTP_PROG_FAILURE,
-  ADI_OTP_ALREADY_PROGRAMMED,
-  ADI_OTP_PROGRAMMED_WRONG,
-  ADI_OTP_INVALID_CONFIG,
-  ADI_OTP_INVALID_ENUM,
-  ADI_OTP_SECURITY_FAILURE,
-  ADI_OTP_BOUNDARY_ERROR
-} ADI_OTP_RESULT;
-
-/* Flash helper algorithm parameter block struct */
-#define ADSP83X_STATUS_OFFSET 0x0c
-
-struct adsp83x_algo_params {
-	uint8_t address[4];
-	uint8_t length[4];
-	uint8_t command[4];
-	uint8_t status[4];
-	uint8_t ready[4];
-};
 
 /* Internal data structure to allow additional options for flash device */
 struct adsp2183x_otp_bank {
@@ -106,60 +40,10 @@ struct adsp2183x_otp_bank {
 	uint32_t sector_length;
 	struct working_area *working_area;
 	struct xtensa_algorithm xtensa_info;
-	const uint8_t *algo_data;
-	uint32_t algo_size;
-	uint32_t algo_start_address;
-	uint32_t buffer_addr;
-	uint32_t params_addr;
+	struct custom_algorithm adsp2183x_algorithm;
+	uint32_t sectorsize;
+	uint32_t size_in_bytes;
 };
-
-static int display_algo_error_code(unsigned char status)
-{
-	switch(status) {
-		case ADI_OTP_FAILURE:
-			LOG_ERROR("%s", ERROR_STRING_OTP_FAILURE);
-			break;
-		case ADI_OTP_INT_FAILURE:
-			LOG_ERROR("%s", ERROR_STRING_OTP_INT_FAILURE);
-			break;
-		case ADI_OTP_INVALID_HANDLE:
-			LOG_ERROR("%s", ERROR_STRING_OTP_INVALID_HANDLE);
-			break;
-		case ADI_OTP_SEMAPHORE_FAILED:
-			LOG_ERROR("%s", ERROR_STRING_OTP_SEMAPHORE_FAILED);
-			break;
-		case ADI_OTP_READ_FAILURE:
-			LOG_ERROR("%s", ERROR_STRING_OTP_READ_FAILURE);
-			break;
-		case ADI_OTP_PROG_FAILURE:
-			LOG_ERROR("%s", ERROR_STRING_OTP_PROG_FAILURE);
-			LOG_ERROR("OTP area may be corrupt or unable to be programmed. Please hard reset and attempt again.");
-			break;
-		case ADI_OTP_ALREADY_PROGRAMMED:
-			LOG_ERROR("%s", ERROR_STRING_OTP_ALREADY_PROGRAMMED);
-			break;
-		case ADI_OTP_PROGRAMMED_WRONG:
-			LOG_ERROR("%s", ERROR_STRING_OTP_PROGRAMMED_WRONG);
-			break;
-		case ADI_OTP_INVALID_CONFIG:
-			LOG_ERROR("%s", ERROR_STRING_OTP_INVALID_CONFIG);
-			break;
-		case ADI_OTP_INVALID_ENUM:
-			LOG_ERROR("%s", ERROR_STRING_OTP_INVALID_ENUM);
-			break;
-		case ADI_OTP_SECURITY_FAILURE:
-			LOG_ERROR("%s", ERROR_STRING_OTP_SECURITY_FAILURE);
-			break;
-		case ADI_OTP_BOUNDARY_ERROR:
-			LOG_ERROR("%s", ERROR_STRING_OTP_BOUNDARY_ERROR);
-			break;
-		default:
-			LOG_ERROR("Uknown error occurred.");
-			break;
-	}
-
-	return 0;
-}
 
 static int adsp83x_quit(struct flash_bank *bank)
 {
@@ -206,18 +90,72 @@ static int adsp83x_wait_algo_done(struct flash_bank *bank, uint32_t params_addr)
 	};
 
 	if (status != 0) {
-		display_algo_error_code(status);
 		return ERROR_FAIL;
 	}
 
 	return ERROR_OK;
 }
 
-
-static int adsp83x_init(struct flash_bank *bank)
+static int wait_for_breakpoint_and_check_status(struct flash_bank *bank, long long timeout)
 {
 	struct target *target = bank->target;
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
+	int retval;
+	long long start_ms;
+	long long elapsed_ms;
+	long long timeout_ms;
+
+	timeout_ms = timeout;
+
+	start_ms = timeval_ms();
+
+	// poll target to update state and wait for algorithm to hit breakpoint to halt target
+	while (target->state != TARGET_HALTED) {
+		elapsed_ms = timeval_ms() - start_ms;
+		if (elapsed_ms > ALGO_TIMEOUT_KEEP_ALIVE)
+			keep_alive();
+		if (elapsed_ms > timeout_ms) {
+			LOG_ERROR("Timeout during algorithm command execution");
+			/* Close down algo */
+			(void)adsp83x_quit(bank);
+			return ERROR_FAIL;
+		}
+
+		retval = target_poll(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Unable to poll target");
+			target_free_working_area(target, adsp2183x_otp_info->working_area);
+			adsp2183x_otp_info->working_area = NULL;
+			return retval;
+		}
+	}
+
+	// get status from buffer to determine result of algorithm initialization
+	retval = adsp83x_wait_algo_done(bank, adsp2183x_otp_info->adsp2183x_algorithm.parameter_address);
+
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Error detected in algorithm command execution. Closing down algorithm.");
+		/* Close down algo */
+		(void)adsp83x_quit(bank);
+	}	else {
+		// Resume running algorithm with parameters
+		xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
+
+	/*
+	* At this point, the algorithm is running on the target and
+	* ready to receive commands and data to flash the target
+	*/
+	}
+
+	return retval;
+}
+
+
+static int adsp2183x_init(struct flash_bank *bank)
+{
+	struct target *target = bank->target;
+	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
+	struct adsp2183x_algo_params algo_params;
 	int retval;
 
 	/* Check for working area to use for flash helper algorithm */
@@ -231,8 +169,8 @@ static int adsp83x_init(struct flash_bank *bank)
 	}
 
 	/* Write flash helper algorithm into target memory */
-	retval = target_write_buffer(target, adsp2183x_otp_info->algo_start_address,
-				adsp2183x_otp_info->algo_size, adsp2183x_otp_info->algo_data);
+	retval = target_write_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.algo_start_address,
+				adsp2183x_otp_info->adsp2183x_algorithm.size, adsp2183x_otp_info->adsp2183x_algorithm.adsp2183x_algo);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Failed to load flash helper algorithm");
 		target_free_working_area(target, adsp2183x_otp_info->working_area);
@@ -245,7 +183,7 @@ static int adsp83x_init(struct flash_bank *bank)
 
 	/* Begin executing the flash helper algorithm */
 	retval = target_start_algorithm(target, 0, NULL, 0, NULL,
-				ALGO_RESET_HANDLER, 0, &adsp2183x_otp_info->xtensa_info);
+				adsp2183x_otp_info->adsp2183x_algorithm.reset_handler_addr, 0, &adsp2183x_otp_info->xtensa_info);
 	if (retval != ERROR_OK) {
 		target_free_working_area(target, adsp2183x_otp_info->working_area);
 		adsp2183x_otp_info->working_area = NULL;
@@ -253,62 +191,19 @@ static int adsp83x_init(struct flash_bank *bank)
 		return retval;
 	}
 
-	// Need to halt before reads/writes
-	retval = target_halt(target);
-	if (retval != ERROR_OK) {
-		LOG_ERROR("Target is not halted!");
-		target_free_working_area(target, adsp2183x_otp_info->working_area);
-		adsp2183x_otp_info->working_area = NULL;
-		return retval;
+	retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
+
+	if (retval == ERROR_OK) {
+		// initialize algorithm parameters to 0
+		buf_set_u32(algo_params.command, 0, 32, 0);
+		buf_set_u32(algo_params.address, 0, 32, 0);
+		buf_set_u32(algo_params.ready,  0, 32, 0);
+		buf_set_u32(algo_params.length,  0, 32, 0);
+		buf_set_u32(algo_params.status,  0, 32, 0);
+		buf_set_u32(algo_params.device_id,  0, 32, 0);
 	}
-
-	// poll target to update state
-	retval = target_poll(target);
-	if (retval != ERROR_OK) {
-		LOG_ERROR("Unable to poll target");
-		target_free_working_area(target, adsp2183x_otp_info->working_area);
-		adsp2183x_otp_info->working_area = NULL;
-		return retval;
-	}
-
-	// get status from buffer to determine result of algorithm initialization
-	retval = adsp83x_wait_algo_done(bank, adsp2183x_otp_info->params_addr);
-
-	// Resume running algorithm with parameters
-	xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
-
-	/*
-	 * At this point, the algorithm is running on the target and
-	 * ready to receive commands and data to flash the target
-	 */
 
 	return retval;
-}
-/**
- * Usage:
- * flash bank <name> adsp2183x <base_addr> 0 0 0 <target>
-*/
-FLASH_BANK_COMMAND_HANDLER(adsp2183x_otp_bank_command)
-{
-	struct adsp2183x_otp_bank *poInfo;
-
-	/* Check the correct number of arguments have been provided */
-	if (CMD_ARGC != 6) {
-		LOG_ERROR("Invalid number of flash bank arguments. Usage:\n"
-			"flash bank <name> adsp2183x <base_addr> 0 0 0 <target>");
-		return ERROR_COMMAND_SYNTAX_ERROR;
-	}
-
-	poInfo = malloc(sizeof(struct adsp2183x_otp_bank));
-	if (!poInfo) {
-		LOG_ERROR("Not enough memory for local driver information.");
-		return ERROR_FAIL;
-	}
-
-	poInfo->probed = false;
-	bank->driver_priv = poInfo;
-
-	return ERROR_OK;
 }
 
 /**
@@ -316,13 +211,6 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_otp_bank_command)
  * Usage:
  * adsp2183x mase_erase bank_id
 */
-
-// No erase for otp
-COMMAND_HANDLER(adsp2183x_mass_erase_handler)
-{
-	LOG_ERROR("Mass erase not available for this device");
-	return ERROR_FLASH_OPER_UNSUPPORTED;
-}
 
 /**
  * Erase the specified sectors
@@ -357,7 +245,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 {
 	struct target *target = bank->target;
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
-	struct adsp83x_algo_params algo_params;
+	struct adsp2183x_algo_params algo_params;
 	int retval;
 	int i, byteCountOrig, byteCountRounded;
 	uint32_t convertedHex;
@@ -373,7 +261,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 	}
 	/* All good to proceed */
 	else {
-		retval = adsp83x_init(bank);
+		retval = adsp2183x_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
 
@@ -414,10 +302,10 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		}
 
 		// Issue program command to algorithm
-		buf_set_u32(algo_params.command, 0, 32, OTP_PROGRAM_COMMAND);
+		buf_set_u32(algo_params.command, 0, 32, PROGRAM_COMMAND);
 
 		/* Put next block of data to flash into buffer */
-		retval = target_write_buffer(target, adsp2183x_otp_info->buffer_addr,
+		retval = target_write_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.buffer_address,
 			byteCountRounded, (void *)sendBuf);
 
 		if(byteCountRounded < 4)
@@ -430,7 +318,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
 
 		/* Put next block of data to flash into buffer */
-		retval = target_write_buffer(target, adsp2183x_otp_info->params_addr,
+		retval = target_write_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.parameter_address,
 					sizeof(algo_params), (uint8_t *)&algo_params);
 
 		if (retval != ERROR_OK) {
@@ -443,22 +331,14 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		// Resume running algorithm with parameters
 		xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
 
-		// poll target to update state and wait for algorithm to hit breakpoint to halt target
-		while(target->state != TARGET_HALTED) {
-			retval = target_poll(target);
-			if (retval != ERROR_OK) {
-				LOG_ERROR("Unable to poll target");
-				target_free_working_area(target, adsp2183x_otp_info->working_area);
-				adsp2183x_otp_info->working_area = NULL;
-				return retval;
-			}
+		retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
+
+		if (retval != ERROR_OK) {
+			/* Close down algo */
+			(void)adsp83x_quit(bank);
+			LOG_ERROR_ALGO_PARAMS(algo_params);
+			return retval;
 		}
-
-		// get status from buffer to determine result of programming
-		retval = adsp83x_wait_algo_done(bank, adsp2183x_otp_info->params_addr);
-
-		/* Regardless of errors, try to close down algo */
-		(void)adsp83x_quit(bank);
 
 	}
 
@@ -484,7 +364,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 
 	struct target *target = bank->target;
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
-	struct adsp83x_algo_params algo_params;
+	struct adsp2183x_algo_params algo_params;
 
 	int retval;
 	uint32_t byteCountRounded;
@@ -498,7 +378,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 	/* All good to proceed */
 	else
 	{
-		retval = adsp83x_init(bank);
+		retval = adsp2183x_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
 
@@ -529,14 +409,14 @@ static int adsp2183x_read(struct flash_bank *bank,
 		}
 
 		// hardcode to issue read command to algorithm
-		buf_set_u32(algo_params.command, 0, 32, OTP_READ_COMMAND);
+		buf_set_u32(algo_params.command, 0, 32, READ_COMMAND);
 
 		// write algo parameters
 		buf_set_u32(algo_params.address, 0, 32, offset);
 		buf_set_u32(algo_params.length, 0, 32, byteCountRounded);
 		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
 
-		retval = target_write_buffer(target, adsp2183x_otp_info->params_addr,
+		retval = target_write_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.parameter_address,
 					sizeof(algo_params), (uint8_t *)&algo_params);
 
 		if (retval != ERROR_OK) {
@@ -561,16 +441,26 @@ static int adsp2183x_read(struct flash_bank *bank,
 		}
 
 		/* Put next block of data from flash into buffer */
-		retval = target_read_buffer(target, adsp2183x_otp_info->buffer_addr,
+		retval = target_read_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.buffer_address,
 		byteCountRounded, recBuf);
 
 		memcpy(buffer, recBuf, count);
 
-		// get status from buffer to determine result of programming
-		retval = adsp83x_wait_algo_done(bank, adsp2183x_otp_info->params_addr);
+		if (retval != ERROR_OK) {
+			LOG_ERROR_ALGO_PARAMS(algo_params);
+			/* Close down algo */
+			(void)adsp83x_quit(bank);
+			return retval;
+		}
 
-		/* Regardless of errors, try to close down algo */
-		(void)adsp83x_quit(bank);
+		retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
+
+		if (retval != ERROR_OK) {
+			/* Close down algo */
+			(void)adsp83x_quit(bank);
+			LOG_ERROR_ALGO_PARAMS(algo_params);
+			return retval;
+		}
 
 	}
 
@@ -587,6 +477,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 */
 static int adsp2183x_probe(struct flash_bank *bank)
 {
+	int retval;
 	struct target *target = bank->target;
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
 	struct flash_sector *sectors = NULL;
@@ -604,28 +495,40 @@ static int adsp2183x_probe(struct flash_bank *bank)
 
 	/* Output available working memory on target */
 	uint32_t available_space = target_get_working_area_avail(target);
+	uint32_t target_start_address = (uint32_t)target->working_area_phys;
 	LOG_INFO("Target has %uB of available space.", available_space);
 	adsp2183x_otp_info->available_space = available_space;
 
-	// Set up target side algo information (Split into two for now)
-	adsp2183x_otp_info->algo_data = adsp83x_otp_algo;
-	adsp2183x_otp_info->algo_size = sizeof(adsp83x_otp_algo);
-	adsp2183x_otp_info->algo_start_address = target->working_area_phys;
+	// Check algorithm size vs allocated flash bank space
+	if (adsp2183x_otp_info->adsp2183x_algorithm.size > adsp2183x_otp_info->available_space) {
+		LOG_ERROR("Not enough available space in flash bank %s for corresponding algorithm of size %lu", bank->name,
+			adsp2183x_otp_info->adsp2183x_algorithm.size);
+		return ERROR_FAIL;
+	}
 
-	// Values derived from algorithm for data buffer address and algo parameter address (g_cfg)
-	adsp2183x_otp_info->buffer_addr = ALGO_BUFFER_ADDRESS;
-	adsp2183x_otp_info->params_addr = ALGO_PARAMETER_ADDRESS;
+	// Check start address of algorithm with address provided in cfg
+	if (adsp2183x_otp_info->adsp2183x_algorithm.algo_start_address < target_start_address
+		|| adsp2183x_otp_info->adsp2183x_algorithm.algo_start_address > (target_start_address + adsp2183x_otp_info->available_space)) {
+		LOG_ERROR("Start address for corresponding algorithm of %lu is not within the allocated range of %u for flash bank %s",
+			adsp2183x_otp_info->adsp2183x_algorithm.algo_start_address, target_start_address + adsp2183x_otp_info->available_space, bank->name);
+		return ERROR_FAIL;
+	}
+
+	// poll target to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_otp_info->working_area);
+		adsp2183x_otp_info->working_area = NULL;
+		return ERROR_FAIL;
+	}
 
 	num_sectors = 1;
 
-	// end of OTP is 0x490
-	sector_length = OTP_SIZE;
-
-	bank->size = num_sectors * sector_length;
+	bank->size = num_sectors * adsp2183x_otp_info->sectorsize;
 	bank->write_start_alignment = 0;
 	bank->write_end_alignment = 0;
 	bank->num_sectors = num_sectors;
-	adsp2183x_otp_info->sector_length = sector_length;
 
 	sectors = malloc(sizeof(struct flash_sector) * num_sectors);
 	if (!sectors)
@@ -642,7 +545,7 @@ static int adsp2183x_probe(struct flash_bank *bank)
 
 	adsp2183x_otp_info->probed = true;
 
-	return ERROR_OK;
+	return retval;
 }
 
 /**
@@ -709,6 +612,147 @@ static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation
 			adsp2183x_otp_info->sector_length);
 
 	return ERROR_OK;
+}
+
+/**
+ * Usage:
+ * flash bank <name> adsp2183x_otp <base_addr> 0 0 0 <target> sector_size algorithm_file param_file
+*/
+FLASH_BANK_COMMAND_HANDLER(adsp2183x_otp_bank_command)
+{
+	struct adsp2183x_otp_bank *adsp2183x_otp_info;
+	int byteCount = 0;
+	int count = 0;
+	uint32_t tempParse;
+	char tempStr[3];
+	uint8_t convertedHex;
+	FILE *algo_file;
+	FILE *parameter_file;
+	bool insideComment = true;
+	char line[256];
+	char parameter_file_data[PARAMETER_FILE_COUNT][9];  // Assuming each hex value is of length 8
+
+	/* Check the correct number of arguments have been provided */
+	if (CMD_ARGC != 9) {
+		LOG_ERROR("Invalid number of flash bank arguments. Usage:\n"
+			"flash bank <name> adsp2183x_otp <base_addr> 0 0 0 <target> "
+			"sector_size algorithm_file parameter_file");
+		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
+
+	adsp2183x_otp_info = malloc(sizeof(struct adsp2183x_otp_bank));
+	if (!adsp2183x_otp_info) {
+		LOG_ERROR("Not enough memory for local driver information.");
+		return ERROR_FAIL;
+	}
+
+    // Opening file in reading mode
+	algo_file = fopen(CMD_ARGV[7], "r");
+
+	if (NULL == algo_file) {
+		LOG_ERROR("File %s can't be opened\n", CMD_ARGV[7]);
+		return -1;
+	}
+
+     /* Size of file */
+	fseek(algo_file, 0, SEEK_END);
+	adsp2183x_otp_info->adsp2183x_algorithm.size = ftell(algo_file);
+	fseek(algo_file, 0, SEEK_SET);
+	adsp2183x_otp_info->adsp2183x_algorithm.adsp2183x_algo = malloc(sizeof(uint8_t) * adsp2183x_otp_info->adsp2183x_algorithm.size);
+	// Get 2 characters at a time to form byte. Convert byte and
+	// store into spi algorithm buffer
+	do {
+		tempStr[0] = fgetc(algo_file);
+		// read/skip over LF (UNIX) and CR (Windows)
+		if (tempStr[0] != '\n' && tempStr[0] != '\r') {
+			tempStr[1] = fgetc(algo_file);
+			convertedHex = strtoul((const char *)tempStr, NULL, 16);
+			adsp2183x_otp_info->adsp2183x_algorithm.adsp2183x_algo[byteCount] = convertedHex;
+			byteCount++;
+		}
+		// Checking if character is not EOF.
+		// If it is EOF stop reading.
+	} while (tempStr[1] != EOF);
+
+    // Closing the file
+	fclose(algo_file);
+
+	// Opening file in reading mode
+	parameter_file = fopen(CMD_ARGV[8], "r");
+
+	if (NULL == parameter_file) {
+		LOG_ERROR("File %s can't be opened\n", CMD_ARGV[8]);
+		return -1;
+	}
+
+    // Loop through each line in the file
+	while (fgets(line, sizeof(line), parameter_file)) {
+		// Assuming the hex values are written one per line
+		// You may need to adjust the logic based on the actual file structure
+		if (strstr(line, "*/")) {
+			insideComment = false;
+			continue;
+		}
+
+		if (!insideComment) {
+			// Copy the last 8 characters (hex value) to the array
+			if (sscanf(line, "%8s", parameter_file_data[count]) == 1) {
+				count++;
+
+				// Break the loop if we have found the correct number of elements
+				if (count == PARAMETER_FILE_COUNT)
+					break;
+			}
+		}
+	}
+
+	// Close the file
+	fclose(parameter_file);
+
+	adsp2183x_otp_info->adsp2183x_algorithm.parameter_address = strtoul(parameter_file_data[0], NULL, 16);
+	adsp2183x_otp_info->adsp2183x_algorithm.buffer_address = strtoul(parameter_file_data[1], NULL, 16);
+	adsp2183x_otp_info->adsp2183x_algorithm.reset_handler_addr = strtoul(parameter_file_data[2], NULL, 16);
+	adsp2183x_otp_info->adsp2183x_algorithm.algo_start_address = strtoul(parameter_file_data[3], NULL, 16);
+	adsp2183x_otp_info->adsp2183x_algorithm.version = strtoul(parameter_file_data[4], NULL, 10);
+	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
+	adsp2183x_otp_info->sectorsize = tempParse;
+
+	adsp2183x_otp_info->probed = false;
+	bank->driver_priv = adsp2183x_otp_info;
+
+	return ERROR_OK;
+}
+
+// No erase for otp
+COMMAND_HANDLER(adsp2183x_mass_erase_handler)
+{
+	LOG_ERROR("Mass erase not available for this device");
+	return ERROR_FLASH_OPER_UNSUPPORTED;
+}
+
+/**
+ * Get algorithm version number
+ * Usage:
+ * adsp2183x get_algorithm_version bank_id
+*/
+COMMAND_HANDLER(adsp2183x_get_algorithm_version_handler)
+{
+	struct adsp2183x_otp_bank *adsp2183x_otp_info;
+	struct flash_bank *bank;
+	int retval;
+
+	if (CMD_ARGC != 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	retval = CALL_COMMAND_HANDLER(flash_command_get_bank, 0, &bank);
+	if (ERROR_OK != retval)
+		return retval;
+
+	adsp2183x_otp_info = bank->driver_priv;
+
+	command_print(CMD, "%lu", adsp2183x_otp_info->adsp2183x_algorithm.version);
+
+	return retval;
 }
 
 static const struct command_registration adsp2183x_exec_command_handlers[] = {
