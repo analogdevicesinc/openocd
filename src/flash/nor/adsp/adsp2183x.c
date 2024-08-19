@@ -540,13 +540,20 @@ static int adsp2183x_read(struct flash_bank *bank,
 
 	/* Make sure read is not larger than buffer size to be passed */
 	uint32_t read_bytes = 0;
+	uint32_t read_size  = 0;
 	while (count) {
-		/* Maximum read size*/
-		uint32_t read_size = SPI_MAX_READ_COUNT;
-
-		/* Then if the actual count is smaller than the theoretical max, use the count */
-		if (count < read_size)
+		// read size threshold is only applicable to SPI protocol. For xSPI the current
+		// implementation requires a valid read size divisible by 4
+		if (strcmp(bank->name, SPI_NAME)) {
 			read_size = count;
+		}  else {
+			/* Maximum read size*/
+			read_size = SPI_MAX_READ_COUNT;
+
+			/* Then if the actual count is smaller than the theoretical max, use the count */
+			if (count < read_size)
+				read_size = count;
+		}
 
 		// Need to halt before reads/writes
 		retval = target_halt(target);
