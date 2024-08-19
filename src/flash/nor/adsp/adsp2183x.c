@@ -944,7 +944,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 	int byteCount = 0;
 	int count = 0;
 	uint32_t tempParse;
-	char tempStr[3];
+	char tempStr[2];
 	uint8_t convertedHex;
 	FILE* algo_file;
 	FILE* parameter_file;
