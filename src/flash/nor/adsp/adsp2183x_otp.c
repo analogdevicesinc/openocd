@@ -158,6 +158,11 @@ static int adsp2183x_init(struct flash_bank *bank)
 	struct adsp2183x_algo_params algo_params;
 	int retval;
 
+	if (!adsp2183x_otp_info) {
+		LOG_ERROR("Flashing commands will fail as flash bank is incomplete without .inc files");
+		return ERROR_FAIL;
+	}
+
 	/* Check for working area to use for flash helper algorithm */
 	adsp2183x_otp_info->working_area = NULL;
 
@@ -484,6 +489,11 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	uint32_t sector_length;
 	int num_sectors;
 
+	if (!adsp2183x_otp_info) {
+		LOG_ERROR("Flashing commands will fail as flash bank is incomplete without .inc files");
+		return ERROR_FAIL;
+	}
+
 	LOG_INFO("Setting up ADSP2183X otp area...");
 
 	if (!target_was_examined(target)) {
@@ -562,6 +572,11 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 	int retval;
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
 
+	if (!adsp2183x_otp_info) {
+		LOG_ERROR("Flashing commands will fail as flash bank is incomplete without .inc files");
+		return ERROR_FAIL;
+	}
+
 	if (adsp2183x_otp_info->probed) {
 		retval = ERROR_OK;
 	}
@@ -601,6 +616,11 @@ static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation
 {
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
 
+	if (!adsp2183x_otp_info) {
+		LOG_ERROR("Flashing commands will fail as flash bank is incomplete without .inc files");
+		return ERROR_FAIL;
+	}
+
 	int retval = adsp2183x_probe(bank);
 	if (retval != ERROR_OK)
 	{
@@ -638,6 +658,12 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_otp_bank_command)
 			"flash bank <name> adsp2183x_otp <base_addr> 0 0 0 <target> "
 			"sector_size algorithm_file parameter_file");
 		return ERROR_COMMAND_SYNTAX_ERROR;
+	}
+
+	/* Check to see if openocd is being used for non-flashing */
+	if (strlen(CMD_ARGV[7]) == 0 && strlen(CMD_ARGV[8]) == 0) {
+		LOG_WARNING("Flashing will not work without corresponding .inc files");
+		return ERROR_OK;
 	}
 
 	adsp2183x_otp_info = malloc(sizeof(struct adsp2183x_otp_bank));
@@ -750,6 +776,11 @@ COMMAND_HANDLER(adsp2183x_get_algorithm_version_handler)
 
 	adsp2183x_otp_info = bank->driver_priv;
 
+	if (!adsp2183x_otp_info) {
+		LOG_ERROR("Flashing commands will fail as flash bank is incomplete without .inc files");
+		return ERROR_FAIL;
+	}
+
 	command_print(CMD, "%lu", adsp2183x_otp_info->adsp2183x_algorithm.version);
 
 	return retval;
@@ -762,6 +793,13 @@ static const struct command_registration adsp2183x_exec_command_handlers[] = {
 		.mode		= COMMAND_EXEC,
 		.usage		= "bank_id",
 		.help		= "Mass erase entire flash device.",
+	},
+	{
+		.name		= "get_algorithm_version",
+		.handler	= adsp2183x_get_algorithm_version_handler,
+		.mode		= COMMAND_EXEC,
+		.usage		= "bank_id",
+		.help		= "Get algorithm version.",
 	},
 	COMMAND_REGISTRATION_DONE
 };
