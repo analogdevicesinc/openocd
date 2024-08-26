@@ -157,6 +157,11 @@ static int adsp2183x_init(struct flash_bank *bank)
 	struct adsp2183x_algo_params algo_params;
 	int retval;
 
+	if (!adsp2183x_flash_info) {
+		LOG_ERROR("Flashing commands will fail as flash bank is incomplete without .inc files");
+		return ERROR_FAIL;
+	}
+
 	/* Check for working area to use for flash helper algorithm */
 	adsp2183x_flash_info->working_area = NULL;
 
@@ -659,6 +664,11 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 	struct flash_sector *sectors = NULL;
 	struct target *target = bank->target;
 
+	if (!adsp2183x_flash_info) {
+		LOG_ERROR("Flashing commands will fail as flash bank is incomplete without .inc files");
+		return ERROR_FAIL;
+	}
+
 	if (adsp2183x_flash_info->probed)
 		return ERROR_OK;
 
@@ -967,6 +977,12 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
+	/* Check to see if openocd is being used for non-flashing */
+	if (strlen(CMD_ARGV[7]) == 0 && strlen(CMD_ARGV[8]) == 0) {
+		LOG_WARNING("Flashing will not work without corresponding .inc files");
+		return ERROR_OK;
+	}
+
 	adsp2183x_flash_info = malloc(sizeof(struct adsp2183x_flash_bank));
 	if (!adsp2183x_flash_info) {
 		LOG_ERROR("Not enough memory for local driver information.");
@@ -1070,6 +1086,11 @@ COMMAND_HANDLER(adsp2183x_get_algorithm_version_handler)
 		return retval;
 
 	adsp2183x_flash_info = bank->driver_priv;
+
+	if (!adsp2183x_flash_info) {
+		LOG_ERROR("Flashing commands will fail as flash bank is incomplete without .inc files");
+		return ERROR_FAIL;
+	}
 
 	command_print(CMD, "%lu", adsp2183x_flash_info->adsp2183x_algorithm.version);
 
