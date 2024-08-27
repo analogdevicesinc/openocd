@@ -1,0 +1,116 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# Copyright (C) 2024 Analog Devices, Inc.
+
+on:
+    push:
+      branches: [ "**/**", "!adi-main", "!milestone/**" ]
+    workflow_dispatch:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+name: OpenOCD macOS Debug Build
+
+env:
+    DEPS_DIR: "${GITHUB_WORKSPACE}/openocd_deps"
+
+jobs:
+  build:
+    runs-on: [self-hosted, macOS, ARM64]
+    strategy:
+        matrix:
+            platform: [
+                {
+                    name: "macOS-ARM64",
+                    compiler_flags: "-g -Wno-error",
+                    linker_flags: "-L${GITHUB_WORKSPACE}/openocd_deps/lib",
+                    configure_options: "--prefix=${GITHUB_WORKSPACE}/output/openocd",
+                    pkg_cfg_path: ""
+                },
+            ]
+
+    steps:
+      - name: Cleanup Workspace
+        run: |
+          rm -rf ./* ./.??*
+
+      - name: Checkout ${{ matrix.platform.name }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: openocd
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout libusb
+        uses: actions/checkout@v4
+        with:
+          repository: libusb/libusb
+          ref: v1.0.24
+          path: libusb
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout hidapi
+        uses: actions/checkout@v4
+        with:
+          repository: libusb/hidapi
+          ref: hidapi-0.13.1
+          path: hidapi
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build libusb
+        run: |
+          cd libusb &&\
+          ./bootstrap.sh &&\
+          ./configure --prefix=${{ env.DEPS_DIR }} --disable-shared --enable-static &&\
+          make -j$(nproc) &&\
+          make install &&\
+          cd ..
+
+      - name: Build hidapi
+        run: |
+          cd hidapi &&\
+          ./bootstrap &&\
+          ./configure --prefix=${{ env.DEPS_DIR }} --disable-shared --enable-static &&\
+          make -j$(nproc) &&\
+          make install &&\
+          cd ..
+
+      - name: Build ${{ matrix.platform.name }}
+        env:
+          PKG_CONFIG_PATH: ${{ matrix.platform.pkg_cfg_path }}
+          CPPFLAGS: ${{ matrix.platform.compiler_flags }}
+          CFLAGS: ${{ matrix.platform.compiler_flags }}
+          LDFLAGS: ${{ matrix.platform.linker_flags }}
+        run: |
+          cd openocd &&\
+          ./bootstrap &&\
+          ./configure ${{ matrix.platform.configure_options }} &&\
+          make -j$(nproc) &&\
+          cd ..
+
+      - name: Install to local folder
+        run: |
+          cd openocd &&\
+          make install &&\
+          cd ..
+
+      - name: Generate ARTIFACT_NAME
+        run: |
+          echo "ARTIFACT_NAME=openocd-${{ github.ref_name }}-${{ matrix.platform.name }}-${{ matrix.build.name }}" | tr '/' '-' >> $GITHUB_ENV
+
+      - name: Zip files
+        run:
+          cd output && zip -qq -r ../${{ env.ARTIFACT_NAME }}.zip openocd/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: "output"
+          retention-days: 30
