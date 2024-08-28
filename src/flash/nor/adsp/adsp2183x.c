@@ -172,6 +172,30 @@ static int adsp2183x_init(struct flash_bank *bank)
 		return retval;
 	}
 
+	// Need to halt before reads/writes
+	retval = target_halt(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Target is not halted!");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return retval;
+	}
+
+	// poll target to update state
+	retval = target_poll(target);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Unable to poll target");
+		target_free_working_area(target, adsp2183x_flash_info->working_area);
+		adsp2183x_flash_info->working_area = NULL;
+		return retval;
+	}
+
+	/* Check device is halted and has been probed first */
+	if (TARGET_HALTED != target->state) {
+		LOG_ERROR("Cannot read from flash. Target is not halted!");
+		return ERROR_TARGET_NOT_HALTED;
+	}
+
 	/* Write flash helper algorithm into target memory */
 	retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address,
 				adsp2183x_flash_info->adsp2183x_algorithm.size, adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo);
