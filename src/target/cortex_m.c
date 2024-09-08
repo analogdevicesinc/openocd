@@ -2082,11 +2082,9 @@ static int cortex_m_set_watchpoint(struct target *target, struct watchpoint *wat
 	target_write_u32(target, comparator->dwt_comparator_address + 8,
 		comparator->function);
 
-	LOG_TARGET_DEBUG(target, "Watchpoint (ID %d) DWT%d 0x%08x 0x%x 0x%05x",
+	LOG_TARGET_DEBUG(target, "Watchpoint (ID %d) DWT%d 0x%08" PRIx32 " 0x%" PRIx32 " 0x%05" PRIx32,
 		watchpoint->unique_id, dwt_num,
-		(unsigned int)comparator->comp,
-		(unsigned int)comparator->mask,
-		(unsigned int)comparator->function);
+		comparator->comp, comparator->mask, comparator->function);
 	return ERROR_OK;
 }
 
@@ -2103,9 +2101,9 @@ static int cortex_m_unset_watchpoint(struct target *target, struct watchpoint *w
 
 	unsigned int dwt_num = watchpoint->number;
 
-	LOG_TARGET_DEBUG(target, "Watchpoint (ID %d) DWT%u address: 0x%08x clear",
+	LOG_TARGET_DEBUG(target, "Watchpoint (ID %d) DWT%u address: " TARGET_ADDR_FMT " clear",
 		watchpoint->unique_id, dwt_num,
-		(unsigned int)watchpoint->address);
+		watchpoint->address);
 
 	if (dwt_num >= cortex_m->dwt_num_comp) {
 		LOG_TARGET_DEBUG(target, "Invalid DWT Comparator number in watchpoint");
