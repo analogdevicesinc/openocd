@@ -10,7 +10,7 @@ proc adjc_unlock {adjc} {
    global _USERKEY2
    global _USERKEY3
 
-   irscan $adjc 0xa -endstate IRPAUSE
+   irscan $adjc 0xa -endstate RUN/IDLE
    drscan $adjc 32 $_USERKEY0 32 $_USERKEY1 32 $_USERKEY2 32 $_USERKEY3 -endstate RUN/IDLE
 }
 
