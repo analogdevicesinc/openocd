@@ -620,7 +620,7 @@ static int dbgagent_execute_reset(struct jtag_command *cmd)
 	return ERROR_OK;
 }
 
-static void dbgagent_end_state(tap_state_t state)
+static void dbgagent_end_state(enum tap_state state)
 {
 	if (tap_is_state_stable(state)) {
 		tap_set_end_state(state);
@@ -662,7 +662,7 @@ static void dbgagent_state_move(void)
 	tap_set_state(tap_get_end_state());
 }
 
-static void dbgagent_path_move(int num_states, tap_state_t *path)
+static void dbgagent_path_move(int num_states, enum tap_state *path)
 {
 	int i;
 
@@ -686,7 +686,7 @@ static void dbgagent_path_move(int num_states, tap_state_t *path)
 static int dbgagent_runtest(int num_cycles)
 {
 	int retval, i;
-	tap_state_t saved_end_state = tap_get_end_state();
+	enum tap_state saved_end_state = tap_get_end_state();
 
 	retval = dbgagent_tap_ensure_space(num_cycles + 16);
 	if (retval != ERROR_OK)
@@ -873,7 +873,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 static int dbgagent_scan(bool ir_scan, enum scan_type type, uint8_t *buffer,
 		int scan_size, struct scan_command *command)
 {
-	tap_state_t saved_end_state;
+	enum tap_state saved_end_state;
 	int retval;
 
 	retval = dbgagent_tap_ensure_space(scan_size + 16);
