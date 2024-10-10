@@ -662,9 +662,9 @@ static int rvmax_soft_reset_halt(struct target *target)
 	return ERROR_OK;
 }
 
-static int rvmax_resume(struct target *target, int current,
-					 target_addr_t address, int handle_breakpoints,
-					 int debug_execution)
+static int rvmax_resume(struct target *target, bool current,
+					 target_addr_t address, bool handle_breakpoints,
+					 bool debug_execution)
 {
 	/* LOG_DEBUG("- %08llx %08x %08x",address,current, debug_execution); */
 
@@ -694,8 +694,8 @@ static int rvmax_resume(struct target *target, int current,
 	return retval;
 }
 
-static int rvmax_step(struct target *target, int current,
-				 target_addr_t address, int handle_breakpoints)
+static int rvmax_step(struct target *target, bool current,
+				 target_addr_t address, bool handle_breakpoints)
 {
 	/* LOG_DEBUG("- %08llx %08x",address,current); */
 
