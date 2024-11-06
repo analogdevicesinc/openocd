@@ -3,7 +3,7 @@
 
 
 struct custom_algorithm {
-	uint8_t *adspsc59x_algo;
+	uint8_t *adspsc5xx_a5_algo;
 	unsigned long algo_start_address;
 	unsigned long reset_handler_addr;
 	unsigned long parameter_address;  /* Values derived from algorithm for data buffer */
@@ -13,9 +13,6 @@ struct custom_algorithm {
 };
 
 #define PARAMETER_FILE_COUNT 5
-
-#define SPI_NAME_594 "adspsc594.spi"
-
 #define BYTE_COUNT 8
 #define ALGO_READY 0xFFFFFFFF
 
@@ -44,10 +41,10 @@ enum FLASH_COMMANDS {
 /******************************/
 
 /* Flash helper algorithm parameter block struct */
-#define ADSPSC59X_STATUS_OFFSET 0x0C
-#define ADSPSC59X_READID_OFFSET 0x14
+#define ADSPSC5XX_A5_STATUS_OFFSET 0x0C
+#define ADSPSC5XX_A5_READID_OFFSET 0x14
 
-struct adspsc59x_algo_params {
+struct adspsc5xx_a5_algo_params {
 	uint8_t address[4];
 	uint8_t length[4];
 	uint8_t command[4];
