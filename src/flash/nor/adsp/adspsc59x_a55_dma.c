@@ -43,7 +43,7 @@
 #define WRITE_CHUNK_SIZE (32u * 1024u)
 
 /* Internal data structure to allow additional options for flash device */
-struct adspsc59x_flash_bank {
+struct adspsc59x_a55_flash_bank {
 	bool				probed;				/*! Has the flash device been probed? */
 	bool				quad_io;			/*! Is the SPI flash currently in Quad IO mode */
 	uint32_t			available_space;	/*! Used for sanity checking against memory leaks */
@@ -61,11 +61,11 @@ const struct flash_driver adspsc59x_a55_flash;
  *
  * @returns	ERROR_OK if successful, otherwise failure return code
 */
-static int adspsc59x_poll(struct flash_bank *bank)
+static int adspsc59x_a55_poll(struct flash_bank *bank)
 {
 	uint8_t read_data;
 	struct target *target = bank->target;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	unsigned int counter = 0;
 	ADSP_SPI_RESULT result;
 	int rc = ERROR_FAIL;
@@ -78,7 +78,7 @@ static int adspsc59x_poll(struct flash_bank *bank)
 	while (0 < (WIP_MAX_RETRIES - counter)) {
 		/* Read SPI Flash status register */
 		struct adsp_spi_flash_cmd flash_cmd = {
-			.device			= (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55,
+			.device			= ADSP_SPI_DEVICE_SC59X_A55,
 			.instruction	= SPIFLASH_READ_STATUS,
 			.address		= 0,
 			.address_bytes	= 0,
@@ -88,7 +88,7 @@ static int adspsc59x_poll(struct flash_bank *bank)
 			.data_in_ptr	= &read_data,
 			.data_in_bytes	= 1,
 			.dma_queue		= NULL,
-			.quad_io		= adspsc59x_flash_info->quad_io
+			.quad_io		= adspsc59x_a55_flash_info->quad_io
 		};
 
 		result = adsp_spi_command(target, &flash_cmd);
@@ -123,15 +123,15 @@ static int adspsc59x_poll(struct flash_bank *bank)
  *
  * @returns	ERROR_OK if successful, otherwise failure return code
 */
-static int adspsc59x_write_enable(struct flash_bank *bank, const bool enable, struct adsp_dma_queue *queue)
+static int adspsc59x_a55_write_enable(struct flash_bank *bank, const bool enable, struct adsp_dma_queue *queue)
 {
 	ADSP_SPI_RESULT result;
 	struct target *target = bank->target;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	int rc;
 
 	struct adsp_spi_flash_cmd flash_cmd = {
-		.device			= (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55,
+		.device			= ADSP_SPI_DEVICE_SC59X_A55,
 		.instruction	= enable ? SPIFLASH_WRITE_ENABLE : SPIFLASH_WRITE_DISABLE,
 		.address		= 0,
 		.address_bytes	= 0,
@@ -141,7 +141,7 @@ static int adspsc59x_write_enable(struct flash_bank *bank, const bool enable, st
 		.data_in_ptr	= NULL,
 		.data_in_bytes	= 0,
 		.dma_queue		= queue,
-		.quad_io		= adspsc59x_flash_info->quad_io
+		.quad_io		= adspsc59x_a55_flash_info->quad_io
 	};
 
 	result = adsp_spi_command(target, &flash_cmd);
@@ -160,19 +160,19 @@ static int adspsc59x_write_enable(struct flash_bank *bank, const bool enable, st
  *
  * @returns	ERROR_OK if successful, otherwise failure return code
 */
-static int adspsc59x_quad_io_enable(struct flash_bank *bank, const bool enable)
+static int adspsc59x_a55_quad_io_enable(struct flash_bank *bank, const bool enable)
 {
 	ADSP_SPI_RESULT result;
 	struct target *target = bank->target;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	int rc;
 
 	/* Only bother sending command if the specified option doesn't match current option */
-	if (enable != adspsc59x_flash_info->quad_io) {
+	if (enable != adspsc59x_a55_flash_info->quad_io) {
 		/* Quad IO enable param should be inverse of what we're trying to set because that should be
 			the current mode. */
 		struct adsp_spi_flash_cmd flash_cmd = {
-			.device			= (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55,
+			.device			= ADSP_SPI_DEVICE_SC59X_A55,
 			.instruction	= enable ? IS25_QUAD_IO_ENABLE_CMD : IS25_QUAD_IO_DISABLE_CMD,
 			.address		= 0,
 			.address_bytes	= 0,
@@ -192,7 +192,7 @@ static int adspsc59x_quad_io_enable(struct flash_bank *bank, const bool enable)
 		/* If the operation was successful... */
 		if (ERROR_OK == rc) {
 			/* ... updated the variable to keep track of whether it's enabled. */
-			adspsc59x_flash_info->quad_io = enable;
+			adspsc59x_a55_flash_info->quad_io = enable;
 		}
 	} else {
 		rc = ERROR_OK;
@@ -209,7 +209,7 @@ static int adspsc59x_quad_io_enable(struct flash_bank *bank, const bool enable)
  *
  * @returns	ERROR_OK if successful, otherwise failure return code
 */
-static int adspsc59x_disable_cache(struct target *target)
+static int adspsc59x_a55_disable_cache(struct target *target)
 {
 	struct aarch64_common *aarch64 = target_to_aarch64(target);
 	struct armv7a_common *armv7a = target_to_armv7a(target);
@@ -302,22 +302,22 @@ static int adspsc59x_disable_cache(struct target *target)
 
 /**
  * Usage:
- * flash bank <name> adspsc59x <base_addr> 0 0 0 <target>
+ * flash bank <name> adspsc59x_a55 <base_addr> 0 0 0 <target>
 */
-FLASH_BANK_COMMAND_HANDLER(adspsc59x_flash_bank_command)
+FLASH_BANK_COMMAND_HANDLER(adspsc59x_a55_flash_bank_command)
 {
-	struct adspsc59x_flash_bank *poInfo;
+	struct adspsc59x_a55_flash_bank *poInfo;
 
 	LOG_DEBUG("%s", __func__);
 
 	/* Check the correct number of arguments have been provided */
 	if (CMD_ARGC != 6) {
 		LOG_ERROR("Invalid number of flash bank arguments. Usage:\n"
-			"flash bank <name> adspsc59x <base_addr> 0 0 0 <target>");
+			"flash bank <name> adspsc59x_a55 <base_addr> 0 0 0 <target>");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
-	poInfo = malloc(sizeof(struct adspsc59x_flash_bank));
+	poInfo = malloc(sizeof(struct adspsc59x_a55_flash_bank));
 	if (!poInfo) {
 		LOG_ERROR("Not enough memory for local driver information.");
 		return ERROR_FAIL;
@@ -338,10 +338,10 @@ FLASH_BANK_COMMAND_HANDLER(adspsc59x_flash_bank_command)
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
 */
-static int adspsc59x_erase(struct flash_bank *bank, unsigned int first, unsigned int last)
+static int adspsc59x_a55_erase(struct flash_bank *bank, unsigned int first, unsigned int last)
 {
 	struct target *target = bank->target;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	ADSP_SPI_RESULT result;
 	int rc;
 
@@ -349,7 +349,7 @@ static int adspsc59x_erase(struct flash_bank *bank, unsigned int first, unsigned
 	if (TARGET_HALTED != target->state) {
 		LOG_ERROR("Cannot erase flash. Target is not halted!");
 		rc = ERROR_TARGET_NOT_HALTED;
-	} else if (!adspsc59x_flash_info->probed) {
+	} else if (!adspsc59x_a55_flash_info->probed) {
 		LOG_ERROR("Cannot erase flash as target has not been probed. Please probe target first.");
 		rc = ERROR_FLASH_BANK_NOT_PROBED;
 	} else {
@@ -362,18 +362,18 @@ static int adspsc59x_erase(struct flash_bank *bank, unsigned int first, unsigned
 			/* Set the write enable. This should be done before each erase instruction as
 				WEL (write enable latch) is reset after erase operation.
 			*/
-			rc = adspsc59x_write_enable(bank, true, NULL);
+			rc = adspsc59x_a55_write_enable(bank, true, NULL);
 			if (rc != ERROR_OK)
 				return rc;
 
 			/* Calculate the address based on the counter and configured sector size */
-			address = counter * adspsc59x_flash_info->dev.sectorsize;
+			address = counter * adspsc59x_a55_flash_info->dev.sectorsize;
 
-			LOG_INFO("Erasing %u bytes at address: 0x%08X", adspsc59x_flash_info->dev.sectorsize, address);
+			LOG_INFO("Erasing %u bytes at address: 0x%08X", adspsc59x_a55_flash_info->dev.sectorsize, address);
 
 			struct adsp_spi_flash_cmd flash_cmd = {
-				.device			= (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55,
-				.instruction	= adspsc59x_flash_info->dev.erase_cmd,
+				.device			= ADSP_SPI_DEVICE_SC59X_A55,
+				.instruction	= adspsc59x_a55_flash_info->dev.erase_cmd,
 				.address		= address,
 				.address_bytes	= 4,
 				.dummy_bytes	= 0,
@@ -382,7 +382,7 @@ static int adspsc59x_erase(struct flash_bank *bank, unsigned int first, unsigned
 				.data_in_ptr	= NULL,
 				.data_in_bytes	= 0,
 				.dma_queue		= NULL,
-				.quad_io		= adspsc59x_flash_info->quad_io
+				.quad_io		= adspsc59x_a55_flash_info->quad_io
 			};
 
 			result = adsp_spi_command(target, &flash_cmd);
@@ -392,7 +392,7 @@ static int adspsc59x_erase(struct flash_bank *bank, unsigned int first, unsigned
 				return rc;
 
 			/* Poll until erase is complete */
-			rc = adspsc59x_poll(bank);
+			rc = adspsc59x_a55_poll(bank);
 			if (rc != ERROR_OK)
 				return rc;
 		}
@@ -412,11 +412,11 @@ static int adspsc59x_erase(struct flash_bank *bank, unsigned int first, unsigned
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
 */
-static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
+static int adspsc59x_a55_write(struct flash_bank *bank, const uint8_t *buffer,
 	uint32_t offset, uint32_t count)
 {
 	struct target *target = bank->target;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	ADSP_SPI_RESULT result;
 	int rc;
 	unsigned int write_size = 0;
@@ -427,7 +427,7 @@ static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
 	if (TARGET_HALTED != target->state) {
 		LOG_ERROR("Cannot read from flash. Target is not halted!");
 		rc = ERROR_TARGET_NOT_HALTED;
-	} else if (!adspsc59x_flash_info->probed) {
+	} else if (!adspsc59x_a55_flash_info->probed) {
 		LOG_ERROR("Cannot read from flash as target has not been probed. Please probe target first.");
 		rc = ERROR_FLASH_BANK_NOT_PROBED;
 	} else if (offset + count > bank->size) {
@@ -441,7 +441,7 @@ static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
 		struct adsp_dma_queue *queue = NULL;
 		uint32_t available_space = target_get_working_area_avail(target);
 		uint32_t chunk = WRITE_CHUNK_SIZE;
-		ADSP_SPI_DEVICE device = (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55;
+		ADSP_SPI_DEVICE device = ADSP_SPI_DEVICE_SC59X_A55;
 
 		// Assume the descriptors won't take up more space than the data itself!
 		while (chunk > (available_space / 2))
@@ -449,7 +449,7 @@ static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
 
 		if (adsp_spi_devices[device].use_tx_dma_chain) {
 			queue = &local_queue;
-			result = adsp_init_dma_queue(queue, chunk, adspsc59x_flash_info->dev.pagesize);
+			result = adsp_init_dma_queue(queue, chunk, adspsc59x_a55_flash_info->dev.pagesize);
 			if (result != ADSP_SPI_RESULT_SUCCESS)
 				return ERROR_FLASH_OPERATION_FAILED;
 			queue->keep_descriptors = true; /* until decided otherwise */
@@ -460,29 +460,29 @@ static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
 		adsp_init_tru(target);
 
 		/* Wait till flash is free... */
-		rc = adspsc59x_poll(bank);
+		rc = adspsc59x_a55_poll(bank);
 		if (ERROR_OK != rc)
 			return rc;
 
 		/* First write any bytes if the specified offset if not on the page size boundary */
-		if (0 != (current_address % adspsc59x_flash_info->dev.pagesize)) {
+		if (0 != (current_address % adspsc59x_a55_flash_info->dev.pagesize)) {
 			if (queue)
 				queue->keep_descriptors = false; /* The next transfer will be different */
 
 			/* Set the write enable. This should be done before each program page instruction as
 				WEL (write enable latch) is reset after each operation.
 			*/
-			rc = adspsc59x_write_enable(bank, true, queue);
+			rc = adspsc59x_a55_write_enable(bank, true, queue);
 			if (rc != ERROR_OK)
 				return rc;
 			/* Calculate the write size to use, the modulo remainder of the page size  (unless the specified count is smaller) */
-			write_size = adspsc59x_flash_info->dev.pagesize - (current_address % adspsc59x_flash_info->dev.pagesize);
+			write_size = adspsc59x_a55_flash_info->dev.pagesize - (current_address % adspsc59x_a55_flash_info->dev.pagesize);
 			if (write_size > count)
 				write_size = count;
 
 			struct adsp_spi_flash_cmd flash_cmd = {
 				.device			= device,
-				.instruction	= adspsc59x_flash_info->dev.pprog_cmd,
+				.instruction	= adspsc59x_a55_flash_info->dev.pprog_cmd,
 				.address		= current_address,
 				.address_bytes	= 4,
 				.dummy_bytes	= 0,
@@ -491,7 +491,7 @@ static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
 				.data_in_ptr	= NULL,
 				.data_in_bytes	= 0,
 				.dma_queue		= queue,
-				.quad_io		= adspsc59x_flash_info->quad_io
+				.quad_io		= adspsc59x_a55_flash_info->quad_io
 			};
 
 			result = adsp_spi_command(target, &flash_cmd);
@@ -530,23 +530,23 @@ static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
 				/* Set the write enable. This should be done before each program page instruction as
 					WEL (write enable latch) is reset after each operation.
 				*/
-				rc = adspsc59x_write_enable(bank, true, queue);
+				rc = adspsc59x_a55_write_enable(bank, true, queue);
 				if (rc != ERROR_OK)
 					return rc;
 
 				/* If the remaining bytes is less than the flash page
 				*  size is just the remaining bytes...
 				*/
-				if ((count - buffer_index) < adspsc59x_flash_info->dev.pagesize) {
+				if ((count - buffer_index) < adspsc59x_a55_flash_info->dev.pagesize) {
 					write_size = count - buffer_index;
 				} else {
 					/* Otherwise size is the page size (max size that can be written in one command) */
-					write_size = adspsc59x_flash_info->dev.pagesize;
+					write_size = adspsc59x_a55_flash_info->dev.pagesize;
 				}
 
 				struct adsp_spi_flash_cmd flash_cmd = {
-					.device			= (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55,
-					.instruction	= adspsc59x_flash_info->dev.pprog_cmd,
+					.device			= ADSP_SPI_DEVICE_SC59X_A55,
+					.instruction	= adspsc59x_a55_flash_info->dev.pprog_cmd,
 					.address		= current_address,
 					.address_bytes	= 4,
 					.dummy_bytes	= 0,
@@ -555,7 +555,7 @@ static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
 					.data_in_ptr	= NULL,
 					.data_in_bytes	= 0,
 					.dma_queue		= queue,
-					.quad_io		= adspsc59x_flash_info->quad_io
+					.quad_io		= adspsc59x_a55_flash_info->quad_io
 				};
 
 				result = adsp_spi_command(target, &flash_cmd);
@@ -601,11 +601,11 @@ static int adspsc59x_write(struct flash_bank *bank, const uint8_t *buffer,
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
 */
-static int adspsc59x_read(struct flash_bank *bank,
+static int adspsc59x_a55_read(struct flash_bank *bank,
 	uint8_t *buffer, uint32_t offset, uint32_t count)
 {
 	struct target *target = bank->target;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	ADSP_SPI_RESULT result;
 	int rc;
 	spi_instruction_t instruction;
@@ -615,7 +615,7 @@ static int adspsc59x_read(struct flash_bank *bank,
 	if (TARGET_HALTED != target->state) {
 		LOG_ERROR("Cannot read from flash. Target is not halted!");
 		rc = ERROR_TARGET_NOT_HALTED;
-	} else if (!adspsc59x_flash_info->probed) {
+	} else if (!adspsc59x_a55_flash_info->probed) {
 		LOG_ERROR("Cannot read from flash as target has not been probed. Please probe target first.");
 		rc = ERROR_FLASH_BANK_NOT_PROBED;
 	} else {
@@ -625,29 +625,29 @@ static int adspsc59x_read(struct flash_bank *bank,
 		LOG_DEBUG("Target has %uB of available space for read.", available_space);
 
 		/* Check there isn't a memory leak. On first usage param will be zero so ignore in that case */
-		if (adspsc59x_flash_info->available_space != 0) {
-			if (adspsc59x_flash_info->available_space > available_space) {
+		if (adspsc59x_a55_flash_info->available_space != 0) {
+			if (adspsc59x_a55_flash_info->available_space > available_space) {
 				LOG_WARNING("Available space on target seems to be decreasing. This may be a memory leak."
-					"Space has decreased by %uB", (adspsc59x_flash_info->available_space - available_space));
+					"Space has decreased by %uB", (adspsc59x_a55_flash_info->available_space - available_space));
 			}
 		}
-		adspsc59x_flash_info->available_space = available_space;
+		adspsc59x_a55_flash_info->available_space = available_space;
 
 		/* Wait till flash is free... */
-		rc = adspsc59x_poll(bank);
+		rc = adspsc59x_a55_poll(bank);
 		if (ERROR_OK != rc)
 			return rc;
 
 		/* Instruction and dummy bytes vary depending if we're in Quad IO mode */
-		if (adspsc59x_flash_info->quad_io) {
-			instruction = adspsc59x_flash_info->dev.qread_cmd;
+		if (adspsc59x_a55_flash_info->quad_io) {
+			instruction = adspsc59x_a55_flash_info->dev.qread_cmd;
 			/* Quad Mode needs 6 dummy cycles which would ordinarily mean 6 bits of data,
 			 * however as we're in Quad IO mode we transmit 4 bits of data very every cycle,
 			 * i.e. 1 byte = 2 cycles
 			*/
 			dummy_bytes = 3;
 		} else {
-			instruction = adspsc59x_flash_info->dev.read_cmd;
+			instruction = adspsc59x_a55_flash_info->dev.read_cmd;
 			dummy_bytes = 0;
 		}
 
@@ -678,7 +678,7 @@ static int adspsc59x_read(struct flash_bank *bank,
 			LOG_INFO("Reading %u bytes from address 0x%08X", read_size, address);
 
 			struct adsp_spi_flash_cmd flash_cmd = {
-				.device			= (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55,
+				.device			= ADSP_SPI_DEVICE_SC59X_A55,
 				.instruction	= instruction,
 				.address		= address,
 				.address_bytes	= 4,
@@ -688,7 +688,7 @@ static int adspsc59x_read(struct flash_bank *bank,
 				.data_in_ptr	= &buffer[read_bytes],
 				.data_in_bytes	= read_size,
 				.dma_queue		= NULL,
-				.quad_io		= adspsc59x_flash_info->quad_io
+				.quad_io		= adspsc59x_a55_flash_info->quad_io
 			};
 
 			result = adsp_spi_command(target, &flash_cmd);
@@ -715,10 +715,10 @@ static int adspsc59x_read(struct flash_bank *bank,
  *
  * @returns	ERROR_OK if successful otherwise the relevant code.
 */
-static int adspsc59x_probe(struct flash_bank *bank)
+static int adspsc59x_a55_probe(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	struct flash_sector *sectors = NULL;
 	ADSP_SPI_RESULT result;
 	int rc;
@@ -731,13 +731,13 @@ static int adspsc59x_probe(struct flash_bank *bank)
 	}
 
 	/* If already probed, reset fields and probe again */
-	if (adspsc59x_flash_info->probed) {
+	if (adspsc59x_a55_flash_info->probed) {
 		bank->size = 0;
 		bank->num_sectors = 0;
 		free(bank->sectors);
 		bank->sectors = NULL;
-		memset(&adspsc59x_flash_info->dev, 0, sizeof(adspsc59x_flash_info->dev));
-		adspsc59x_flash_info->probed = false;
+		memset(&adspsc59x_a55_flash_info->dev, 0, sizeof(adspsc59x_a55_flash_info->dev));
+		adspsc59x_a55_flash_info->probed = false;
 	}
 
 	/** We disable Cache completely to stop cache ruining DMA transfers. Flushing of cache for
@@ -745,7 +745,7 @@ static int adspsc59x_probe(struct flash_bank *bank)
 	 *  SPI driver could be reverted back to core (non-DMA) mode and this sledgehammer solution
 	 *  could be removed.
 	*/
-	rc = adspsc59x_disable_cache(target);
+	rc = adspsc59x_a55_disable_cache(target);
 	if (ERROR_OK != rc) {
 		LOG_ERROR("Failed to disable cache on target device.");
 		return rc;
@@ -756,27 +756,27 @@ static int adspsc59x_probe(struct flash_bank *bank)
 	/* Output available working memory on target */
 	uint32_t available_space = target_get_working_area_avail(target);
 	LOG_INFO("Target has %uB of available space.", available_space);
-	adspsc59x_flash_info->available_space = available_space;
+	adspsc59x_a55_flash_info->available_space = available_space;
 
 #ifdef DO_QUAD_IO
 	/* Set the global variable to the opposite to force it to send the command first time round */
-	adspsc59x_flash_info->quad_io = false;
-	rc = adspsc59x_quad_io_enable(bank, true);
+	adspsc59x_a55_flash_info->quad_io = false;
+	rc = adspsc59x_a55_quad_io_enable(bank, true);
 	if (ERROR_OK != rc) {
 		LOG_ERROR("Failed to enable Quad IO mode");
 		return rc;
 	}
 #else
 	/* Set the global variable to the opposite to force it to send the command first time round */
-	adspsc59x_flash_info->quad_io = true;
-	rc = adspsc59x_quad_io_enable(bank, false);
+	adspsc59x_a55_flash_info->quad_io = true;
+	rc = adspsc59x_a55_quad_io_enable(bank, false);
 	if (ERROR_OK != rc) {
 		LOG_ERROR("Failed to disable Quad IO mode");
 		return rc;
 	}
 #endif
 
-	rc = adspsc59x_poll(bank);
+	rc = adspsc59x_a55_poll(bank);
 	if (ERROR_OK != rc) {
 		LOG_ERROR("Error polling SPI Flash. Either it is busy or communication is failing altogether.");
 		return rc;
@@ -785,7 +785,7 @@ static int adspsc59x_probe(struct flash_bank *bank)
 	/* Find the device ID first */
 	uint32_t jedec_id = 0u;
 	struct adsp_spi_flash_cmd flash_cmd = {
-		.device			= (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55,
+		.device			= ADSP_SPI_DEVICE_SC59X_A55,
 		.instruction	= SPIFLASH_READ_ID,
 		.address		= 0,
 		.address_bytes	= 0,
@@ -795,7 +795,7 @@ static int adspsc59x_probe(struct flash_bank *bank)
 		.data_in_ptr	= (uint8_t *)&jedec_id,
 		.data_in_bytes	= 3,
 		.dma_queue		= NULL,
-		.quad_io		= adspsc59x_flash_info->quad_io
+		.quad_io		= adspsc59x_a55_flash_info->quad_io
 	};
 
 	result = adsp_spi_command(target, &flash_cmd);
@@ -809,7 +809,7 @@ static int adspsc59x_probe(struct flash_bank *bank)
 	bool found_device = false;
 	for (const struct flash_device *pFlashDevice = flash_devices; pFlashDevice->name; pFlashDevice++) {
 		if (pFlashDevice->device_id == jedec_id) {
-			adspsc59x_flash_info->dev = *pFlashDevice;
+			adspsc59x_a55_flash_info->dev = *pFlashDevice;
 			found_device = true;
 			break;
 		}
@@ -820,11 +820,11 @@ static int adspsc59x_probe(struct flash_bank *bank)
 		return ERROR_FLASH_OPER_UNSUPPORTED;
 	}
 
-	LOG_INFO("Discovered SPI Flash: %s", adspsc59x_flash_info->dev.name);
+	LOG_INFO("Discovered SPI Flash: %s", adspsc59x_a55_flash_info->dev.name);
 
 	/* Fill the bank info based on the discovered device info */
-	bank->size = adspsc59x_flash_info->dev.size_in_bytes;
-	bank->num_sectors = (adspsc59x_flash_info->dev.size_in_bytes / adspsc59x_flash_info->dev.sectorsize);
+	bank->size = adspsc59x_a55_flash_info->dev.size_in_bytes;
+	bank->num_sectors = (adspsc59x_a55_flash_info->dev.size_in_bytes / adspsc59x_a55_flash_info->dev.sectorsize);
 
 	/* Create and fill the sectors array */
 	sectors = malloc(sizeof(struct flash_sector) * bank->num_sectors);
@@ -834,14 +834,14 @@ static int adspsc59x_probe(struct flash_bank *bank)
 	}
 
 	for (unsigned int sector = 0; sector < bank->num_sectors; sector++) {
-		sectors[sector].offset = sector * adspsc59x_flash_info->dev.sectorsize;
-		sectors[sector].size = adspsc59x_flash_info->dev.sectorsize;
+		sectors[sector].offset = sector * adspsc59x_a55_flash_info->dev.sectorsize;
+		sectors[sector].size = adspsc59x_a55_flash_info->dev.sectorsize;
 		sectors[sector].is_erased = -1;
 		sectors[sector].is_protected = 0;
 	}
 
 	bank->sectors = sectors;
-	adspsc59x_flash_info->probed = true;
+	adspsc59x_a55_flash_info->probed = true;
 
 	return ERROR_OK;
 }
@@ -855,15 +855,15 @@ static int adspsc59x_probe(struct flash_bank *bank)
  *
  * @returns	ERROR_OK if successful otherwise the relevant code.
 */
-static int adspsc59x_auto_probe(struct flash_bank *bank)
+static int adspsc59x_a55_auto_probe(struct flash_bank *bank)
 {
 	int rc;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 
-	if (adspsc59x_flash_info->probed)
+	if (adspsc59x_a55_flash_info->probed)
 		rc = ERROR_OK;
 	else
-		rc = adspsc59x_probe(bank);
+		rc = adspsc59x_a55_probe(bank);
 
 	return rc;
 }
@@ -871,10 +871,10 @@ static int adspsc59x_auto_probe(struct flash_bank *bank)
 /**
  * TODO: CCES-24914 - Implement sector level protection.
  *
- * See explanation for adspsc59x_protect(...)
+ * See explanation for adspsc59x_a55_protect(...)
  *
 */
-static int adspsc59x_protect_check(struct flash_bank *bank)
+static int adspsc59x_a55_protect_check(struct flash_bank *bank)
 {
 	return ERROR_FLASH_OPER_UNSUPPORTED;
 }
@@ -889,7 +889,7 @@ static int adspsc59x_protect_check(struct flash_bank *bank)
  * by a boot ROM and OpenOCD should not start altering this.
  *
 */
-static int adspsc59x_protect(struct flash_bank *bank, int set,
+static int adspsc59x_a55_protect(struct flash_bank *bank, int set,
 	unsigned int first, unsigned int last)
 {
 	return ERROR_FLASH_OPER_UNSUPPORTED;
@@ -898,11 +898,11 @@ static int adspsc59x_protect(struct flash_bank *bank, int set,
 /**
  * Erase whole memory on SPI flash device.
 */
-COMMAND_HANDLER(adspsc59x_mass_erase_handler)
+COMMAND_HANDLER(adspsc59x_a55_mass_erase_handler)
 {
 	struct flash_bank *bank;
 	struct target *target;
-	struct adspsc59x_flash_bank *adspsc59x_flash_info;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info;
 	ADSP_SPI_RESULT result;
 	int rc;
 
@@ -914,7 +914,7 @@ COMMAND_HANDLER(adspsc59x_mass_erase_handler)
 		return rc;
 
 	target = bank->target;
-	adspsc59x_flash_info = bank->driver_priv;
+	adspsc59x_a55_flash_info = bank->driver_priv;
 
 	/* TODO: CCES-24914 - Check protection status, see todo in protect function for details */
 
@@ -922,22 +922,23 @@ COMMAND_HANDLER(adspsc59x_mass_erase_handler)
 	if (TARGET_HALTED != target->state) {
 		LOG_ERROR("Cannot erase flash. Target is not halted!");
 		rc = ERROR_TARGET_NOT_HALTED;
-	} else if (!adspsc59x_flash_info->probed) {
+	} else if (!adspsc59x_a55_flash_info->probed) {
 		LOG_ERROR("Cannot erase flash as target has not been probed. Please probe target first.");
 		rc = ERROR_FLASH_BANK_NOT_PROBED;
-	} else if (adspsc59x_flash_info->dev.chip_erase_cmd == 0x00) {
+	} else if (adspsc59x_a55_flash_info->dev.chip_erase_cmd == 0x00) {
 		LOG_ERROR("Mass erase not available for this device");
 		rc = ERROR_FLASH_OPER_UNSUPPORTED;
 	} else {
 		/* All good to proceed */
 		/* Set the write enable */
-		rc = adspsc59x_write_enable(bank, true, NULL);
+
+		rc = adspsc59x_a55_write_enable(bank, true, NULL);
 		if (rc != ERROR_OK)
 			return rc;
 
 		struct adsp_spi_flash_cmd flash_cmd = {
-			.device			= (bank->driver == &adspsc59x_flash) ? ADSP_SPI_DEVICE_SC59X : ADSP_SPI_DEVICE_SC59X_A55,
-			.instruction	= adspsc59x_flash_info->dev.chip_erase_cmd,
+			.device			= ADSP_SPI_DEVICE_SC59X_A55,
+			.instruction	= adspsc59x_a55_flash_info->dev.chip_erase_cmd,
 			.address		= 0,
 			.address_bytes	= 0,
 			.dummy_bytes	= 0,
@@ -946,7 +947,7 @@ COMMAND_HANDLER(adspsc59x_mass_erase_handler)
 			.data_in_ptr	= NULL,
 			.data_in_bytes	= 0,
 			.dma_queue		= NULL,
-			.quad_io		= adspsc59x_flash_info->quad_io
+			.quad_io		= adspsc59x_a55_flash_info->quad_io
 		};
 
 		result = adsp_spi_command(target, &flash_cmd);
@@ -956,7 +957,7 @@ COMMAND_HANDLER(adspsc59x_mass_erase_handler)
 			return rc;
 
 		/* Poll until erase is complete */
-		rc = adspsc59x_poll(bank);
+		rc = adspsc59x_a55_poll(bank);
 		if (rc != ERROR_OK)
 			return rc;
 	}
@@ -972,11 +973,11 @@ COMMAND_HANDLER(adspsc59x_mass_erase_handler)
  *
  * @returns	ERROR_OK if successful otherwise the relevant code.
 */
-static int adspsc59x_get_info(struct flash_bank *bank, struct command_invocation *cmd)
+static int adspsc59x_a55_get_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
-	struct adspsc59x_flash_bank *adspsc59x_flash_info = bank->driver_priv;
+	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 
-	if (!adspsc59x_flash_info->probed) {
+	if (!adspsc59x_a55_flash_info->probed) {
 		command_print(cmd, "ADSP-SC59X SPI Flash not yet probed.");
 		return ERROR_FLASH_BANK_NOT_PROBED;
 	}
@@ -985,18 +986,18 @@ static int adspsc59x_get_info(struct flash_bank *bank, struct command_invocation
 			"Size: 0x%X\n"
 			"Page Size: 0x%X\n"
 			"Sector Size: 0x%X\n",
-			adspsc59x_flash_info->dev.name,
-			adspsc59x_flash_info->dev.size_in_bytes,
-			adspsc59x_flash_info->dev.pagesize,
-			adspsc59x_flash_info->dev.sectorsize);
+			adspsc59x_a55_flash_info->dev.name,
+			adspsc59x_a55_flash_info->dev.size_in_bytes,
+			adspsc59x_a55_flash_info->dev.pagesize,
+			adspsc59x_a55_flash_info->dev.sectorsize);
 
 	return ERROR_OK;
 }
 
-static const struct command_registration adspsc59x_exec_command_handlers[] = {
+static const struct command_registration adspsc59x_a55_exec_command_handlers[] = {
 	{
 		.name		= "mass_erase",
-		.handler	= adspsc59x_mass_erase_handler,
+		.handler	= adspsc59x_a55_mass_erase_handler,
 		.mode		= COMMAND_EXEC,
 		.usage		= "bank_id",
 		.help		= "Mass erase entire flash device.",
@@ -1004,29 +1005,29 @@ static const struct command_registration adspsc59x_exec_command_handlers[] = {
 	COMMAND_REGISTRATION_DONE
 };
 
-static const struct command_registration adspsc59x_command_handlers[] = {
+static const struct command_registration adspsc59x_a55_command_handlers[] = {
 	{
-		.name	= "adspsc59x",
+		.name	= "adspsc59x_a55",
 		.mode	= COMMAND_ANY,
-		.help	= "adspsc59x flash command group",
+		.help	= "adspsc59x_a55 flash command group",
 		.usage	= "",
-		.chain	= adspsc59x_exec_command_handlers,
+		.chain	= adspsc59x_a55_exec_command_handlers,
 	},
 	COMMAND_REGISTRATION_DONE
 };
 
 const struct flash_driver adspsc59x_a55_flash = {
 	.name				= "adspsc59x_a55",
-	.commands			= adspsc59x_command_handlers,
-	.flash_bank_command	= adspsc59x_flash_bank_command,
-	.erase				= adspsc59x_erase,
-	.protect			= adspsc59x_protect,
-	.write				= adspsc59x_write,
-	.read				= adspsc59x_read,
-	.probe				= adspsc59x_probe,
-	.auto_probe			= adspsc59x_auto_probe,
+	.commands			= adspsc59x_a55_command_handlers,
+	.flash_bank_command	= adspsc59x_a55_flash_bank_command,
+	.erase				= adspsc59x_a55_erase,
+	.protect			= adspsc59x_a55_protect,
+	.write				= adspsc59x_a55_write,
+	.read				= adspsc59x_a55_read,
+	.probe				= adspsc59x_a55_probe,
+	.auto_probe			= adspsc59x_a55_auto_probe,
 	.erase_check		= default_flash_blank_check,
-	.protect_check		= adspsc59x_protect_check,
-	.info				= adspsc59x_get_info,
+	.protect_check		= adspsc59x_a55_protect_check,
+	.info				= adspsc59x_a55_get_info,
 	.free_driver_priv	= default_flash_free_driver_priv,
 };
