@@ -1867,9 +1867,12 @@ int xtensa_do_step(struct target *target, int current, target_addr_t address, in
 			/* Update ICOUNTLEVEL accordingly */
 			icountlvl = MIN((oldps & 0xF) + 1, xtensa->core_config->debug.irq_level);
 		} else {
-			/* Disable interrupts while stepping */
+			/* Xtensa NX does not have the ICOUNTLEVEL feature present in Xtensa LX
+			 * and instead disable interrupts while stepping. This could change
+			 * the timing of the system while under debug */
 			xtensa_reg_val_t newps = oldps | XT_PS_DI_MSK;
 			xtensa_reg_set(target, XT_REG_IDX_PS, newps);
+			icountlvl = xtensa->core_config->debug.irq_level;
 			ps_modified = true;
 		}
 	} else {
@@ -2000,9 +2003,7 @@ int xtensa_do_step(struct target *target, int current, target_addr_t address, in
 	if (ps_modified) {
 		LOG_DEBUG("Restoring %s after stepping: 0x%08" PRIx32,
 			xtensa->core_cache->reg_list[(xtensa->core_config->core_type == XT_LX) ?
-				xtensa->eps_dbglevel_idx : XT_REG_IDX_PS].name,
-			oldps);
-
+				xtensa->eps_dbglevel_idx : XT_REG_IDX_PS].name, oldps);
 		xtensa_reg_set(target, (xtensa->core_config->core_type == XT_LX) ?
 			xtensa->eps_dbglevel_idx : XT_REG_IDX_PS, oldps);
 	}

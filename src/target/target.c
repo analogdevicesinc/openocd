@@ -5225,7 +5225,7 @@ no_params:
 			break;
 
 		case TCFG_RESTART_CTI_REG_ADDR:
-			if (goi->isconfigure) {
+			if (goi->is_configure) {
 				e = jim_getopt_wide(goi, &w);
 				if (e != JIM_OK)
 					return e;
@@ -5240,7 +5240,7 @@ no_params:
 			break;
 
 		case TCFG_RESTART_CTI_CHANNEL:
-			if (goi->isconfigure) {
+			if (goi->is_configure) {
 				e = jim_getopt_wide(goi, &w);
 				if (e != JIM_OK)
 					return e;
@@ -5253,7 +5253,7 @@ no_params:
 			/* loop for more */
 			break;
 		case TCFG_HALT_CTI_CHANNEL:
-			if (goi->isconfigure) {
+			if (goi->is_configure) {
 				e = jim_getopt_wide(goi, &w);
 				if (e != JIM_OK)
 					return e;
