@@ -54,7 +54,7 @@ metadata:
     backstage.io/source-location: url:https://github.com/adi-innersource/openocd.git
     backstage.io/techdocs-ref: dir:.
     hub.blackduck/project-name: openocd
-    hub.blackduck/project-version: adi-main
+    hub.blackduck/project-version: release/0.12.0-1.1.2
 spec:
   type: library
   lifecycle: release
