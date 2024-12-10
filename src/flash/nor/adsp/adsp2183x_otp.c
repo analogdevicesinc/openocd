@@ -764,6 +764,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_otp_bank_command)
 	adsp2183x_otp_info->adsp2183x_algorithm.reset_handler_addr = strtoul(parameter_file_data[2], NULL, 16);
 	adsp2183x_otp_info->adsp2183x_algorithm.algo_start_address = strtoul(parameter_file_data[3], NULL, 16);
 	adsp2183x_otp_info->adsp2183x_algorithm.version = strtoul(parameter_file_data[4], NULL, 10);
+	adsp2183x_otp_info->adsp2183x_algorithm.buffer_size = strtoul(parameter_file_data[5], NULL, 16);
 	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
 	adsp2183x_otp_info->sectorsize = tempParse;
 

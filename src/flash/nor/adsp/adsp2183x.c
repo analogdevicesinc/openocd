@@ -352,6 +352,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 	unsigned write_size = 0;
 	unsigned buffer_index = 0;
 	uint32_t current_address = offset;
+	uint32_t buffer_size = adsp2183x_flash_info->adsp2183x_algorithm.buffer_size;
 
 	if (offset + count > bank->size) {
 		LOG_ERROR("Write would go beyond end of supported flash size.");
@@ -374,10 +375,10 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 				return retval;
 		}
 
-		/* First write any bytes if the specified offset if not on the sector size boundary */
-		if (0 != (current_address % adsp2183x_flash_info->sectorsize)) {
-						/* Calculate the write size to use, the modulo remainder of the page size  (unless the specified count is smaller) */
-			write_size = adsp2183x_flash_info->sectorsize - (current_address % adsp2183x_flash_info->sectorsize);
+		/* First write any bytes if the specified offset if not on the buffer size boundary */
+		if (0 != (current_address % buffer_size)) {
+			/* Calculate the write size to use, the modulo remainder of the buffer size  (unless the specified count is smaller) */
+			write_size = buffer_size - (current_address % buffer_size);
 			if (write_size > count)
 				write_size = count;
 
@@ -450,14 +451,14 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 
 		/* Write remaining data */
 		while (count - buffer_index) {
-			/* If the remaining bytes is less than the flash sectot size,
+			/* If the remaining bytes is less than the buffer size,
 			*  size is just the remaining bytes...
 			*/
-			if ((count - buffer_index) < adsp2183x_flash_info->sectorsize)
+			if ((count - buffer_index) < buffer_size)
 				write_size = count - buffer_index;
-			/* Otherwise size is the page size (max size that can be written in one command) */
+			/* Otherwise size is the buffer size (max size that can be written in one command) */
 			else
-				write_size = adsp2183x_flash_info->sectorsize;
+				write_size = buffer_size;
 
 			// Need to halt before reads/writes
 			retval = target_halt(target);
@@ -549,6 +550,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 	struct target *target = bank->target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
 	struct adsp2183x_algo_params algo_params;
+	uint32_t buffer_size = adsp2183x_flash_info->adsp2183x_algorithm.buffer_size;
 	int retval;
 
 	// poll target to update state
@@ -577,9 +579,9 @@ static int adsp2183x_read(struct flash_bank *bank,
 			read_size = count;
 		}  else {
 			/* Maximum read size*/
-			read_size = SPI_MAX_READ_COUNT;
+			read_size = buffer_size;
 
-			/* Then if the actual count is smaller than the theoretical max, use the count */
+			/* Then if the actual count is smaller than the buffer size, use the count */
 			if (count < read_size)
 				read_size = count;
 		}
@@ -1082,6 +1084,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 	adsp2183x_flash_info->adsp2183x_algorithm.reset_handler_addr = strtoul(parameter_file_data[2], NULL, 16);
 	adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address = strtoul(parameter_file_data[3], NULL, 16);
 	adsp2183x_flash_info->adsp2183x_algorithm.version = strtoul(parameter_file_data[4], NULL, 10);
+	adsp2183x_flash_info->adsp2183x_algorithm.buffer_size = strtoul(parameter_file_data[5], NULL, 16);
 	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
 	adsp2183x_flash_info->sectorsize = tempParse;
 

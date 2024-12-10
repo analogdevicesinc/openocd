@@ -341,6 +341,7 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 	unsigned int write_size = 0;
 	unsigned int buffer_index = 0;
 	uint32_t current_address = offset;
+	uint32_t buffer_size = adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.buffer_size;
 
 	if (offset + count > bank->size) {
 		LOG_ERROR("Write would go beyond end of supported flash size.");
@@ -362,10 +363,10 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 				return retval;
 		}
 
-		/* First write any bytes if the specified offset if not on the sector size boundary */
-		if (0 != (current_address % adspsc5xx_a5_flash_info->sectorsize)) {
-						/* Calculate the write size to use, the modulo remainder of the page size  (unless the specified count is smaller) */
-			write_size = adspsc5xx_a5_flash_info->sectorsize - (current_address % adspsc5xx_a5_flash_info->sectorsize);
+		/* First write any bytes if the specified offset is not on the buffer size boundary */
+		if (0 != (current_address % buffer_size)) {
+			/* Calculate the write size to use, the modulo remainder of the buffer size  (unless the specified count is smaller) */
+			write_size = buffer_size - (current_address % buffer_size);
 			if (write_size > count)
 				write_size = count;
 
@@ -435,14 +436,14 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 
 		/* Write remaining data */
 		while (count - buffer_index) {
-			/* If the remaining bytes is less than the flash sectot size,
+			/* If the remaining bytes is less than the buffer size
 			*  size is just the remaining bytes...
 			*/
-			if ((count - buffer_index) < adspsc5xx_a5_flash_info->sectorsize)
+			if ((count - buffer_index) < buffer_size)
 				write_size = count - buffer_index;
-			/* Otherwise size is the page size (max size that can be written in one command) */
+			/* Otherwise size is the buffer size (max size that can be written in one command) */
 			else
-				write_size = adspsc5xx_a5_flash_info->sectorsize;
+				write_size = buffer_size;
 
 			// Need to halt before reads/writes
 			retval = target_halt(target);
@@ -531,6 +532,7 @@ static int adspsc5xx_a5_read(struct flash_bank *bank,
 	struct target *target = bank->target;
 	struct adspsc5xx_a5_flash_bank *adspsc5xx_a5_flash_info = bank->driver_priv;
 	struct adspsc5xx_a5_algo_params algo_params = {0};
+	uint32_t buffer_size = adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.buffer_size;
 	int retval;
 
 	// poll target to update state
@@ -553,9 +555,9 @@ static int adspsc5xx_a5_read(struct flash_bank *bank,
 	uint32_t read_bytes = 0;
 	while (count) {
 		/* Maximum read size*/
-		uint32_t read_size = SPI_MAX_READ_COUNT;
+		uint32_t read_size = buffer_size;
 
-		/* Then if the actual count is smaller than the theoretical max, use the count */
+		/* Then if the actual count is smaller than the buffer size, use the count */
 		if (count < read_size)
 			read_size = count;
 
@@ -1057,6 +1059,7 @@ FLASH_BANK_COMMAND_HANDLER(adspsc5xx_a5_flash_bank_command)
 
 	adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.algo_start_address = strtoul(parameter_file_data[3], NULL, 16);
 	adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.version = strtoul(parameter_file_data[4], NULL, 10);
+	adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.buffer_size = strtoul(parameter_file_data[5], NULL, 16);
 
 	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], tempParse);
 	adspsc5xx_a5_flash_info->sectorsize = tempParse;
