@@ -1,6 +1,8 @@
 // SPDX-License Identifier: GPL-2.0-or-later
 // Copyright (C) 2022-2024 Analog Devices, Inc.
 
+#ifndef ADSP2183X_H
+#define ADSP2183X_H
 
 struct custom_algorithm {
 	uint8_t *adsp2183x_algo;
@@ -10,9 +12,10 @@ struct custom_algorithm {
 	unsigned long buffer_address;	  /*  address and algo parameter address (g_cfg)*/
 	unsigned long version;
 	unsigned long size;
+	unsigned long buffer_size
 };
 
-#define PARAMETER_FILE_COUNT 5
+#define PARAMETER_FILE_COUNT 6
 
 #define SPI_NAME "adsp2183x.spi"
 
@@ -55,3 +58,5 @@ struct adsp2183x_algo_params {
 	uint8_t ready[4];
 	uint8_t device_id[4];
 };
+
+#endif // ADSP2183X_H
