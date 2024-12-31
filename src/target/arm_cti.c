@@ -29,7 +29,7 @@ struct arm_cti {
 	int dbgrestart_outen;
 };
 
-static LIST_HEAD(all_cti);
+static OOCD_LIST_HEAD(all_cti);
 
 const char *arm_cti_name(struct arm_cti *self)
 {
