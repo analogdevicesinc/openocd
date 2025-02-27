@@ -1,5 +1,5 @@
-/* SPDX-License Identifier: GPL-2.0-or-later
-	Copyright (C) 2022-2024 Analog Devices, Inc. */
+// SPDX-License-Identifier: GPL-2.0+
+// Copyright (C) 2022-2025 Analog Devices, Inc.
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -20,23 +20,20 @@
  */
 
 /* JTAG TMS/TDI Data */
-typedef struct
-{
+typedef struct {
 	uint8_t tms;			/* TMS data */
 	uint8_t tdi;			/* TDI data */
 } tap_pairs;
 
 /* For collecting data */
-typedef struct
-{
+typedef struct {
 	int32_t idx;			/* Index where data is to be collected */
 	int32_t pos;			/* Bit position where data is to be collected */
 	void *ptr;				/* This can point to a scan_command or swd_packet */
 } dat_dat;
 
 /* Master scan control structure */
-typedef struct
-{
+typedef struct {
 	int32_t total;			/* Max number of tap pointers */
 	int32_t cur_idx;		/* Where to add next, or total */
 	int32_t bit_pos;		/* Position to place next bit */
@@ -49,8 +46,7 @@ typedef struct
 } num_tap_pairs;
 
 /* Cable params_t structure with our data */
-typedef struct
-{
+typedef struct {
 	libusb_device_handle *usb_handle; /* USB handle */
 	uint32_t cur_freq;				/* JTAG Frequency */
 	uint32_t cur_voltage;			/* Voltage 1: 1.8V, 2: 2.5V, 3: 3.3/5V, ICE-2000 only */
@@ -69,14 +65,14 @@ typedef struct
 	int32_t r_buf_sz;				/* USB Read Buffer Size */
 	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
 	bool use_usbmux;				/* If true, use USB MUX for USB communication */
+	bool reset_hw_on_connection;	/* If true, do a complete hardware reset at end of init */
 #ifdef _ADI_USB_MUX_
 	HANDLE mux_handle;				/* USB MUX handle */
 #endif
 } params_t;
 
 /* Emulator's USB Data structure */
-typedef struct
-{
+typedef struct {
 	uint32_t command;		/* What to do */
 	uint32_t buffer;		/* used for Kit only, always initialized to 0 */
 	uint32_t count;			/* Amount of data in bytes to send */
@@ -124,20 +120,22 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define DAT_SZ							0x4000	/* size allocated for reading data */
 #define DAT_SZ_INC						0x40	/* size to increase if data full */
 
+#define RESET_TARGET_DURATION			140		/* Reset target duration of 140 ms */
+
 /* USB Emulator Commands */
 #define HOST_GET_FW_VERSION				0x01	/* get the firmware version */
-#define HOST_REQUEST_RX_DATA			0x02	/* host request to transmit data */
-#define HOST_RX_DATA                   	0x03	/* host has requested to receive data */
+#define HOST_REQUEST_RX_DATA			0x02	/* host request to receive data */
+#define HOST_RX_DATA					0x03	/* host has requested to receive data */
 #define HOST_REQUEST_TX_DATA			0x04	/* host request to transmit data */
-#define HOST_TX_DATA                   	0x05	/* host has requested to transmit data */
-#define HOST_DO_RAW_SCAN               	0x06	/* do a raw scan */
+#define HOST_TX_DATA					0x05	/* host has requested to transmit data */
+#define HOST_DO_RAW_SCAN				0x06	/* do a raw scan */
 #define HOST_DO_LOOPBACK				0x07	/* usb loopback testing */
 #define HOST_HARD_RESET_KIT				0x08
-#define HOST_SET_TRST                  	0x09	/* changes TRST Line state  */
+#define HOST_SET_TRST					0x09	/* changes TRST Line state  */
 
-#define HOST_PREP_FIRMWARE_UPDATE      	0x0A	/* prepare to update the firmware */
-#define HOST_READ_EEPROM               	0x0B	/* read the target's EEPROM */
-#define HOST_WRITE_EEPROM              	0x0C	/* write to the target's EEPROM */
+#define HOST_PREP_FIRMWARE_UPDATE		0x0A	/* prepare to update the firmware */
+#define HOST_READ_EEPROM				0x0B	/* read the target's EEPROM */
+#define HOST_WRITE_EEPROM				0x0C	/* write to the target's EEPROM */
 #define HOST_CONNECT					0x0D	/* make a debug connection */
 #define HOST_DISCONNECT					0x0E	/* disconnect from debug mode */
 #define HOST_SET_JTAG_FREQUENCY			0x0F	/* set JTAG frequency */
@@ -167,21 +165,17 @@ static const int valid_freq_set[MAX_FREQ_1500] = { 1000, 5000 };
 #ifdef _ADI_USB_MUX_
 #define adi_usb_read_or_ret(buf, len)										\
 	do {																	\
-		if (cable_params.use_usbmux)										\
-		{																	\
+		if (cable_params.use_usbmux) {										\
 			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, 	\
-				buf, len, cable_params.r_ep | LIBUSB_ENDPOINT_IN, cable_params.r_timeout);	\
+			buf, len, cable_params.r_ep | LIBUSB_ENDPOINT_IN, cable_params.r_timeout);	\
 			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;					\
-		}																	\
-		else																\
-		{																	\
+		} else {															\
 			int __ret, __actual, __size = (len);							\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
 									cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
 									(unsigned char *)(buf), __size,			\
 									&__actual, cable_params.r_timeout);		\
-			if (__ret || __actual != __size)								\
-			{																\
+			if (__ret || __actual != __size) {								\
 				LOG_ERROR("unable to read from usb to " #buf ": "			\
 						"wanted %i bytes but only received %i bytes",		\
 						__size, __actual);									\
@@ -193,22 +187,18 @@ static const int valid_freq_set[MAX_FREQ_1500] = { 1000, 5000 };
 
 #define adi_usb_write_or_ret(buf, len)										\
 	do {																	\
-	if (cable_params.use_usbmux)											\
-		{																	\
+		if (cable_params.use_usbmux) {										\
 			USB_MUX_ERROR mux_ret = usbmux_write(cable_params.mux_handle,	\
-				buf, len, cable_params.wr_ep | LIBUSB_ENDPOINT_OUT,			\
-				cable_params.wr_timeout);									\
+			buf, len, cable_params.wr_ep | LIBUSB_ENDPOINT_OUT,				\
+			cable_params.wr_timeout);										\
 			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;					\
-		}																	\
-		else																\
-		{																	\
+		} else {															\
 			int __ret, __actual, __size = (len);							\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,			\
-									cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
-									(unsigned char *)(buf), __size,			\
-									&__actual, cable_params.wr_timeout);	\
-			if (__ret || __actual != __size)								\
-			{																\
+								cable_params.wr_ep | LIBUSB_ENDPOINT_OUT,	\
+								(unsigned char *)(buf), __size,				\
+								&__actual, cable_params.wr_timeout);		\
+			if (__ret || __actual != __size) {								\
 				LOG_ERROR("unable to write from " #buf " to usb: "			\
 						"wanted %i bytes but only wrote %i bytes",			\
 						__size, __actual);									\
@@ -226,8 +216,7 @@ static const int valid_freq_set[MAX_FREQ_1500] = { 1000, 5000 };
 								cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
 								(unsigned char *)(buf), __size,		\
 								&__actual, cable_params.r_timeout);	\
-		if (__ret || __actual != __size)							\
-		{															\
+		if (__ret || __actual != __size) {							\
 			LOG_ERROR("unable to read from usb to " #buf ": "		\
 					"wanted %i bytes but only received %i bytes",	\
 					__size, __actual);								\
@@ -242,8 +231,7 @@ static const int valid_freq_set[MAX_FREQ_1500] = { 1000, 5000 };
 								cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
 								(unsigned char *)(buf), __size,		\
 								&__actual, cable_params.wr_timeout);\
-		if (__ret || __actual != __size)							\
-		{															\
+		if (__ret || __actual != __size) {							\
 			LOG_ERROR("unable to write from " #buf " to usb: "		\
 					"wanted %i bytes but only wrote %i bytes",		\
 					__size, __actual);								\
@@ -252,9 +240,9 @@ static const int valid_freq_set[MAX_FREQ_1500] = { 1000, 5000 };
 	} while (0)
 #endif
 
-
-static params_t cable_params;
-
+static params_t cable_params = {
+	.reset_hw_on_connection = false,
+};
 
 /*
  * System Interface Functions
@@ -263,7 +251,7 @@ static params_t cable_params;
 extern struct adapter_driver *adapter_driver;
 static const char *adi_cable_name(void)
 {
-	if (adapter_driver == NULL)
+	if (!adapter_driver)
 		return "";
 
 	if (strcmp(adapter_driver->name, "ice1500") == 0)
@@ -295,8 +283,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	if (cable_params.use_usbmux) {
 #ifdef _ADI_USB_MUX_
 		ret = usbmux_open(&cable_params.mux_handle, USB_CONNECTION_TIMEOUT);
-		if (ret)
-		{
+		if (ret) {
 			LOG_ERROR("failed to open USB MUX.");
 			return ERROR_FAIL;
 		}
@@ -304,9 +291,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		LOG_ERROR("USB MUX is not supported on this host.");
 		return ERROR_FAIL;
 #endif
-	}
-	else
-	{
+	} else {
 		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
 		if (ret != ERROR_OK)
 			return ret;
@@ -328,19 +313,16 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	}
 
 	cable_params.tap_info.dat = malloc(sizeof(dat_dat) * DAT_SZ);
-	if (!cable_params.tap_info.dat)
-	{
+	if (!cable_params.tap_info.dat) {
 		LOG_ERROR("_malloc(%d) fails", (int)(sizeof(dat_dat) * DAT_SZ));
-		if (dev)
-		{
+		if (dev) {
 			libusb_release_interface(dev, 0);
 			libusb_close(dev);
 			dev = NULL;
 		}
 
 #ifdef _ADI_USB_MUX_
-		if (cable_params.mux_handle)
-		{
+		if (cable_params.mux_handle) {
 			usbmux_close(cable_params.mux_handle);
 			cable_params.mux_handle = NULL;
 		}
@@ -348,10 +330,8 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		return ERROR_FAIL;
 	}
 
-
 	/* Initialize receive data array to unused */
-	for (i = 0; i < DAT_SZ; ++i)
-	{
+	for (i = 0; i < DAT_SZ; ++i) {
 		cable_params.tap_info.dat[i].idx = -1;
 		cable_params.tap_info.dat[i].pos = -1;
 	}
@@ -393,6 +373,9 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
 	cable_params.num_rcv_hdr_bytes = 3;  // this is where our TDO actually starts
 
+	if (cable_params.reset_hw_on_connection)
+		do_host_cmd(HOST_HARD_RESET_KIT, RESET_TARGET_DURATION, 0);
+
 	return ERROR_OK;
 }
 
@@ -403,16 +386,14 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (tap_info->pairs == NULL)
-	{
+	if (!tap_info->pairs) {
 		unsigned char *cmd;
 		int32_t new_sz = cable_params.default_scanlen;
 		uint8_t bit_set;
 		int i, j;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
-		{
+		if (!cmd) {
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
@@ -430,13 +411,11 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		tap_info->pairs[i].tdi = 0;
 
 		/* go through and set tms and tdi to the appropriate values */
-		for (j = 0; j < cnt; j++)
-		{
+		for (j = 0; j < cnt; j++) {
 			tap_info->pairs[i].tms |= tms ? bit_set : 0;
 			tap_info->pairs[i].tdi |= tdi ? bit_set : 0;
 			bit_set >>= 1;
-			if (!bit_set)
-			{
+			if (!bit_set) {
 				/* start over again */
 				bit_set = 0x80;
 				i++;
@@ -450,22 +429,18 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		tap_info->bit_pos = bit_set;
 
 		return ERROR_OK;
-	}
-	else
-	{
+	} else {
 		int i, j;
 		uint8_t bit_set;
 
 		bit_set = tap_info->bit_pos;
 		i = tap_info->cur_idx;
 
-		for (j = 0; j < cnt; j++)
-		{
+		for (j = 0; j < cnt; j++) {
 			tap_info->pairs[i].tms |= tms ? bit_set : 0;
 			tap_info->pairs[i].tdi |= tdi ? bit_set : 0;
 			bit_set >>= 1;
-			if (!bit_set)
-			{
+			if (!bit_set) {
 				/* start over again */
 				bit_set = 0x80;
 				i++;
@@ -489,8 +464,7 @@ static int ice1500_init(void)
 	int retval;
 
 	retval = adi_connect(vids, pids);
-	if (retval != ERROR_OK)
-	{
+	if (retval != ERROR_OK) {
 		if (retval == -ENODEV)
 			LOG_ERROR("ICE-1500 emulator not found");
 
@@ -507,17 +481,14 @@ static int ice1500_quit(void)
 	// indicate to the emulator that we are shutting down
 	do_host_cmd(HOST_DISCONNECT, 0, 0);
 
-	if (cable_params.usb_handle != NULL)
-	{
+	if (cable_params.usb_handle) {
 		libusb_release_interface(cable_params.usb_handle, 0);
 		libusb_close(cable_params.usb_handle);
 	}
 
 #ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
-	{
 		usbmux_close(cable_params.mux_handle);
-	}
 #endif
 
 	free(cable_params.tap_info.dat);
@@ -539,10 +510,8 @@ static int ice1500_khz(int khz, int *speed)
 static int ice1500_speed_div(int speed, int *khz)
 {
 	// check if the given frequency is valid
-	for (int i=0; i<MAX_FREQ_1500; i++)
-	{
-		if (valid_freq_set[i] == *khz)
-		{
+	for (int i = 0; i < MAX_FREQ_1500; i++) {
+		if (valid_freq_set[i] == *khz) {
 			do_host_cmd(HOST_SET_JTAG_FREQUENCY,(*khz/1000),0);
 			return ERROR_OK;
 		}
@@ -568,17 +537,17 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 
 	buf = (uint8_t *)calloc(DIV_ROUND_UP(len, 8), 1);
 
-	if (buf == NULL)
+	if (!buf) {
 		LOG_ERROR("malloc(%d) fails", DIV_ROUND_UP(len, 8));
+		return NULL;
+	}
 
-	if (idx_dat < 0)
-	{
+	if (idx_dat < 0) {
 		DEBUG("get_recv_data(): No Received Data\n");
 		return NULL;
 	}
 
-	for (i = 0; i < len; i++)
-	{
+	for (i = 0; i < len; i++) {
 		buf[i/8] |= ((*rcvBuf & bit_set) ? 1 : 0) << (i % 8);
 
 #ifdef DUMP_EACH_RCV_DATA
@@ -591,8 +560,7 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 #endif
 		bit_set >>= 1;
 
-		if (!bit_set)
-		{
+		if (!bit_set) {
 			bit_set = 0x80;
 			rcvBuf++;
 			dat_idx++;
@@ -621,8 +589,7 @@ static int ice1500_tap_execute(void)
 
 	retval = ERROR_OK;
 
-	for (i = 0; i <= tap_info->cur_dat; i++)
-	{
+	for (i = 0; i <= tap_info->cur_dat; i++) {
 		uint8_t *buffer;
 		struct scan_command *command = tap_info->dat[i].ptr;
 
@@ -635,8 +602,7 @@ static int ice1500_tap_execute(void)
 	}
 
 	free(buf);
-	if (tap_info->pairs)
-	{
+	if (tap_info->pairs) {
 		free(tap_info->cmd);
 		tap_info->pairs = NULL;
 		tap_info->cmd = NULL;
@@ -663,8 +629,7 @@ static int ice1500_execute_reset(struct jtag_command *cmd)
 
 	if ((cmd->cmd.reset->trst == 1)
 		|| (cmd->cmd.reset->srst
-			&& (jtag_get_reset_config() & RESET_SRST_PULLS_TRST)))
-	{
+			&& (jtag_get_reset_config() & RESET_SRST_PULLS_TRST))) {
 		tap_set_state(TAP_RESET);
 	}
 
@@ -675,12 +640,9 @@ static int ice1500_execute_reset(struct jtag_command *cmd)
 
 static void ice1500_end_state(tap_state_t state)
 {
-	if (tap_is_state_stable(state))
-	{
+	if (tap_is_state_stable(state)) {
 		tap_set_end_state(state);
-	}
-	else
-	{
+	} else {
 		LOG_ERROR("BUG: %s is not a valid end state", tap_state_name(state));
 		exit(-1);
 	}
@@ -710,8 +672,7 @@ static void ice1500_state_move(void)
 	uint8_t tms_scan = tap_get_tms_path(tap_get_state(), tap_get_end_state());
 	uint8_t tms_scan_bits = tap_get_tms_path_len(tap_get_state(), tap_get_end_state());
 
-	for (i = 0; i < tms_scan_bits; i++)
-	{
+	for (i = 0; i < tms_scan_bits; i++) {
 		tms = (tms_scan >> i) & 1;
 		ice1500_tap_append_step(tms, 0);
 	}
@@ -723,18 +684,12 @@ static void ice1500_path_move(int num_states, tap_state_t *path)
 {
 	int i;
 
-	for (i = 0; i < num_states; i++)
-	{
-		if (path[i] == tap_state_transition(tap_get_state(), false))
-		{
+	for (i = 0; i < num_states; i++) {
+		if (path[i] == tap_state_transition(tap_get_state(), false)) {
 			ice1500_tap_append_step(0, 0);
-		}
-		else if (path[i] == tap_state_transition(tap_get_state(), true))
-		{
+		} else if (path[i] == tap_state_transition(tap_get_state(), true)) {
 			ice1500_tap_append_step(1, 0);
-		}
-		else
-		{
+		} else {
 			LOG_ERROR("BUG: %s -> %s isn't a valid TAP transition",
 					tap_state_name(tap_get_state()), tap_state_name(path[i]));
 			exit(-1);
@@ -755,8 +710,7 @@ static int ice1500_runtest(int num_cycles)
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (tap_get_state() != TAP_IDLE)
-	{
+	if (tap_get_state() != TAP_IDLE)  {
 		ice1500_end_state(TAP_IDLE);
 		ice1500_state_move();
 	}
@@ -767,9 +721,7 @@ static int ice1500_runtest(int num_cycles)
 	/* finish in end_state */
 	ice1500_end_state(saved_end_state);
 	if (tap_get_state() != tap_get_end_state())
-	{
 		ice1500_state_move();
-	}
 
 	return ERROR_OK;
 }
@@ -827,17 +779,15 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	int32_t idx;
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (in == NULL)
+	if (!in)
 		LOG_WARNING("NO IN DATA!!!%s", out ? " BUT there is out data!" : "");
 
-	if (tap_info->pairs == NULL)
-	{	/* really should never get here, but must not crash system. Would be rude */
+	if (!tap_info->pairs) {	/* really should never get here, but must not crash system. Would be rude */
 		int32_t new_sz = cable_params.default_scanlen + 4;
 		unsigned char *cmd;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
-		{
+		if (!cmd) {
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
@@ -857,9 +807,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_scan++;
 		tap_scan->tdi = 0;
 		tap_scan->tms = 0;
-	}
-	else if ((tap_info->total - tap_info->cur_idx) < byte_cnt)
-	{	/* to small, increase size! */
+	} else if ((tap_info->total - tap_info->cur_idx) < byte_cnt) {	/* to small, increase size! */
 		unsigned char *cmd;
 		int32_t new_sz;
 
@@ -867,8 +815,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 		new_sz = tap_info->total + byte_cnt + 8;
 		cmd = realloc(tap_info->cmd, (sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
-		if (cmd == NULL)
-		{
+		if (!cmd) {
 			LOG_ERROR("realloc(%ld) fails",
 				(long int)(sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
@@ -881,31 +828,24 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_scan = tap_info->pairs;
 		idx = tap_info->cur_idx;		/* to add on */
 		tap_scan = &tap_info->pairs[idx];
-	}
-	else
-	{
+	} else {
 		idx = tap_info->cur_idx;		/* to add on */
 		tap_scan = &tap_info->pairs[idx];
 	}
 
 	bit_set = tap_info->bit_pos;
 
-	if (out)
-	{	/* Setup where we start to read, can be more than 1 */
+	if (out) {	/* Setup where we start to read, can be more than 1 */
 		if (tap_info->rcv_dat == -1)
-		{
 			tap_info->rcv_dat = 0;
-		}
 		tap_info->cur_dat++;
-		if (tap_info->cur_dat >= tap_info->num_dat)
-		{
+		if (tap_info->cur_dat >= tap_info->num_dat) {
 			int32_t new_sz;
 			dat_dat *datPtr;
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
 			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
-			if (datPtr == NULL)
-			{
+			if (!datPtr) {
 				LOG_ERROR("realloc(%ld) fails",
 					(long int)(sizeof (dat_dat) * new_sz));
 				return ERROR_FAIL;
@@ -921,10 +861,8 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 	/* Build Scan.	If command is NULL, IN is TMS. Otherwise,
 	   TMS will always be zero except the last bit! */
-	for (i = 0; i < num_bits; i++)
-	{
-		if (command != NULL)
-		{
+	for (i = 0; i < num_bits; i++) {
+		if (command) {
 			tap_scan->tdi |= (in[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
 			if (i == num_bits - 1)
 				tap_scan->tms |= bit_set;
@@ -933,8 +871,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 			tap_scan->tms |= (in[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
 
 		bit_set >>= 1;
-		if (!bit_set)
-		{
+		if (!bit_set) {
 			bit_set = 0x80;
 			idx++;
 			tap_scan++;
@@ -978,9 +915,7 @@ static int ice1500_scan(bool ir_scan, enum scan_type type, uint8_t *buffer,
 	tap_set_state(ir_scan ? TAP_IRPAUSE : TAP_DRPAUSE);
 
 	if (tap_get_state() != tap_get_end_state())
-	{
 		ice1500_state_move();
-	}
 
 	return ERROR_OK;
 }
@@ -1069,8 +1004,7 @@ static int ice1500_execute_command(struct jtag_command *cmd)
 {
 	int retval;
 
-	switch (cmd->type)
-	{
+	switch (cmd->type) {
 	case JTAG_RESET:
 		retval = ice1500_execute_reset(cmd);
 		break;
@@ -1109,8 +1043,7 @@ static int ice1500_execute_queue(struct jtag_command *cmd)
 
 #ifdef _ADI_USB_MUX_
 #define USB_MUX_MAX_LOCK_ATTEMPTS 50
-if (cable_params.mux_handle)
-	{
+	if (cable_params.mux_handle) {
 		unsigned int attempt = 0;
 		do {
 			attempt++;
@@ -1119,26 +1052,18 @@ if (cable_params.mux_handle)
 			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
 
 			if (mux_ret == USB_MUX_OK)
-			{
 				break;
-			}
-			else if (mux_ret == USB_MUX_BUSY)
-			{
+			else if (mux_ret == USB_MUX_BUSY) {
 				/* Send out the message every 5 attempts */
 				if ((attempt % 5) == 0)
-				{
 					LOG_DEBUG("MUX is busy after %u attempts, retrying.", attempt);
-				}
 
-				if (attempt == USB_MUX_MAX_LOCK_ATTEMPTS)
-				{
+				if (attempt == USB_MUX_MAX_LOCK_ATTEMPTS) {
 					// Failed to acquire lock (TIMEOUT)
 					LOG_ERROR("Timeout acquiring USB lock after %u attempts", attempt);
 					return ERROR_TIMEOUT;
 				}
-			}
-			else
-			{
+			} else {
 				LOG_ERROR("USB error: Failed to acquire USB lock (error %d).", mux_ret);
 				return ERROR_FAIL;
 			}
@@ -1149,21 +1074,17 @@ if (cable_params.mux_handle)
 #endif
 
 	/* TODO add blink */
-	while (cmd != NULL)
-	{
+	while (cmd) {
 		if (ice1500_execute_command(cmd) != ERROR_OK)
 			retval = ERROR_JTAG_QUEUE_FAILED;
 		cmd = cmd->next;
 	}
 
-	if (retval != ERROR_OK)
-	{
+	if (retval != ERROR_OK) {
 #ifdef _ADI_USB_MUX_
 		if (cable_params.mux_handle)
-		{
 			// release USB lock
 			usbmux_unlock(cable_params.mux_handle);
-		}
 #endif
 		return retval;
 	}
@@ -1172,10 +1093,8 @@ if (cable_params.mux_handle)
 
 #ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
-	{
 		// release USB lock
 		usbmux_unlock(cable_params.mux_handle);
-	}
 #endif
 
 	return retval;
@@ -1218,8 +1137,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 
 	adi_usb_write_or_ret(cmd_buffer.b, size);
 
-	if (r_data)
-	{
+	if (r_data) {
 		usb_cmd_blk.command = HOST_REQUEST_RX_DATA;
 		usb_cmd_blk.count = 2;
 		usb_cmd_blk.buffer = 0;
@@ -1248,8 +1166,9 @@ static int perform_scan(uint8_t **rdata)
 	uint32_t out_inc = 0;
 
 	/* Data is scan as 32 bit words, so boundaries are adjusted here */
-	if (tap_info->bit_pos != 0x80) /* meaning no dangling bits? */
-	{	/* yes, so straighten out! */
+	/* meaning no dangling bits? */
+	if (tap_info->bit_pos != 0x80) {
+		/* yes, so straighten out! */
 		cur_len++;
 		tap_info->pairs[cur_len].tms = 0;
 		tap_info->pairs[cur_len].tdi = 0;
@@ -1260,8 +1179,8 @@ static int perform_scan(uint8_t **rdata)
 	tap_info->pairs[cur_len].tms = 0;
 	tap_info->pairs[cur_len].tdi = 0;
 
-	while (cur_len & 0x03)
-	{	/* expect to be in 32 bit words */
+	while (cur_len & 0x03) {
+		/* expect to be in 32 bit words */
 		cur_len++;
 		tap_info->pairs[cur_len].tms = 0;
 		tap_info->pairs[cur_len].tdi = 0;
@@ -1270,8 +1189,8 @@ static int perform_scan(uint8_t **rdata)
 	tap_info->cur_idx = cur_len;
 	rem_len = cur_len * sizeof (tap_pairs);
 
-	if (tap_info->cur_dat != -1)
-	{	/* yes we have data, so allocate for data plus header */
+	if (tap_info->cur_dat != -1) {
+		/* yes we have data, so allocate for data plus header */
 		size_t len;
 
 		len = cur_len + cable_params.tap_pair_start_idx + 16;
@@ -1279,19 +1198,16 @@ static int perform_scan(uint8_t **rdata)
 			len -= tap_info->dat[0].idx;
 
 		out = malloc(len);
-		if (out == NULL)
-		{
+		if (!out) {
 			LOG_ERROR("malloc(%ld) fails", (long int)len);
 			return ERROR_FAIL;
 		}
 		*rdata = out;
 		collect_data = 1;
-	}
-	else
-	{	/* no data, so allocate for just header */
+	} else {
+		/* no data, so allocate for just header */
 		out = malloc(cable_params.tap_pair_start_idx + 16);
-		if (out == NULL)
-		{
+		if (!out) {
 			LOG_ERROR("malloc(%d) fails", cable_params.tap_pair_start_idx + 16);
 			return ERROR_FAIL;
 		}
@@ -1303,24 +1219,18 @@ static int perform_scan(uint8_t **rdata)
 	idx_out = 0;
 
 	/* Here if data is too large, we break it up into manageable chunks */
-	do
-	{
+	do {
 		cur_len = (rem_len > MAX_DIF_SIZE) ? MAX_DIF_SIZE : rem_len;
 
 		do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx_in] - cable_params.tap_pair_start_idx, &out[idx_out]);
-		if(idx_in != 0)
-		{
+		if (idx_in != 0) {
 			// each scan gives us scan status, remove it from our buffer
 			// if it is not the first scan
 			uint8_t *pData = &out[idx_out + scan_status_bytes];
 			for(size_t i = 0; i < cur_len/2 + scan_status_bytes; i++)
-			{
 				out[idx_out+i] = pData[i];
-			}
 			out_inc = (cur_len/2);
-		}
-		else
-		{
+		} else {
 			out_inc = (cur_len/2) + scan_status_bytes;
 		}
 
@@ -1330,9 +1240,8 @@ static int perform_scan(uint8_t **rdata)
 	} while (rem_len);
 
 	if (tap_info->cur_dat == -1)
-	{	/* no data to return, so free it */
+		/* no data to return, so free it */
 		free(out);
-	}
 
 	return ERROR_OK;
 }
@@ -1385,8 +1294,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	raw_buf[i++] = firstpkt;
 	raw_buf[i++] = lastpkt;
 	raw_buf[i++] = HOST_DO_RAW_SCAN;
-	if ((collect_dof && lastpkt) && (tap_info->dat[0].idx > 12))
-	{
+	if ((collect_dof && lastpkt) && (tap_info->dat[0].idx > 12)) {
 		int32_t j, offset;
 
 		dof_start = tap_info->dat[0].idx;
@@ -1395,9 +1303,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 		tap_info->dat[0].idx = offset;
 
 		for (j = 1; j <= tap_info->cur_dat; j++)
-		{
 			tap_info->dat[j].idx -= dof_start;
-		}
 	}
 
 	raw_buf[i++] = collect_dof ? 1 : 0;
@@ -1407,21 +1313,18 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 
 	adi_usb_write_or_ret(raw_buf, size);
 
-	if (lastpkt)
-	{
+	if (lastpkt) {
 		int32_t cur_rd_bytes = 0, tot_bytes_rd = 0, rd_bytes_left;
 		int32_t buf_index = 0;
 
 		rd_bytes_left = RAW_SCAN_HDR_SZ + ((collect_dof) ? ((scan_pairs_in_longs * 4) - dof_start) : 0);
 
-		while (tot_bytes_rd < rd_bytes_left)
-		{
+		while (tot_bytes_rd < rd_bytes_left) {
 			cur_rd_bytes = ((rd_bytes_left - tot_bytes_rd) > cable_params.r_buf_sz) ?
 				cable_params.r_buf_sz : (rd_bytes_left - tot_bytes_rd);
 
 			adi_usb_read_or_ret(out + buf_index, cur_rd_bytes);
-			if ((out + buf_index)[0] != 2)
-			{
+			if ((out + buf_index)[0] != 2) {
 				LOG_ERROR("Scan Error!");
 				return ERROR_FAIL;
 			}
@@ -1433,6 +1336,15 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	return ERROR_OK;
 }
 
+COMMAND_HANDLER(ice1500_reset_hw_on_connection)
+{
+	if (CMD_ARGC > 0)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	cable_params.reset_hw_on_connection = true;
+
+	return ERROR_OK;
+}
 
 COMMAND_HANDLER(ice1500_use_usbmux)
 {
@@ -1458,6 +1370,12 @@ static const struct command_registration ice1500_command_handlers[] = {
 		.handler = &ice1500_use_usbmux,
 		.mode = COMMAND_CONFIG,
 		.usage = "use_usbmux ['true'|'false']",
+	},
+	{
+		.name = "reset_hw",
+		.handler = &ice1500_reset_hw_on_connection,
+		.mode = COMMAND_CONFIG,
+		.usage = "reset_hw",
 	},
 
 	COMMAND_REGISTRATION_DONE
