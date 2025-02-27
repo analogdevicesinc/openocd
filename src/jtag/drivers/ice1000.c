@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: GPL-2.0+
+// Copyright (C) 2021-2025 Analog Devices, Inc.
 
 /***************************************************************************
  *   Based on ice100.c of UrJTAG                                           *
- *   Copyright (C) 2011-2024 Analog Devices, Inc.                          *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -25,16 +25,14 @@
  */
 
 /* JTAG TMS/TDI Data */
-typedef struct
-{
+typedef struct {
 	uint8_t tms;			/* TMS data */
 	uint8_t tdi;			/* TDI data */
 } tap_pairs;
 
 /* swd_packet can be used to describe a read packet, a write packet,
    an acknowledge response or a data phase. */
-struct swd_packet
-{
+struct swd_packet {
 	/* IN or OUT */
 	bool is_out;
 	/* bit position of ACK */
@@ -52,30 +50,27 @@ struct swd_packet
 };
 
 /* For collecting data */
-typedef struct
-{
+typedef struct {
 	int32_t idx;			/* Index where data is to be collected */
 	int32_t pos;			/* Bit position where data is to be collected */
 	void *ptr;				/* This can point to a scan_command or swd_packet */
 } dat_dat;
 
 /* Master scan control structure */
-typedef struct
-{
+typedef struct {
 	int32_t total;			/* Max number of tap pointers */
 	int32_t cur_idx;		/* Where to add next, or total */
 	int32_t bit_pos;		/* Position to place next bit */
-	int32_t num_dat;		/* Total posible data collection points */
+	int32_t num_dat;		/* Total possible data collection points */
 	int32_t cur_dat;		/* Index to dat array for data to be collected */
-	int32_t rcv_dat;		/* Index to retreive collected data */
+	int32_t rcv_dat;		/* Index to retrieve collected data */
 	dat_dat *dat;			/* Pointer to data collection points */
 	unsigned char *cmd;		/* Pointer to command, which encompasses pairs */
 	tap_pairs *pairs;		/* Pointer to tap pairs array */
 } num_tap_pairs;
 
 /* Cable params_t structure with our data */
-typedef struct
-{
+typedef struct {
 	libusb_device_handle *usb_handle; /* USB handle */
 	uint32_t cur_freq;				/* JTAG Frequency */
 	uint32_t cur_voltage;			/* Voltage 1: 1.8V, 2: 2.5V, 3: 3.3/5V, ICE-2000 only */
@@ -94,15 +89,14 @@ typedef struct
 	int32_t r_buf_sz;				/* USB Read Buffer Size */
 	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
 	bool use_usbmux;				/* If true, use USB MUX for USB communication */
-	bool reset_hw_on_connection;    /* If true, do a complete hardware reset at end of init */
+	bool reset_hw_on_connection;	/* If true, do a complete hardware reset at end of init */
 #ifdef _ADI_USB_MUX_
 	HANDLE mux_handle;				/* USB MUX handle */
 #endif
 } params_t;
 
-/* Emulators's USB Data structure */
-typedef struct
-{
+/* Emulator's USB Data structure */
+typedef struct {
 	uint32_t command;		/* What to do */
 	uint32_t buffer;		/* used for Kit only, always initialized to 0 */
 	uint32_t count;			/* Amount of data in bytes to send */
@@ -220,21 +214,17 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 #ifdef _ADI_USB_MUX_
 #define adi_usb_read_or_ret(buf, len)									\
 	do {																\
-		if (cable_params.use_usbmux)									\
-		{																\
+		if (cable_params.use_usbmux) {									\
 			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, \
 				buf, len, cable_params.r_ep | LIBUSB_ENDPOINT_IN, cable_params.r_timeout);	\
 			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;				\
-		}																\
-		else															\
-		{																\
+		} else {														\
 			int __ret, __actual, __size = (len);						\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
 									cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
 									(unsigned char *)(buf), __size,		\
 									&__actual, cable_params.r_timeout);	\
-			if (__ret || __actual != __size)							\
-			{															\
+			if (__ret || __actual != __size) {							\
 				LOG_ERROR("unable to read from usb to " #buf ": "		\
 						"wanted %i bytes but only received %i bytes",	\
 						__size, __actual);								\
@@ -245,22 +235,18 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 
 #define adi_usb_write_or_ret(buf, len)									\
 	do {																\
-		if (cable_params.use_usbmux)									\
-		{																\
+		if (cable_params.use_usbmux) {									\
 			USB_MUX_ERROR mux_ret = usbmux_write(cable_params.mux_handle,	\
 				buf, len, cable_params.wr_ep | LIBUSB_ENDPOINT_OUT,			\
 				cable_params.wr_timeout);									\
 			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;				\
-		}																\
-		else															\
-		{																\
+		} else {														\
 			int __ret, __actual, __size = (len);						\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
 									cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
 									(unsigned char *)(buf), __size,		\
 									&__actual, cable_params.wr_timeout);\
-			if (__ret || __actual != __size)							\
-			{															\
+			if (__ret || __actual != __size) {							\
 				LOG_ERROR("unable to write from " #buf " to usb: "		\
 						"wanted %i bytes but only wrote %i bytes",		\
 						__size, __actual);								\
@@ -277,8 +263,7 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 								cable_params.r_ep | LIBUSB_ENDPOINT_IN, \
 								(unsigned char *)(buf), __size,		\
 								&__actual, cable_params.r_timeout);	\
-		if (__ret || __actual != __size)							\
-		{															\
+		if (__ret || __actual != __size) {							\
 			LOG_ERROR("unable to read from usb to " #buf ": "		\
 					"wanted %i bytes but only received %i bytes",	\
 					__size, __actual);								\
@@ -293,8 +278,7 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 								cable_params.wr_ep | LIBUSB_ENDPOINT_OUT, \
 								(unsigned char *)(buf), __size,		\
 								&__actual, cable_params.wr_timeout);\
-		if (__ret || __actual != __size)							\
-		{															\
+		if (__ret || __actual != __size) {							\
 			LOG_ERROR("unable to write from " #buf " to usb: "		\
 					"wanted %i bytes but only wrote %i bytes",		\
 					__size, __actual);								\
@@ -302,7 +286,6 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 		}															\
 	} while (0)
 #endif
-
 
 static params_t cable_params = {
 	.reset_hw_on_connection = false,
@@ -335,15 +318,11 @@ static int adi_get_freq(uint32_t freq, int arr_sz, const uint32_t *freq_arr)
 	int i;
 
 	/* Verify Frequency is valid */
-	for (i = 0; i < arr_sz; i++)
-	{
+	for (i = 0; i < arr_sz; i++) {
 		if (freq == freq_arr[i])
-		{
 			/* spot on */
 			break;
-		}
-		else if (freq < freq_arr[i])
-		{
+		else if (freq < freq_arr[i]) {
 			/* an in between frequency */
 			if (i > 0)
 				i--;
@@ -352,10 +331,8 @@ static int adi_get_freq(uint32_t freq, int arr_sz, const uint32_t *freq_arr)
 	}
 
 	if (i == arr_sz)
-	{
 		/* must of entered something above the max! */
 		i--;
-	}
 
 	return i;
 }
@@ -368,13 +345,11 @@ static void ice1000_set_freq(uint32_t freq)
 	params_t *params = &cable_params;
 
 	/* Verify Frequency is valid */
-	if (freq != params->cur_freq)
-	{
+	if (freq != params->cur_freq) {
 		/* only change if different from current settings */
 		int idx = adi_get_freq(freq, MAX_FREQ_1000, &avail_freqs_1000[0]);
 
-		if (avail_freqs_1000[idx] != params->cur_freq)
-		{
+		if (avail_freqs_1000[idx] != params->cur_freq) {
 			/* only change if different from current settings
 			 * this call's frequency may have been not one of
 			 * the defined settings, but ends up there */
@@ -399,8 +374,7 @@ static int ice2000_validate_ircapture(int test_data_length, int total_ir_length,
 	if (retval != ERROR_OK)
 		return retval;
 
-	for (i = 0; i < test_data_length / 64; i++)
-	{
+	for (i = 0; i < test_data_length / 64; i++) {
 		uint64_t val_in, val_out;
 		val_in = buf_get_u64(ir_test_in, i * 64, 64);
 		val_out = buf_get_u64(ir_test_out, total_ir_length + i * 64, 64);
@@ -449,8 +423,7 @@ static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
 	if (!ir_test_in)
 		return ERROR_FAIL;
 	ir_test_out = malloc(ir_test_length);
-	if (!ir_test_out)
-	{
+	if (!ir_test_out) {
 		free(ir_test_in);
 		return ERROR_FAIL;
 	}
@@ -473,40 +446,32 @@ static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
 	if (retval != ERROR_OK)
 		goto done;
 
-	for (delay = 0; delay <= 0xff; delay++)
-	{
+	for (delay = 0; delay <= 0xff; delay++) {
 		ice2000_set_voltage_freq_delay(voltage, freq_set_2000[idx], delay);
 
 		if (ice2000_validate_ircapture(test_data_length, total_ir_length,
-									   ir_test_in, ir_test_out) == ERROR_OK)
-		{
+									   ir_test_in, ir_test_out) == ERROR_OK) {
 			if (first_good_delay < 0)
 				first_good_delay = delay;
 
 			last_good_delay = delay;
-		}
-		else
-		{
+		} else {
 			if (last_good_delay > 0)
 				break;
 		}
 	}
 
 	/* if we cannot find a good delay */
-	if (first_good_delay < 0)
+	if (first_good_delay < 0) {
 		retval = ERROR_FAIL;
-
-	/* if we find a whole window of good delays */
-	else if (first_good_delay > 0 && last_good_delay < 0xff)
+	} else if (first_good_delay > 0 && last_good_delay < 0xff) {
+		/* if we find a whole window of good delays */
 		params->cur_delay = (first_good_delay + last_good_delay) / 2;
-
-	/* all delays are valid, just pick the middle one */
-	else if (first_good_delay == 0 && last_good_delay == 0xff)
+	} else if (first_good_delay == 0 && last_good_delay == 0xff) {
+		/* all delays are valid, just pick the middle one */
 		params->cur_delay = (first_good_delay + last_good_delay) / 2;
-
-	/* we only find a partial window */
-	else if (first_good_delay == 0 && last_good_delay < 0xff)
-	{
+	} else if (first_good_delay == 0 && last_good_delay < 0xff) {
+		/* we only find a partial window */
 		/* we still can get the best value */
 		if (last_good_delay - delay_window_size / 2 >= 0)
 			params->cur_delay = last_good_delay - delay_window_size / 2;
@@ -516,11 +481,9 @@ static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
 		/* otherwise we just fail */
 		else
 			retval = ERROR_FAIL;
-	}
-
-	/* we only find a partial window */
-	else /* first_good_delay > 0 && last_good_delay == 0xff */
-	{
+	} else {
+		/* we only find a partial window */
+		/* first_good_delay > 0 && last_good_delay == 0xff */
 		/* we still can get the best value */
 		if (first_good_delay + delay_window_size / 2 <= 0xff)
 			params->cur_delay = first_good_delay + delay_window_size / 2;
@@ -557,8 +520,7 @@ static int ice2000_set_freq(uint32_t freq)
 	int idx = adi_get_freq(freq, MAX_FREQ_2000, &avail_freqs_2000[0]);
 
 	/* only change if different from current settings */
-	if (avail_freqs_2000[idx] != params->cur_freq)
-	{
+	if (avail_freqs_2000[idx] != params->cur_freq) {
 		if (ice2000_find_delay(params->cur_voltage, avail_freqs_2000[idx]) != ERROR_OK)
 			return ERROR_FAIL;
 		params->cur_freq = freq;
@@ -587,13 +549,11 @@ static uint16_t crc16_ccitt(const uint8_t *data, int length, uint16_t crc)
 {
 	int i;
 
-	for (i = 0; i < length; i++)
-	{
+	for (i = 0; i < length; i++) {
 		uint8_t b = data[i];
 		int j;
 
-		for (j = 0; j < 8; j++)
-		{
+		for (j = 0; j < 8; j++) {
 			bool add = ((crc >> 15) != (b >> 7));
 			crc <<= 1;
 			b <<= 1;
@@ -622,8 +582,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 
 	LOG_OUTPUT("updating ... 0%%");
 
-	for (i = 0; i < firmware->num_sections; i++)
-	{
+	for (i = 0; i < firmware->num_sections; i++) {
 		size_t section_size;
 		uint8_t *section_buffer;
 		int remaining;
@@ -633,16 +592,14 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 
 		section_size = firmware->sections[i].size;
 		section_buffer = malloc(section_size);
-		if (!section_buffer)
-		{
+		if (!section_buffer) {
 			LOG_ERROR("error allocating buffer for section (%d bytes)",
 					  firmware->sections[i].size);
 			return ERROR_FAIL;
 		}
 
 		ret = image_read_section(firmware, (int)i, 0, section_size, section_buffer, &size_read);
-		if (ret != ERROR_OK || size_read != section_size)
-		{
+		if (ret != ERROR_OK || size_read != section_size) {
 			free(section_buffer);
 			return ret;
 		}
@@ -652,8 +609,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 		remaining = section_size;
 		address = firmware->sections[i].base_address;
 
-		while (remaining)
-		{
+		while (remaining) {
 			usb_command_block usb_cmd_blk;
 			uint32_t count;
 			int percentage;
@@ -730,10 +686,9 @@ static int ice1000_update_firmware(const char *filename)
 
 	image_close(&ice1000_firmware_image);
 
-	if (crc1 == crc2)
+	if (crc1 == crc2) {
 		return ERROR_OK;
-	else
-	{
+	} else {
 		LOG_ERROR("CRCs do NOT match");
 		return ERROR_FAIL;
 	}
@@ -757,12 +712,10 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	cable_params.mux_handle = NULL;
 #endif
 
-	if (cable_params.use_usbmux)
-	{
+	if (cable_params.use_usbmux) {
 #ifdef _ADI_USB_MUX_
 		ret = usbmux_open(&cable_params.mux_handle, ICE_1000_USB_CONNECTION_TIMEOUT);
-		if (ret)
-		{
+		if (ret) {
 			LOG_ERROR("failed to open USB MUX.");
 			return ERROR_FAIL;
 		}
@@ -770,9 +723,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		LOG_ERROR("USB MUX is not supported on this host.");
 		return ERROR_FAIL;
 #endif
-	}
-	else
-	{
+	} else {
 		ret = jtag_libusb_open(vids, pids, NULL, &dev, NULL);
 		if (ret != ERROR_OK)
 			return ret;
@@ -783,8 +734,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		libusb_free_config_descriptor (config);
 		libusb_set_configuration(dev, configuration);
 		ret = libusb_claim_interface(dev, 0);
-		if (ret)
-		{
+		if (ret) {
 			LOG_ERROR("libusb_claim_interface failed: %d", ret);
 			libusb_close(dev);
 			return ERROR_FAIL;
@@ -798,19 +748,16 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	}
 
 	cable_params.tap_info.dat = malloc(sizeof(dat_dat) * DAT_SZ);
-	if (!cable_params.tap_info.dat)
-	{
+	if (!cable_params.tap_info.dat) {
 		LOG_ERROR("_malloc(%d) fails", (int)(sizeof(dat_dat) * DAT_SZ));
-		if (dev)
-		{
+		if (dev) {
 			libusb_release_interface(dev, 0);
 			libusb_close(dev);
 			dev = NULL;
 		}
 
 #ifdef _ADI_USB_MUX_
-		if (cable_params.mux_handle)
-		{
+		if (cable_params.mux_handle) {
 			usbmux_close(cable_params.mux_handle);
 			cable_params.mux_handle = NULL;
 		}
@@ -819,8 +766,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	}
 
 	/* Initialize receive data array to unused */
-	for (i = 0; i < DAT_SZ; ++i)
-	{
+	for (i = 0; i < DAT_SZ; ++i) {
 		cable_params.tap_info.dat[i].idx = -1;
 		cable_params.tap_info.dat[i].pos = -1;
 	}
@@ -851,8 +797,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	if (cable_params.version <= 0x0101)
 		LOG_WARNING("This firmware version is obsolete. Please update to the latest version.");
 
-	if (firmware_filename)
-	{
+	if (firmware_filename) {
 		ret = ice1000_update_firmware(firmware_filename);
 		if (ret == ERROR_OK)
 			LOG_INFO("The firmware has been updated successfully. "
@@ -863,8 +808,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	}
 
 	/* Set frequency to lowest value */
-	if (strcmp (cable_name, "ICE-2000") == 0)
-	{
+	if (strcmp(cable_name, "ICE-2000") == 0) {
 		/* Turn on the voltage regulators */
 		do_host_cmd(HOST_SET_2000_VOLTAGE, 1, 0);
 
@@ -887,9 +831,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 
 		/* Set the delay to 0. */
 		ice2000_set_voltage_freq_delay(cable_params.cur_voltage, freq_set_2000[0], 0);
-	}
-	else if (strcmp (cable_name, "ICE-1000") == 0)
-	{
+	} else if (strcmp(cable_name, "ICE-1000") == 0) {
 		/* set interface mode */
 		do_host_cmd(HOST_SET_INTERFACE_MODE, swd_mode ? 1 : 0, 0);
 
@@ -906,8 +848,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	   Blackfin and ADSP-SC589 requires at least 4 JTAG CLKs. As a workaround,
 	   we hold TRST low for 4 us, which should be enough even for the lowest
 	   frequecy we can set, 1 MHz. */
-	if (cable_params.version <= 0x0101)
-	{
+	if (cable_params.version <= 0x0101) {
 		do_host_cmd(HOST_SET_TRST, 1, 0);
 		usleep(4);
 		do_host_cmd(HOST_SET_TRST, 0, 0);
@@ -923,13 +864,11 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	cable_params.num_rcv_hdr_bytes = cable_params.tap_pair_start_idx;
 
 	if (strcmp (cable_name, "ICE-1000") == 0 || strcmp (cable_name, "ICE-2000") == 0) {
-		if (swd_mode)
-		{
+		if (swd_mode) {
 			ice1000_swd_switch_seq(JTAG_TO_SWD);
 
 			ret = ice1000_swd_run_queue();
-			if (ret != ERROR_OK)
-			{
+			if (ret != ERROR_OK) {
 				LOG_ERROR("Unable to change transport modes.");
 				return ret;
 			}
@@ -949,16 +888,14 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 {
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (!tap_info->pairs)
-	{
+	if (!tap_info->pairs) {
 		unsigned char *cmd;
 		int32_t new_sz = cable_params.default_scanlen;
 		uint8_t bit_set;
 		int i, j;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (!cmd)
-		{
+		if (!cmd) {
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
@@ -976,13 +913,11 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		tap_info->pairs[i].tdi = 0;
 
 		/* go through and set tms and tdi to the appropriate values */
-		for (j = 0; j < cnt; j++)
-		{
+		for (j = 0; j < cnt; j++) {
 			tap_info->pairs[i].tms |= tms ? bit_set : 0;
 			tap_info->pairs[i].tdi |= tdi ? bit_set : 0;
 			bit_set >>= 1;
-			if (!bit_set)
-			{
+			if (!bit_set) {
 				/* start over again */
 				bit_set = 0x80;
 				i++;
@@ -996,22 +931,18 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		tap_info->bit_pos = bit_set;
 
 		return ERROR_OK;
-	}
-	else
-	{
+	} else {
 		int i, j;
 		uint8_t bit_set;
 
 		bit_set = tap_info->bit_pos;
 		i = tap_info->cur_idx;
 
-		for (j = 0; j < cnt; j++)
-		{
+		for (j = 0; j < cnt; j++) {
 			tap_info->pairs[i].tms |= tms ? bit_set : 0;
 			tap_info->pairs[i].tdi |= tdi ? bit_set : 0;
 			bit_set >>= 1;
-			if (!bit_set)
-			{
+			if (!bit_set) {
 				/* start over again */
 				bit_set = 0x80;
 				i++;
@@ -1035,8 +966,7 @@ static int ice1000_init(void)
 	int retval;
 
 	retval = adi_connect(vids, pids);
-	if (retval != ERROR_OK)
-	{
+	if (retval != ERROR_OK) {
 		if (retval == -ENODEV)
 			LOG_ERROR("ICE-1000 emulator not found");
 
@@ -1054,8 +984,7 @@ static int ice2000_init(void)
 	int retval;
 
 	retval = adi_connect(vids, pids);
-	if (retval != ERROR_OK)
-	{
+	if (retval != ERROR_OK) {
 		if (retval == -ENODEV)
 			LOG_ERROR("ICE-2000 emulator not found");
 
@@ -1069,17 +998,14 @@ static int ice1000_quit(void)
 {
 	do_host_cmd(HOST_DISCONNECT, 0, 0);
 
-	if (cable_params.usb_handle)
-	{
+	if (cable_params.usb_handle) {
 		libusb_release_interface(cable_params.usb_handle, 0);
 		libusb_close(cable_params.usb_handle);
 	}
 
 #ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
-	{
 		usbmux_close(cable_params.mux_handle);
-	}
 #endif
 
 	free(cable_params.tap_info.dat);
@@ -1094,17 +1020,14 @@ static int ice2000_quit(void)
 
 	do_host_cmd(HOST_DISCONNECT, 0, 0);
 
-	if (cable_params.usb_handle)
-	{
+	if (cable_params.usb_handle) {
 		libusb_release_interface(cable_params.usb_handle, 0);
 		libusb_close(cable_params.usb_handle);
 	}
 
 #ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
-	{
 		usbmux_close(cable_params.mux_handle);
-	}
 #endif
 
 	free(cable_params.tap_info.dat);
@@ -1114,8 +1037,7 @@ static int ice2000_quit(void)
 
 static int ice1000_speed(int speed)
 {
-	if (speed >= MAX_FREQ_1000 && speed < 0)
-	{
+	if (speed >= MAX_FREQ_1000 && speed < 0) {
 		LOG_ERROR("bad speed %d, should between %d and %d.",
 				  speed, 0, MAX_FREQ_1000 - 1);
 		return ERROR_FAIL;
@@ -1140,8 +1062,7 @@ static int ice1000_khz(int khz, int *speed)
 
 static int ice2000_speed(int speed)
 {
-	if (speed >= MAX_FREQ_2000 && speed < 0)
-	{
+	if (speed >= MAX_FREQ_2000 && speed < 0) {
 		LOG_ERROR("bad speed %d, should between %d and %d.",
 				  speed, 0, MAX_FREQ_2000 - 1);
 		return ERROR_FAIL;
@@ -1180,20 +1101,17 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 #endif
 
 	buf = (uint8_t *)calloc(DIV_ROUND_UP(len, 8), 1);
-	if (!buf)
-	{
+	if (!buf) {
 		LOG_ERROR("calloc(%d) fails", DIV_ROUND_UP(len, 8));
 		return NULL;
 	}
 
-	if (idx_dat < 0)
-	{
+	if (idx_dat < 0) {
 		DEBUG("get_recv_data(): No Received Data\n");
 		return NULL;
 	}
 
-	for (i = 0; i < len; i++)
-	{
+	for (i = 0; i < len; i++) {
 		buf[i/8] |= ((*rcvBuf & bit_set) ? 1 : 0) << (i % 8);
 
 #ifdef DUMP_EACH_RCV_DATA
@@ -1206,8 +1124,7 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 #endif
 		bit_set >>= 1;
 
-		if (!bit_set)
-		{
+		if (!bit_set) {
 			bit_set = 0x80;
 			rcvBuf++;
 			dat_idx++;
@@ -1233,10 +1150,8 @@ static int ice1000_tap_execute(void)
 
 	buf = NULL;
 	retval = perform_scan(&buf);
-	if ((retval == ERROR_OK) && buf)
-	{
-		for (i = 0; i <= tap_info->cur_dat; i++)
-		{
+	if ((retval == ERROR_OK) && buf) {
+		for (i = 0; i <= tap_info->cur_dat; i++) {
 			uint8_t *buffer;
 			struct scan_command *command = tap_info->dat[i].ptr;
 
@@ -1256,8 +1171,7 @@ static int ice1000_tap_execute(void)
 		}
 
 		free(buf);
-		if (tap_info->pairs)
-		{
+		if (tap_info->pairs) {
 			free(tap_info->cmd);
 			tap_info->pairs = NULL;
 			tap_info->cmd = NULL;
@@ -1286,9 +1200,7 @@ static int ice1000_execute_reset(struct jtag_command *cmd)
 	if ((cmd->cmd.reset->trst == 1)
 		|| (cmd->cmd.reset->srst
 			&& (jtag_get_reset_config() & RESET_SRST_PULLS_TRST)))
-	{
 		tap_set_state(TAP_RESET);
-	}
 
 	do_host_cmd(HOST_SET_TRST, cmd->cmd.reset->trst ? 0 : 1, 0);
 	return ERROR_OK;
@@ -1296,12 +1208,9 @@ static int ice1000_execute_reset(struct jtag_command *cmd)
 
 static void ice1000_end_state(tap_state_t state)
 {
-	if (tap_is_state_stable(state))
-	{
+	if (tap_is_state_stable(state)) {
 		tap_set_end_state(state);
-	}
-	else
-	{
+	} else {
 		LOG_ERROR("BUG: %s is not a valid end state", tap_state_name(state));
 		exit(-1);
 	}
@@ -1331,8 +1240,7 @@ static void ice1000_state_move(void)
 	uint8_t tms_scan = tap_get_tms_path(tap_get_state(), tap_get_end_state());
 	uint8_t tms_scan_bits = tap_get_tms_path_len(tap_get_state(), tap_get_end_state());
 
-	for (i = 0; i < tms_scan_bits; i++)
-	{
+	for (i = 0; i < tms_scan_bits; i++) {
 		tms = (tms_scan >> i) & 1;
 		ice1000_tap_append_step(tms, 0);
 	}
@@ -1344,18 +1252,12 @@ static void ice1000_path_move(int num_states, tap_state_t *path)
 {
 	int i;
 
-	for (i = 0; i < num_states; i++)
-	{
-		if (path[i] == tap_state_transition(tap_get_state(), false))
-		{
+	for (i = 0; i < num_states; i++) {
+		if (path[i] == tap_state_transition(tap_get_state(), false)) {
 			ice1000_tap_append_step(0, 0);
-		}
-		else if (path[i] == tap_state_transition(tap_get_state(), true))
-		{
+		} else if (path[i] == tap_state_transition(tap_get_state(), true)) {
 			ice1000_tap_append_step(1, 0);
-		}
-		else
-		{
+		} else {
 			LOG_ERROR("BUG: %s -> %s isn't a valid TAP transition",
 					tap_state_name(tap_get_state()), tap_state_name(path[i]));
 			exit(-1);
@@ -1376,8 +1278,7 @@ static int ice1000_runtest(int num_cycles)
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (tap_get_state() != TAP_IDLE)
-	{
+	if (tap_get_state() != TAP_IDLE) {
 		ice1000_end_state(TAP_IDLE);
 		ice1000_state_move();
 	}
@@ -1388,9 +1289,7 @@ static int ice1000_runtest(int num_cycles)
 	/* finish in end_state */
 	ice1000_end_state(saved_end_state);
 	if (tap_get_state() != tap_get_end_state())
-	{
 		ice1000_state_move();
-	}
 
 	return ERROR_OK;
 }
@@ -1451,14 +1350,13 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	if (!in)
 		LOG_WARNING("NO IN DATA!!!%s", out ? " BUT there is out data!" : "");
 
-	if (!tap_info->pairs)
-	{	/* really should never get here, but must not crash system. Would be rude */
+	if (!tap_info->pairs) {
+		/* really should never get here, but must not crash system. Would be rude */
 		int32_t new_sz = cable_params.default_scanlen + 4;
 		unsigned char *cmd;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (!cmd)
-		{
+		if (!cmd) {
 			LOG_ERROR("malloc(%ld) fails",
 					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
@@ -1478,9 +1376,8 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_scan++;
 		tap_scan->tdi = 0;
 		tap_scan->tms = 0;
-	}
-	else if ((tap_info->total - tap_info->cur_idx) < byte_cnt)
-	{	/* to small, increase size! */
+	} else if ((tap_info->total - tap_info->cur_idx) < byte_cnt) {
+		/* to small, increase size! */
 		unsigned char *cmd;
 		int32_t new_sz;
 
@@ -1488,8 +1385,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 		new_sz = tap_info->total + byte_cnt + 8;
 		cmd = realloc(tap_info->cmd, (sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
-		if (!cmd)
-		{
+		if (!cmd) {
 			LOG_ERROR("realloc(%ld) fails",
 				(long int)(sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
@@ -1502,9 +1398,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_scan = tap_info->pairs;
 		idx = tap_info->cur_idx;		/* to add on */
 		tap_scan = &tap_info->pairs[idx];
-	}
-	else
-	{
+	} else {
 		idx = tap_info->cur_idx;		/* to add on */
 		tap_scan = &tap_info->pairs[idx];
 	}
@@ -1512,22 +1406,18 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	// begin where we left off to set our tms/tdi pairs
 	bit_set = tap_info->bit_pos;
 
-	if (out)
-	{	/* Setup where we start to read, can be more than 1 */
+	if (out) {
+		/* Setup where we start to read, can be more than 1 */
 		if (tap_info->rcv_dat == -1)
-		{
 			tap_info->rcv_dat = 0;
-		}
 		tap_info->cur_dat++;
-		if (tap_info->cur_dat >= tap_info->num_dat)
-		{
+		if (tap_info->cur_dat >= tap_info->num_dat) {
 			int32_t new_sz;
 			dat_dat *datPtr;
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
 			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
-			if (!datPtr)
-			{
+			if (!datPtr) {
 				LOG_ERROR("realloc(%ld) fails",
 					(long int)(sizeof (dat_dat) * new_sz));
 				return ERROR_FAIL;
@@ -1543,10 +1433,8 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 	/* Build Scan.	If command is NULL, IN is TMS. Otherwise,
 	   TMS will always be zero except the last bit! */
-	for (i = 0; i < num_bits; i++)
-	{
-		if (command)
-		{
+	for (i = 0; i < num_bits; i++) {
+		if (command) {
 			tap_scan->tdi |= (in[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
 			if (i == num_bits - 1)
 				tap_scan->tms |= bit_set;
@@ -1555,8 +1443,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 			tap_scan->tms |= (in[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
 
 		bit_set >>= 1;
-		if (!bit_set)
-		{
+		if (!bit_set) {
 			bit_set = 0x80;
 			idx++;
 			tap_scan++;
@@ -1602,9 +1489,7 @@ static int ice1000_scan(bool ir_scan, enum scan_type type, uint8_t *buffer,
 	tap_set_state(ir_scan ? TAP_IRPAUSE : TAP_DRPAUSE);
 
 	if (tap_get_state() != tap_get_end_state())
-	{
 		ice1000_state_move();
-	}
 
 	return ERROR_OK;
 }
@@ -1693,8 +1578,7 @@ static int ice1000_execute_command(struct jtag_command *cmd)
 {
 	int retval;
 
-	switch (cmd->type)
-	{
+	switch (cmd->type) {
 	case JTAG_RESET:
 		retval = ice1000_execute_reset(cmd);
 		break;
@@ -1736,8 +1620,7 @@ static int ice1000_execute_queue(struct jtag_command *cmd_queue)
 
 #ifdef _ADI_USB_MUX_
 #define USB_MUX_MAX_LOCK_ATTEMPTS 50
-	if (cable_params.mux_handle)
-	{
+	if (cable_params.mux_handle) {
 		unsigned int attempt = 0;
 		do {
 			attempt++;
@@ -1746,26 +1629,17 @@ static int ice1000_execute_queue(struct jtag_command *cmd_queue)
 			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
 
 			if (mux_ret == USB_MUX_OK)
-			{
 				break;
-			}
-			else if (mux_ret == USB_MUX_BUSY)
-			{
+			else if (mux_ret == USB_MUX_BUSY) {
 				/* Send out the message every 5 attempts */
 				if ((attempt % 5) == 0)
-				{
 					LOG_DEBUG("MUX is busy after %u attempts, retrying.", attempt);
-				}
-
-				if (attempt == USB_MUX_MAX_LOCK_ATTEMPTS)
-				{
+				if (attempt == USB_MUX_MAX_LOCK_ATTEMPTS) {
 					// Failed to acquire lock (TIMEOUT)
 					LOG_ERROR("Timeout acquiring USB lock after %u attempts", attempt);
 					return ERROR_TIMEOUT;
 				}
-			}
-			else
-			{
+			} else {
 				LOG_ERROR("USB error: Failed to acquire USB lock (error %d).", mux_ret);
 				return ERROR_FAIL;
 			}
@@ -1781,14 +1655,11 @@ static int ice1000_execute_queue(struct jtag_command *cmd_queue)
 			retval = ERROR_JTAG_QUEUE_FAILED;
 	}
 
-	if (retval != ERROR_OK)
-	{
+	if (retval != ERROR_OK) {
 #ifdef _ADI_USB_MUX_
 		if (cable_params.mux_handle)
-		{
 			// release USB lock
 			usbmux_unlock(cable_params.mux_handle);
-		}
 #endif
 		return retval;
 	}
@@ -1797,10 +1668,8 @@ static int ice1000_execute_queue(struct jtag_command *cmd_queue)
 
 #ifdef _ADI_USB_MUX_
 	if (cable_params.mux_handle)
-	{
 		// release USB lock
 		usbmux_unlock(cable_params.mux_handle);
-	}
 #endif
 
 	return retval;
@@ -1836,9 +1705,7 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data
 	cmd_buffer.b[i++] = wr_data ? HOST_SET_SINGLE_REG : HOST_GET_SINGLE_REG;
 	cmd_buffer.b[i++] = reg;
 	if (wr_data)
-	{
 		cmd_buffer.l[i / 4] = data;
-	}
 
 	adi_usb_write_or_ret(cmd_buffer.b, size);
 
@@ -1885,8 +1752,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 
 	adi_usb_write_or_ret(cmd_buffer.b, size);
 
-	if (r_data)
-	{
+	if (r_data) {
 		usb_cmd_blk.command = HOST_REQUEST_RX_DATA;
 		usb_cmd_blk.count = 2;
 		usb_cmd_blk.buffer = 0;
@@ -1913,8 +1779,9 @@ static int perform_scan(uint8_t **rdata)
 	uint32_t rem_len;
 
 	/* Data is scan as 32 bit words, so boundaries are adjusted here */
-	if (tap_info->bit_pos != 0x80) /* meaning no dangling bits? */
-	{	/* yes, so straighten out! */
+	/* meaning no dangling bits? */
+	if (tap_info->bit_pos != 0x80) {
+		/* yes, so straighten out! */
 		cur_len++;
 		tap_info->pairs[cur_len].tms = 0;
 		tap_info->pairs[cur_len].tdi = 0;
@@ -1925,8 +1792,8 @@ static int perform_scan(uint8_t **rdata)
 	tap_info->pairs[cur_len].tms = 0;
 	tap_info->pairs[cur_len].tdi = 0;
 
-	while (cur_len & 0x03)
-	{	/* expect to be in 32 bit words */
+	while (cur_len & 0x03) {
+		/* expect to be in 32 bit words */
 		cur_len++;
 		tap_info->pairs[cur_len].tms = 0;
 		tap_info->pairs[cur_len].tdi = 0;
@@ -1935,15 +1802,14 @@ static int perform_scan(uint8_t **rdata)
 	tap_info->cur_idx = cur_len;
 	rem_len = cur_len * sizeof (tap_pairs);
 
-	if (cur_len > cable_params.default_scanlen)
-	{
+	if (cur_len > cable_params.default_scanlen) {
 		LOG_ERROR("TAP Scan length %d is greater than DIF Memory",
 			tap_info->cur_idx);
 		return ERROR_FAIL;
 	}
 
-	if (tap_info->cur_dat != -1)
-	{	/* yes we have data, so allocate for data plus header */
+	if (tap_info->cur_dat != -1) {
+		/* yes we have data, so allocate for data plus header */
 		size_t len;
 
 		len = cur_len + cable_params.tap_pair_start_idx + 16;
@@ -1951,19 +1817,16 @@ static int perform_scan(uint8_t **rdata)
 			len -= tap_info->dat[0].idx;
 
 		out = malloc(len);
-		if (!out)
-		{
+		if (!out) {
 			LOG_ERROR("malloc(%ld) fails", (long int)len);
 			return ERROR_FAIL;
 		}
 		*rdata = out;
 		collect_data = 1;
-	}
-	else
-	{	/* no data, so allocate for just header */
+	} else {
+		/* no data, so allocate for just header */
 		out = malloc(cable_params.tap_pair_start_idx + 16);
-		if (!out)
-		{
+		if (!out) {
 			LOG_ERROR("malloc(%d) fails", cable_params.tap_pair_start_idx + 16);
 			return ERROR_FAIL;
 		}
@@ -1974,8 +1837,7 @@ static int perform_scan(uint8_t **rdata)
 	idx = 0;
 
 	/* Here if data is too large, we break it up into manageable chunks */
-	do
-	{
+	do {
 		cur_len = (rem_len >= cable_params.max_raw_data_tx_items) ? cable_params.max_raw_data_tx_items : rem_len;
 
 		if (cur_len == rem_len)
@@ -1990,9 +1852,8 @@ static int perform_scan(uint8_t **rdata)
 	} while (rem_len);
 
 	if (tap_info->cur_dat == -1)
-	{	/* no data to return, so free it */
+		/* no data to return, so free it */
 		free(out);
-	}
 
 	return ERROR_OK;
 }
@@ -2043,8 +1904,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	raw_buf[i++] = firstpkt;
 	raw_buf[i++] = lastpkt;
 	raw_buf[i++] = HOST_DO_SELECTIVE_RAW_SCAN;
-	if ((collect_dof && lastpkt) && (tap_info->dat[0].idx > 12))
-	{
+	if ((collect_dof && lastpkt) && (tap_info->dat[0].idx > 12)) {
 		int32_t j, offset;
 
 		dof_start = tap_info->dat[0].idx;
@@ -2053,9 +1913,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 		tap_info->dat[0].idx = offset;
 
 		for (j = 1; j <= tap_info->cur_dat; j++)
-		{
 			tap_info->dat[j].idx -= dof_start;
-		}
 	}
 
 	raw_buf[i++] = collect_dof ? 1 : 0;
@@ -2070,14 +1928,12 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 
 	adi_usb_write_or_ret(raw_buf, size);
 
-	if (lastpkt)
-	{
+	if (lastpkt) {
 		int32_t cur_rd_bytes = 0, tot_bytes_rd = 0, rd_bytes_left;
 
 		rd_bytes_left = cable_params.num_rcv_hdr_bytes + ((collect_dof) ? (tap_info->cur_idx - dof_start) : 0);
 
-		while (tot_bytes_rd < rd_bytes_left)
-		{
+		while (tot_bytes_rd < rd_bytes_left) {
 			cur_rd_bytes = ((rd_bytes_left - tot_bytes_rd) > cable_params.r_buf_sz) ?
 				cable_params.r_buf_sz : (rd_bytes_left - tot_bytes_rd);
 
@@ -2085,8 +1941,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 			tot_bytes_rd += cur_rd_bytes;
 		}
 
-		if (out[0] != 2)
-		{
+		if (out[0] != 2) {
 			LOG_ERROR("Scan Error!");
 			return ERROR_FAIL;
 		}
@@ -2110,14 +1965,12 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 	int32_t idx;
 	num_tap_pairs *tap_info = &cable_params.tap_info;
 
-	if (!tap_info->pairs)
-	{
+	if (!tap_info->pairs) {
 		int32_t new_sz = cable_params.default_scanlen;
 		unsigned char *cmd;
 
 		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
-		if (!cmd)
-		{
+		if (!cmd) {
 			LOG_ERROR("malloc(%ld) fails", (long int)((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx));
 			return ERROR_FAIL;
 		}
@@ -2138,31 +1991,24 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 		/* zero out tdi/tms so we can OR in our actual data */
 		tap_scan->tdi = 0;
 		tap_scan->tms = 0;
-	}
-	else
-	{
+	} else {
 		idx = tap_info->cur_idx;
 		tap_scan = &tap_info->pairs[idx];
 	}
 
 	bit_set = tap_info->bit_pos;
 
-	if (!packet->is_out)
-	{
+	if (!packet->is_out) {
 		if (tap_info->rcv_dat == -1)
-		{
 			tap_info->rcv_dat = 0;
-		}
 		tap_info->cur_dat++;
-		if (tap_info->cur_dat >= tap_info->num_dat)
-		{
+		if (tap_info->cur_dat >= tap_info->num_dat) {
 			int32_t new_sz;
 			dat_dat *datPtr;
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
 			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
-			if (!datPtr)
-			{
+			if (!datPtr) {
 				LOG_ERROR("realloc(%ld) fails", (long int)(sizeof (dat_dat) * new_sz));
 				return ERROR_FAIL;
 			}
@@ -2176,16 +2022,14 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 	}
 
 
-	for (i = 0; i < packet->length; i++)
-	{
+	for (i = 0; i < packet->length; i++) {
 		if (packet->is_out)
 			tap_scan->tms |= (packet->out[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
 		else
 			tap_scan->tdi |= bit_set;
 
 		bit_set >>= 1;
-		if (!bit_set)
-		{
+		if (!bit_set) {
 			bit_set = 0x80;
 			idx++;
 			tap_scan++;
@@ -2222,8 +2066,7 @@ static int ice1000_swd_queue_idle_cycles(uint32_t len)
 	int retval;
 
 	buffer = calloc(DIV_ROUND_UP(len, 8), 1);
-	if (!buffer)
-	{
+	if (!buffer) {
 		LOG_ERROR("calloc(%"PRIu32") fails", DIV_ROUND_UP(len, 8));
 		return ERROR_FAIL;
 	}
@@ -2254,17 +2097,14 @@ static int ice1000_swd_run_queue(void)
 	scan_buf = NULL;
 	retval = perform_scan(&scan_buf);
 
-	if ((retval == ERROR_OK) && scan_buf)
-	{
-		for (i = 0; i <= tap_info->cur_dat; i++)
-		{
+	if ((retval == ERROR_OK) && scan_buf) {
+		for (i = 0; i <= tap_info->cur_dat; i++) {
 			uint8_t *rx_buf;
 			struct swd_packet *packet = tap_info->dat[i].ptr;
 
 			/* check ACK for read or write */
 			rx_buf = get_recv_data(packet->length, tap_info->rcv_dat, scan_buf);
-			if (!rx_buf)
-			{
+			if (!rx_buf) {
 				LOG_ERROR("No recv data acquired");
 				retval = ERROR_FAIL;
 				break;
@@ -2272,29 +2112,23 @@ static int ice1000_swd_run_queue(void)
 
 			int ack = buf_get_u32(rx_buf, packet->ack_pos, 3);
 
-			if (ack != SWD_ACK_OK)
-			{
+			if (ack != SWD_ACK_OK) {
 				free(rx_buf);
 				LOG_ERROR("SWD ack not OK: %d %s", ack,
 						ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK");
 				retval = ERROR_FAIL;
 				break;
-			}
-			else if (packet->in)
-			{
+			} else if (packet->in) {
 				/* get the data that was read */
 				uint32_t data = buf_get_u32(rx_buf, packet->data_pos, 32);
 				int parity = buf_get_u32(rx_buf, packet->parity_pos, 1);
 
-				if (parity != parity_u32(data))
-				{
+				if (parity != parity_u32(data)) {
 					free(rx_buf);
 					LOG_ERROR("SWD Read data parity mismatch");
 					retval = ERROR_FAIL;
 					break;
-				}
-				else
-				{
+				} else {
 					uint32_t *p = packet->in;
 					*p = data;
 				}
@@ -2308,16 +2142,14 @@ static int ice1000_swd_run_queue(void)
 	}
 
 	/* free all packets that were allocated */
-	for (i = 0; i <= tap_info->cur_dat; i++)
-	{
+	for (i = 0; i <= tap_info->cur_dat; i++) {
 		if (tap_info->dat[i].ptr) {
 			free((struct swd_packet*)tap_info->dat[i].ptr);
 			tap_info->dat[i].ptr = NULL;
 		}
 	}
 
-	if (tap_info->pairs)
-	{
+	if (tap_info->pairs) {
 		free(tap_info->cmd);
 		tap_info->pairs = NULL;
 		tap_info->cmd = NULL;
@@ -2389,16 +2221,14 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 	cmd |= SWD_CMD_START | SWD_CMD_PARK;
 
 	retval = ice1000_swd_queue_data_out(&cmd, 8);
-	if (retval != ERROR_OK)
-	{
+	if (retval != ERROR_OK) {
 		num_tap_pairs *tap_info = &cable_params.tap_info;
 
 		/* free current packet */
 		free(packet);
 
 		/* free all packets that were allocated previously */
-		for (i = 0; i <= tap_info->cur_dat; i++)
-		{
+		for (i = 0; i <= tap_info->cur_dat; i++) {
 			if (tap_info->dat[i].ptr) {
 				free((struct swd_packet*)tap_info->dat[i].ptr);
 				tap_info->dat[i].ptr = NULL;
@@ -2439,8 +2269,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 		num_tap_pairs *tap_info = &cable_params.tap_info;
 
 		/* free all packets that were allocated previously */
-		for (i = 0; i <= tap_info->cur_dat; i++)
-		{
+		for (i = 0; i <= tap_info->cur_dat; i++) {
 			if (tap_info->dat[i].ptr) {
 				free((struct swd_packet*)tap_info->dat[i].ptr);
 				tap_info->dat[i].ptr = NULL;
@@ -2588,7 +2417,6 @@ static const struct command_registration ice2000_command_handlers[] = {
 		.mode = COMMAND_CONFIG,
 		.usage = "use_usbmux ['true'|'false']",
 	},
-
 	{
 		.name = "reset_hw",
 		.handler = &ice2000_reset_hw_on_connection,
