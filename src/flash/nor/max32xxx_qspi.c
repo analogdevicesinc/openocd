@@ -7,6 +7,9 @@
  *   Copyright (C) 2010 by Antonio Borneo                                  *
  *   borneo.antonio@gmail.com                                              *
  *                                                                         *
+ *   Potions Copyright (C) 2025 by Pete Johanson                           *
+ *   pete.johanson@analog.com                                              *
+ *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or	   *
@@ -500,25 +503,63 @@ static int max32xxx_qspi_poll_wip(struct target *target)
 
 		read_data = SPIFLASH_BSY_BIT;
 		retval = max32xxx_qspi_read_bytes(target, &read_data, 1, true);
-		if (retval != ERROR_OK)
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Failed to read the status bytes");
 			return retval;
+		}
 
 		/* Prevent GDB warnings */
 		keep_alive();
 
 	} while (read_data & SPIFLASH_BSY_BIT);
 
+	/* TODO Timeout */
+	return ERROR_OK;
+}
+
+static int max32xxx_qspi_poll_we(struct target *target)
+{
+	uint8_t cmd_data = SPIFLASH_READ_STATUS;
+	uint8_t read_data;
+	int retval;
+
+	do {
+		retval = max32xxx_qspi_write_bytes(target, &cmd_data, 1, false);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Failed to write the read status bytes");
+			return retval;
+		}
+
+		read_data = 0;
+		retval = max32xxx_qspi_read_bytes(target, &read_data, 1, true);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Failed to read the status bytes");
+			return retval;
+		}
+
+		/* Prevent GDB warnings */
+		keep_alive();
+
+	} while (!(read_data & SPIFLASH_WE_BIT));
 
 	/* TODO Timeout */
 	return ERROR_OK;
 }
 
+
 static int max32xxx_qspi_set_we(struct target *target)
 {
 	uint8_t cmd_data = SPIFLASH_WRITE_ENABLE;
+	int retval;
 
 	/* TODO: Could also be instruction 0x50 */
-	return max32xxx_qspi_write_bytes(target, &cmd_data, 1, true);
+	retval = max32xxx_qspi_write_bytes(target, &cmd_data, 1, true);
+	if (retval != ERROR_OK) {
+		LOG_ERROR("Failed to write the write-enable bytes");
+		return retval;
+	}
+
+	return max32xxx_qspi_poll_we(target);
 }
 
 static int max32xxx_qspi_erase(struct flash_bank *bank, unsigned int first, unsigned int last)
@@ -546,8 +587,10 @@ static int max32xxx_qspi_erase(struct flash_bank *bank, unsigned int first, unsi
 	while (first <= last) {
 		/* Set the write enable */
 		retval = max32xxx_qspi_set_we(target);
-		if (retval != ERROR_OK)
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Failed to set the write-enable bit!");
 			goto exit;
+		}
 
 		/* Send the erase command */
 		cmd_data[0] = max32xxx_qspi_info->dev.erase_cmd;
@@ -571,7 +614,11 @@ static int max32xxx_qspi_erase(struct flash_bank *bank, unsigned int first, unsi
 			goto exit;
 
 		/* Poll WIP until erase is complete */
-		max32xxx_qspi_poll_wip(target);
+		retval = max32xxx_qspi_poll_wip(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Flash bank didn't respond to status request after erase");
+			goto exit;
+		}
 	}
 
 exit:
