@@ -35,6 +35,9 @@ proc adspsc83x_configure_cti {} {
    # *pREG_CTI0_LAR = 0xC5ACCE55
    mww 0x31113fb0 0xC5ACCE55
 
+   # Enable XOCDMode + BreakIn
+   mww 0x3111600c 0x00410000
+
    # Unlock CTI3 (System CTI)
    # *pREG_CTI3_LAR = 0xC5ACCE55
    mww 0x3110dfb0 0xC5ACCE55
