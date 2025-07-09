@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *   ADSPSC83x Target Support for OpenOCD                                  *
- *   Portions Copyright (C) 2022-2023 Analog Devices, Inc.                 *
+ *   Portions Copyright (C) 2022-2026 Analog Devices, Inc.                 *
  *                                                                         *
  *   Generic Xtensa target API for OpenOCD                                 *
  *   Copyright (C) 2020-2022 Cadence Design Systems, Inc.                  *
@@ -2026,13 +2026,6 @@ int xtensa_step(struct target *target, bool current, target_addr_t address,
 			return res;
 	}
 	int retval = xtensa_do_step(target, current, address, handle_breakpoints);
-	if (target->restart_use_cti) {
-		/* The core state as viewed from OpenOCD does not change during single
-		 step and it is necessary to halt the peripherals before proceeding */
-		int res = xtensa_trigger_cti_apppulse(target, target->halt_cti_channel);
-		if (res != ERROR_OK)
-			return res;
-	}
 	if (retval != ERROR_OK)
 		return retval;
 	target_call_event_callbacks(target, TARGET_EVENT_HALTED);
@@ -2458,13 +2451,6 @@ int xtensa_poll(struct target *target)
 			xtensa->come_online_probes_num--;
 	} else if (xtensa_is_stopped(target)) {
 		if (target->state != TARGET_HALTED) {
-			if (target->restart_use_cti) {
-				/* Send DBGTRIGGER signal to halt peripherals */
-				res = xtensa_trigger_cti_apppulse(target, target->halt_cti_channel);
-				if (res != ERROR_OK)
-					return res;
-			}
-
 			enum target_state oldstate = target->state;
 			target->state = TARGET_HALTED;
 			/* Examine why the target has been halted */
