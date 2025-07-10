@@ -13,7 +13,7 @@
  *                                                                         *
  *   Cortex-M3(tm) TRM, ARM DDI 0337E (r1p1) and 0337G (r2p0)              *
  *                                                                         *
- * 	 Portions Copyright (C) 2023-2024 Analog Devices, Inc.                 *
+ *   Portions Copyright (C) 2023-2024 Analog Devices, Inc.                 *
  *                                                                         *
  ***************************************************************************/
 #ifdef HAVE_CONFIG_H

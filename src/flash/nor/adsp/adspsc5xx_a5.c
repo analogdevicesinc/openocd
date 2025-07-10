@@ -1,5 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0+
-// Copyright (C) 2022-2024 Analog Devices, Inc.
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+/****************************************************************************
+ *	Copyright (C) 2022-2024 Analog Devices, Inc.							*
+ ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -436,9 +439,7 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 
 		/* Write remaining data */
 		while (count - buffer_index) {
-			/* If the remaining bytes is less than the buffer size
-			*  size is just the remaining bytes...
-			*/
+			/* If the remaining bytes is less than the buffer size, then size is just the remaining bytes */
 			if ((count - buffer_index) < buffer_size)
 				write_size = count - buffer_index;
 			/* Otherwise size is the buffer size (max size that can be written in one command) */

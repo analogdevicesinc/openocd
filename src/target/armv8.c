@@ -120,27 +120,24 @@ const char *armv8_mode_name(unsigned int psr_mode)
 
 static int instr_read_data_r0_64(struct arm_dpm *dpm, uint32_t opcode, uint64_t *data_64, uint32_t expected_el)
 {
-	if (armv8_curel_from_core_mode(dpm->arm->core_mode) < expected_el) {
+	if (armv8_curel_from_core_mode(dpm->arm->core_mode) < expected_el)
 		return ERROR_TARGET_EXCEPTION_LEVEL;
-	}
 
 	return dpm->instr_read_data_r0_64(dpm, opcode, data_64);
 }
 
 static int instr_read_data_r0_32(struct arm_dpm *dpm, uint32_t opcode, uint32_t *data, uint32_t expected_el)
 {
-	if (armv8_curel_from_core_mode(dpm->arm->core_mode) < expected_el) {
+	if (armv8_curel_from_core_mode(dpm->arm->core_mode) < expected_el)
 		return ERROR_TARGET_EXCEPTION_LEVEL;
-	}
 
 	return dpm->instr_read_data_r0(dpm, opcode, data);
 }
 
 static int instr_read_data_dcc(struct arm_dpm *dpm, uint32_t opcode, uint32_t *data, uint32_t expected_el)
 {
-	if (armv8_curel_from_core_mode(dpm->arm->core_mode) < expected_el) {
+	if (armv8_curel_from_core_mode(dpm->arm->core_mode) < expected_el)
 		return ERROR_TARGET_EXCEPTION_LEVEL;
-	}
 
 	return dpm->instr_read_data_dcc(dpm, opcode, data);
 }

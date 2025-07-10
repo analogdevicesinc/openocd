@@ -27,7 +27,7 @@
  *                                                                         *
  *   Copyright (C) 2016 Chengyu Zheng                                      *
  *   chengyu.zheng@polimi.it : watchpoint support                          *
- * 																		   *
+ *                                                                         *
  *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
  *                                                                         *
  *   Cortex-A8(tm) TRM, ARM DDI 0344H                                      *
@@ -937,7 +937,7 @@ static int cortex_a_internal_restart(struct target *target)
 		/* Send DBGRESTART signal */
 		uint32_t channel = 1 << target->restart_cti_channel;
 		retval = mem_ap_write_atomic_u32(armv7a->debug_ap,
-                target->restart_cti_reg_addr, channel);
+				target->restart_cti_reg_addr, channel);
 	} else {
 		retval = mem_ap_write_atomic_u32(armv7a->debug_ap,
 				armv7a->debug_base + CPUDBG_DRCR, DRCR_RESTART |

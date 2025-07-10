@@ -67,7 +67,7 @@ static int adspsc59x_a55_poll(struct flash_bank *bank)
 	struct target *target = bank->target;
 	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	unsigned int counter = 0;
-	ADSP_SPI_RESULT result;
+	enum ADSP_SPI_RESULT result;
 	int rc = ERROR_FAIL;
 
 	/** Set the default RC to timeout error. If device is free within set time,
@@ -125,7 +125,7 @@ static int adspsc59x_a55_poll(struct flash_bank *bank)
 */
 static int adspsc59x_a55_write_enable(struct flash_bank *bank, const bool enable, struct adsp_dma_queue *queue)
 {
-	ADSP_SPI_RESULT result;
+	enum ADSP_SPI_RESULT result;
 	struct target *target = bank->target;
 	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	int rc;
@@ -162,7 +162,7 @@ static int adspsc59x_a55_write_enable(struct flash_bank *bank, const bool enable
 */
 static int adspsc59x_a55_quad_io_enable(struct flash_bank *bank, const bool enable)
 {
-	ADSP_SPI_RESULT result;
+	enum ADSP_SPI_RESULT result;
 	struct target *target = bank->target;
 	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	int rc;
@@ -342,7 +342,7 @@ static int adspsc59x_a55_erase(struct flash_bank *bank, unsigned int first, unsi
 {
 	struct target *target = bank->target;
 	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
-	ADSP_SPI_RESULT result;
+	enum ADSP_SPI_RESULT result;
 	int rc;
 
 	/* Check device is halted and has been probed first */
@@ -417,7 +417,7 @@ static int adspsc59x_a55_write(struct flash_bank *bank, const uint8_t *buffer,
 {
 	struct target *target = bank->target;
 	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
-	ADSP_SPI_RESULT result;
+	enum ADSP_SPI_RESULT result;
 	int rc;
 	unsigned int write_size = 0;
 	unsigned int buffer_index = 0;
@@ -441,7 +441,7 @@ static int adspsc59x_a55_write(struct flash_bank *bank, const uint8_t *buffer,
 		struct adsp_dma_queue *queue = NULL;
 		uint32_t available_space = target_get_working_area_avail(target);
 		uint32_t chunk = WRITE_CHUNK_SIZE;
-		ADSP_SPI_DEVICE device = ADSP_SPI_DEVICE_SC59X_A55;
+		enum ADSP_SPI_DEVICE device = ADSP_SPI_DEVICE_SC59X_A55;
 
 		// Assume the descriptors won't take up more space than the data itself!
 		while (chunk > (available_space / 2))
@@ -606,7 +606,7 @@ static int adspsc59x_a55_read(struct flash_bank *bank,
 {
 	struct target *target = bank->target;
 	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
-	ADSP_SPI_RESULT result;
+	enum ADSP_SPI_RESULT result;
 	int rc;
 	spi_instruction_t instruction;
 	uint8_t dummy_bytes;
@@ -720,7 +720,7 @@ static int adspsc59x_a55_probe(struct flash_bank *bank)
 	struct target *target = bank->target;
 	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info = bank->driver_priv;
 	struct flash_sector *sectors = NULL;
-	ADSP_SPI_RESULT result;
+	enum ADSP_SPI_RESULT result;
 	int rc;
 
 	LOG_INFO("Probing ADSP-SC59X chip...");
@@ -903,7 +903,7 @@ COMMAND_HANDLER(adspsc59x_a55_mass_erase_handler)
 	struct flash_bank *bank;
 	struct target *target;
 	struct adspsc59x_a55_flash_bank *adspsc59x_a55_flash_info;
-	ADSP_SPI_RESULT result;
+	enum ADSP_SPI_RESULT result;
 	int rc;
 
 	if (CMD_ARGC != 1)

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 
 /***************************************************************************
  *   Copyright (C) 2022-2024 Analog Devices, Inc.                          *
@@ -14,12 +14,12 @@
  * @enum	ADSP_SPI_DEVICE
  * @brief	Lists the available targets with SPI device definitions
  */
-typedef enum {
+enum ADSP_SPI_DEVICE {
 	ADSP_SPI_DEVICE_2183X,		/*!< ADSP-2183x/ADSP-SC83x family*/
 	ADSP_SPI_DEVICE_SC59X,		/*!< ADSP-SC594 family */
 	ADSP_SPI_DEVICE_SC59X_A55,	/*!< ADSP-SC598 family */
 	ADSP_SPI_DEVICE_UNKNOWN		/*!< Unknown device*/
-} ADSP_SPI_DEVICE;
+};
 
 /**! @struct	adsp_spi_regs
  *	 @brief		Defines the SPI registers required in the driver
@@ -59,12 +59,12 @@ struct adsp_dma_regs {
  *	 @brief		Defines the 1D DMA descriptor for descriptor-array based mode.
 */
 #pragma pack(4)
-typedef struct adsp_1d_dma_array_desc {
+struct adsp_1d_dma_array_desc {
 	uint32_t	address_start;		/*!< Receive Control Register Address */
 	uint32_t	config;				/*!< Config Register Address */
 	uint32_t	x_count;			/*!< X Count Register Address */
 	int32_t		x_increment;		/*!< X Increment Register Address */
-} adsp_1d_dma_array_desc;
+};
 #pragma pack(0)
 
 /**! @struct	adsp_smpu_regs

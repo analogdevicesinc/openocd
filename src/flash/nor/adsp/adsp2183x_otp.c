@@ -1,5 +1,8 @@
-/* SPDX-License Identifier: GPL-2.0-or-later
-	Copyright (C) 2022-2024 Analog Devices, Inc. */
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+/****************************************************************************
+ *	Copyright (C) 2022-2024 Analog Devices, Inc.							*
+ ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -16,7 +19,7 @@
 #include <target/xtensa/xtensa.h>
 #include "adsp2183x_otp.h"
 
-#define ROUNDUP(value, limit) (value + limit - (value % limit))
+#define ROUNDUP(value, limit) (((value) + (limit) - ((value) % (limit))))
 
 #define LOG_ERROR_ALGO_PARAMS(algo_params) \
 	LOG_ERROR("Address offset: %08X " \
@@ -53,9 +56,8 @@ static int adsp83x_quit(struct flash_bank *bank)
 
 	/* Regardless of the algo's status, attempt to halt the target */
 	retval = target_halt(target);
-	if (retval != ERROR_OK) {
+	if (retval != ERROR_OK)
 		return retval;
-	}
 
 	/* Now confirm target halted and clean up from flash helper algorithm */
 	retval = target_wait_algorithm(target, 0, NULL, 0, NULL, 0, ALGO_TIMEOUT_MAX,
@@ -89,9 +91,8 @@ static int adsp83x_wait_algo_done(struct flash_bank *bank, uint32_t params_addr)
 			break;
 	};
 
-	if (status != 0) {
+	if (status != 0)
 		return ERROR_FAIL;
-	}
 
 	return ERROR_OK;
 }
@@ -283,29 +284,26 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 	if (TARGET_HALTED != target->state) {
 		LOG_ERROR("Cannot read from flash. Target is not halted!");
 		retval = ERROR_TARGET_NOT_HALTED;
-	}
-	else if (offset + count > bank->size) {
+	} else if (offset + count > bank->size) {
 		LOG_ERROR("Write would go beyond end of supported flash size.");
 		retval = ERROR_FLASH_DST_OUT_OF_BANK;
-	}
-	/* All good to proceed */
-	else {
+	} else {
+		/* All good to proceed */
 		retval = adsp2183x_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
 
-		byteCountOrig = (count/2) + (count % 2);
+		byteCountOrig = (count / 2) + (count % 2);
 
-		if(byteCountOrig % 4 != 0){
+		if (byteCountOrig % 4 != 0)
 			byteCountRounded = ROUNDUP(byteCountOrig, 4);
-		}
 		else
 			byteCountRounded = byteCountOrig;
 
-		uint32_t tempBuf[byteCountRounded/4];
-		uint32_t sendBuf[byteCountRounded/4];
+		uint32_t tempBuf[byteCountRounded / 4];
+		uint32_t sendBuf[byteCountRounded / 4];
 
-		for (i = 0;	i < byteCountRounded/4;	i++) {
+		for (i = 0;	i < byteCountRounded / 4; i++) {
 			memcpy(tempBuf, buffer, BYTE_COUNT);
 			buffer += BYTE_COUNT;
 			convertedHex = (uint32_t)strtoul((void *)tempBuf, NULL, 16);
@@ -337,7 +335,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		retval = target_write_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.buffer_address,
 			byteCountRounded, (void *)sendBuf);
 
-		if(byteCountRounded < 4)
+		if (byteCountRounded < 4)
 			byteCountRounded = 4;
 
 		// write algo parameters
@@ -368,7 +366,6 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			LOG_ERROR_ALGO_PARAMS(algo_params);
 			return retval;
 		}
-
 	}
 
 	return retval;
@@ -390,7 +387,6 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 static int adsp2183x_read(struct flash_bank *bank,
 	uint8_t *buffer, uint32_t offset, uint32_t count)
 {
-
 	struct target *target = bank->target;
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
 	struct adsp2183x_algo_params algo_params;
@@ -399,21 +395,17 @@ static int adsp2183x_read(struct flash_bank *bank,
 	uint32_t byteCountRounded;
 
 	/* Check device is halted and has been probed first */
-	if (TARGET_HALTED != target->state)
-	{
+	if (TARGET_HALTED != target->state) {
 		LOG_ERROR("Cannot read from flash. Target is not halted!");
 		retval = ERROR_TARGET_NOT_HALTED;
-	}
-	/* All good to proceed */
-	else
-	{
+	} else {
+		/* All good to proceed */
 		retval = adsp2183x_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
 
-		if(count % 4 != 0){
+		if (count % 4 != 0)
 			byteCountRounded = ROUNDUP(count, 4);
-		}
 		else
 			byteCountRounded = count;
 
@@ -459,7 +451,7 @@ static int adsp2183x_read(struct flash_bank *bank,
 		xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
 
 		// poll target to update state and wait for algorithm to hit breakpoint to halt target
-		while(target->state != TARGET_HALTED) {
+		while (target->state != TARGET_HALTED) {
 			retval = target_poll(target);
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to poll target");
@@ -490,7 +482,6 @@ static int adsp2183x_read(struct flash_bank *bank,
 			LOG_ERROR_ALGO_PARAMS(algo_params);
 			return retval;
 		}
-
 	}
 
 	return retval;
@@ -601,12 +592,10 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 		return ERROR_FAIL;
 	}
 
-	if (adsp2183x_otp_info->probed) {
+	if (adsp2183x_otp_info->probed)
 		retval = ERROR_OK;
-	}
-	else {
+	else
 		retval = adsp2183x_probe(bank);
-	}
 
 	return retval;
 }
@@ -647,9 +636,8 @@ static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation
 
 	int retval = adsp2183x_probe(bank);
 	if (retval != ERROR_OK)
-	{
 		return retval;
-	}
+
 
 	command_print(cmd, "ADSP-2183X OTP\n"
 			"Size: 0x%X\n",

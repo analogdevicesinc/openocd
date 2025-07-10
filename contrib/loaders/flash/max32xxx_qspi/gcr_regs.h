@@ -86,7 +86,7 @@ extern "C" {
  * @ingroup gcr_registers
  * Structure type to access the GCR Registers.
  */
-typedef struct {
+struct mxc_gcr_regs {
 __IO uint32_t scon;                 /**< <tt>\b 0x00:</tt> GCR SCON Register */
 __IO uint32_t rstr0;                /**< <tt>\b 0x04:</tt> GCR RSTR0 Register */
 __IO uint32_t clkcn;                /**< <tt>\b 0x08:</tt> GCR CLKCN Register */
@@ -109,7 +109,7 @@ __IO uint32_t eccerr;               /**< <tt>\b 0x64:</tt> GCR ECCERR Register *
 __IO uint32_t eccnded;              /**< <tt>\b 0x68:</tt> GCR ECCNDED Register */
 __IO uint32_t eccirqen;             /**< <tt>\b 0x6C:</tt> GCR ECCIRQEN Register */
 __IO uint32_t eccerrad;             /**< <tt>\b 0x70:</tt> GCR ECCERRAD Register */
-} mxc_gcr_regs_t;
+};
 
 /* Register offsets for module GCR */
 /**

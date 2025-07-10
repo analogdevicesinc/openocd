@@ -83,7 +83,7 @@ extern "C" {
  * @ingroup tpu_registers
  * Structure type to access the TPU Registers.
  */
-typedef struct {
+struct mxc_tpu_regs {
 __IO uint32_t ctrl;                 /**< <tt>\b 0x00:<\tt> TPU CTRL Register */
 __IO uint32_t cipher_ctrl;          /**< <tt>\b 0x04:<\tt> TPU CIPHER_CTRL Register */
 __IO uint32_t hash_ctrl;            /**< <tt>\b 0x08:<\tt> TPU HASH_CTRL Register */
@@ -103,7 +103,7 @@ __O  uint32_t cipher_key[8];        /**< <tt>\b 0x60:<\tt> TPU CIPHER_KEY Regist
 __IO uint32_t hash_digest[16];      /**< <tt>\b 0x80:<\tt> TPU HASH_DIGEST Register */
 __IO uint32_t hash_msg_sz[4];       /**< <tt>\b 0xC0:<\tt> TPU HASH_MSG_SZ Register */
 __IO uint32_t maa_maws;             /**< <tt>\b 0xD0:<\tt> TPU MAA_MAWS Register */
-} mxc_tpu_regs_t;
+};
 
 /* Register offsets for module TPU */
 /**

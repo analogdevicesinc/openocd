@@ -292,9 +292,7 @@ static struct command_context *setup_command_handler(Jim_Interp *interp)
 	int i = strlen(pretty_version);
 	int j = 0;
 	while (i < 150 && version[j] && version[j] != '+' && version[j] != '-')
-	{
 		pretty_version[i++] = version[j++];
-	}
 
 	/* copy the PKGBLDDATE */
 	pretty_version[i++] = ' ';

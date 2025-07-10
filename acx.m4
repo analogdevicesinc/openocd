@@ -107,7 +107,7 @@ AC_SUBST([target_subdir]) []dnl
 
 
 ####
-# _NCN_TOOL_PREFIXES:  Some stuff that oughtta be done in AC_CANONICAL_SYSTEM 
+# _NCN_TOOL_PREFIXES:  Some stuff that oughtta be done in AC_CANONICAL_SYSTEM
 # or AC_INIT.
 # These demand that AC_CANONICAL_SYSTEM be called beforehand.
 AC_DEFUN([_NCN_TOOL_PREFIXES],
@@ -139,11 +139,11 @@ fi
 
 for ncn_progname in $2; do
   if test -n "$ncn_tool_prefix"; then
-    AC_CHECK_PROG([$1], [${ncn_tool_prefix}${ncn_progname}], 
+    AC_CHECK_PROG([$1], [${ncn_tool_prefix}${ncn_progname}],
                   [${ncn_tool_prefix}${ncn_progname}], , [$4])
   fi
   if test -z "$ac_cv_prog_$1" && test $build = $host ; then
-    AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4]) 
+    AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4])
   fi
   test -n "$ac_cv_prog_$1" && break
 done
@@ -194,16 +194,16 @@ fi
 if test -z "$ac_cv_prog_$1"; then
   for ncn_progname in $2; do
     if test -n "$ncn_target_tool_prefix"; then
-      AC_CHECK_PROG([$1], [${ncn_target_tool_prefix}${ncn_progname}], 
+      AC_CHECK_PROG([$1], [${ncn_target_tool_prefix}${ncn_progname}],
                     [${ncn_target_tool_prefix}${ncn_progname}], , [$4])
     fi
     if test -z "$ac_cv_prog_$1" && test $build = $target ; then
-      AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4]) 
+      AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4])
     fi
     test -n "$ac_cv_prog_$1" && break
   done
 fi
-  
+
 if test -z "$ac_cv_prog_$1" ; then
   ifelse([$3],[], [set dummy $2
   if test $build = $target ; then
@@ -215,7 +215,7 @@ else
   $1="$ac_cv_prog_$1"
 fi
 ]) []dnl # NCN_STRICT_CHECK_TARGET_TOOLS
-  
+
 
 # Backported from Autoconf 2.5x; can go away when and if
 # we switch.  Put the OS path separator in $PATH_SEPARATOR.
@@ -228,7 +228,7 @@ if test "${PATH_SEPARATOR+set}" != set; then
   if (PATH="/nonexistent;."; conf$$.sh) >/dev/null 2>&1; then
     PATH_SEPARATOR=';'
   else
-    PATH_SEPARATOR=: 
+    PATH_SEPARATOR=:
   fi
   rm -f conf$$.sh
 fi
@@ -501,7 +501,7 @@ else
     *" patsubst([$4], [/.*], []) "*) ;;
     *) ok=no ;;
   esac
-  ifelse([$5],,, 
+  ifelse([$5],,,
   [case ,${enable_languages}, in
     *,$5,*) ;;
     *) ok=no ;;
@@ -599,7 +599,7 @@ AC_DEFUN([ACX_BUGURL],[
 
 dnl ####
 dnl # ACX_CHECK_CYGWIN_CAT_WORKS
-dnl # On Cygwin hosts, check that the cat command ignores 
+dnl # On Cygwin hosts, check that the cat command ignores
 dnl # carriage returns as otherwise builds will not work.
 dnl # See binutils PR 4334 for more details.
 AC_DEFUN([ACX_CHECK_CYGWIN_CAT_WORKS],[
@@ -615,7 +615,7 @@ else
   Please either mount the build directory in binary mode or run the following
   commands before running any configure script:
 set -o igncr
-export SHELLOPTS 
+export SHELLOPTS
   ])
 fi
 ])

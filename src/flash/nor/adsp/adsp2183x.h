@@ -1,4 +1,4 @@
-// SPDX-License Identifier: GPL-2.0-or-later
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 // Copyright (C) 2022-2024 Analog Devices, Inc.
 
 #ifndef ADSP2183X_H
@@ -27,12 +27,12 @@ struct custom_algorithm {
 #define ALGO_TIMEOUT_MAX_MASS_ERASE 500000
 
 enum FLASH_COMMANDS {
-    READ_COMMAND = 1,
-    PROGRAM_COMMAND = 2,
-    LOCK_COMMAND = 3,
-    MASS_ERASE_COMMAND = 4,
-    SECTOR_ERASE_COMMAND = 5,
-    READ_ID_CODE_COMMAND = 6
+	READ_COMMAND = 1,
+	PROGRAM_COMMAND = 2,
+	LOCK_COMMAND = 3,
+	MASS_ERASE_COMMAND = 4,
+	SECTOR_ERASE_COMMAND = 5,
+	READ_ID_CODE_COMMAND = 6
 };
 
 /*** xtensa resume handling ***/

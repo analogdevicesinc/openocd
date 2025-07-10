@@ -54,9 +54,9 @@
 
 /***** Definitions *****/
 #define MXC_BASE_CTB                            ((uint32_t)0x40001000UL)
-#define MXC_CTB                                 ((mxc_ctb_regs_t *)MXC_BASE_CTB)
+#define MXC_CTB                                 ((struct mxc_ctb_regs *)MXC_BASE_CTB)
 #define MXC_BASE_GCR                            ((uint32_t)0x40000000UL)
-#define MXC_GCR                                 ((mxc_gcr_regs_t *)MXC_BASE_GCR)
+#define MXC_GCR                                 ((struct mxc_gcr_regs *)MXC_BASE_GCR)
 
 #define ERROR_OK                                0
 

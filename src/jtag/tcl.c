@@ -376,17 +376,17 @@ __COMMAND_HANDLER(handle_jtag_configure)
 #define NTAP_OPT_SHARED_CONNECTION 9
 
 static const struct nvp jtag_newtap_opts[] = {
-	{ .name = "-irlen",          .value = NTAP_OPT_IRLEN },
-	{ .name = "-irmask",         .value = NTAP_OPT_IRMASK },
-	{ .name = "-ircapture",      .value = NTAP_OPT_IRCAPTURE },
-	{ .name = "-enable",         .value = NTAP_OPT_ENABLED },
-	{ .name = "-disable",        .value = NTAP_OPT_DISABLED },
-	{ .name = "-expected-id",    .value = NTAP_OPT_EXPECTED_ID },
-	{ .name = "-ignore-version", .value = NTAP_OPT_VERSION },
-	{ .name = "-ignore-bypass",  .value = NTAP_OPT_BYPASS },
-	{ .name = "-ir-bypass",      .value = NTAP_OPT_IRBYPASS },
-    { .name = "-shared-connection",     .value = NTAP_OPT_SHARED_CONNECTION },
-	{ .name = NULL,              .value = -1 },
+	{ .name = "-irlen",             .value = NTAP_OPT_IRLEN },
+	{ .name = "-irmask",            .value = NTAP_OPT_IRMASK },
+	{ .name = "-ircapture",         .value = NTAP_OPT_IRCAPTURE },
+	{ .name = "-enable",            .value = NTAP_OPT_ENABLED },
+	{ .name = "-disable",           .value = NTAP_OPT_DISABLED },
+	{ .name = "-expected-id",       .value = NTAP_OPT_EXPECTED_ID },
+	{ .name = "-ignore-version",    .value = NTAP_OPT_VERSION },
+	{ .name = "-ignore-bypass",     .value = NTAP_OPT_BYPASS },
+	{ .name = "-ir-bypass",         .value = NTAP_OPT_IRBYPASS },
+	{ .name = "-shared-connection", .value = NTAP_OPT_SHARED_CONNECTION },
+	{ .name = NULL,                 .value = -1 },
 };
 
 static COMMAND_HELPER(handle_jtag_newtap_args, struct jtag_tap *tap)

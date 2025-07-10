@@ -21,7 +21,7 @@
 
 static int armv8_d_cache_sanity_check(struct armv8_common *armv8)
 {
-#if 0	
+#if 0
 	//TBD if this can be used pending an investigation into GXP2 when running on FPGA
 	struct armv8_cache_common *armv8_cache = &armv8->armv8_mmu.armv8_cache;
 
@@ -37,7 +37,7 @@ static int armv8_d_cache_sanity_check(struct armv8_common *armv8)
 static int armv8_i_cache_sanity_check(struct armv8_common *armv8)
 {
 #if 0
-    //TBD if this can be used pending an investigation into GXP2 when running on FPGA
+	//TBD if this can be used pending an investigation into GXP2 when running on FPGA
 	struct armv8_cache_common *armv8_cache = &armv8->armv8_mmu.armv8_cache;
 
 	if (armv8_cache->i_cache_enabled)

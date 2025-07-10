@@ -1,5 +1,8 @@
-/* SPDX-License Identifier: GPL-2.0-or-later
-	Copyright (C) 2022-2024 Analog Devices, Inc. */
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+/****************************************************************************
+ *	Copyright (C) 2022-2024 Analog Devices, Inc.							*
+ ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -38,7 +41,7 @@ struct adsp2183x_flash_bank {
 	uint32_t available_space;	/*! Used for sanity checking against memory leaks */
 	struct working_area *working_area;
 	struct xtensa_algorithm xtensa_info;
-	struct flash_device	dev;
+	struct flash_device dev;
 	struct custom_algorithm adsp2183x_algorithm;
 	uint32_t sectorsize;
 	uint32_t size_in_bytes;
@@ -52,13 +55,11 @@ static int adsp83x_quit(struct flash_bank *bank)
 
 	/* Regardless of the algo's status, attempt to halt the target */
 	retval = target_halt(target);
-	if (retval != ERROR_OK) {
+	if (retval != ERROR_OK)
 		return retval;
-	}
 
 	/* Now confirm target halted and clean up from flash helper algorithm */
-	retval = target_wait_algorithm(target, 0, NULL, 0, NULL, 0, ALGO_TIMEOUT_MAX,
-				&adsp2183x_flash_info->xtensa_info);
+	retval = target_wait_algorithm(target, 0, NULL, 0, NULL, 0, ALGO_TIMEOUT_MAX, &adsp2183x_flash_info->xtensa_info);
 
 	target_free_working_area(target, adsp2183x_flash_info->working_area);
 	adsp2183x_flash_info->working_area = NULL;
@@ -88,9 +89,8 @@ static int adsp83x_wait_algo_done(struct flash_bank *bank, uint32_t params_addr)
 			break;
 	};
 
-	if (status != 0) {
+	if (status != 0)
 		return ERROR_FAIL;
-	}
 
 	return ERROR_OK;
 }
@@ -136,19 +136,18 @@ static int wait_for_breakpoint_and_check_status(struct flash_bank *bank, long lo
 		LOG_ERROR("Error detected in algorithm command execution. Closing down algorithm.");
 		/* Close down algo */
 		(void)adsp83x_quit(bank);
-	}	else {
+	} else {
 		// Resume running algorithm with parameters
 		xtensa_resume(target, USE_PC_VAL, 0, SKIP_BREAKPOINTS, DEBUG_EXECUTION);
 
-	/*
-	* At this point, the algorithm is running on the target and
-	* ready to receive commands and data to flash the target
-	*/
+		/*
+		 * At this point, the algorithm is running on the target and
+		 * ready to receive commands and data to flash the target
+		 */
 	}
 
 	return retval;
 }
-
 
 static int adsp2183x_init(struct flash_bank *bank)
 {
@@ -165,8 +164,8 @@ static int adsp2183x_init(struct flash_bank *bank)
 	/* Check for working area to use for flash helper algorithm */
 	adsp2183x_flash_info->working_area = NULL;
 
-	retval = target_alloc_working_area(target, adsp2183x_flash_info->available_space,
-				&adsp2183x_flash_info->working_area);
+	retval =
+		target_alloc_working_area(target, adsp2183x_flash_info->available_space, &adsp2183x_flash_info->working_area);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Working address is not correctly allocated");
 		return retval;
@@ -198,7 +197,8 @@ static int adsp2183x_init(struct flash_bank *bank)
 
 	/* Write flash helper algorithm into target memory */
 	retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address,
-				adsp2183x_flash_info->adsp2183x_algorithm.size, adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo);
+								 adsp2183x_flash_info->adsp2183x_algorithm.size,
+								 adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo);
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Failed to load flash helper algorithm");
 		target_free_working_area(target, adsp2183x_flash_info->working_area);
@@ -210,8 +210,9 @@ static int adsp2183x_init(struct flash_bank *bank)
 	adsp2183x_flash_info->xtensa_info.core_mode = XT_MODE_ANY;
 
 	/* Begin executing the flash helper algorithm */
-	retval = target_start_algorithm(target, 0, NULL, 0, NULL,
-				adsp2183x_flash_info->adsp2183x_algorithm.reset_handler_addr, 0, &adsp2183x_flash_info->xtensa_info);
+	retval =
+		target_start_algorithm(target, 0, NULL, 0, NULL, adsp2183x_flash_info->adsp2183x_algorithm.reset_handler_addr,
+							   0, &adsp2183x_flash_info->xtensa_info);
 	if (retval != ERROR_OK) {
 		target_free_working_area(target, adsp2183x_flash_info->working_area);
 		adsp2183x_flash_info->working_area = NULL;
@@ -225,10 +226,10 @@ static int adsp2183x_init(struct flash_bank *bank)
 		// initialize algorithm parameters to 0
 		buf_set_u32(algo_params.command, 0, 32, 0);
 		buf_set_u32(algo_params.address, 0, 32, 0);
-		buf_set_u32(algo_params.ready,  0, 32, 0);
-		buf_set_u32(algo_params.length,  0, 32, 0);
-		buf_set_u32(algo_params.status,  0, 32, 0);
-		buf_set_u32(algo_params.device_id,  0, 32, 0);
+		buf_set_u32(algo_params.ready, 0, 32, 0);
+		buf_set_u32(algo_params.length, 0, 32, 0);
+		buf_set_u32(algo_params.status, 0, 32, 0);
+		buf_set_u32(algo_params.device_id, 0, 32, 0);
 	}
 
 	return retval;
@@ -242,7 +243,7 @@ static int adsp2183x_init(struct flash_bank *bank)
  * @param	last	The number of the last sector to erase
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
-*/
+ */
 static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned int last)
 {
 	struct target *target = bank->target;
@@ -277,7 +278,7 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 
 		for (unsigned int counter = first; counter <= last; counter++) {
 			/* Calculate the address based on the counter and configured sector size */
-			address = counter*adsp2183x_flash_info->sectorsize;
+			address = counter * adsp2183x_flash_info->sectorsize;
 
 			// Need to halt before reads/writes
 			retval = target_halt(target);
@@ -303,16 +304,15 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
 				return ERROR_TARGET_NOT_HALTED;
 			}
 
-
 			// hardcode to issue sector erase command to algorithm
 			buf_set_u32(algo_params.command, 0, 32, SECTOR_ERASE_COMMAND);
 
 			// write algo parameters
 			buf_set_u32(algo_params.address, 0, 32, address);
-			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+			buf_set_u32(algo_params.ready, 0, 32, ALGO_READY);
 
 			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
-					sizeof(algo_params), (uint8_t *)&algo_params);
+										 sizeof(algo_params), (uint8_t *)&algo_params);
 
 			// Resume running algorithm with parameters
 			xtensa_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
@@ -341,16 +341,15 @@ static int adsp2183x_erase(struct flash_bank *bank, unsigned int first, unsigned
  * @param	count	Number of bytes to write to spi flash
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
-*/
-static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
-	uint32_t offset, uint32_t count)
+ */
+static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer, uint32_t offset, uint32_t count)
 {
 	struct target *target = bank->target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
 	struct adsp2183x_algo_params algo_params;
 	int retval;
-	unsigned write_size = 0;
-	unsigned buffer_index = 0;
+	unsigned int write_size = 0;
+	unsigned int buffer_index = 0;
 	uint32_t current_address = offset;
 	uint32_t buffer_size = adsp2183x_flash_info->adsp2183x_algorithm.buffer_size;
 
@@ -377,7 +376,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 
 		/* First write any bytes if the specified offset if not on the buffer size boundary */
 		if (0 != (current_address % buffer_size)) {
-			/* Calculate the write size to use, the modulo remainder of the buffer size  (unless the specified count is smaller) */
+			/* Calculate the write size to use, the modulo remainder of the buffer size  (unless the specified count is
+			 * smaller) */
 			write_size = buffer_size - (current_address % buffer_size);
 			if (write_size > count)
 				write_size = count;
@@ -410,18 +410,17 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			buf_set_u32(algo_params.command, 0, 32, PROGRAM_COMMAND);
 
 			/* Put next block of data to flash into buffer */
-			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address,
-			write_size, &buffer[buffer_index]);
-
+			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address, write_size,
+										 &buffer[buffer_index]);
 
 			// write algo parameters
 			buf_set_u32(algo_params.address, 0, 32, current_address);
 			buf_set_u32(algo_params.length, 0, 32, write_size);
-			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+			buf_set_u32(algo_params.ready, 0, 32, ALGO_READY);
 
 			/* Put next block of data to flash into buffer */
 			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
-					sizeof(algo_params), (uint8_t *)&algo_params);
+										 sizeof(algo_params), (uint8_t *)&algo_params);
 
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to write data to target memory");
@@ -452,8 +451,8 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		/* Write remaining data */
 		while (count - buffer_index) {
 			/* If the remaining bytes is less than the buffer size,
-			*  size is just the remaining bytes...
-			*/
+			 *  size is just the remaining bytes...
+			 */
 			if ((count - buffer_index) < buffer_size)
 				write_size = count - buffer_index;
 			/* Otherwise size is the buffer size (max size that can be written in one command) */
@@ -488,19 +487,18 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 			buf_set_u32(algo_params.command, 0, 32, PROGRAM_COMMAND);
 
 			/* Put next block of data to flash into buffer */
-			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address,
-			write_size, &buffer[buffer_index]);
-
+			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address, write_size,
+										 &buffer[buffer_index]);
 
 			// write algo parameters
 
 			buf_set_u32(algo_params.address, 0, 32, current_address);
 			buf_set_u32(algo_params.length, 0, 32, write_size);
-			buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+			buf_set_u32(algo_params.ready, 0, 32, ALGO_READY);
 
 			/* Put next block of data to flash into buffer */
 			retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
-					sizeof(algo_params), (uint8_t *)&algo_params);
+										 sizeof(algo_params), (uint8_t *)&algo_params);
 
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to write data to target memory");
@@ -542,11 +540,9 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
  * @param	count	Number of bytes to read from memory region
  *
  * @returns	Return code, ERROR_OK if successful otherwise the relevant code.
-*/
-static int adsp2183x_read(struct flash_bank *bank,
-	uint8_t *buffer, uint32_t offset, uint32_t count)
+ */
+static int adsp2183x_read(struct flash_bank *bank, uint8_t *buffer, uint32_t offset, uint32_t count)
 {
-
 	struct target *target = bank->target;
 	struct adsp2183x_flash_bank *adsp2183x_flash_info = bank->driver_priv;
 	struct adsp2183x_algo_params algo_params;
@@ -571,13 +567,13 @@ static int adsp2183x_read(struct flash_bank *bank,
 
 	/* Make sure read is not larger than buffer size to be passed */
 	uint32_t read_bytes = 0;
-	uint32_t read_size  = 0;
+	uint32_t read_size = 0;
 	while (count) {
 		// read size threshold is only applicable to SPI protocol. For xSPI the current
 		// implementation requires a valid read size divisible by 4
 		if (strcmp(bank->name, SPI_NAME)) {
 			read_size = count;
-		}  else {
+		} else {
 			/* Maximum read size*/
 			read_size = buffer_size;
 
@@ -613,7 +609,6 @@ static int adsp2183x_read(struct flash_bank *bank,
 		/* Check we're not going reading more than we should */
 		assert(count >= read_size);
 
-
 		uint32_t address = offset + read_bytes;
 
 		// hardcode to issue read command to algorithm
@@ -622,10 +617,10 @@ static int adsp2183x_read(struct flash_bank *bank,
 		// write algo parameters
 		buf_set_u32(algo_params.address, 0, 32, address);
 		buf_set_u32(algo_params.length, 0, 32, read_size);
-		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+		buf_set_u32(algo_params.ready, 0, 32, ALGO_READY);
 
 		retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
-				sizeof(algo_params), (uint8_t *)&algo_params);
+									 sizeof(algo_params), (uint8_t *)&algo_params);
 
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to read data from target memory");
@@ -647,8 +642,8 @@ static int adsp2183x_read(struct flash_bank *bank,
 			}
 		}
 		/* Put next block of data from flash into buffer */
-		retval = target_read_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address,
-		read_size, &buffer[read_bytes]);
+		retval = target_read_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.buffer_address, read_size,
+									&buffer[read_bytes]);
 
 		if (retval != ERROR_OK) {
 			LOG_ERROR_ALGO_PARAMS(algo_params);
@@ -682,7 +677,7 @@ static int adsp2183x_read(struct flash_bank *bank,
  * @param	bank	Pointer to the flash bank to use and write to
  *
  * @returns	ERROR_OK if successful otherwise the relevant code.
-*/
+ */
 static int adsp2183x_auto_probe(struct flash_bank *bank)
 {
 	int retval;
@@ -716,15 +711,18 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
 	// Check algorithm size vs allocated flash bank space
 	if (adsp2183x_flash_info->adsp2183x_algorithm.size > adsp2183x_flash_info->available_space) {
 		LOG_ERROR("Not enough available space in flash bank %s for corresponding algorithm of size %lu", bank->name,
-			adsp2183x_flash_info->adsp2183x_algorithm.size);
+				  adsp2183x_flash_info->adsp2183x_algorithm.size);
 		return ERROR_FAIL;
 	}
 
 	// Check start address of algorithm with address provided in cfg
-	if (adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address < target_start_address
-		|| adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address > (target_start_address + adsp2183x_flash_info->available_space)) {
-		LOG_ERROR("Start address for corresponding algorithm of %lu is not within the allocated range of %u for flash bank %s",
-			adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address, target_start_address + adsp2183x_flash_info->available_space, bank->name);
+	if (adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address < target_start_address ||
+		adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address >
+			(target_start_address + adsp2183x_flash_info->available_space)) {
+		LOG_ERROR("Start address for corresponding algorithm of %lu is not within the allocated range of %u for flash "
+				  "bank %s",
+				  adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address,
+				  target_start_address + adsp2183x_flash_info->available_space, bank->name);
 		return ERROR_FAIL;
 	}
 
@@ -767,7 +765,7 @@ static int adsp2183x_auto_probe(struct flash_bank *bank)
  * @param	bank	Pointer to the flash bank to use and write to
  *
  * @returns	ERROR_OK if successful otherwise the relevant code.
-*/
+ */
 static int adsp2183x_probe(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
@@ -802,10 +800,13 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	}
 
 	// Check start address of algorithm with address provided in cfg
-	if (adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address < target_start_address
-		|| adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address > (target_start_address + adsp2183x_flash_info->available_space)) {
-		LOG_ERROR("Start address for corresponding algorithm of %lu is not within the allocated range of %u for flash bank %s",
-			adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address, target_start_address + adsp2183x_flash_info->available_space, bank->name);
+	if (adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address < target_start_address ||
+		adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address >
+			(target_start_address + adsp2183x_flash_info->available_space)) {
+		LOG_ERROR("Start address for corresponding algorithm of %lu is not within the allocated range of %u for flash "
+				  "bank %s",
+				  adsp2183x_flash_info->adsp2183x_algorithm.algo_start_address,
+				  target_start_address + adsp2183x_flash_info->available_space, bank->name);
 		return ERROR_FAIL;
 	}
 
@@ -847,10 +848,10 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	buf_set_u32(algo_params.command, 0, 32, READ_ID_CODE_COMMAND);
 
 	// write algo parameters
-	buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+	buf_set_u32(algo_params.ready, 0, 32, ALGO_READY);
 
 	retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
-				sizeof(algo_params), (uint8_t *)&algo_params);
+								 sizeof(algo_params), (uint8_t *)&algo_params);
 
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Unable to write algorithm parameters");
@@ -886,7 +887,6 @@ static int adsp2183x_probe(struct flash_bank *bank)
 		adsp2183x_flash_info->working_area = NULL;
 		return ERROR_FAIL;
 	}
-
 
 	retval = target_read_u32(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address + ADSP83X_READID_OFFSET, &jedec_id);
 	if (retval != ERROR_OK) {
@@ -940,18 +940,14 @@ static int adsp2183x_probe(struct flash_bank *bank)
 }
 
 /**
-* Not yet supported for spi flash.
-*/
-static int adsp2183x_protect_check(struct flash_bank *bank)
-{
-	return ERROR_FLASH_OPER_UNSUPPORTED;
-}
+ * Not yet supported for spi flash.
+ */
+static int adsp2183x_protect_check(struct flash_bank *bank) { return ERROR_FLASH_OPER_UNSUPPORTED; }
 
 /**
-* Not yet supported for spi flash.
-*/
-static int adsp2183x_protect(struct flash_bank *bank, int set,
-	unsigned int first, unsigned int last)
+ * Not yet supported for spi flash.
+ */
+static int adsp2183x_protect(struct flash_bank *bank, int set, unsigned int first, unsigned int last)
 {
 	return ERROR_FLASH_OPER_UNSUPPORTED;
 }
@@ -963,16 +959,17 @@ static int adsp2183x_protect(struct flash_bank *bank, int set,
  * @param   cmd         Pointer to the command invocation
  *
  * @returns	ERROR_OK if successful otherwise the relevant code.
-*/
+ */
 static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation *cmd)
 {
 	int retval = adsp2183x_probe(bank);
 	if (retval != ERROR_OK)
 		return retval;
 
-	command_print(cmd, "ADSP-2183X %s\n"
-			"Size: 0x%X\n", bank->name,
-			bank->size);
+	command_print(cmd,
+				  "ADSP-2183X %s\n"
+				  "Size: 0x%X\n",
+				  bank->name, bank->size);
 
 	return ERROR_OK;
 }
@@ -980,7 +977,7 @@ static int adsp2183x_get_info(struct flash_bank *bank, struct command_invocation
 /**
  * Usage:
  * flash bank <name> adsp2183x <base_addr> 0 0 0 <target> sector_size algorithm_file param_file
-*/
+ */
 FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 {
 	struct adsp2183x_flash_bank *adsp2183x_flash_info;
@@ -989,17 +986,17 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 	uint32_t tempParse;
 	char tempStr[2];
 	uint8_t convertedHex;
-	FILE* algo_file;
-	FILE* parameter_file;
+	FILE *algo_file;
+	FILE *parameter_file;
 	bool insideComment = true;
 	char line[256];
-	char parameter_file_data[PARAMETER_FILE_COUNT][9];  // Assuming each hex value is of length 8
+	char parameter_file_data[PARAMETER_FILE_COUNT][9]; // Assuming each hex value is of length 8
 
 	/* Check the correct number of arguments have been provided */
 	if (CMD_ARGC != 9) {
 		LOG_ERROR("Invalid number of flash bank arguments. Usage:\n"
-			"flash bank <name> adsp2183x <base_addr> 0 0 0 <target> "
-			"sector_size algorithm_file parameter_file");
+				  "flash bank <name> adsp2183x <base_addr> 0 0 0 <target> "
+				  "sector_size algorithm_file parameter_file");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
@@ -1015,69 +1012,69 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
 		return ERROR_FAIL;
 	}
 
-    // Opening file in reading mode
-    algo_file = fopen(CMD_ARGV[7], "r");
+	// Opening file in reading mode
+	algo_file = fopen(CMD_ARGV[7], "r");
 
-    if (NULL == algo_file) {
-        LOG_ERROR("File %s can't be opened \n", CMD_ARGV[7]);
+	if (NULL == algo_file) {
+		LOG_ERROR("File %s can't be opened\n", CMD_ARGV[7]);
 		return -1;
-    }
+	}
 
-     /* Size of file */
-    fseek(algo_file, 0, SEEK_END);
-   	adsp2183x_flash_info->adsp2183x_algorithm.size = ftell(algo_file);
-    fseek(algo_file, 0, SEEK_SET);
-	adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo = malloc(sizeof(uint8_t) * adsp2183x_flash_info->adsp2183x_algorithm.size);
+	/* Size of file */
+	fseek(algo_file, 0, SEEK_END);
+	adsp2183x_flash_info->adsp2183x_algorithm.size = ftell(algo_file);
+	fseek(algo_file, 0, SEEK_SET);
+	adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo =
+		malloc(sizeof(uint8_t) * adsp2183x_flash_info->adsp2183x_algorithm.size);
 	// Get 2 characters at a time to form byte. Convert byte and
 	// store into spi algorithm buffer
-    do {
-        tempStr[0] = fgetc(algo_file);
+	do {
+		tempStr[0] = fgetc(algo_file);
 		// read/skip over LF (UNIX) and CR (Windows)
-		if(tempStr[0] != '\n' && tempStr[0] != '\r') {
+		if (tempStr[0] != '\n' && tempStr[0] != '\r') {
 			tempStr[1] = fgetc(algo_file);
 			convertedHex = strtoul((const char *)tempStr, NULL, 16);
 			adsp2183x_flash_info->adsp2183x_algorithm.adsp2183x_algo[byteCount] = convertedHex;
 			byteCount++;
 		}
-        // Checking if character is not EOF.
-        // If it is EOF stop reading.
-    } while (tempStr[1] != EOF);
+		// Checking if character is not EOF.
+		// If it is EOF stop reading.
+	} while (tempStr[1] != EOF);
 
-    // Closing the file
-    fclose(algo_file);
+	// Closing the file
+	fclose(algo_file);
 
 	// Opening file in reading mode
-    parameter_file = fopen(CMD_ARGV[8], "r");
+	parameter_file = fopen(CMD_ARGV[8], "r");
 
-    if (NULL == parameter_file) {
-        LOG_ERROR("File %s can't be opened \n", CMD_ARGV[8]);
+	if (!parameter_file) {
+		LOG_ERROR("File %s can't be opened\n", CMD_ARGV[8]);
 		return -1;
-    }
+	}
 
-    // Loop through each line in the file
-    while (fgets(line, sizeof(line), parameter_file) != NULL) {
-        // Assuming the hex values are written one per line
-        // You may need to adjust the logic based on the actual file structure
-        if (strstr(line, "*/") != NULL) {
-            insideComment = false;
+	// Loop through each line in the file
+	while (fgets(line, sizeof(line), parameter_file)) {
+		// Assuming the hex values are written one per line
+		// You may need to adjust the logic based on the actual file structure
+		if (strstr(line, "*/")) {
+			insideComment = false;
 			continue;
-        }
-
-		if(!insideComment) {
-        	// Copy the last 8 characters (hex value) to the array
-        	if (sscanf(line, "%8s", parameter_file_data[count]) == 1) {
-            	count++;
-
-            	// Break the loop if we have found the correct number of elements
-            	if (count == PARAMETER_FILE_COUNT) {
-                	break;
-            	}
-       		}
 		}
-    }
 
-    // Close the file
-    fclose(parameter_file);
+		if (!insideComment) {
+			// Copy the last 8 characters (hex value) to the array
+			if (sscanf(line, "%8s", parameter_file_data[count]) == 1) {
+				count++;
+
+				// Break the loop if we have found the correct number of elements
+				if (count == PARAMETER_FILE_COUNT)
+					break;
+			}
+		}
+	}
+
+	// Close the file
+	fclose(parameter_file);
 
 	adsp2183x_flash_info->adsp2183x_algorithm.parameter_address = strtoul(parameter_file_data[0], NULL, 16);
 	adsp2183x_flash_info->adsp2183x_algorithm.buffer_address = strtoul(parameter_file_data[1], NULL, 16);
@@ -1098,7 +1095,7 @@ FLASH_BANK_COMMAND_HANDLER(adsp2183x_flash_bank_command)
  * Get algorithm version number
  * Usage:
  * adsp2183x get_algorithm_version bank_id
-*/
+ */
 COMMAND_HANDLER(adsp2183x_get_algorithm_version_handler)
 {
 	struct adsp2183x_flash_bank *adsp2183x_flash_info;
@@ -1128,7 +1125,7 @@ COMMAND_HANDLER(adsp2183x_get_algorithm_version_handler)
  * Erase whole memory on SPI flash device.
  * Usage:
  * adsp2183x mase_erase bank_id
-*/
+ */
 COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 {
 	struct flash_bank *bank;
@@ -1194,11 +1191,11 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 		// hardcode to issue mass erase command to algorithm
 		buf_set_u32(algo_params.command, 0, 32, MASS_ERASE_COMMAND);
 
-		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+		buf_set_u32(algo_params.ready, 0, 32, ALGO_READY);
 
 		// write algo parameters
 		retval = target_write_buffer(target, adsp2183x_flash_info->adsp2183x_algorithm.parameter_address,
-					sizeof(algo_params), (uint8_t *)&algo_params);
+									 sizeof(algo_params), (uint8_t *)&algo_params);
 
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to write algorithm parameters");
@@ -1223,21 +1220,20 @@ COMMAND_HANDLER(adsp2183x_mass_erase_handler)
 
 static const struct command_registration adsp2183x_exec_command_handlers[] = {
 	{
-		.name		= "mass_erase",
-		.handler	= adsp2183x_mass_erase_handler,
-		.mode		= COMMAND_EXEC,
-		.usage		= "bank_id",
-		.help		= "Mass erase entire flash device.",
+		.name = "mass_erase",
+		.handler = adsp2183x_mass_erase_handler,
+		.mode = COMMAND_EXEC,
+		.usage = "bank_id",
+		.help = "Mass erase entire flash device.",
 	},
 	{
-		.name		= "get_algorithm_version",
-		.handler	= adsp2183x_get_algorithm_version_handler,
-		.mode		= COMMAND_EXEC,
-		.usage		= "bank_id",
-		.help		= "Get algorithm version.",
+		.name = "get_algorithm_version",
+		.handler = adsp2183x_get_algorithm_version_handler,
+		.mode = COMMAND_EXEC,
+		.usage = "bank_id",
+		.help = "Get algorithm version.",
 	},
-	COMMAND_REGISTRATION_DONE
-};
+	COMMAND_REGISTRATION_DONE};
 
 static const struct command_registration adsp2183x_command_handlers[] = {
 	{
@@ -1246,22 +1242,22 @@ static const struct command_registration adsp2183x_command_handlers[] = {
 		.help	= "adsp2183x flash command group",
 		.usage	= "",
 		.chain	= adsp2183x_exec_command_handlers,
-	},
+																		 },
 	COMMAND_REGISTRATION_DONE
 };
 
 const struct flash_driver adsp2183x_flash = {
-	.name				= "adsp2183x",
-	.commands			= adsp2183x_command_handlers,
-	.flash_bank_command	= adsp2183x_flash_bank_command,
-	.erase				= adsp2183x_erase,
-	.protect			= adsp2183x_protect,
-	.write				= adsp2183x_write,
-	.read				= adsp2183x_read,
-	.probe				= adsp2183x_probe,
-	.auto_probe			= adsp2183x_auto_probe,
-	.erase_check		= default_flash_blank_check,
-	.protect_check		= adsp2183x_protect_check,
-	.info				= adsp2183x_get_info,
-	.free_driver_priv	= default_flash_free_driver_priv,
+	.name = "adsp2183x",
+	.commands = adsp2183x_command_handlers,
+	.flash_bank_command = adsp2183x_flash_bank_command,
+	.erase = adsp2183x_erase,
+	.protect = adsp2183x_protect,
+	.write = adsp2183x_write,
+	.read = adsp2183x_read,
+	.probe = adsp2183x_probe,
+	.auto_probe = adsp2183x_auto_probe,
+	.erase_check = default_flash_blank_check,
+	.protect_check = adsp2183x_protect_check,
+	.info = adsp2183x_get_info,
+	.free_driver_priv = default_flash_free_driver_priv,
 };
