@@ -86,7 +86,7 @@ extern "C" {
  * @ingroup ctb_registers
  * Structure type to access the CTB Registers.
  */
-typedef struct {
+struct mxc_ctb_regs {
 __IO uint32_t crypto_ctrl;          /**< <tt>\b 0x00:</tt> CTB CRYPTO_CTRL Register */
 __IO uint32_t cipher_ctrl;          /**< <tt>\b 0x04:</tt> CTB CIPHER_CTRL Register */
 __IO uint32_t hash_ctrl;            /**< <tt>\b 0x08:</tt> CTB HASH_CTRL Register */
@@ -124,7 +124,7 @@ __IO uint32_t sca_rdsa_addr;        /**< <tt>\b 0x124:</tt> CTB SCA_RDSA_ADDR Re
 __IO uint32_t sca_res_addr;         /**< <tt>\b 0x128:</tt> CTB SCA_RES_ADDR Register */
 __IO uint32_t sca_op_buff_addr;     /**< <tt>\b 0x12C:</tt> CTB SCA_OP_BUFF_ADDR Register */
 __IO uint32_t sca_moddata;          /**< <tt>\b 0x130:</tt> CTB SCA_MODDATA Register */
-} mxc_ctb_regs_t;
+};
 
 /* Register offsets for module CTB */
 /**

@@ -14,6 +14,7 @@
 #include <target/algorithm.h>
 #include <target/armv7m.h>
 #include <helper/binarybuffer.h>
+#include <helper/bits.h>
 
 
 /* ADuCM302x ID registers */
@@ -46,47 +47,47 @@
 
 #define USER_KEY		0x676c7565
 
-#define STAT_CMDBUSY				(1 << 0)
-#define STAT_WRCLOSE				(1 << 1)
-#define STAT_CMDCOMP				(1 << 2)
-#define STAT_WRALCOMP				(1 << 3)
+#define STAT_CMDBUSY				BIT(0)
+#define STAT_WRCLOSE				BIT(1)
+#define STAT_CMDCOMP				BIT(2)
+#define STAT_WRALCOMP				BIT(3)
 #define STAT_CMDFAIL_MASK			(3 << 4)
 #define STAT_CMDFAIL_SUCCESS		(0 << 4)
-#define STAT_CMDFAIL_IGNORED		(1 << 4)
+#define STAT_CMDFAIL_IGNORED		BIT(4)
 #define STAT_CMDFAIL_VERIFY_ERR		(2 << 4)
 #define STAT_CMDFAIL_ABORT			(3 << 4)
-#define STAT_SLEEPING				(1 << 6)
+#define STAT_SLEEPING				BIT(6)
 #define STAT_ECCERRCMD_MASK			(3 << 7)
 #define STAT_ECCERRCMD_SUCCESS		(0 << 7)
-#define STAT_ECCERRCMD_ERR_2BIT		(1 << 7)
+#define STAT_ECCERRCMD_ERR_2BIT		BIT(7)
 #define STAT_ECCERRCMD_ERR_1BIT		(2 << 7)
 #define STAT_ECCERRCMD_ERR_1OR2		(3 << 7)
 #define STAT_ECCRDERR_MASK			(3 << 9)
 #define STAT_ECCRDERR_SUCCESS		(0 << 9)
-#define STAT_ECCRDERR_ERR_2BIT		(1 << 9)
+#define STAT_ECCRDERR_ERR_2BIT		BIT(9)
 #define STAT_ECCRDERR_ERR_1BIT		(2 << 9)
 #define STAT_ECCRDERR_ERR_1OR2		(3 << 9)
-#define STAT_OVERLAP				(1 << 11)
-#define STAT_SIGNERR				(1 << 13)
-#define STAT_INIT					(1 << 14)
+#define STAT_OVERLAP				BIT(11)
+#define STAT_SIGNERR				BIT(13)
+#define STAT_INIT					BIT(14)
 #define STAT_ECCINFOSIGN_MASK		(2 << 15)
 #define STAT_ECCINFOSIGN_SUCCESS	(0 << 15)
-#define STAT_ECCINFOSIGN_ERR_2BIT	(1 << 15)
+#define STAT_ECCINFOSIGN_ERR_2BIT	BIT(15)
 #define STAT_ECCINFOSIGN_ERR_1BIT	(2 << 15)
 #define STAT_ECCINFOSIGN_ERR_1OR2	(3 << 15)
 #define STAT_ECCERRCNT_MASK			(7 << 17)
 #define STAT_ECCICODE_MASK			(3 << 25)
 #define STAT_ECCICODE_SUCCESS		(0 << 25)
-#define STAT_ECCICODE_ERR_2BIT		(1 << 25)
+#define STAT_ECCICODE_ERR_2BIT		BIT(25)
 #define STAT_ECCICODE_ERR_1BIT		(2 << 25)
 #define STAT_ECCDCODE_MASK			(3 << 27)
 #define STAT_ECCDCODE_SUCCESS		(0 << 27)
-#define STAT_ECCDCODE_ERR_2BIT		(1 << 27)
+#define STAT_ECCDCODE_ERR_2BIT		BIT(27)
 #define STAT_ECCDCODE_ERR_1BIT		(2 << 27)
-#define STAT_CACHESRAMPERR			(1 << 29)
+#define STAT_CACHESRAMPERR			BIT(29)
 
-#define ECC_CFG_EN					(1 << 0)
-#define ECC_CFG_INFOEN				(1 << 1)
+#define ECC_CFG_EN					BIT(0)
+#define ECC_CFG_INFOEN				BIT(1)
 
 #define TIME_PARAM0_TERASE_POS		24
 #define TIME_PARAM0_TERASE_MASK		(0xf << TIME_PARAM0_TERASE_POS)
@@ -110,7 +111,7 @@ struct aducm302x_flash_bank {
 	/* flash geometry */
 	uint32_t pagesize;
 	/* how many pages in one protect block */
-	unsigned pages_per_block;
+	unsigned int pages_per_block;
 };
 
 static int aducm302x_probe(struct flash_bank *bank)
@@ -129,16 +130,14 @@ static int aducm302x_probe(struct flash_bank *bank)
 		return ERROR_OK;
 
 	objPtr = Jim_GetGlobalVariableStr(global_cmd_ctx->interp, "_CHIPNAME", JIM_NONE);
-	if (!objPtr)
-	{
+	if (!objPtr) {
 		LOG_ERROR("%s: _CHIPNAME is not defined", target_name(target));
 		return ERROR_FAIL;
 	}
 	chipname = Jim_GetString(objPtr, NULL);
 
 	objPtr = Jim_GetGlobalVariableStr(global_cmd_ctx->interp, "_CHIPID", JIM_NONE);
-	if (!objPtr)
-	{
+	if (!objPtr) {
 		LOG_ERROR("%s: _CHIPID is not defined", target_name(target));
 		return ERROR_FAIL;
 	}
@@ -175,7 +174,7 @@ static int aducm302x_probe(struct flash_bank *bank)
 		LOG_ERROR("malloc failed");
 		return ERROR_FAIL;
 	}
-	for (unsigned i = 0; i < bank->num_sectors; i++) {
+	for (unsigned int i = 0; i < bank->num_sectors; i++) {
 		bank->sectors[i].offset = i * aducm302x_info->pagesize;
 		bank->sectors[i].size = aducm302x_info->pagesize;
 		bank->sectors[i].is_erased = -1;
@@ -236,13 +235,13 @@ static int aducm302x_mass_erase(struct flash_bank *bank)
 	if (retval != ERROR_OK)
 		return retval;
 
-	for (unsigned i = 0; i < bank->num_sectors; i++)
+	for (unsigned int i = 0; i < bank->num_sectors; i++)
 		bank->sectors[i].is_erased = 1;
 
 	return ERROR_OK;
 }
 
-static int aducm302x_erase(struct flash_bank *bank, unsigned first, unsigned last)
+static int aducm302x_erase(struct flash_bank *bank, unsigned int first, unsigned int last)
 {
 	struct aducm302x_flash_bank *aducm302x_info = bank->driver_priv;
 	struct target *target = bank->target;
@@ -267,7 +266,7 @@ static int aducm302x_erase(struct flash_bank *bank, unsigned first, unsigned las
 		return retval;
 	}
 
-	for (unsigned i = first; i <= last; i++) {
+	for (unsigned int i = first; i <= last; i++) {
 		/* Address is first word in page */
 		target_write_u32(target, PAGE_ADDR0, i * aducm302x_info->pagesize);
 		/* Write user key */
@@ -289,12 +288,12 @@ static int aducm302x_erase(struct flash_bank *bank, unsigned first, unsigned las
 	return ERROR_OK;
 }
 
-static int aducm302x_protect(struct flash_bank *bank, int set, unsigned first, unsigned last)
+static int aducm302x_protect(struct flash_bank *bank, int set, unsigned int first, unsigned int last)
 {
 	struct aducm302x_flash_bank *aducm302x_info = bank->driver_priv;
 	struct target *target = bank->target;
 	uint32_t wrprot;
-	unsigned n = aducm302x_info->pages_per_block;
+	unsigned int n = aducm302x_info->pages_per_block;
 
 	if (target->state != TARGET_HALTED) {
 		LOG_ERROR("Target not halted");
@@ -323,10 +322,10 @@ static int aducm302x_protect(struct flash_bank *bank, int set, unsigned first, u
 
 	target_read_u32(target, WRPROT, &wrprot);
 
-	for (unsigned i = first; i <= last; i++)
+	for (unsigned int i = first; i <= last; i++)
 		wrprot &= ~(1 << i);
 
-	LOG_DEBUG("WRPROT 0x%"PRIx32, wrprot);
+	LOG_DEBUG("WRPROT 0x%" PRIx32, wrprot);
 
 	target_write_u32(target, WRPROT, wrprot);
 
@@ -338,7 +337,7 @@ static int aducm302x_protect_check(struct flash_bank *bank)
 	struct aducm302x_flash_bank *aducm302x_info = bank->driver_priv;
 	struct target *target = bank->target;
 	uint32_t wrprot;
-	unsigned n = aducm302x_info->pages_per_block;
+	unsigned int n = aducm302x_info->pages_per_block;
 
 	if (target->state != TARGET_HALTED) {
 		LOG_ERROR("Target not halted");
@@ -348,13 +347,13 @@ static int aducm302x_protect_check(struct flash_bank *bank)
 	if (!aducm302x_info->probed)
 		return ERROR_FLASH_BANK_NOT_PROBED;
 
-	for (unsigned i = 0; i < bank->num_sectors; i++)
+	for (unsigned int i = 0; i < bank->num_sectors; i++)
 		bank->sectors[i].is_protected = -1;
 
 	target_read_u32(target, WRPROT, &wrprot);
 
-	for (unsigned i = 0; i < 32; i++)
-		for (unsigned j = 0; j < n; j++)
+	for (unsigned int i = 0; i < 32; i++)
+		for (unsigned int j = 0; j < n; j++)
 			bank->sectors[i * n + j].is_protected = !(wrprot & (1 << i));
 
 	return ERROR_OK;
@@ -412,9 +411,9 @@ static int aducm302x_write_block(struct flash_bank *bank, const uint8_t *buffer,
 	int retval;
 
 	/* power of two, and multiple of 8 bytes */
-	static const unsigned buf_min = 128;
+	static const unsigned int buf_min = 128;
 
-	LOG_DEBUG("bank=%p buffer=%p offset=%08"PRIx32" dwcount=%"PRIx32,
+	LOG_DEBUG("bank=%p buffer=%p offset=%08" PRIx32 " dwcount=%" PRIx32,
 			  bank, buffer, offset, dwcount);
 
 	/* For small buffers it's faster not to download the algorithm */
@@ -443,7 +442,7 @@ static int aducm302x_write_block(struct flash_bank *bank, const uint8_t *buffer,
 		}
 		/* 8 bytes for wp and rp */
 		buffer_size += 8;
-		LOG_DEBUG("retry target_alloc_working_area(%s, size=%"PRIu32")",
+		LOG_DEBUG("retry target_alloc_working_area(%s, size=%" PRIu32 ")",
 				  target_name(target), buffer_size);
 	}
 
@@ -497,7 +496,7 @@ static int aducm302x_write(struct flash_bank *bank, const uint8_t *buffer,
 	bool ecc_cfg_modified;
 	int retval = ERROR_OK;
 
-	LOG_DEBUG("bank=%p buffer=%p offset=%08"PRIx32" count=%"PRIx32,
+	LOG_DEBUG("bank=%p buffer=%p offset=%08" PRIx32 " count=%" PRIx32,
 			  bank, buffer, offset, count);
 
 	if (bank->target->state != TARGET_HALTED) {
@@ -530,7 +529,7 @@ static int aducm302x_write(struct flash_bank *bank, const uint8_t *buffer,
 		uint8_t first_dword[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 		/* read the bytes from target into the write buffer */
-		target_read_buffer(target, offset & (~ 0x7), offset & 0x7, first_dword);
+		target_read_buffer(target, offset & (~0x7), offset & 0x7, first_dword);
 
 		bytes_remaining = 8 - (offset & 0x7);
 		if (bytes_remaining > count)
@@ -538,7 +537,7 @@ static int aducm302x_write(struct flash_bank *bank, const uint8_t *buffer,
 		memcpy(first_dword + (offset & 0x7), buffer, bytes_remaining);
 
 		/* write one double word */
-		target_write_u32(target, KH_ADDR, address & (~ 0x7));
+		target_write_u32(target, KH_ADDR, address & (~0x7));
 		target_write_buffer(target, KH_DATA0, 4, first_dword);
 		target_write_buffer(target, KH_DATA1, 4, first_dword + 4);
 		target_write_u32(target, CMD_ADDR, CMD_WRITE);
@@ -552,7 +551,7 @@ static int aducm302x_write(struct flash_bank *bank, const uint8_t *buffer,
 			goto finish;
 
 		count -= bytes_remaining;
-		address &= ~ 0x7;
+		address &= ~0x7;
 	}
 
 	dwords_remaining = count / 8;
@@ -561,9 +560,9 @@ static int aducm302x_write(struct flash_bank *bank, const uint8_t *buffer,
 	if (dwords_remaining > 0) {
 		retval = aducm302x_write_block(bank, buffer, offset, dwords_remaining);
 		if (retval != ERROR_OK) {
-			if (retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE)
+			if (retval == ERROR_TARGET_RESOURCE_NOT_AVAILABLE) {
 				LOG_DEBUG("writing flash word-at-a-time");
-			else if (retval == ERROR_FLASH_OPERATION_FAILED) {
+			} else if (retval == ERROR_FLASH_OPERATION_FAILED) {
 				LOG_ERROR("flash writing failed");
 				retval = ERROR_FLASH_OPERATION_FAILED;
 				goto finish;

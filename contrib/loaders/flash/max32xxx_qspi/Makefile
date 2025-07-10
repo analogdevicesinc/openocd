@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 TARGET=max32xxx_qspi
 ENTRY=algo_write
 OFFSET=0x20005000

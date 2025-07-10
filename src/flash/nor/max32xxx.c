@@ -238,7 +238,7 @@ static int max32xxx_protect_check(struct flash_bank *bank)
 	/* Check the protection */
 	for (unsigned int i = 0; i < bank->num_sectors; i++) {
 		if (i%32 == 0)
-			target_read_u32(target, info->flc_base + FLC_PROT + ((i/32)*4), &temp_reg);
+			target_read_u32(target, info->flc_base + FLC_PROT + ((i / 32) * 4), &temp_reg);
 
 		if (temp_reg & (0x1 << i % 32))
 			bank->sectors[i].is_protected = 1;

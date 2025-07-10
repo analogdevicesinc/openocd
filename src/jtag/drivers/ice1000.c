@@ -9,11 +9,11 @@
 #include "config.h"
 #endif
 
+#include <helper/configuration.h>
+#include <helper/log.h>
 #include <jtag/interface.h>
 #include <jtag/swd.h>
 #include <target/image.h>
-#include <helper/log.h>
-#include <helper/configuration.h>
 #include "libusb_helper.h"
 
 #ifdef _ADI_USB_MUX_
@@ -25,10 +25,10 @@
  */
 
 /* JTAG TMS/TDI Data */
-typedef struct {
-	uint8_t tms;			/* TMS data */
-	uint8_t tdi;			/* TDI data */
-} tap_pairs;
+struct tap_pairs {
+	uint8_t tms; /* TMS data */
+	uint8_t tdi; /* TDI data */
+};
 
 /* swd_packet can be used to describe a read packet, a write packet,
    an acknowledge response or a data phase. */
@@ -50,72 +50,69 @@ struct swd_packet {
 };
 
 /* For collecting data */
-typedef struct {
-	int32_t idx;			/* Index where data is to be collected */
-	int32_t pos;			/* Bit position where data is to be collected */
-	void *ptr;				/* This can point to a scan_command or swd_packet */
-} dat_dat;
+struct dat_dat {
+	int32_t idx; /* Index where data is to be collected */
+	int32_t pos; /* Bit position where data is to be collected */
+	void *ptr;	 /* This can point to a scan_command or swd_packet */
+};
 
 /* Master scan control structure */
-typedef struct {
-	int32_t total;			/* Max number of tap pointers */
-	int32_t cur_idx;		/* Where to add next, or total */
-	int32_t bit_pos;		/* Position to place next bit */
-	int32_t num_dat;		/* Total possible data collection points */
-	int32_t cur_dat;		/* Index to dat array for data to be collected */
-	int32_t rcv_dat;		/* Index to retrieve collected data */
-	dat_dat *dat;			/* Pointer to data collection points */
-	unsigned char *cmd;		/* Pointer to command, which encompasses pairs */
-	tap_pairs *pairs;		/* Pointer to tap pairs array */
-} num_tap_pairs;
+struct num_tap_pairs {
+	int32_t total;		/* Max number of tap pointers */
+	int32_t cur_idx;	/* Where to add next, or total */
+	int32_t bit_pos;	/* Position to place next bit */
+	int32_t num_dat;	/* Total possible data collection points */
+	int32_t cur_dat;	/* Index to dat array for data to be collected */
+	int32_t rcv_dat;	/* Index to retrieve collected data */
+	struct dat_dat *dat;		/* Pointer to data collection points */
+	unsigned char *cmd; /* Pointer to command, which encompasses pairs */
+	struct tap_pairs *pairs;	/* Pointer to tap pairs array */
+};
 
-/* Cable params_t structure with our data */
-typedef struct {
+/* Cable cbl_params structure with our data */
+struct cbl_params {
 	libusb_device_handle *usb_handle; /* USB handle */
-	uint32_t cur_freq;				/* JTAG Frequency */
-	uint32_t cur_voltage;			/* Voltage 1: 1.8V, 2: 2.5V, 3: 3.3/5V, ICE-2000 only */
-	uint32_t cur_delay;				/* Delay, ICE-2000 only */
-	uint16_t version;				/* Firmware Version */
-	uint32_t default_scanlen;		/* #Scan pairs in scan */
-	uint32_t trigger_scanlen;		/* High water mark */
-	uint32_t tap_pair_start_idx;	/* depends on firmware version */
-	uint32_t num_rcv_hdr_bytes;		/* Number of data bytes in received raw scan data header */
-	uint32_t max_raw_data_tx_items;	/* depends on firmware version */
-	int32_t wr_ep;					/* USB End Write Point */
-	int32_t wr_timeout;				/* USB Write Timeout */
-	int32_t wr_buf_sz;				/* USB Write Buffer Size */
-	int32_t r_ep;					/* USB End Read Point */
-	int32_t r_timeout;				/* USB Read Timeout */
-	int32_t r_buf_sz;				/* USB Read Buffer Size */
-	num_tap_pairs tap_info;			/* For collecting and sending tap scans */
-	bool use_usbmux;				/* If true, use USB MUX for USB communication */
-	bool reset_hw_on_connection;	/* If true, do a complete hardware reset at end of init */
+	uint32_t cur_freq;				  /* JTAG Frequency */
+	uint32_t cur_voltage;			  /* Voltage 1: 1.8V, 2: 2.5V, 3: 3.3/5V, ICE-2000 only */
+	uint32_t cur_delay;				  /* Delay, ICE-2000 only */
+	uint16_t version;				  /* Firmware Version */
+	uint32_t default_scanlen;		  /* #Scan pairs in scan */
+	uint32_t trigger_scanlen;		  /* High water mark */
+	uint32_t tap_pair_start_idx;	  /* depends on firmware version */
+	uint32_t num_rcv_hdr_bytes;		  /* Number of data bytes in received raw scan data header */
+	uint32_t max_raw_data_tx_items;	  /* depends on firmware version */
+	int32_t wr_ep;					  /* USB End Write Point */
+	int32_t wr_timeout;				  /* USB Write Timeout */
+	int32_t wr_buf_sz;				  /* USB Write Buffer Size */
+	int32_t r_ep;					  /* USB End Read Point */
+	int32_t r_timeout;				  /* USB Read Timeout */
+	int32_t r_buf_sz;				  /* USB Read Buffer Size */
+	struct num_tap_pairs tap_info;			  /* For collecting and sending tap scans */
+	bool use_usbmux;				  /* If true, use USB MUX for USB communication */
+	bool reset_hw_on_connection;	  /* If true, do a complete hardware reset at end of init */
 #ifdef _ADI_USB_MUX_
-	HANDLE mux_handle;				/* USB MUX handle */
+	HANDLE mux_handle; /* USB MUX handle */
 #endif
-} params_t;
+};
 
 /* Emulator's USB Data structure */
-typedef struct {
-	uint32_t command;		/* What to do */
-	uint32_t buffer;		/* used for Kit only, always initialized to 0 */
-	uint32_t count;			/* Amount of data in bytes to send */
-} usb_command_block;
-
+struct usb_command_block {
+	uint32_t command; /* What to do */
+	uint32_t buffer;  /* used for Kit only, always initialized to 0 */
+	uint32_t count;	  /* Amount of data in bytes to send */
+};
 
 /*
  * Internal Prototypes
  */
 
 static int perform_scan(uint8_t **rdata);
-static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
-					  int32_t collect_dof, int32_t dif_cnt, uint8_t *raw_buf,
+static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt, int32_t collect_dof, int32_t dif_cnt, uint8_t *raw_buf,
 					  uint8_t *out);
 static int add_scan_data(int32_t, uint8_t *, bool, struct scan_command *);
 static uint8_t *get_recv_data(int32_t, int32_t, uint8_t *);
 static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
-static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data,
-									int32_t wr_data, uint32_t data);
+static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data, uint32_t data);
 static int ice1000_swd_switch_seq(enum swd_special_seq seq);
 static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint32_t ap_delay_clk);
 static void ice1000_swd_write_reg(uint8_t cmd, uint32_t value, uint32_t ap_delay_clk);
@@ -126,12 +123,12 @@ static int ice1000_swd_run_queue(void);
  * Debug Macros
  */
 
-#if 0    /* set to 1 to output debug info about scans */
+#if 0 /* set to 1 to output debug info about scans */
 
 //#define DSP_SCAN_DATA
 #define DUMP_EACH_RCV_DATA
 //#define DSP_SCAN_CAUSE
-#define DEBUG(...)    printf(__VA_ARGS__)
+#define DEBUG(...) printf(__VA_ARGS__)
 
 #else
 
@@ -139,73 +136,72 @@ static int ice1000_swd_run_queue(void);
 
 #endif
 
-
 /*
  * Internal Data, defines and Macros
  */
-#define ICE_DEFAULT_SCAN_LEN			0x7FF0	/* Max DIF is 0x2AAA8, but DMA is only 16 bits. */
-#define ICE_TRIGGER_SCAN_LEN			0x7FD8	/* Start checking for RTI/TLR for xmit */
+#define ICE_DEFAULT_SCAN_LEN 0x7FF0 /* Max DIF is 0x2AAA8, but DMA is only 16 bits. */
+#define ICE_TRIGGER_SCAN_LEN 0x7FD8 /* Start checking for RTI/TLR for xmit */
 
-#define SELECTIVE_RAW_SCAN_HDR_SZ		12
+#define SELECTIVE_RAW_SCAN_HDR_SZ 12
 
-#define DAT_SZ							0x8000	/* size allocated for reading data */
-#define DAT_SZ_INC						0x40	/* size to increase if data full */
+#define DAT_SZ 0x8000	/* size allocated for reading data */
+#define DAT_SZ_INC 0x40 /* size to increase if data full */
 
-#define RESET_TARGET_DURATION			140     /* Reset target duration of 140 ms */
+#define RESET_TARGET_DURATION 140 /* Reset target duration of 140 ms */
 
 /* USB Emulator Commands */
-#define HOST_GET_FW_VERSION				0x01	/* get the firmware version */
-#define HOST_REQUEST_RX_DATA			0x02	/* host request to receive data */
-#define HOST_REQUEST_TX_DATA			0x04	/* host request to transmit data */
-#define HOST_GET_SINGLE_REG				0x08	/* get a JTAG register */
-#define HOST_SET_SINGLE_REG				0x09	/* set a JTAG register */
-#define HOST_PROGRAM_FLASH				0x0C	/* program flash */
-#define HOST_HARD_RESET_JTAG_CTRLR		0x0E	/* do a hard reset on JTAG controller */
-#define HOST_HARD_RESET_KIT				0x14    /* do a hardware reset */
-#define HOST_SET_TRST					0x1F	/* changes TRST Line state */
-#define HOST_GET_TRST					0x20	/* gets TRST Line state */
-#define HOST_DO_SELECTIVE_RAW_SCAN		0x21	/* Return only data needed */
-#define HOST_SET_2000_VOLTAGE			0x24
-#define HOST_SET_INTERFACE_MODE			0x25
-#define HOST_DISCONNECT					0x27
+#define HOST_GET_FW_VERSION 0x01		/* get the firmware version */
+#define HOST_REQUEST_RX_DATA 0x02		/* host request to receive data */
+#define HOST_REQUEST_TX_DATA 0x04		/* host request to transmit data */
+#define HOST_GET_SINGLE_REG 0x08		/* get a JTAG register */
+#define HOST_SET_SINGLE_REG 0x09		/* set a JTAG register */
+#define HOST_PROGRAM_FLASH 0x0C			/* program flash */
+#define HOST_HARD_RESET_JTAG_CTRLR 0x0E /* do a hard reset on JTAG controller */
+#define HOST_HARD_RESET_KIT 0x14		/* do a hardware reset */
+#define HOST_SET_TRST 0x1F				/* changes TRST Line state */
+#define HOST_GET_TRST 0x20				/* gets TRST Line state */
+#define HOST_DO_SELECTIVE_RAW_SCAN 0x21 /* Return only data needed */
+#define HOST_SET_2000_VOLTAGE 0x24
+#define HOST_SET_INTERFACE_MODE 0x25
+#define HOST_DISCONNECT 0x27
 
 /* Registers */
-#define REG_AUX							0x00
-#define REG_SCR							0x04
-#define REG_FREQ						0x40
+#define REG_AUX 0x00
+#define REG_SCR 0x04
+#define REG_FREQ 0x40
 
-#define SCR_DEFAULT						0x30A0461
-#define SCR_TRST_BIT					0x0000040
+#define SCR_DEFAULT 0x30A0461
+#define SCR_TRST_BIT 0x0000040
 
 /* Ice USB controls */
-#define ICE_1000_WRITE_ENDPOINT			0x06
-#define ICE_1000_READ_ENDPOINT			0x05
-#define ICE_1000_USB_CONNECTION_TIMEOUT	10000
-#define ICE_1000_USB_WRITE_TIMEOUT		10000
-#define ICE_1000_USB_READ_TIMEOUT		30000
-#define ICE_1000_WRITE_BUFFER_SIZE		0x9800
-#define ICE_1000_READ_BUFFER_SIZE		0x8000
-
+#define ICE_1000_WRITE_ENDPOINT 0x06
+#define ICE_1000_READ_ENDPOINT 0x05
+#define ICE_1000_USB_CONNECTION_TIMEOUT 10000
+#define ICE_1000_USB_WRITE_TIMEOUT 10000
+#define ICE_1000_USB_READ_TIMEOUT 30000
+#define ICE_1000_WRITE_BUFFER_SIZE 0x9800
+#define ICE_1000_READ_BUFFER_SIZE 0x8000
 
 /* frequency settings for ICE-1000 */
-#define MAX_FREQ_1000	3
-static const uint8_t freq_set_1000[MAX_FREQ_1000] = { 45, 22, 8  };
-static const uint32_t avail_freqs_1000[MAX_FREQ_1000] = { 1000000, 2000000, 5000000 };
+#define MAX_FREQ_1000 3
+static const uint8_t freq_set_1000[MAX_FREQ_1000] = {45, 22, 8};
+static const uint32_t avail_freqs_1000[MAX_FREQ_1000] = {1000000, 2000000, 5000000};
 /* frequency settings for ICE-2000 */
-#define MAX_FREQ_2000	7
-static const uint8_t freq_set_2000[MAX_FREQ_2000] = { 45, 22, 8, 4, 2, 1, 0 };
-static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000000, 9000000, 15000000, 23000000, 46000000 };
+#define MAX_FREQ_2000 7
+static const uint8_t freq_set_2000[MAX_FREQ_2000] = {45, 22, 8, 4, 2, 1, 0};
+static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = {1000000,  2000000,	 5000000, 9000000,
+														 15000000, 23000000, 46000000};
 
 /* SWD defines */
-#define REQUEST_SIZE	8
-#define TRN_SIZE		1
-#define ACK_SIZE		3
-#define RDATA_SIZE		32
-#define PARITY_SIZE		1
-#define COMPLETE_TRANSACTION_SIZE	(REQUEST_SIZE + TRN_SIZE + ACK_SIZE + RDATA_SIZE + PARITY_SIZE + TRN_SIZE)
-#define PARITY_POS		35
-#define ACK_POS			0
-#define DATA_POS		3
+#define REQUEST_SIZE 8
+#define TRN_SIZE 1
+#define ACK_SIZE 3
+#define RDATA_SIZE 32
+#define PARITY_SIZE 1
+#define COMPLETE_TRANSACTION_SIZE (REQUEST_SIZE + TRN_SIZE + ACK_SIZE + RDATA_SIZE + PARITY_SIZE + TRN_SIZE)
+#define PARITY_POS 35
+#define ACK_POS 0
+#define DATA_POS 3
 
 /*
  * Internal Macros
@@ -217,7 +213,8 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 		if (cable_params.use_usbmux) {									\
 			USB_MUX_ERROR mux_ret = usbmux_read(cable_params.mux_handle, \
 				buf, len, cable_params.r_ep | LIBUSB_ENDPOINT_IN, cable_params.r_timeout);	\
-			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;				\
+			if (mux_ret != USB_MUX_OK)									\
+				return ERROR_FAIL;										\
 		} else {														\
 			int __ret, __actual, __size = (len);						\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
@@ -239,7 +236,8 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 			USB_MUX_ERROR mux_ret = usbmux_write(cable_params.mux_handle,	\
 				buf, len, cable_params.wr_ep | LIBUSB_ENDPOINT_OUT,			\
 				cable_params.wr_timeout);									\
-			if (mux_ret != USB_MUX_OK) return ERROR_FAIL;				\
+			if (mux_ret != USB_MUX_OK)									\
+				return ERROR_FAIL;										\
 		} else {														\
 			int __ret, __actual, __size = (len);						\
 			__ret = libusb_bulk_transfer(cable_params.usb_handle,		\
@@ -287,7 +285,7 @@ static const uint32_t avail_freqs_2000[MAX_FREQ_2000] = { 1000000, 2000000, 5000
 	} while (0)
 #endif
 
-static params_t cable_params = {
+static struct cbl_params cable_params = {
 	.reset_hw_on_connection = false,
 };
 static bool swd_mode;
@@ -342,7 +340,7 @@ static int adi_get_freq(uint32_t freq, int arr_sz, const uint32_t *freq_arr)
  */
 static void ice1000_set_freq(uint32_t freq)
 {
-	params_t *params = &cable_params;
+	struct cbl_params *params = &cable_params;
 
 	/* Verify Frequency is valid */
 	if (freq != params->cur_freq) {
@@ -359,16 +357,15 @@ static void ice1000_set_freq(uint32_t freq)
 	}
 }
 
-static int ice2000_validate_ircapture(int test_data_length, int total_ir_length,
-									  const uint8_t *ir_test_in, uint8_t *ir_test_out)
+static int ice2000_validate_ircapture(int test_data_length, int total_ir_length, const uint8_t *ir_test_in,
+									  uint8_t *ir_test_out)
 {
 	int retval, i;
 
 	if (test_data_length % 64)
 		return ERROR_FAIL;
 
-	jtag_add_plain_ir_scan(test_data_length + total_ir_length,
-						   ir_test_in, ir_test_out, TAP_IDLE);
+	jtag_add_plain_ir_scan(test_data_length + total_ir_length, ir_test_in, ir_test_out, TAP_IDLE);
 
 	retval = jtag_execute_queue();
 	if (retval != ERROR_OK)
@@ -400,20 +397,20 @@ static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
 	struct jtag_tap *tap;
 	int total_ir_length, test_data_length, ir_test_length;
 	uint8_t *ir_test_in, *ir_test_out;
-	params_t *params = &cable_params;
+	struct cbl_params *params = &cable_params;
 	int delay, delay_window_size;
 	int first_good_delay = -1, last_good_delay = -1;
 	int retval;
 	int i;
 	int idx;
 
-    /* FIXME  find a way to do delay test for SWD mode */
-    if (swd_mode)
+	/* FIXME  find a way to do delay test for SWD mode */
+	if (swd_mode)
 		return ERROR_OK;
 
 	total_ir_length = 0;
 	tap = jtag_tap_next_enabled(NULL);
-	for (; tap != NULL; tap = jtag_tap_next_enabled(tap))
+	for (; tap; tap = jtag_tap_next_enabled(tap))
 		total_ir_length += tap->ir_length;
 
 	test_data_length = TEST_DATA_LENGTH;
@@ -449,8 +446,7 @@ static int ice2000_find_delay(uint32_t voltage, uint32_t freq)
 	for (delay = 0; delay <= 0xff; delay++) {
 		ice2000_set_voltage_freq_delay(voltage, freq_set_2000[idx], delay);
 
-		if (ice2000_validate_ircapture(test_data_length, total_ir_length,
-									   ir_test_in, ir_test_out) == ERROR_OK) {
+		if (ice2000_validate_ircapture(test_data_length, total_ir_length, ir_test_in, ir_test_out) == ERROR_OK) {
 			if (first_good_delay < 0)
 				first_good_delay = delay;
 
@@ -516,7 +512,7 @@ done:
  */
 static int ice2000_set_freq(uint32_t freq)
 {
-	params_t *params = &cable_params;
+	struct cbl_params *params = &cable_params;
 	int idx = adi_get_freq(freq, MAX_FREQ_2000, &avail_freqs_2000[0]);
 
 	/* only change if different from current settings */
@@ -532,15 +528,15 @@ static int ice2000_set_freq(uint32_t freq)
 
 static int ice1000_firmware_crc(uint16_t *p)
 {
-	usb_command_block usb_cmd_blk;
+	struct usb_command_block usb_cmd_blk;
 
 	usb_cmd_blk.command = HOST_REQUEST_RX_DATA;
 	usb_cmd_blk.count = 2;
 	usb_cmd_blk.buffer = 0;
 
-	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t *)&usb_cmd_blk, sizeof(usb_cmd_blk));
 
-	adi_usb_read_or_ret((uint8_t*)p, sizeof (*p));
+	adi_usb_read_or_ret((uint8_t *)p, sizeof(*p));
 
 	return ERROR_OK;
 }
@@ -593,8 +589,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 		section_size = firmware->sections[i].size;
 		section_buffer = malloc(section_size);
 		if (!section_buffer) {
-			LOG_ERROR("error allocating buffer for section (%d bytes)",
-					  firmware->sections[i].size);
+			LOG_ERROR("error allocating buffer for section (%d bytes)", firmware->sections[i].size);
 			return ERROR_FAIL;
 		}
 
@@ -610,10 +605,9 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 		address = firmware->sections[i].base_address;
 
 		while (remaining) {
-			usb_command_block usb_cmd_blk;
+			struct usb_command_block usb_cmd_blk;
 			uint32_t count;
 			int percentage;
-
 
 			if (remaining < ICE_1000_FLASH_DATA_BUFFER_SIZE - 16)
 				count = remaining;
@@ -635,7 +629,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 			usb_cmd_blk.command = HOST_REQUEST_TX_DATA;
 			usb_cmd_blk.count = count + 16;
 			usb_cmd_blk.buffer = 0;
-			adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
+			adi_usb_write_or_ret((uint8_t *)&usb_cmd_blk, sizeof(usb_cmd_blk));
 
 			adi_usb_write_or_ret(buffer, usb_cmd_blk.count);
 
@@ -648,7 +642,7 @@ static int ice1000_send_flash_data(struct image *firmware, uint16_t *crcp)
 			if (total_written == total_size)
 				percentage = 100;
 			else
-				percentage = (int) (total_written * 100.0 / total_size);
+				percentage = (int)(total_written * 100.0 / total_size);
 			LOG_OUTPUT("\rupdating ... %d%%", percentage);
 		}
 
@@ -681,17 +675,17 @@ static int ice1000_update_firmware(const char *filename)
 	if (ret != ERROR_OK)
 		return ret;
 
-	if ((ret = ice1000_firmware_crc(&crc2)) != ERROR_OK)
+	ret = ice1000_firmware_crc(&crc2);
+	if (ret != ERROR_OK)
 		return ret;
 
 	image_close(&ice1000_firmware_image);
 
-	if (crc1 == crc2) {
-		return ERROR_OK;
-	} else {
+	if (crc1 != crc2) {
 		LOG_ERROR("CRCs do NOT match");
 		return ERROR_FAIL;
 	}
+	return ERROR_OK;
 }
 
 /*
@@ -704,7 +698,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	libusb_device *udev;
 	struct libusb_config_descriptor *config;
 	uint8_t configuration;
-	char *firmware_filename	= get_firmware_filename();
+	char *firmware_filename = get_firmware_filename();
 	int i, ret;
 
 	dev = NULL;
@@ -731,7 +725,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		udev = libusb_get_device(dev);
 		libusb_get_active_config_descriptor(udev, &config);
 		configuration = config->bConfigurationValue;
-		libusb_free_config_descriptor (config);
+		libusb_free_config_descriptor(config);
 		libusb_set_configuration(dev, configuration);
 		ret = libusb_claim_interface(dev, 0);
 		if (ret) {
@@ -744,12 +738,12 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 
 		/* For an unknown reason, this is needed for using ICE-1000/2000
 		with xHCI controller on Linux. */
-		libusb_set_interface_alt_setting (dev, 0, 0);
+		libusb_set_interface_alt_setting(dev, 0, 0);
 	}
 
-	cable_params.tap_info.dat = malloc(sizeof(dat_dat) * DAT_SZ);
+	cable_params.tap_info.dat = malloc(sizeof(struct dat_dat) * DAT_SZ);
 	if (!cable_params.tap_info.dat) {
-		LOG_ERROR("_malloc(%d) fails", (int)(sizeof(dat_dat) * DAT_SZ));
+		LOG_ERROR("_malloc(%d) fails", (int)(sizeof(struct dat_dat) * DAT_SZ));
 		if (dev) {
 			libusb_release_interface(dev, 0);
 			libusb_close(dev);
@@ -771,28 +765,25 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		cable_params.tap_info.dat[i].pos = -1;
 	}
 
-	cable_params.usb_handle			= dev;
-	cable_params.tap_info.bit_pos	= 0x80;
-	cable_params.tap_info.num_dat	= DAT_SZ;
-	cable_params.tap_info.rcv_dat	= -1;
-	cable_params.tap_info.cur_dat	= -1;
+	cable_params.usb_handle = dev;
+	cable_params.tap_info.bit_pos = 0x80;
+	cable_params.tap_info.num_dat = DAT_SZ;
+	cable_params.tap_info.rcv_dat = -1;
+	cable_params.tap_info.cur_dat = -1;
 
-	cable_params.default_scanlen	= ICE_DEFAULT_SCAN_LEN;
-	cable_params.trigger_scanlen	= ICE_TRIGGER_SCAN_LEN;
-	cable_params.wr_ep				= ICE_1000_WRITE_ENDPOINT;
-	cable_params.r_ep				= ICE_1000_READ_ENDPOINT;
-	cable_params.wr_timeout			= ICE_1000_USB_WRITE_TIMEOUT;
-	cable_params.r_timeout			= ICE_1000_USB_READ_TIMEOUT;
-	cable_params.wr_buf_sz			= ICE_1000_WRITE_BUFFER_SIZE;
-	cable_params.r_buf_sz			= ICE_1000_READ_BUFFER_SIZE;
+	cable_params.default_scanlen = ICE_DEFAULT_SCAN_LEN;
+	cable_params.trigger_scanlen = ICE_TRIGGER_SCAN_LEN;
+	cable_params.wr_ep = ICE_1000_WRITE_ENDPOINT;
+	cable_params.r_ep = ICE_1000_READ_ENDPOINT;
+	cable_params.wr_timeout = ICE_1000_USB_WRITE_TIMEOUT;
+	cable_params.r_timeout = ICE_1000_USB_READ_TIMEOUT;
+	cable_params.wr_buf_sz = ICE_1000_WRITE_BUFFER_SIZE;
+	cable_params.r_buf_sz = ICE_1000_READ_BUFFER_SIZE;
 
 	cable_params.version = do_host_cmd(HOST_GET_FW_VERSION, 0, 1);
 
-	LOG_INFO("%s firmware version is %d.%d.%d",
-			 cable_name,
-			 ((cable_params.version >> 8) & 0xFF),
-			 ((cable_params.version >> 4) & 0x0F),
-			 ((cable_params.version)	  & 0x0F));
+	LOG_INFO("%s firmware version is %d.%d.%d", cable_name, ((cable_params.version >> 8) & 0xFF),
+			 ((cable_params.version >> 4) & 0x0F), ((cable_params.version) & 0x0F));
 
 	if (cable_params.version <= 0x0101)
 		LOG_WARNING("This firmware version is obsolete. Please update to the latest version.");
@@ -801,7 +792,8 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 		ret = ice1000_update_firmware(firmware_filename);
 		if (ret == ERROR_OK)
 			LOG_INFO("The firmware has been updated successfully. "
-					 "Please unplug the %s cable and reconnect it to finish the update process.", cable_name);
+					 "Please unplug the %s cable and reconnect it to finish the update process.",
+					 cable_name);
 		else
 			LOG_ERROR("The firmware failed to update.");
 		return ERROR_JTAG_INIT_FAILED;
@@ -863,7 +855,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
 	cable_params.num_rcv_hdr_bytes = cable_params.tap_pair_start_idx;
 
-	if (strcmp (cable_name, "ICE-1000") == 0 || strcmp (cable_name, "ICE-2000") == 0) {
+	if (strcmp(cable_name, "ICE-1000") == 0 || strcmp(cable_name, "ICE-2000") == 0) {
 		if (swd_mode) {
 			ice1000_swd_switch_seq(JTAG_TO_SWD);
 
@@ -886,7 +878,7 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
  */
 static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 {
-	num_tap_pairs *tap_info = &cable_params.tap_info;
+	struct num_tap_pairs *tap_info = &cable_params.tap_info;
 
 	if (!tap_info->pairs) {
 		unsigned char *cmd;
@@ -894,16 +886,15 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		uint8_t bit_set;
 		int i, j;
 
-		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
+		cmd = malloc((sizeof(struct tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 		if (!cmd) {
-			LOG_ERROR("malloc(%ld) fails",
-					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
+			LOG_ERROR("malloc(%ld) fails", (long)(sizeof(struct tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
 		}
 
 		tap_info->cmd = cmd;
 		/* point our pairs to the space that was allocated */
-		tap_info->pairs = (tap_pairs *)(cmd + cable_params.tap_pair_start_idx);	/* new pointer */
+		tap_info->pairs = (struct tap_pairs *)(cmd + cable_params.tap_pair_start_idx); /* new pointer */
 
 		/* initialize some of our structure */
 
@@ -927,10 +918,8 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 		}
 
 		tap_info->total = new_sz;
-		tap_info->cur_idx = cnt / 8;		/* we scan in multiples of 32 */
+		tap_info->cur_idx = cnt / 8; /* we scan in multiples of 32 */
 		tap_info->bit_pos = bit_set;
-
-		return ERROR_OK;
 	} else {
 		int i, j;
 		uint8_t bit_set;
@@ -953,15 +942,15 @@ static int adi_clock(int32_t tms, int32_t tdi, int32_t cnt)
 
 		tap_info->cur_idx = i;
 		tap_info->bit_pos = bit_set;
-
-		return ERROR_OK;
 	}
+
+	return ERROR_OK;
 }
 
 static int ice1000_init(void)
 {
-	const uint16_t vids[] = { 0x064b, 0 };
-	const uint16_t pids[] = { 0x0617, 0 };
+	const uint16_t vids[] = {0x064b, 0};
+	const uint16_t pids[] = {0x0617, 0};
 
 	int retval;
 
@@ -978,8 +967,8 @@ static int ice1000_init(void)
 
 static int ice2000_init(void)
 {
-	const uint16_t vids[] = { 0x064b, 0 };
-	const uint16_t pids[] = { 0x0283, 0 };
+	const uint16_t vids[] = {0x064b, 0};
+	const uint16_t pids[] = {0x0283, 0};
 
 	int retval;
 
@@ -1038,8 +1027,7 @@ static int ice2000_quit(void)
 static int ice1000_speed(int speed)
 {
 	if (speed >= MAX_FREQ_1000 && speed < 0) {
-		LOG_ERROR("bad speed %d, should between %d and %d.",
-				  speed, 0, MAX_FREQ_1000 - 1);
+		LOG_ERROR("bad speed %d, should between %d and %d.", speed, 0, MAX_FREQ_1000 - 1);
 		return ERROR_FAIL;
 	}
 
@@ -1063,8 +1051,7 @@ static int ice1000_khz(int khz, int *speed)
 static int ice2000_speed(int speed)
 {
 	if (speed >= MAX_FREQ_2000 && speed < 0) {
-		LOG_ERROR("bad speed %d, should between %d and %d.",
-				  speed, 0, MAX_FREQ_2000 - 1);
+		LOG_ERROR("bad speed %d, should between %d and %d.", speed, 0, MAX_FREQ_2000 - 1);
 		return ERROR_FAIL;
 	}
 
@@ -1090,7 +1077,7 @@ static int ice2000_khz(int khz, int *speed)
 static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 {
 	uint8_t *buf;
-	num_tap_pairs *tap_info = &cable_params.tap_info;
+	struct num_tap_pairs *tap_info = &cable_params.tap_info;
 	int32_t dat_idx = tap_info->dat[idx_dat].idx;
 	uint8_t *rcvBuf = rcv_data + cable_params.num_rcv_hdr_bytes + dat_idx;
 	int32_t bit_set = tap_info->dat[idx_dat].pos;
@@ -1107,16 +1094,16 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 	}
 
 	if (idx_dat < 0) {
-		DEBUG("get_recv_data(): No Received Data\n");
+		LOG_DEBUG_IO("No Received Data\n");
 		return NULL;
 	}
 
 	for (i = 0; i < len; i++) {
-		buf[i/8] |= ((*rcvBuf & bit_set) ? 1 : 0) << (i % 8);
+		buf[i / 8] |= ((*rcvBuf & bit_set) ? 1 : 0) << (i % 8);
 
 #ifdef DUMP_EACH_RCV_DATA
 		if (i % 8 == 0 && i != 0)
-			DEBUG("%d", buf[i/8 - 1]);
+			DEBUG("%d", buf[i / 8 - 1]);
 		if (((i + 1) % 64) == 0)
 			putchar('\n');
 		else if (((i + 1) % 8) == 0)
@@ -1140,12 +1127,11 @@ static uint8_t *get_recv_data(int32_t len, int32_t idx_dat, uint8_t *rcv_data)
 
 static int ice1000_tap_execute(void)
 {
-	num_tap_pairs *tap_info = &cable_params.tap_info;
+	struct num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t *buf;
 	int i, retval;
 
-	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80
-		&& tap_info->cur_dat == -1)
+	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80 && tap_info->cur_dat == -1)
 		return ERROR_OK;
 
 	buf = NULL;
@@ -1194,12 +1180,9 @@ static int ice1000_execute_reset(struct jtag_command *cmd)
 	if (retval != ERROR_OK)
 		return retval;
 
-	LOG_DEBUG_IO("reset trst: %i srst %i",
-			cmd->cmd.reset->trst, cmd->cmd.reset->srst);
+	LOG_DEBUG_IO("reset trst: %i srst %i", cmd->cmd.reset->trst, cmd->cmd.reset->srst);
 
-	if ((cmd->cmd.reset->trst == 1)
-		|| (cmd->cmd.reset->srst
-			&& (jtag_get_reset_config() & RESET_SRST_PULLS_TRST)))
+	if ((cmd->cmd.reset->trst == 1) || (cmd->cmd.reset->srst && (jtag_get_reset_config() & RESET_SRST_PULLS_TRST)))
 		tap_set_state(TAP_RESET);
 
 	do_host_cmd(HOST_SET_TRST, cmd->cmd.reset->trst ? 0 : 1, 0);
@@ -1258,8 +1241,8 @@ static void ice1000_path_move(int num_states, enum tap_state *path)
 		} else if (path[i] == tap_state_transition(tap_get_state(), true)) {
 			ice1000_tap_append_step(1, 0);
 		} else {
-			LOG_ERROR("BUG: %s -> %s isn't a valid TAP transition",
-					tap_state_name(tap_get_state()), tap_state_name(path[i]));
+			LOG_ERROR("BUG: %s -> %s isn't a valid TAP transition", tap_state_name(tap_get_state()),
+					  tap_state_name(path[i]));
 			exit(-1);
 		}
 
@@ -1296,9 +1279,7 @@ static int ice1000_runtest(int num_cycles)
 
 static int ice1000_execute_runtest(struct jtag_command *cmd)
 {
-	LOG_DEBUG_IO("runtest %i cycles, end in %i",
-			cmd->cmd.runtest->num_cycles,
-			cmd->cmd.runtest->end_state);
+	LOG_DEBUG_IO("runtest %i cycles, end in %i", cmd->cmd.runtest->num_cycles, cmd->cmd.runtest->end_state);
 
 	ice1000_end_state(cmd->cmd.runtest->end_state);
 
@@ -1323,12 +1304,10 @@ static int ice1000_execute_tlr_reset(struct jtag_command *cmd)
 
 static int ice1000_execute_pathmove(struct jtag_command *cmd)
 {
-	LOG_DEBUG_IO("pathmove: %i states, end in %i",
-		cmd->cmd.pathmove->num_states,
-		cmd->cmd.pathmove->path[cmd->cmd.pathmove->num_states - 1]);
+	LOG_DEBUG_IO("pathmove: %i states, end in %i", cmd->cmd.pathmove->num_states,
+				 cmd->cmd.pathmove->path[cmd->cmd.pathmove->num_states - 1]);
 
-	ice1000_path_move(cmd->cmd.pathmove->num_states,
-			cmd->cmd.pathmove->path);
+	ice1000_path_move(cmd->cmd.pathmove->num_states, cmd->cmd.pathmove->path);
 
 	return ERROR_OK;
 }
@@ -1340,12 +1319,12 @@ static int ice1000_execute_pathmove(struct jtag_command *cmd)
  */
 static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_command *command)
 {
-	int32_t bit_cnt	 = num_bits % 8;
+	int32_t bit_cnt = num_bits % 8;
 	int32_t byte_cnt = (num_bits >> 3) + (bit_cnt ? 1 : 0);
 	int32_t i, bit_set;
-	tap_pairs *tap_scan = NULL;
+	struct tap_pairs *tap_scan = NULL;
 	int32_t idx;
-	num_tap_pairs *tap_info = &cable_params.tap_info;
+	struct num_tap_pairs *tap_info = &cable_params.tap_info;
 
 	if (!in)
 		LOG_WARNING("NO IN DATA!!!%s", out ? " BUT there is out data!" : "");
@@ -1355,10 +1334,9 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		int32_t new_sz = cable_params.default_scanlen + 4;
 		unsigned char *cmd;
 
-		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
+		cmd = malloc((sizeof(struct tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 		if (!cmd) {
-			LOG_ERROR("malloc(%ld) fails",
-					  (long int)(sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
+			LOG_ERROR("malloc(%ld) fails", (long)(sizeof(struct tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
 		}
 
@@ -1366,13 +1344,14 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_info->rcv_dat = -1;
 		tap_info->bit_pos = 0x80;
 		tap_info->total = new_sz;
-		tap_info->cmd = cmd;	/* new pointer */
-		tap_info->pairs = (tap_pairs *)(cmd + cable_params.tap_pair_start_idx);	/* new pointer */
+		tap_info->cmd = cmd;													/* new pointer */
+		tap_info->pairs = (struct tap_pairs *)(cmd + cable_params.tap_pair_start_idx); /* new pointer */
 
 		tap_scan = tap_info->pairs;
 		tap_scan->tms = 0;
 		tap_scan->tdi = 0;
-		idx = tap_info->cur_idx = 1;	/* first pair is 0 */
+		idx = 1;
+		tap_info->cur_idx = 1; /* first pair is 0 */
 		tap_scan++;
 		tap_scan->tdi = 0;
 		tap_scan->tms = 0;
@@ -1384,22 +1363,21 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		DEBUG("Reallocating scan_data\n");
 
 		new_sz = tap_info->total + byte_cnt + 8;
-		cmd = realloc(tap_info->cmd, (sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
+		cmd = realloc(tap_info->cmd, (sizeof(struct tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
 		if (!cmd) {
-			LOG_ERROR("realloc(%ld) fails",
-				(long int)(sizeof (tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
+			LOG_ERROR("realloc(%ld) fails", (long)(sizeof(struct tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
 			return ERROR_FAIL;
 		}
 
-		tap_info->total = new_sz;		/* resize size */
-		tap_info->cmd = cmd;			/* new pointer */
-		tap_info->pairs = (tap_pairs *)(cmd + cable_params.tap_pair_start_idx);	/* new pointer */
+		tap_info->total = new_sz;												/* resize size */
+		tap_info->cmd = cmd;													/* new pointer */
+		tap_info->pairs = (struct tap_pairs *)(cmd + cable_params.tap_pair_start_idx); /* new pointer */
 
 		tap_scan = tap_info->pairs;
-		idx = tap_info->cur_idx;		/* to add on */
+		idx = tap_info->cur_idx; /* to add on */
 		tap_scan = &tap_info->pairs[idx];
 	} else {
-		idx = tap_info->cur_idx;		/* to add on */
+		idx = tap_info->cur_idx; /* to add on */
 		tap_scan = &tap_info->pairs[idx];
 	}
 
@@ -1413,18 +1391,16 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_info->cur_dat++;
 		if (tap_info->cur_dat >= tap_info->num_dat) {
 			int32_t new_sz;
-			dat_dat *datPtr;
+			struct dat_dat *datPtr;
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
-			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
+			datPtr = realloc(tap_info->dat, sizeof(struct dat_dat) * new_sz);
 			if (!datPtr) {
-				LOG_ERROR("realloc(%ld) fails",
-					(long int)(sizeof (dat_dat) * new_sz));
+				LOG_ERROR("realloc(%ld) fails", (long)(sizeof(struct dat_dat) * new_sz));
 				return ERROR_FAIL;
 			}
 			tap_info->dat = datPtr;
 			tap_info->num_dat = new_sz;
-
 		}
 		tap_info->dat[tap_info->cur_dat].idx = idx;
 		tap_info->dat[tap_info->cur_dat].pos = bit_set;
@@ -1438,10 +1414,9 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 			tap_scan->tdi |= (in[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
 			if (i == num_bits - 1)
 				tap_scan->tms |= bit_set;
-		}
-		else
+		} else {
 			tap_scan->tms |= (in[i / 8] >> (i % 8)) & 0x1 ? bit_set : 0;
-
+		}
 		bit_set >>= 1;
 		if (!bit_set) {
 			bit_set = 0x80;
@@ -1459,8 +1434,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 	return ERROR_OK;
 }
 
-static int ice1000_scan(bool ir_scan, enum scan_type type, uint8_t *buffer,
-		int scan_size, struct scan_command *command)
+static int ice1000_scan(bool ir_scan, enum scan_type type, uint8_t *buffer, int scan_size, struct scan_command *command)
 {
 	enum tap_state saved_end_state;
 	int retval;
@@ -1508,8 +1482,7 @@ static int ice1000_execute_scan(struct jtag_command *cmd)
 	LOG_DEBUG_IO("scan input, length = %d", scan_size);
 
 	type = jtag_scan_type(cmd->cmd.scan);
-	ice1000_scan(cmd->cmd.scan->ir_scan,
-			type, buffer, scan_size, cmd->cmd.scan);
+	ice1000_scan(cmd->cmd.scan->ir_scan, type, buffer, scan_size, cmd->cmd.scan);
 
 	free(buffer);
 
@@ -1593,9 +1566,8 @@ static int ice1000_execute_command(struct jtag_command *cmd)
 		break;
 	case JTAG_SCAN:
 		retval = ice1000_execute_scan(cmd);
-		if (cable_params.cur_freq == 1000000 || cable_params.cur_freq == 2000000){
+		if (cable_params.cur_freq == 1000000 || cable_params.cur_freq == 2000000)
 			keep_alive();
-		}
 		break;
 	case JTAG_SLEEP:
 		retval = ice1000_execute_sleep(cmd);
@@ -1628,9 +1600,9 @@ static int ice1000_execute_queue(struct jtag_command *cmd_queue)
 			// attempt to acquire the USB lock
 			USB_MUX_ERROR mux_ret = usbmux_lock(cable_params.mux_handle);
 
-			if (mux_ret == USB_MUX_OK)
+			if (mux_ret == USB_MUX_OK) {
 				break;
-			else if (mux_ret == USB_MUX_BUSY) {
+			} else if (mux_ret == USB_MUX_BUSY) {
 				/* Send out the message every 5 attempts */
 				if ((attempt % 5) == 0)
 					LOG_DEBUG("MUX is busy after %u attempts, retrying.", attempt);
@@ -1684,7 +1656,7 @@ static int ice1000_execute_queue(struct jtag_command *cmd_queue)
  */
 static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data, uint32_t data)
 {
-	usb_command_block usb_cmd_blk;
+	struct usb_command_block usb_cmd_blk;
 	union {
 		uint8_t b[24];
 		uint32_t l[6];
@@ -1696,7 +1668,7 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data
 	usb_cmd_blk.count = size;
 	usb_cmd_blk.buffer = 0;
 
-	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof(usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t *)&usb_cmd_blk, sizeof(usb_cmd_blk));
 	i = 0;
 
 	/* send HOST_SET_SINGLE_REG command */
@@ -1710,7 +1682,7 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data
 	adi_usb_write_or_ret(cmd_buffer.b, size);
 
 	if (r_data)
-		adi_usb_read_or_ret((uint8_t*)&count, sizeof (count));
+		adi_usb_read_or_ret((uint8_t *)&count, sizeof(count));
 
 	return count;
 }
@@ -1724,11 +1696,11 @@ static uint32_t do_single_reg_value(uint8_t reg, int32_t r_data, int32_t wr_data
  */
 static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 {
-	usb_command_block usb_cmd_blk;
+	struct usb_command_block usb_cmd_blk;
 	uint16_t results = 0;
 	union {
 		uint8_t b[20];
-		uint32_t l[20/4];
+		uint32_t l[20 / 4];
 	} cmd_buffer;
 	int32_t size = 5;
 
@@ -1736,7 +1708,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 	usb_cmd_blk.count = size;
 	usb_cmd_blk.buffer = 0;
 
-	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof(usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t *)&usb_cmd_blk, sizeof(usb_cmd_blk));
 
 	/* send command */
 	cmd_buffer.b[0] = 0;
@@ -1757,9 +1729,9 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
 		usb_cmd_blk.count = 2;
 		usb_cmd_blk.buffer = 0;
 
-		adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
+		adi_usb_write_or_ret((uint8_t *)&usb_cmd_blk, sizeof(usb_cmd_blk));
 
-		adi_usb_read_or_ret ((uint8_t*)&results, sizeof (results));
+		adi_usb_read_or_ret((uint8_t *)&results, sizeof(results));
 	}
 
 	return results;
@@ -1772,7 +1744,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data)
  */
 static int perform_scan(uint8_t **rdata)
 {
-	num_tap_pairs *tap_info = &cable_params.tap_info;
+	struct num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t firstpkt = 1, lastpkt = 0, *in = NULL, *out = NULL;
 	int32_t idx, collect_data = 0;
 	uint32_t cur_len = tap_info->cur_idx;
@@ -1800,11 +1772,10 @@ static int perform_scan(uint8_t **rdata)
 	}
 
 	tap_info->cur_idx = cur_len;
-	rem_len = cur_len * sizeof (tap_pairs);
+	rem_len = cur_len * sizeof(struct tap_pairs);
 
 	if (cur_len > cable_params.default_scanlen) {
-		LOG_ERROR("TAP Scan length %d is greater than DIF Memory",
-			tap_info->cur_idx);
+		LOG_ERROR("TAP Scan length %d is greater than DIF Memory", tap_info->cur_idx);
 		return ERROR_FAIL;
 	}
 
@@ -1818,7 +1789,7 @@ static int perform_scan(uint8_t **rdata)
 
 		out = malloc(len);
 		if (!out) {
-			LOG_ERROR("malloc(%ld) fails", (long int)len);
+			LOG_ERROR("malloc(%ld) fails", (long)len);
 			return ERROR_FAIL;
 		}
 		*rdata = out;
@@ -1882,12 +1853,11 @@ static int perform_scan(uint8_t **rdata)
  * XXX: probably needs converting from memory arrays to byte shifts
  *      so we work regardless of host endian
  */
-static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
-					  int32_t collect_dof, int32_t dif_cnt,
-					  uint8_t *raw_buf, uint8_t *out)
+static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt, int32_t collect_dof, int32_t dif_cnt, uint8_t *raw_buf,
+					  uint8_t *out)
 {
-	usb_command_block usb_cmd_blk;
-	num_tap_pairs *tap_info = &cable_params.tap_info;
+	struct usb_command_block usb_cmd_blk;
+	struct num_tap_pairs *tap_info = &cable_params.tap_info;
 	int32_t i, dof_start = 0;
 	uint32_t data;
 	uint32_t size = cable_params.tap_pair_start_idx + dif_cnt;
@@ -1897,7 +1867,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	usb_cmd_blk.buffer = 0;
 
 	/* first send Xmit request with the count of what will be sent */
-	adi_usb_write_or_ret((uint8_t*)&usb_cmd_blk, sizeof (usb_cmd_blk));
+	adi_usb_write_or_ret((uint8_t *)&usb_cmd_blk, sizeof(usb_cmd_blk));
 	i = 0;
 
 	/* send HOST_DO_SELECTIVE_RAW_SCAN command */
@@ -1917,12 +1887,12 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 	}
 
 	raw_buf[i++] = collect_dof ? 1 : 0;
-	data = dif_cnt / 4;			/* dif count in longs */
+	data = dif_cnt / 4; /* dif count in longs */
 	memcpy(raw_buf + i, &data, 4);
-	data = tap_info->cur_idx / 4;  /* count in longs */
+	data = tap_info->cur_idx / 4; /* count in longs */
 	memcpy(raw_buf + i + 2, &data, 4);
 
-	{	/* only Ice emulators use this */
+	{ /* only Ice emulators use this */
 		memcpy(raw_buf + i + 4, &dof_start, 4);
 	}
 
@@ -1934,10 +1904,10 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt,
 		rd_bytes_left = cable_params.num_rcv_hdr_bytes + ((collect_dof) ? (tap_info->cur_idx - dof_start) : 0);
 
 		while (tot_bytes_rd < rd_bytes_left) {
-			cur_rd_bytes = ((rd_bytes_left - tot_bytes_rd) > cable_params.r_buf_sz) ?
-				cable_params.r_buf_sz : (rd_bytes_left - tot_bytes_rd);
+			cur_rd_bytes = ((rd_bytes_left - tot_bytes_rd) > cable_params.r_buf_sz) ? cable_params.r_buf_sz
+																					: (rd_bytes_left - tot_bytes_rd);
 
-			adi_usb_read_or_ret((uint8_t*)(out + tot_bytes_rd), cur_rd_bytes);
+			adi_usb_read_or_ret((uint8_t *)(out + tot_bytes_rd), cur_rd_bytes);
 			tot_bytes_rd += cur_rd_bytes;
 		}
 
@@ -1961,17 +1931,17 @@ static int ice1000_swd_init(void)
 static int ice1000_swd_queue_packet(struct swd_packet *packet)
 {
 	uint32_t i, bit_set;
-	tap_pairs *tap_scan;
+	struct tap_pairs *tap_scan;
 	int32_t idx;
-	num_tap_pairs *tap_info = &cable_params.tap_info;
+	struct num_tap_pairs *tap_info = &cable_params.tap_info;
 
 	if (!tap_info->pairs) {
 		int32_t new_sz = cable_params.default_scanlen;
 		unsigned char *cmd;
 
-		cmd = malloc((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
+		cmd = malloc((sizeof(struct tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx);
 		if (!cmd) {
-			LOG_ERROR("malloc(%ld) fails", (long int)((sizeof (tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx));
+			LOG_ERROR("malloc(%ld) fails", (long)((sizeof(struct tap_pairs) * new_sz) + 1 + cable_params.tap_pair_start_idx));
 			return ERROR_FAIL;
 		}
 
@@ -1980,12 +1950,13 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 		tap_info->bit_pos = 0x80;
 		tap_info->total = new_sz;
 		tap_info->cmd = cmd;
-		tap_info->pairs = (tap_pairs *)(cmd + cable_params.tap_pair_start_idx);
+		tap_info->pairs = (struct tap_pairs *)(cmd + cable_params.tap_pair_start_idx);
 
 		tap_scan = tap_info->pairs;
 		tap_scan->tms = 0;
 		tap_scan->tdi = 0;
-		idx = tap_info->cur_idx = 1;	/* first pair is 0 for tms and tdi */
+		idx = 1;
+		tap_info->cur_idx = 1; /* first pair is 0 for tms and tdi */
 		tap_scan++;
 
 		/* zero out tdi/tms so we can OR in our actual data */
@@ -2004,23 +1975,21 @@ static int ice1000_swd_queue_packet(struct swd_packet *packet)
 		tap_info->cur_dat++;
 		if (tap_info->cur_dat >= tap_info->num_dat) {
 			int32_t new_sz;
-			dat_dat *datPtr;
+			struct dat_dat *datPtr;
 
 			new_sz = tap_info->num_dat + DAT_SZ_INC;
-			datPtr = realloc(tap_info->dat, sizeof (dat_dat) * new_sz);
+			datPtr = realloc(tap_info->dat, sizeof(struct dat_dat) * new_sz);
 			if (!datPtr) {
-				LOG_ERROR("realloc(%ld) fails", (long int)(sizeof (dat_dat) * new_sz));
+				LOG_ERROR("realloc(%ld) fails", (long)(sizeof(struct dat_dat) * new_sz));
 				return ERROR_FAIL;
 			}
 			tap_info->dat = datPtr;
 			tap_info->num_dat = new_sz;
-
 		}
 		tap_info->dat[tap_info->cur_dat].idx = idx;
 		tap_info->dat[tap_info->cur_dat].pos = bit_set;
 		tap_info->dat[tap_info->cur_dat].ptr = packet;
 	}
-
 
 	for (i = 0; i < packet->length; i++) {
 		if (packet->is_out)
@@ -2067,7 +2036,7 @@ static int ice1000_swd_queue_idle_cycles(uint32_t len)
 
 	buffer = calloc(DIV_ROUND_UP(len, 8), 1);
 	if (!buffer) {
-		LOG_ERROR("calloc(%"PRIu32") fails", DIV_ROUND_UP(len, 8));
+		LOG_ERROR("calloc(%" PRIu32 ") fails", DIV_ROUND_UP(len, 8));
 		return ERROR_FAIL;
 	}
 
@@ -2081,12 +2050,11 @@ static int ice1000_swd_queue_idle_cycles(uint32_t len)
 
 static int ice1000_swd_run_queue(void)
 {
-	num_tap_pairs *tap_info = &cable_params.tap_info;
+	struct num_tap_pairs *tap_info = &cable_params.tap_info;
 	uint8_t *scan_buf;
 	int i, retval;
 
-	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80
-		&& tap_info->cur_dat == -1)
+	if (tap_info->cur_idx == 0 && tap_info->bit_pos == 0x80 && tap_info->cur_dat == -1)
 		return ERROR_OK;
 
 	/* A transaction must be followed by another transaction or at least
@@ -2115,7 +2083,9 @@ static int ice1000_swd_run_queue(void)
 			if (ack != SWD_ACK_OK) {
 				free(rx_buf);
 				LOG_ERROR("SWD ack not OK: %d %s", ack,
-						ack == SWD_ACK_WAIT ? "WAIT" : ack == SWD_ACK_FAULT ? "FAULT" : "JUNK");
+						  ack == SWD_ACK_WAIT	 ? "WAIT"
+						  : ack == SWD_ACK_FAULT ? "FAULT"
+												 : "JUNK");
 				retval = ERROR_FAIL;
 				break;
 			} else if (packet->in) {
@@ -2123,14 +2093,14 @@ static int ice1000_swd_run_queue(void)
 				uint32_t data = buf_get_u32(rx_buf, packet->data_pos, 32);
 				int parity = buf_get_u32(rx_buf, packet->parity_pos, 1);
 
-				if (parity != parity_u32(data)) {
+				if (parity == parity_u32(data)) {
+					uint32_t *p = packet->in;
+					*p = data;
+				} else {
 					free(rx_buf);
 					LOG_ERROR("SWD Read data parity mismatch");
 					retval = ERROR_FAIL;
 					break;
-				} else {
-					uint32_t *p = packet->in;
-					*p = data;
 				}
 			}
 
@@ -2144,7 +2114,7 @@ static int ice1000_swd_run_queue(void)
 	/* free all packets that were allocated */
 	for (i = 0; i <= tap_info->cur_dat; i++) {
 		if (tap_info->dat[i].ptr) {
-			free((struct swd_packet*)tap_info->dat[i].ptr);
+			free((struct swd_packet *)tap_info->dat[i].ptr);
 			tap_info->dat[i].ptr = NULL;
 		}
 	}
@@ -2159,7 +2129,6 @@ static int ice1000_swd_run_queue(void)
 	tap_info->bit_pos = 0x80;
 	tap_info->cur_dat = -1;
 	tap_info->rcv_dat = -1;
-
 
 	return retval;
 }
@@ -2222,7 +2191,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 
 	retval = ice1000_swd_queue_data_out(&cmd, 8);
 	if (retval != ERROR_OK) {
-		num_tap_pairs *tap_info = &cable_params.tap_info;
+		struct num_tap_pairs *tap_info = &cable_params.tap_info;
 
 		/* free current packet */
 		free(packet);
@@ -2230,7 +2199,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 		/* free all packets that were allocated previously */
 		for (i = 0; i <= tap_info->cur_dat; i++) {
 			if (tap_info->dat[i].ptr) {
-				free((struct swd_packet*)tap_info->dat[i].ptr);
+				free((struct swd_packet *)tap_info->dat[i].ptr);
 				tap_info->dat[i].ptr = NULL;
 			}
 		}
@@ -2239,7 +2208,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 	}
 
 	if (cmd & SWD_CMD_RNW) {
-        /* Queue a read transaction */
+		/* Queue a read transaction */
 		packet->out = false;
 		packet->ack_pos = ACK_POS;
 		packet->data_pos = DATA_POS;
@@ -2266,19 +2235,18 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 	}
 
 	if (retval != ERROR_OK) {
-		num_tap_pairs *tap_info = &cable_params.tap_info;
+		struct num_tap_pairs *tap_info = &cable_params.tap_info;
 
 		/* free all packets that were allocated previously */
 		for (i = 0; i <= tap_info->cur_dat; i++) {
 			if (tap_info->dat[i].ptr) {
-				free((struct swd_packet*)tap_info->dat[i].ptr);
+				free((struct swd_packet *)tap_info->dat[i].ptr);
 				tap_info->dat[i].ptr = NULL;
 			}
 		}
 
 		return retval;
 	}
-
 
 	/* Insert idle cycles after AP accesses to avoid WAIT */
 	if (cmd & SWD_CMD_APNDP)
@@ -2306,7 +2274,7 @@ static void ice1000_swd_read_reg(uint8_t cmd, uint32_t *value, uint32_t ap_delay
 /* (1) assert or (0) deassert reset lines */
 static int adi_ice_reset(int trst, int srst)
 {
-    /* SWD requires this function or one similar
+	/* SWD requires this function or one similar
 	   do nothing because we toggle TRST on connection
 	*/
 	return ERROR_OK;
@@ -2366,16 +2334,14 @@ static struct jtag_interface ice1000_interface = {
 	.execute_queue = ice1000_execute_queue,
 };
 
-static const struct command_registration ice1000_command_handlers[] = {
-	{
-		.name = "use_usbmux",
-		.handler = &ice1000_use_usbmux,
-		.mode = COMMAND_CONFIG,
-		.usage = "use_usbmux ['true'|'false']",
-	},
+static const struct command_registration ice1000_command_handlers[] = {{
+																		   .name = "use_usbmux",
+																		   .handler = &ice1000_use_usbmux,
+																		   .mode = COMMAND_CONFIG,
+																		   .usage = "use_usbmux ['true'|'false']",
+																	   },
 
-	COMMAND_REGISTRATION_DONE
-};
+																	   COMMAND_REGISTRATION_DONE};
 
 static const struct swd_driver adi_ice_swd = {
 	.init = ice1000_swd_init,
@@ -2385,7 +2351,7 @@ static const struct swd_driver adi_ice_swd = {
 	.run = ice1000_swd_run_queue,
 };
 
-static const char * const ice_transports[] = { "jtag", "swd", NULL };
+static const char *const ice_transports[] = {"jtag", "swd", NULL};
 
 struct adapter_driver ice1000_adapter_driver = {
 	.name = "ice1000",

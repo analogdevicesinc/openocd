@@ -449,34 +449,32 @@ static inline bool xtensa_is_cacheable(const struct xtensa_cache_config *cache,
 }
 static inline bool xtensa_is_icacheable(struct xtensa *xtensa, target_addr_t address)
 {
-	return (
-		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram, address) ||
+	return (xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram, address) ||
 		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->irom, address) ||
 		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->sram, address) ||
 		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->srom, address) ||
-		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->l2ram, address)||
-		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range1, address)||
-		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range2, address)||
-		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range3, address)||
-		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram_mp, address)||
-		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram_arm, address)||
-		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->srom_arm, address)||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->l2ram, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range1, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range2, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range3, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram_mp, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram_arm, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->srom_arm, address) ||
 		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->l2ram, address));
 }
 
 static inline bool xtensa_is_dcacheable(struct xtensa *xtensa, target_addr_t address)
 {
-	return (
-		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram, address) ||
+	return (xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram, address) ||
 		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->drom, address) ||
 		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->sram, address) ||
 		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->srom, address) ||
-		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range1, address)||
-		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range2, address)||
-		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range3, address)||
-		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram_mp, address)||
-		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram_arm, address)||
-		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->srom_arm, address)||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range1, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range2, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range3, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram_mp, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram_arm, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->srom_arm, address) ||
 		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->l2ram, address));
 }
 
@@ -2210,7 +2208,7 @@ int xtensa_write_memory(struct target *target,
 
 	if (!xtensa->permissive_mode) {
 		if (!xtensa_memory_op_validate_range(xtensa, address, (size * count), XT_MEM_ACCESS_WRITE)) {
-			LOG_INFO("address "TARGET_ADDR_FMT " not writable, skipped", address);
+			LOG_INFO("address " TARGET_ADDR_FMT " not writable, skipped", address);
 
 			/* To skip writing flash sections we need to return ERROR_OK
 			 * otherwise GDB will quit trying to load the program */
@@ -2638,12 +2636,12 @@ static int xtensa_sw_breakpoint_add(struct target *target,
 
 	uint64_t break_insn;
 
-	if( (sw_bp->insn[0] & 0x08) == 0 ) {
+	if ((sw_bp->insn[0] & 0x08) == 0) {
 		// bit 3 of the first byte being clear indicates a 3 byte instruction
 		sw_bp->insn_sz = XT_BRK_INSN_3BYTE;
 		// use 3 byte breakpoint instruction
 		break_insn = XT_INS_BREAK(xtensa, 0, 0);
-	} else if ( ((sw_bp->insn[0] & 0x02) == 0 ) || ((sw_bp->insn[0] & 0x04) == 0 ) ){
+	} else if (((sw_bp->insn[0] & 0x02) == 0) || ((sw_bp->insn[0] & 0x04) == 0)) {
 		// bit 1 or 2 of the first byte being clear indicates a 2 byte instruction
 		sw_bp->insn_sz = XT_BRK_INSN_2BYTE;
 		// use 2 byte breakpoint instruction
@@ -3925,10 +3923,10 @@ COMMAND_HELPER(xtensa_cmd_xtmem_do, struct xtensa *xtensa)
 				memp = &xtensa->core_config->spi_range2;
 			} else if (strcasecmp(mem_name, "spi_range3") == 0) {
 				memp = &xtensa->core_config->spi_range3;
- 			} else {
- 				LOG_ERROR("Invalid xtmem type %s, use: %s\n", mem_name, XTMEM_TYPES);
- 				return ERROR_COMMAND_ARGUMENT_INVALID;
- 			}
+			} else {
+				LOG_ERROR("Invalid xtmem type %s, use: %s\n", mem_name, XTMEM_TYPES);
+				return ERROR_COMMAND_ARGUMENT_INVALID;
+			}
 		} else {
 			LOG_ERROR("Invalid xtmem type %s, use: %s\n", mem_name, XTMEM_TYPES);
 			return ERROR_COMMAND_ARGUMENT_INVALID;

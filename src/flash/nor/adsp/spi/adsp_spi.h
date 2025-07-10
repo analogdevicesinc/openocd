@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 
 /***************************************************************************
  *   Copyright (C) 2022-2024 Analog Devices, Inc.                          *
@@ -29,7 +29,7 @@ struct adsp_dma_channel_data {
 	uint32_t				*descriptors;		/*!< The memory allocated for the descriptors on the host */
 	uint32_t				chain_size;			/*!< The number of words of queued descriptors */
 	uint32_t				max_chain_size;		/*!< The number of words of descriptors we have allocated space for on the host */
-	adsp_1d_dma_array_desc	current_regs;		/*!< The current value of the DMA registers after execution of last descriptor */
+	struct adsp_1d_dma_array_desc	current_regs;		/*!< The current value of the DMA registers after execution of last descriptor */
 	uint32_t				*last_config;		/*!< The pointer to the DMA config field in the last descriptor, or initial value */
 	uint32_t				first_config;		/*!< The value of the config register we load to start the DMA descriptor chain going */
 	uint32_t				saved_first_config; /*!< The value of the config register we loaded to start the DMA descriptor chain going last time */
@@ -63,7 +63,7 @@ struct adsp_dma_queue {
  * 3) Data In			(in)	[Not sent if data_in_bytes=0]
 */
 struct adsp_spi_flash_cmd {
-	const ADSP_SPI_DEVICE	device;			/*!< Sets the SPI driver device definition to use */
+	const enum ADSP_SPI_DEVICE	device;			/*!< Sets the SPI driver device definition to use */
 	const spi_instruction_t	instruction;	/*!< 8-bit SPI Flash Instruction to send */
 	const uint8_t			address_bytes;	/*!< Specifies whether the address is 3 or 4 bytes. Set to 0
 												to send out no address. */
@@ -84,35 +84,35 @@ struct adsp_spi_flash_cmd {
 /*! @enum	ADSP_SPI_IO_MODE
 *	@brief	Lists the possible IO modes of the SPI Block
 */
-typedef enum {
+enum ADSP_SPI_IO_MODE {
 	ADSP_SPI_IO_MODE_NORMAL,	/*!< Normal mode. Two lines; one in, one out */
 	ADSP_SPI_IO_MODE_QUAD_TX,	/*!< Quad Mode for transfers only. Receives operate in normal mode */
 	ADSP_SPI_IO_MODE_QUAD_RX,	/*!< Quad Mode for receives only. Transfers operate in normal mode */
 	ADSP_SPI_IO_MODE_QUAD_FULL	/*!< Quad Mode for both transfers and receives */
-} ADSP_SPI_IO_MODE;
+};
 
 /*! @enum	ADSP_SPI_UNIT_SIZE
 *	@brief	Lists the unit sizes available in the SPI Block
 */
-typedef enum {
+enum ADSP_SPI_UNIT_SIZE {
 	ADSP_SPI_UNIT_SIZE_BYTE,		/*!< One unit is one byte (8-bits) */
 	ADSP_SPI_UNIT_SIZE_HALFWORD,	/*!< One unit is a half-word (16-bits) */
 	ADSP_SPI_UNIT_SIZE_WORD,		/*!< One unit is one word (32-bits) */
 	ADSP_SPI_UNIT_SIZE_UNKNOWN		/*!< Unknown word size */
-} ADSP_SPI_UNIT_SIZE;
+};
 
 /*! @enum	ADSP_SPI_CHANNEL
 *	@brief	Lists the possible SPI channels
 */
-typedef enum {
+enum ADSP_SPI_CHANNEL {
 	ADSP_SPI_CHANNEL_TX,/*!< The TX (transfer) channel */
 	ADSP_SPI_CHANNEL_RX	/*!< The RX (receive) channel */
-} ADSP_SPI_CHANNEL;
+};
 
 /*! @enum	ADSP_SPI_RESULT
 *	@brief	Lists the possible returns values for APIs
 */
-typedef enum {
+enum ADSP_SPI_RESULT {
 	ADSP_SPI_RESULT_SUCCESS,				/*!< The API completed successfully */
 	ADSP_SPI_RESULT_TARGET_NOT_AVAILABLE,	/*!< The target device is unavailable or unresponsive */
 	ADSP_SPI_RESULT_TIMED_OUT,				/*!< The API timed out */
@@ -121,7 +121,7 @@ typedef enum {
 	ADSP_SPI_RESULT_SPACE_NOT_AVAILABLE,	/*!< Insufficient space available for the operation */
 	ADSP_SPI_RESULT_CONFIGURATION_INVALID,	/*!< User configuration error */
 	ADSP_SPI_RESULT_INVALID_TARGET,			/*!< No SPI device defined for this target */
-} ADSP_SPI_RESULT;
+};
 
 /* ====== GLOBALS ========== */
 
@@ -129,7 +129,7 @@ typedef enum {
 extern uint32_t spi_max_word_count;
 
 /*! Defines the required extra space within the target side buffer for DMA transfers */
-extern unsigned spi_dma_buffer_minimum_size;
+extern unsigned int spi_dma_buffer_minimum_size;
 
 /* ====== APIS ========== */
 
@@ -141,7 +141,7 @@ extern unsigned spi_dma_buffer_minimum_size;
  *
  * @returns ADSP_SPI_RESULT_SUCCESS on success
 */
-ADSP_SPI_RESULT adsp_spi_command(struct target *target, struct adsp_spi_flash_cmd *flash_cmd);
+enum ADSP_SPI_RESULT adsp_spi_command(struct target *target, struct adsp_spi_flash_cmd *flash_cmd);
 
 /**
  * Utility function to map the SPI driver return codes to OpenOCD return codes
@@ -152,7 +152,7 @@ ADSP_SPI_RESULT adsp_spi_command(struct target *target, struct adsp_spi_flash_cm
  *
  * @returns	Mapped OpenOCD return code.
 */
-int adsp_spi_decode_result(const ADSP_SPI_RESULT result, const char err_message[]);
+int adsp_spi_decode_result(const enum ADSP_SPI_RESULT result, const char err_message[]);
 
 /**
  * Initial setup for Trigger Routing Unit, to allow DMA descriptor synchronisation.
@@ -172,7 +172,7 @@ void adsp_init_tru(struct target *target);
  *
  * @returns ADSP_SPI_RESULT_SUCCESS on success
 */
-ADSP_SPI_RESULT adsp_init_dma_queue(struct adsp_dma_queue *queue,
+enum ADSP_SPI_RESULT adsp_init_dma_queue(struct adsp_dma_queue *queue,
 									uint32_t num_bytes,
 									uint32_t page_size);
 
@@ -182,7 +182,7 @@ ADSP_SPI_RESULT adsp_init_dma_queue(struct adsp_dma_queue *queue,
  * @param target			Pointer to the target device to use
  * @param queue				The DMA queue to start
 */
-ADSP_SPI_RESULT adsp_run_queue(struct target *target, struct adsp_dma_queue *queue);
+enum ADSP_SPI_RESULT adsp_run_queue(struct target *target, struct adsp_dma_queue *queue);
 
 /**
  * Free the various bits of memory allocated in a DMA queue.

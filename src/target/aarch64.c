@@ -254,7 +254,7 @@ static int aarch64_init_debug_access(struct target *target)
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (armv8->sys_cti != NULL) {
+	if (armv8->sys_cti) {
 		/* Enable SYS CTI */
 		retval = arm_cti_enable(armv8->sys_cti, true);
 		/* By default, gate all channel events to and from the CTM */
@@ -725,7 +725,7 @@ static int aarch64_do_restart_one(struct target *target, enum restart_mode mode)
 	if (retval != ERROR_OK)
 		return retval;
 
-	if (armv8->sys_cti != NULL) {
+	if (armv8->sys_cti) {
 		retval = arm_cti_pulse_channel(armv8->sys_cti, 1);
 		if (retval != ERROR_OK)
 			return retval;
@@ -1032,7 +1032,7 @@ static int aarch64_debug_entry(struct target *target)
 		return retval;
 
 	/* issue halt peripherals if a sys_cti has been registered */
-	if (armv8->sys_cti != NULL) {
+	if (armv8->sys_cti) {
 		retval = arm_cti_pulse_channel(armv8->sys_cti, 0);
 		if (retval != ERROR_OK)
 			return retval;
@@ -2751,7 +2751,7 @@ static int aarch64_examine_first(struct target *target)
 
 	armv8->cti = pc->cti;
 
-	if (pc->sys_cti != NULL)
+	if (pc->sys_cti)
 		armv8->sys_cti = pc->sys_cti;
 
 	retval = aarch64_dpm_setup(aarch64, debug);

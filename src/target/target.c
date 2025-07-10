@@ -25,7 +25,7 @@
  *   Copyright (C) 2011 Andreas Fritiofson                                 *
  *   andreas.fritiofson@gmail.com                                          *
  *                                                                         *
- * 	 Portions Copyright (C) 2023-2024 Analog Devices, Inc.                 *
+ *   Portions Copyright (C) 2023-2024 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -3515,12 +3515,12 @@ COMMAND_HANDLER(handle_mw_command)
 	if (physical || ignore_data_abort) {
 		CMD_ARGC--;
 		CMD_ARGV++;
-    }
-    if (physical) {
-		fn = target_write_phys_memory;
-	} else {
-		fn = target_write_memory;
 	}
+	if (physical)
+		fn = target_write_phys_memory;
+	else
+		fn = target_write_memory;
+
 	if ((CMD_ARGC < 2) || (CMD_ARGC > 3))
 		return ERROR_COMMAND_SYNTAX_ERROR;
 

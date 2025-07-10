@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /****************************************************************************
  *	Copyright (C) 2022-2024 Analog Devices, Inc.							*
@@ -90,16 +90,16 @@ const struct adsp_spi_device adsp_spi_devices[ADSP_SPI_DEVICE_UNKNOWN] = {
 		.pinmux = {
 			.port_mux_reg		= REG_2183X_PORTA_MUX,
 			.port_function_reg	= REG_2183X_PORTA_FER,
-			.port_mux_cfg		= ( (uint32_t) ((uint32_t) 1<<20) |
-									(uint32_t) ((uint32_t) 1<<22) |
-									(uint32_t) ((uint32_t) 1<<24) |
-									(uint32_t) ((uint32_t) 1<<28) |
-									(uint32_t) ((uint32_t) 1<<30)),
-			.port_function_cfg	= ( (uint32_t) ((uint32_t) 1<<10) |
-									(uint32_t) ((uint32_t) 1<<11) |
-									(uint32_t) ((uint32_t) 1<<12) |
-									(uint32_t) ((uint32_t) 1<<14) |
-									(uint32_t) ((uint32_t) 1<<15)),
+			.port_mux_cfg		= ((uint32_t)((uint32_t)1 << 20) |
+								(uint32_t)((uint32_t)1 << 22) |
+								(uint32_t)((uint32_t)1 << 24) |
+								(uint32_t)((uint32_t)1 << 28) |
+								(uint32_t)((uint32_t)1 << 30)),
+			.port_function_cfg	= ((uint32_t)((uint32_t)1 << 10) |
+								(uint32_t)((uint32_t)1 << 11) |
+								(uint32_t)((uint32_t)1 << 12) |
+								(uint32_t)((uint32_t)1 << 14) |
+								(uint32_t)((uint32_t)1 << 15)),
 		},
 		.wait_reg = REG_2183X_RCU0_MSG_SET,
 		.max_word_count = 0xFFFF,
@@ -185,11 +185,11 @@ const struct adsp_spi_device adsp_spi_devices[ADSP_SPI_DEVICE_UNKNOWN] = {
 			.port_mux_reg		= REG_SC59X_PORTA_MUX,
 			.port_function_reg	= REG_SC59X_PORTA_FER,
 			.port_mux_cfg		= (0uL),
-			.port_function_cfg	= ( (uint32_t) ((uint32_t) 1<<0) |
-									(uint32_t) ((uint32_t) 1<<1) |
-									(uint32_t) ((uint32_t) 1<<2) |
-									(uint32_t) ((uint32_t) 1<<3) |
-									(uint32_t) ((uint32_t) 1<<4)),
+			.port_function_cfg	= ((uint32_t)((uint32_t)1 << 0) |
+								(uint32_t)((uint32_t)1 << 1) |
+								(uint32_t)((uint32_t)1 << 2) |
+								(uint32_t)((uint32_t)1 << 3) |
+								(uint32_t)((uint32_t)1 << 4)),
 		},
 		.wait_reg = REG_SC59X_RCU0_MSG_SET,
 		.max_word_count = 0xFFFF,
@@ -275,11 +275,11 @@ const struct adsp_spi_device adsp_spi_devices[ADSP_SPI_DEVICE_UNKNOWN] = {
 			.port_mux_reg		= REG_SC59X_PORTA_MUX,
 			.port_function_reg	= REG_SC59X_PORTA_FER,
 			.port_mux_cfg		= (0uL),
-			.port_function_cfg	= ( (uint32_t) ((uint32_t) 1<<0) |
-									(uint32_t) ((uint32_t) 1<<1) |
-									(uint32_t) ((uint32_t) 1<<2) |
-									(uint32_t) ((uint32_t) 1<<3) |
-									(uint32_t) ((uint32_t) 1<<4)),
+			.port_function_cfg	= ((uint32_t)((uint32_t)1 << 0) |
+								(uint32_t)((uint32_t)1 << 1) |
+								(uint32_t)((uint32_t)1 << 2) |
+								(uint32_t)((uint32_t)1 << 3) |
+								(uint32_t)((uint32_t)1 << 4)),
 		},
 		.wait_reg = REG_SC59X_RCU0_MSG_SET,
 		.max_word_count = 0xFFFF,

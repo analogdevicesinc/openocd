@@ -1,7 +1,7 @@
-/* SPDX-License-Identifier: GPL-2.0-or-later */
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /****************************************************************************
- *	Copyright (C) 2023, 2024 Analog Devices, Inc.							*
+ *	Copyright (C) 2023-2025 Analog Devices, Inc.							*
  ***************************************************************************/
 
 #include "adsp_spi.h"
@@ -76,11 +76,9 @@ void _debug_print_registers(struct target *target)
 	uint32_t tmp;
 	const bool print_all = false;
 
-	for (uint32_t i; i < (sizeof(reg_info) / sizeof(reg_info[0])); i++)
-	{
+	for (uint32_t i; i < ARRAY_SIZE(reg_info); i++) {
 		target_read_u32(target, *reg_info[i].device_reg, &tmp);
-		if (print_all || tmp != reg_info[i].last_value)
-		{
+		if (print_all || tmp != reg_info[i].last_value) {
 			LOG_INFO("%s Register: 0x%08X", reg_info[i].name, tmp);
 			reg_info[i].last_value = tmp;
 		}
@@ -98,12 +96,9 @@ void _debug_print_registers(struct target *target)
  */
 static char *_dbg_reg_name(uint32_t address)
 {
-	for (uint32_t i; i < (sizeof(reg_info) / sizeof(reg_info[0])); i++)
-	{
+	for (uint32_t i; i < ARRAY_SIZE(reg_info); i++) {
 		if (address == *reg_info[i].device_reg)
-		{
 			return reg_info[i].name;
-		}
 	}
 	return "Unknown";
 }
@@ -130,34 +125,30 @@ void _debug_print_mdma_descriptor(struct target *target, struct adsp_dma_queue *
 {
     #ifdef PRINT_DEBUG_INFO
 	uint32_t value;
-	adsp_1d_dma_array_desc *tx_desc = (adsp_1d_dma_array_desc *)(&queue->mdma_tx.descriptors[mdma_tx_offset]);
-	adsp_1d_dma_array_desc *rx_desc = (adsp_1d_dma_array_desc *)(&queue->mdma_rx.descriptors[mdma_rx_offset]);
+	struct adsp_1d_dma_array_desc *tx_desc = (struct adsp_1d_dma_array_desc *)(&queue->mdma_tx.descriptors[mdma_tx_offset]);
+	struct adsp_1d_dma_array_desc *rx_desc = (struct adsp_1d_dma_array_desc *)(&queue->mdma_rx.descriptors[mdma_rx_offset]);
 	target_read_u32(target, tx_desc->address_start, &value);
 	LOG_INFO("MDMA TX Descriptor %d (0x%08lx)", i, mdma_tx_descriptor_address + (mdma_tx_offset * sizeof(uint32_t)));
 	LOG_INFO("  Address: 0x%08x", tx_desc->address_start);
 	LOG_INFO("    Value: 0x%08x", value);
 	LOG_INFO("  Config:  0x%08x", tx_desc->config);
 	if (mdma_tx_size > 2)
-	{
 		LOG_INFO("  X Count: %d", tx_desc->x_count);
-	}
+
 	if (mdma_tx_size > 3)
-	{
 		LOG_INFO("  X Inc:   %d", tx_desc->x_increment);
-	}
+
 	LOG_INFO("  Triggers: %s%s",  tx_desc->config & ENUM_DMA_CFG_TRGWAIT ? "TWAIT " : "",
 									tx_desc->config & BITM_DMA_CFG_TRIG ? "TRIG " : "");
 	LOG_INFO("MDMA RX Descriptor %d (0x%08lx)", i, mdma_rx_descriptor_address + (mdma_rx_offset * sizeof(uint32_t)));
 	LOG_INFO("  Address: %s (0x%08x)", _dbg_reg_name(rx_desc->address_start), rx_desc->address_start);
 	LOG_INFO("  Config:  0x%08x", rx_desc->config);
 	if (mdma_rx_size > 2)
-	{
 		LOG_INFO("  X Count: %d", rx_desc->x_count);
-	}
+
 	if (mdma_rx_size > 3)
-	{
 		LOG_INFO("  X Inc:   %d", rx_desc->x_increment);
-	}
+
 	LOG_INFO("  Triggers: %s%s",  rx_desc->config & ENUM_DMA_CFG_TRGWAIT ? "TWAIT " : "",
 									rx_desc->config & BITM_DMA_CFG_TRIG ? "TRIG " : "");
     #endif
@@ -180,24 +171,21 @@ void _debug_print_pdma_descriptor(struct target *target, struct adsp_dma_queue *
 {
     #ifdef PRINT_DEBUG_INFO
 	uint32_t j;
-	adsp_1d_dma_array_desc *desc = (adsp_1d_dma_array_desc *)(&queue->pdma_tx.descriptors[pdma_tx_offset]);
+	struct adsp_1d_dma_array_desc *desc = (struct adsp_1d_dma_array_desc *)(&queue->pdma_tx.descriptors[pdma_tx_offset]);
 	LOG_INFO("PDMA TX Descriptor %d (0x%08lx)", i, pdma_tx_descriptor_address + (pdma_tx_offset * sizeof(uint32_t)));
 	LOG_INFO("  Address: 0x%08x", desc->address_start);
-	for (j = 0; j < (desc->x_count < 8 ? desc->x_count : 8); j++)
-	{
+	for (j = 0; j < (desc->x_count < 8 ? desc->x_count : 8); j++) {
 		uint8_t value;
 		target_read_u8(target, desc->address_start + j, &value);
 		LOG_INFO("    Data:  0x%02x", value);
 	}
 	LOG_INFO("  Config:  0x%08x", desc->config);
 	if (pdma_tx_size > 2)
-	{
 		LOG_INFO("  X Count: 0x%08x", desc->x_count);
-	}
+
 	if (pdma_tx_size > 3)
-	{
 		LOG_INFO("  X Inc:   0x%08x", desc->x_increment);
-	}
+
 	LOG_INFO("  Triggers: %s%s",  desc->config & ENUM_DMA_CFG_TRGWAIT ? "TWAIT " : "",
 									desc->config & BITM_DMA_CFG_TRIG ? "TRIG " : "");
     #endif
@@ -217,15 +205,13 @@ void _debug_print_dma_queue(struct target *target,
 	#ifdef PRINT_DEBUG_INFO
 	uint32_t i;
 
-	if (queue->mdma_tx.num_in_queue > 0)
-	{
+	if (queue->mdma_tx.num_in_queue > 0) {
 		LOG_INFO("MDMA TX Start");
 		LOG_INFO("  Config:  0x%08x", queue->mdma_tx.first_config);
 		LOG_INFO("  Triggers: %s%s",  queue->mdma_tx.first_config & ENUM_DMA_CFG_TRGWAIT ? "TWAIT " : "",
 									queue->mdma_tx.first_config & BITM_DMA_CFG_TRIG ? "TRIG " : "");
 	}
-	if (queue->mdma_rx.num_in_queue > 0)
-	{
+	if (queue->mdma_rx.num_in_queue > 0) {
 		LOG_INFO("MDMA RX Start");
 		LOG_INFO("  Config:  0x%08x", queue->mdma_rx.first_config);
 		LOG_INFO("  Triggers: %s%s",  queue->mdma_rx.first_config & ENUM_DMA_CFG_TRGWAIT ? "TWAIT " : "",
@@ -235,10 +221,9 @@ void _debug_print_dma_queue(struct target *target,
 	uint32_t tx_desc_size = adsp_config_to_descriptor_size(queue->mdma_tx.first_config);
 	uint32_t rx_addr_idx = 0;
 	uint32_t rx_desc_size = adsp_config_to_descriptor_size(queue->mdma_rx.first_config);
-	for (i = 0; i < queue->mdma_tx.num_in_queue; i++)
-	{
-		adsp_1d_dma_array_desc *tx_desc = (adsp_1d_dma_array_desc *)&queue->mdma_tx.descriptors[tx_addr_idx];
-		adsp_1d_dma_array_desc *rx_desc = (adsp_1d_dma_array_desc *)&queue->mdma_rx.descriptors[rx_addr_idx];
+	for (i = 0; i < queue->mdma_tx.num_in_queue; i++) {
+		struct adsp_1d_dma_array_desc *tx_desc = (struct adsp_1d_dma_array_desc *)&queue->mdma_tx.descriptors[tx_addr_idx];
+		struct adsp_1d_dma_array_desc *rx_desc = (struct adsp_1d_dma_array_desc *)&queue->mdma_rx.descriptors[rx_addr_idx];
 		_debug_print_mdma_descriptor(target, queue, i, queue->mdma_tx.descriptors_target->address, tx_addr_idx, tx_desc_size,
 									queue->mdma_rx.descriptors_target->address, rx_addr_idx, rx_desc_size);
 		tx_addr_idx += tx_desc_size;
@@ -252,9 +237,8 @@ void _debug_print_dma_queue(struct target *target,
 								queue->pdma_tx.first_config & BITM_DMA_CFG_TRIG ? "TRIG " : "");
 	tx_addr_idx = 0;
 	tx_desc_size = adsp_config_to_descriptor_size(queue->pdma_tx.first_config);
-	for (i = 0; i < queue->pdma_tx.num_in_queue; i++)
-	{
-		adsp_1d_dma_array_desc *tx_desc = (adsp_1d_dma_array_desc *)&queue->pdma_tx.descriptors[tx_addr_idx];
+	for (i = 0; i < queue->pdma_tx.num_in_queue; i++) {
+		struct adsp_1d_dma_array_desc *tx_desc = (struct adsp_1d_dma_array_desc *)&queue->pdma_tx.descriptors[tx_addr_idx];
 		_debug_print_pdma_descriptor(target, queue, i, queue->pdma_tx.descriptors_target->address, tx_addr_idx, tx_desc_size);
 		tx_addr_idx += tx_desc_size;
 		tx_desc_size = adsp_config_to_descriptor_size(tx_desc->config);

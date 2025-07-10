@@ -439,7 +439,7 @@ struct adiv5_dap {
 
 	/* If the DAP connection is shared with another instance do not use caching
 	 * for DP_SELECT, TAR and CSW values as they could have changed since they
-	 * they were last accessed.
+	 * were last accessed.
 	 */
 	bool shared_connection;
 };

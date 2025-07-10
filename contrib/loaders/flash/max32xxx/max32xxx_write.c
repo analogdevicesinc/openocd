@@ -51,9 +51,9 @@
 
 /***** Definitions *****/
 #define MXC_BASE_TPU                    ((uint32_t)0x40001000UL)
-#define MXC_TPU                         ((mxc_tpu_regs_t *)MXC_BASE_TPU)
+#define MXC_TPU                         ((struct mxc_tpu_regs *)MXC_BASE_TPU)
 #define MXC_BASE_GCR                    ((uint32_t)0x40000000UL)
-#define MXC_GCR                         ((mxc_gcr_regs_t *)MXC_BASE_GCR)
+#define MXC_GCR                         ((struct mxc_gcr_regs *)MXC_BASE_GCR)
 
 /******************************************************************************/
 #define getbyte(temp8)                                                  \
@@ -85,7 +85,7 @@ void algo_write(uint8_t *work_start, uint8_t *work_end, uint32_t len, uint32_t a
 	uint8_t temp8;
 	uint32_t addr_save;
 	int i;
-	mxc_flc_regs_t *MXC_FLC = (mxc_flc_regs_t *)*flc_base;
+	struct mxc_flc_regs *MXC_FLC = (struct mxc_flc_regs *)*flc_base;
 
 	printf(" > w%08x r%08x o%08x f%08x b%08x b%08x\n",
 		(uint32_t)write_ptr, (uint32_t)read_ptr, (uint32_t)*options, (uint32_t)*flc_base,
