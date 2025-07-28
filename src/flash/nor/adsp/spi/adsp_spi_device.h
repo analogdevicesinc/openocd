@@ -58,14 +58,12 @@ struct adsp_dma_regs {
 /**! @struct	adsp_1d_dma_array_desc
  *	 @brief		Defines the 1D DMA descriptor for descriptor-array based mode.
 */
-#pragma pack(4)
 struct adsp_1d_dma_array_desc {
 	uint32_t	address_start;		/*!< Receive Control Register Address */
 	uint32_t	config;				/*!< Config Register Address */
 	uint32_t	x_count;			/*!< X Count Register Address */
 	int32_t		x_increment;		/*!< X Increment Register Address */
-};
-#pragma pack(0)
+} __attribute__((packed, aligned(4)));
 
 /**! @struct	adsp_smpu_regs
  *	 @brief		Defines the SMPU registers required in the driver

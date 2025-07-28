@@ -262,7 +262,6 @@ int armv7a_start_algorithm(struct target *target,
 	enum arm_state core_state = arm->core_state;
 	uint32_t cpsr;
 	int exit_breakpoint_size = 0;
-	int i;
 	int retval = ERROR_OK;
 
 	LOG_DEBUG("Running algorithm");
@@ -282,7 +281,7 @@ int armv7a_start_algorithm(struct target *target,
 		return ERROR_FAIL;
 	}
 
-	for (i = 0; i <= arm->core_cache->num_regs; i++) {
+	for (unsigned int i = 0; i <= arm->core_cache->num_regs; i++) {
 		struct reg *r = &arm->core_cache->reg_list[i];
 		if (!r->exist)
 			continue;
@@ -296,7 +295,7 @@ int armv7a_start_algorithm(struct target *target,
 	}
 	cpsr = buf_get_u32(arm->cpsr->value, 0, 32);
 
-	for (i = 0; i < num_mem_params; i++) {
+	for (int i = 0; i < num_mem_params; i++) {
 		if (mem_params[i].direction == PARAM_IN)
 			continue;
 		retval = target_write_buffer(target, mem_params[i].address, mem_params[i].size,
@@ -305,7 +304,7 @@ int armv7a_start_algorithm(struct target *target,
 			return retval;
 	}
 
-	for (i = 0; i < num_reg_params; i++) {
+	for (int i = 0; i < num_reg_params; i++) {
 		if (reg_params[i].direction == PARAM_IN)
 			continue;
 

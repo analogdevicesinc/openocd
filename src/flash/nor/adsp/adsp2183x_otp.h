@@ -46,12 +46,12 @@ enum FLASH_COMMANDS {
 #define ADSP83X_READID_OFFSET 0x14
 
 struct adsp2183x_algo_params {
-	uint8_t address[4];
-	uint8_t length[4];
-	uint8_t command[4];
-	uint8_t status[4];
-	uint8_t ready[4];
-	uint8_t device_id[4];
-};
+	uint32_t address;
+	uint32_t length;
+	uint32_t command;
+	uint32_t status;
+	uint32_t ready;
+	uint32_t device_id;
+} __attribute__((packed, aligned(4)));
 
 #endif // ADSP2183X_OTP_H
