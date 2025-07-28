@@ -22,19 +22,18 @@
 #define ROUNDUP(value, limit) (((value) + (limit) - ((value) % (limit))))
 
 #define LOG_ERROR_ALGO_PARAMS(algo_params) \
-	LOG_ERROR("Address offset: %08X " \
-				"Length in bytes: %08X " \
-				"Flash command: %08X " \
-				"Status: %08X " \
-				"Readiness: %08X " \
-				"Device ID: %08X ", \
-				*(uint32_t *)algo_params.address, \
-				*(uint32_t *)algo_params.length, \
-				*(uint32_t *)algo_params.command, \
-				*(uint32_t *)algo_params.status, \
-				*(uint32_t *)algo_params.ready, \
-				*(uint32_t *)algo_params.device_id)
-
+	LOG_ERROR("Address offset: 0x%8.8" PRIx32 \
+				" Length in bytes:0x%8.8" PRIx32 \
+				" Flash command: 0x%8.8" PRIx32 \
+				" Status: 0x%8.8" PRIx32 \
+				" Readiness: 0x%8.8" PRIx32 \
+				" Device ID: 0x%8.8" PRIx32, \
+				algo_params.address, \
+				algo_params.length, \
+				algo_params.command, \
+				algo_params.status, \
+				algo_params.ready, \
+				algo_params.device_id)
 
 /* Internal data structure to allow additional options for flash device */
 struct adsp2183x_otp_bank {
@@ -156,7 +155,6 @@ static int adsp2183x_init(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
-	struct adsp2183x_algo_params algo_params;
 	int retval;
 
 	if (!adsp2183x_otp_info) {
@@ -222,16 +220,6 @@ static int adsp2183x_init(struct flash_bank *bank)
 	}
 
 	retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
-
-	if (retval == ERROR_OK) {
-		// initialize algorithm parameters to 0
-		buf_set_u32(algo_params.command, 0, 32, 0);
-		buf_set_u32(algo_params.address, 0, 32, 0);
-		buf_set_u32(algo_params.ready,  0, 32, 0);
-		buf_set_u32(algo_params.length,  0, 32, 0);
-		buf_set_u32(algo_params.status,  0, 32, 0);
-		buf_set_u32(algo_params.device_id,  0, 32, 0);
-	}
 
 	return retval;
 }
@@ -329,7 +317,7 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 		}
 
 		// Issue program command to algorithm
-		buf_set_u32(algo_params.command, 0, 32, PROGRAM_COMMAND);
+		algo_params.command = PROGRAM_COMMAND;
 
 		/* Put next block of data to flash into buffer */
 		retval = target_write_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.buffer_address,
@@ -340,9 +328,9 @@ static int adsp2183x_write(struct flash_bank *bank, const uint8_t *buffer,
 
 		// write algo parameters
 
-		buf_set_u32(algo_params.address, 0, 32, offset);
-		buf_set_u32(algo_params.length, 0, 32, byteCountRounded);
-		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+		algo_params.address = offset;
+		algo_params.length = byteCountRounded;
+		algo_params.ready = ALGO_READY;
 
 		/* Put next block of data to flash into buffer */
 		retval = target_write_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.parameter_address,
@@ -430,12 +418,12 @@ static int adsp2183x_read(struct flash_bank *bank,
 		}
 
 		// hardcode to issue read command to algorithm
-		buf_set_u32(algo_params.command, 0, 32, READ_COMMAND);
+		algo_params.command = READ_COMMAND;
 
 		// write algo parameters
-		buf_set_u32(algo_params.address, 0, 32, offset);
-		buf_set_u32(algo_params.length, 0, 32, byteCountRounded);
-		buf_set_u32(algo_params.ready,  0, 32, ALGO_READY);
+		algo_params.address = offset;
+		algo_params.length = byteCountRounded;
+		algo_params.ready = ALGO_READY;
 
 		retval = target_write_buffer(target, adsp2183x_otp_info->adsp2183x_algorithm.parameter_address,
 					sizeof(algo_params), (uint8_t *)&algo_params);
@@ -501,7 +489,7 @@ static int adsp2183x_probe(struct flash_bank *bank)
 	struct target *target = bank->target;
 	struct adsp2183x_otp_bank *adsp2183x_otp_info = bank->driver_priv;
 	struct flash_sector *sectors = NULL;
-	uint32_t sector_length;
+	uint32_t sector_length = 0;
 	int num_sectors;
 
 	if (!adsp2183x_otp_info) {

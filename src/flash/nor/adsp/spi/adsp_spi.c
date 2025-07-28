@@ -461,10 +461,12 @@ static enum ADSP_SPI_RESULT adsp_write_or_queue_n_x_u32(struct target *target, t
 		 * distinct values.
 		 */
 		uint32_t idx;
-		uint32_t *buffer = (uint32_t *)queue->mdma_tx.data;
+		uint32_t buffer_value;
+		// uint32_t *buffer = (uint32_t *)queue->mdma_tx.data;
 		bool allocate_data = true;
 		for (idx = 0u; idx < (queue->mdma_tx.data_size / sizeof(uint32_t)); idx++) {
-			if (value == buffer[idx]) {
+			memcpy(&buffer_value, (const uint8_t *)queue->mdma_tx.data + idx * sizeof(uint32_t), sizeof(uint32_t));
+			if (value == buffer_value) {
 				allocate_data = false;
 				break;
 			}
@@ -478,7 +480,7 @@ static enum ADSP_SPI_RESULT adsp_write_or_queue_n_x_u32(struct target *target, t
 			return result;
 		}
 		/* Reset buffer just in case the above call did a realloc */
-		buffer = (uint32_t *)queue->mdma_tx.data;
+		// buffer = (uint32_t *)queue->mdma_tx.data;
 		result = adsp_inc_dma_queue(&queue->mdma_rx, 0u, 0u);
 		if (result != ADSP_SPI_RESULT_SUCCESS) {
 			LOG_INFO("Failed to realloc MDMA RX queue");
@@ -487,7 +489,7 @@ static enum ADSP_SPI_RESULT adsp_write_or_queue_n_x_u32(struct target *target, t
 
 		/* Set the value to transfer in the buffer */
 		if (allocate_data) {
-			buffer[idx] = value;
+			memcpy((uint8_t *)queue->mdma_tx.data + idx * sizeof(uint32_t), &value, sizeof(uint32_t));
 			queue->mdma_tx.data_size += sizeof(uint32_t);
 		}
 
@@ -555,20 +557,24 @@ static enum ADSP_SPI_RESULT adsp_write_or_queue_u32(struct target *target, targe
  * @param queue				The DMA queue to add target writes to, or NULL to commit immediately
  */
 static void adsp_write_or_queue_memory(struct target *target, target_addr_t address, uint32_t size, uint32_t count,
-									   const uint8_t *buffer, struct adsp_dma_queue *queue)
+									const uint8_t *buffer, struct adsp_dma_queue *queue)
 {
 	if (queue) {
 		uint32_t i;
 		for (i = 0u; i < count; i++) {
+			uint32_t value = 0;
 			switch (size) {
 			case 1:
-				adsp_write_or_queue_u32(target, address + (i * size), buffer[i], queue);
+				value = buffer[i];
+				adsp_write_or_queue_u32(target, address + (i * size), value, queue);
 				break;
 			case 2:
-				adsp_write_or_queue_u32(target, address + (i * size), ((uint16_t *)buffer)[i], queue);
+				memcpy(&value, buffer + (i * 2), 2);
+				adsp_write_or_queue_u32(target, address + (i * size), value, queue);
 				break;
 			case 4:
-				adsp_write_or_queue_u32(target, address + (i * size), ((uint32_t *)buffer)[i], queue);
+				memcpy(&value, buffer + (i * 4), 4);
+				adsp_write_or_queue_u32(target, address + (i * size), value, queue);
 				break;
 			}
 		}
