@@ -1,0 +1,31 @@
+This file includes highlights of the changes made in the OpenOCD
+source archive release.
+
+JTAG Layer:
+
+Boundary Scan:
+
+Target Layer:
+		
+Flash Layer:
+	* Max32690 QSPI support
+
+Board, Target, and Interface Configuration Scripts:
+	* MAX32657 target config
+	* MAX32658 target config
+	
+Server Layer:
+
+RTOS:
+
+Documentation:
+
+Build and Release:
+	* Pulled in upstream OpenOCD changes from 2025/04/03
+	
+For older NEWS, see the NEWS files associated with each release
+(i.e. NEWS-<version>).
+
+For more information about contributing test reports, bug fixes, or new
+features and device support, please read the new Developer Manual (or
+the BUGS and PATCHES.txt files in the source archive).
