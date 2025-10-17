@@ -46,8 +46,9 @@
 #define RVMAX_VERSION_MAX 0
 #define RVMAX_VERSION_MIN 10
 
-struct list_head rm_tap_list;
-struct list_head rm_du_list;
+OOCD_LIST_HEAD(rm_tap_list);
+OOCD_LIST_HEAD(rm_du_list);
+
 extern uint32_t rvmax_auth_data[];
 char rvmax_driver_info[256] = "";
 static int rvmax_remove_breakpoint(struct target *target,
