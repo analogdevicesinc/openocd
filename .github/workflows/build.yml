@@ -1,0 +1,250 @@
+name: Build and Package OpenOCD
+
+on:
+  workflow_dispatch:
+  push:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build:
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install Build Dependencies
+      run: |
+        sudo apt-get update
+        DEBIAN_FRONTEND=noninteractive sudo apt-get install -y --no-install-recommends tzdata
+        sudo apt-get install -y \
+          build-essential git automake autoconf libtool texinfo \
+          libusb-1.0-0-dev libftdi1-dev libjaylink-dev libcapstone-dev \
+          pkg-config patchelf ca-certificates curl
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Prepare temporary directories
+      id: tempdirs
+      run: |
+        tmpdir=$(mktemp -d)
+        echo "staging_dir=$tmpdir/staging" >> "$GITHUB_OUTPUT"
+
+    - name: Compute version
+      id: version
+      run: |
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        if [ "${{ github.event_name }}" = "release" ]; then
+          VERSION="${{ github.event.release.tag_name }}"
+        elif [ "${{ github.ref_type }}" = "tag" ]; then
+          VERSION="${{ github.ref_name }}"
+        else
+          VERSION=$(git ls-remote --tags --refs origin | awk '{sub("refs/tags/", "", $2); print $2}' | sort -V | tail -1)
+          VERSION=${VERSION:-0.0.0-dev}
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Bootstrap
+      run: ./bootstrap with-submodules
+
+    - name: Configure
+      run: |
+        ./configure \
+          --prefix=/usr \
+          --datarootdir=/usr/share/openocd-adi \
+          --datadir=/usr/share/openocd-adi \
+          --with-pkgversion="${VERSION}" \
+          --enable-internal-jimtcl \
+          --enable-internal-libjaylink
+
+    - name: Build
+      run: make -j$(nproc)
+
+    - name: Create Bundle
+      run: |
+        staging_dir="${{ steps.tempdirs.outputs.staging_dir }}"
+        mkdir -p "$staging_dir/bin"
+        mkdir -p "$staging_dir/lib"
+        mkdir -p "$staging_dir/share/openocd-adi"
+
+        cp src/openocd "$staging_dir/bin/openocd-adi"
+        cp -r tcl/* "$staging_dir/share/openocd-adi/"
+
+        echo "Bundling dependencies..."
+        ldd src/openocd | grep -E "libusb|libftdi|libjaylink|libcapstone" | awk '{print $3}' | xargs -I '{}' cp -v '{}' "$staging_dir/lib/"
+
+        echo "Patching RPATH..."
+        patchelf --set-rpath '$ORIGIN/../lib' "$staging_dir/bin/openocd-adi"
+
+    - name: Upload Bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: openocd-portable-build
+        path: ${{ steps.tempdirs.outputs.staging_dir }}/
+
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Prepare temporary directories
+      id: tempdirs
+      run: |
+        tmpdir=$(mktemp -d)
+        echo "pkg_root=$tmpdir/pkg-root" >> "$GITHUB_OUTPUT"
+
+    - name: Set package version
+      run: |
+        VERSION="${{ needs.build.outputs.version }}"
+        : "${VERSION:?Computed package version is empty}"
+        echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+    - name: Download Bundle
+      uses: actions/download-artifact@v4
+      with:
+        name: openocd-portable-build
+        path: ${{ steps.tempdirs.outputs.pkg_root }}/usr/lib/openocd-adi
+
+    - name: Create System Wrapper
+      run: |
+        pkg_root="${{ steps.tempdirs.outputs.pkg_root }}"
+        mkdir -p "$pkg_root/usr/bin"
+
+        printf '#!/bin/sh\nexec /usr/lib/openocd-adi/bin/openocd-adi -s /usr/lib/openocd-adi/share/openocd-adi "$@"\n' > "$pkg_root/usr/bin/openocd-adi"
+
+        chmod +x "$pkg_root/usr/bin/openocd-adi"
+        chmod +x "$pkg_root/usr/lib/openocd-adi/bin/openocd-adi"
+
+    - name: Install FPM
+      run: |
+        sudo apt-get update && sudo apt-get install -y ruby ruby-dev rubygems rpm
+        sudo gem install --no-document fpm
+
+    - name: Package DEB
+      run: |
+        pkg_root="${{ steps.tempdirs.outputs.pkg_root }}"
+        fpm -s dir -t deb \
+          -n openocd-adi \
+          -v "$VERSION" \
+          -m "Ozan Durgut <linux@analog.com>" \
+          --license "GPL-2.0" \
+          --description "OpenOCD for ADI" \
+          -C "$pkg_root" \
+          .
+
+    - name: Package RPM
+      run: |
+        pkg_root="${{ steps.tempdirs.outputs.pkg_root }}"
+        fpm -s dir -t rpm \
+          -n openocd-adi \
+          -v "$VERSION" \
+          -m "Ozan Durgut <linux@analog.com>" \
+          --license "GPL-2.0" \
+          --description "OpenOCD for ADI" \
+          -C "$pkg_root" \
+          .
+
+    - name: Upload Artifacts to GitHub
+      uses: actions/upload-artifact@v4
+      with:
+        name: openocd-packages
+        path: |
+          *.deb
+          *.rpm
+
+  test-packages:
+      needs: package
+      runs-on: ubuntu-24.04
+      strategy:
+        matrix:
+          include:
+            - name: Ubuntu
+              image: ubuntu:24.04
+              pkg_type: deb
+              install_cmd: apt-get update && apt-get install -y
+            - name: Fedora
+              image: fedora:latest
+              pkg_type: rpm
+              install_cmd: dnf install -y
+
+      container: ${{ matrix.image }}
+
+      steps:
+      - name: Download Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: openocd-packages
+          path: ./pkgs
+
+      - name: Install Package
+        run: |
+          echo "Installing ${{ matrix.pkg_type }} on ${{ matrix.image }}..."
+          ${{ matrix.install_cmd }} ./pkgs/*.${{ matrix.pkg_type }}
+
+      - name: Verify Binary Execution
+        run: |
+          if ldd $(which openocd-adi) | grep "not found"; then
+            echo "Missing shared libraries detected!"
+            exit 1
+          else
+            echo "Library linkage looks good."
+          fi
+
+          openocd-adi --version
+
+          LOG_OUTPUT=$(openocd-adi -d3 -c "exit" 2>&1)
+
+          if echo "$LOG_OUTPUT" | grep -q "/usr/lib/openocd-adi/share/openocd-adi"; then
+            echo "Search path is set correctly."
+          else
+            echo "Search path is erroneus."
+            echo "DEBUG LOGS:"
+            echo "$LOG_OUTPUT"
+            exit 1
+          fi
+
+          RUN_OUTPUT=$(openocd-adi -f interface/ice1000.cfg -c "exit" 2>&1 || true)
+
+          if echo "$RUN_OUTPUT" | grep -q "Can't find interface/ice1000.cfg"; then
+            echo "Script file 'interface/ice1000.cfg' not found!"
+            exit 1
+          else
+            echo "Script file found and parsed."
+          fi
+
+          echo "All Tests Passed!"
+
+  publish:
+      needs: test-packages
+      runs-on: ubuntu-latest
+      if: github.event_name == 'release'
+      steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Download Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: openocd-packages
+          path: ./pkgs
+
+      - name: Authenticate Cloudsmith OIDC
+        uses: cloudsmith-io/cloudsmith-cli-action@v1.0.3
+        with:
+          oidc-namespace: "adi"
+          oidc-service-slug: ${{ secrets.CLOUDSMITH_SERVICE_SLUG }}
+          oidc-auth-only: "false"
+
+      - name: Publish to Cloudsmith
+        run: |
+          cloudsmith push deb adi/external/any-distro/any-version *.deb
+          cloudsmith push rpm adi/external/any-distro/any-version *.rpm
