@@ -5,9 +5,9 @@
 #include "config.h"
 #endif
 
+#include <jtag/interface.h>
 #include <helper/configuration.h>
 #include <helper/log.h>
-#include <jtag/interface.h>
 #include <target/image.h>
 #include "libusb_helper.h"
 
@@ -34,15 +34,15 @@ struct dat_dat {
 
 /* Master scan control structure */
 struct num_tap_pairs {
-	int32_t total;		/* Max number of tap pointers */
-	int32_t cur_idx;	/* Where to add next, or total */
-	int32_t bit_pos;	/* Position to place next bit */
-	int32_t num_dat;	/* Total possible data collection points */
-	int32_t cur_dat;	/* Index to dat array for data to be collected */
-	int32_t rcv_dat;	/* Index to retrieve collected data */
-	struct dat_dat *dat;		/* Pointer to data collection points */
-	unsigned char *cmd; /* Pointer to command, which encompasses pairs */
-	struct tap_pairs *pairs;	/* Pointer to tap pairs array */
+	int32_t total;			 /* Max number of tap pointers */
+	int32_t cur_idx;		 /* Where to add next, or total */
+	int32_t bit_pos;		 /* Position to place next bit */
+	int32_t num_dat;		 /* Total possible data collection points */
+	int32_t cur_dat;		 /* Index to dat array for data to be collected */
+	int32_t rcv_dat;		 /* Index to retrieve collected data */
+	struct dat_dat *dat;	 /* Pointer to data collection points */
+	unsigned char *cmd;		 /* Pointer to command, which encompasses pairs */
+	struct tap_pairs *pairs; /* Pointer to tap pairs array */
 };
 
 /* Cable cbl_params structure with our data */
@@ -63,7 +63,7 @@ struct cbl_params {
 	int32_t r_ep;					  /* USB End Read Point */
 	int32_t r_timeout;				  /* USB Read Timeout */
 	int32_t r_buf_sz;				  /* USB Read Buffer Size */
-	struct num_tap_pairs tap_info;			  /* For collecting and sending tap scans */
+	struct num_tap_pairs tap_info;	  /* For collecting and sending tap scans */
 	bool use_usbmux;				  /* If true, use USB MUX for USB communication */
 	bool reset_hw_on_connection;	  /* If true, do a complete hardware reset at end of init */
 #ifdef _ADI_USB_MUX_
@@ -112,7 +112,9 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define ICE_DEFAULT_SCAN_LEN 0x7FF0 /* Max DIF is 0x2AAA8, but DMA is only 16 bits. */
 #define ICE_TRIGGER_SCAN_LEN 0x7FD8 /* Start checking for RTI/TLR for xmit */
 
-#define RAW_SCAN_HDR_SZ 8
+#define RAW_SCAN_HDR_SZ 3
+#define RAW_SCAN_FTR_SZ 5
+#define RAW_SCAN_OVERHEAD_SZ (RAW_SCAN_HDR_SZ + RAW_SCAN_FTR_SZ)
 
 #define DAT_SZ 0x4000	/* size allocated for reading data */
 #define DAT_SZ_INC 0x40 /* size to increase if data full */
@@ -146,6 +148,8 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define WRITE_BUFFER_SIZE 0x4800
 #define READ_BUFFER_SIZE 0x4000
 #define MAX_DIF_SIZE (27 * 1024) /* 0x7008 is the max but leave some room */
+#define USB_HS_BULK_MAX_PACKET_SIZE 512
+#define USB_HS_BULK_MAX_PACKET_ADJUSTMENT 8 /* Each DIF is a multiple of 8 bytes */
 
 /* Latest firmware version for ICE-1500 */
 #define CURRENT_ICE1500_FW_VERSION 0x0104
@@ -354,9 +358,9 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	usleep(4);
 	do_host_cmd(HOST_SET_TRST, 0, 0);
 
-	cable_params.tap_pair_start_idx = RAW_SCAN_HDR_SZ;
+	cable_params.tap_pair_start_idx = RAW_SCAN_OVERHEAD_SZ;
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
-	cable_params.num_rcv_hdr_bytes = 3; // this is where our TDO actually starts
+	cable_params.num_rcv_hdr_bytes = RAW_SCAN_HDR_SZ; // this is where our TDO actually starts
 
 	if (cable_params.reset_hw_on_connection)
 		do_host_cmd(HOST_HARD_RESET_KIT, RESET_TARGET_DURATION, 0);
@@ -771,7 +775,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 		tap_info->rcv_dat = -1;
 		tap_info->bit_pos = 0x80;
 		tap_info->total = new_sz;
-		tap_info->cmd = cmd;													/* new pointer */
+		tap_info->cmd = cmd;														   /* new pointer */
 		tap_info->pairs = (struct tap_pairs *)(cmd + cable_params.tap_pair_start_idx); /* new pointer */
 
 		tap_scan = tap_info->pairs;
@@ -788,7 +792,7 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 
 		DEBUG("Reallocating scan_data\n");
 
-		new_sz = tap_info->total + byte_cnt + 8;
+		new_sz = tap_info->total + byte_cnt + RAW_SCAN_OVERHEAD_SZ;
 		cmd = realloc(tap_info->cmd, (sizeof(struct tap_pairs) * new_sz) + 4 + cable_params.tap_pair_start_idx);
 		if (!cmd) {
 			LOG_ERROR("realloc(%ld) fails",
@@ -796,8 +800,8 @@ static int add_scan_data(int32_t num_bits, uint8_t *in, bool out, struct scan_co
 			return ERROR_FAIL;
 		}
 
-		tap_info->total = new_sz;												/* resize size */
-		tap_info->cmd = cmd;													/* new pointer */
+		tap_info->total = new_sz;													   /* resize size */
+		tap_info->cmd = cmd;														   /* new pointer */
 		tap_info->pairs = (struct tap_pairs *)(cmd + cable_params.tap_pair_start_idx); /* new pointer */
 
 		tap_scan = tap_info->pairs;
@@ -1133,7 +1137,6 @@ static int perform_scan(uint8_t **rdata)
 	int32_t idx_in, idx_out, collect_data = 0;
 	uint32_t cur_len = tap_info->cur_idx;
 	uint32_t rem_len;
-	uint32_t scan_status_bytes = 3; /* number of bytes letting us know if the scan was successful */
 	uint32_t out_inc = 0;
 
 	/* Data is scan as 32 bit words, so boundaries are adjusted here */
@@ -1191,19 +1194,35 @@ static int perform_scan(uint8_t **rdata)
 
 	/* Here if data is too large, we break it up into manageable chunks */
 	do {
+		int32_t bytes_read;
 		cur_len = (rem_len > MAX_DIF_SIZE) ? MAX_DIF_SIZE : rem_len;
 
-		do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx_in] - cable_params.tap_pair_start_idx,
+		// Avoid sending a packet that is exactly USB_HS_BULK_MAX_PACKET_SIZE bytes long
+		// The USB specification states that a packet of that size must be followed by a zero-length packet
+		// to indicate the end of the transfer. Since the protocol does not handle this, adjust the packet
+		// size to avoid this situation.
+		// The response must also be taken into account and if collecting DOF data it is always
+		// cur_len / 2 + RAW_SCAN_OVERHEAD_SZ bytes long.
+		if ((cur_len + RAW_SCAN_OVERHEAD_SZ == USB_HS_BULK_MAX_PACKET_SIZE) ||
+				(cur_len / 2 + RAW_SCAN_OVERHEAD_SZ == USB_HS_BULK_MAX_PACKET_SIZE)) {
+			LOG_DEBUG("Adjusting USB packet size to avoid USB zero-length packet");
+			cur_len -= USB_HS_BULK_MAX_PACKET_ADJUSTMENT;
+		}
+
+		bytes_read = do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx_in] - cable_params.tap_pair_start_idx,
 				   &out[idx_out]);
+		if (bytes_read == ERROR_FAIL)
+			return ERROR_FAIL;
+
 		if (idx_in != 0) {
-			// each scan gives us scan status, remove it from our buffer
+			// Each scan gives us scan status of size RAW_SCAN_HDR_SZ, remove it from the buffer
 			// if it is not the first scan
-			uint8_t *pData = &out[idx_out + scan_status_bytes];
-			for (size_t i = 0; i < cur_len / 2 + scan_status_bytes; i++)
+			uint8_t *pData = &out[idx_out + RAW_SCAN_HDR_SZ];
+			for (int32_t i = 0; i < bytes_read - RAW_SCAN_HDR_SZ; i++)
 				out[idx_out + i] = pData[i];
-			out_inc = (cur_len / 2);
+			out_inc = bytes_read - RAW_SCAN_HDR_SZ;
 		} else {
-			out_inc = (cur_len / 2) + scan_status_bytes;
+			out_inc = bytes_read;
 		}
 
 		rem_len -= cur_len;
@@ -1242,7 +1261,7 @@ static int perform_scan(uint8_t **rdata)
  * XXX: probably needs converting from memory arrays to byte shifts
  *      so we work regardless of host endian
  */
-static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt, int32_t collect_dof, int32_t dif_cnt, uint8_t *raw_buf,
+static int32_t do_rawscan(uint8_t firstpkt, uint8_t lastpkt, int32_t collect_dof, int32_t dif_cnt, uint8_t *raw_buf,
 					  uint8_t *out)
 {
 	struct usb_command_block usb_cmd_blk;
@@ -1250,6 +1269,7 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt, int32_t collect_dof, in
 	int32_t i, dof_start = 0;
 	uint32_t data;
 	uint32_t size = cable_params.tap_pair_start_idx + dif_cnt;
+	int32_t bytes_read = 0;
 	int32_t num_scan_pairs = (dif_cnt >= 2) ? dif_cnt / 2 : 2;
 	int32_t scan_pairs_in_longs = (num_scan_pairs >= 4) ? num_scan_pairs / 4 : 1;
 
@@ -1285,26 +1305,38 @@ static int do_rawscan(uint8_t firstpkt, uint8_t lastpkt, int32_t collect_dof, in
 	adi_usb_write_or_ret(raw_buf, size);
 
 	if (lastpkt) {
-		int32_t cur_rd_bytes = 0, tot_bytes_rd = 0, rd_bytes_left;
+		int32_t cur_rd_bytes = 0, rd_bytes_left;
 		int32_t buf_index = 0;
 
-		rd_bytes_left = RAW_SCAN_HDR_SZ + ((collect_dof) ? ((scan_pairs_in_longs * 4) - dof_start) : 0);
+		// The ICE-1500 does not support skipping bytes in a scan response,
+		// so the entire response has to be read and then the DOF data extracted.
+		// Allocate a temporary buffer to hold the entire response.
+		uint8_t *dof_buf = malloc(4 * scan_pairs_in_longs + RAW_SCAN_OVERHEAD_SZ);
 
-		while (tot_bytes_rd < rd_bytes_left) {
-			cur_rd_bytes = ((rd_bytes_left - tot_bytes_rd) > cable_params.r_buf_sz) ? cable_params.r_buf_sz
-																					: (rd_bytes_left - tot_bytes_rd);
+		rd_bytes_left = RAW_SCAN_OVERHEAD_SZ + ((collect_dof) ? ((scan_pairs_in_longs * 4)) : 0);
 
-			adi_usb_read_or_ret(out + buf_index, cur_rd_bytes);
-			if ((out + buf_index)[0] != 2) {
+		while (bytes_read < rd_bytes_left) {
+			cur_rd_bytes = ((rd_bytes_left - bytes_read) > cable_params.r_buf_sz) ? cable_params.r_buf_sz
+																					: (rd_bytes_left - bytes_read);
+			adi_usb_read_or_ret(dof_buf + buf_index, cur_rd_bytes);
+			if ((dof_buf + buf_index)[0] != 2) {
 				LOG_ERROR("Scan Error!");
+				free(dof_buf);
 				return ERROR_FAIL;
 			}
-			tot_bytes_rd += cur_rd_bytes;
-			buf_index += (cur_rd_bytes - 8);
+			bytes_read += cur_rd_bytes;
+			buf_index += (cur_rd_bytes - RAW_SCAN_OVERHEAD_SZ);
 		}
+		memcpy(out, dof_buf, RAW_SCAN_HDR_SZ);
+		// The ICE-1500 adds 5 extra bytes at the end of the scan response that are not part of the DOF data.
+		// Copy only the DOF data to the output buffer, skipping the dof_start number of bytes that should
+		// not be included in the response. At the same time trim off the trailing bytes.
+		memcpy(out + RAW_SCAN_HDR_SZ, dof_buf + RAW_SCAN_HDR_SZ + dof_start, bytes_read - dof_start - RAW_SCAN_OVERHEAD_SZ);
+		free(dof_buf);
 	}
 
-	return ERROR_OK;
+	// return number of bytes copied into out buffer
+	return bytes_read - dof_start - RAW_SCAN_FTR_SZ;
 }
 
 COMMAND_HANDLER(ice1500_reset_hw_on_connection)
