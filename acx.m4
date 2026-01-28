@@ -107,9 +107,9 @@ AC_SUBST([target_subdir]) []dnl
 
 
 ####
-# _NCN_TOOL_PREFIXES:  Some stuff that oughtta be done in AC_CANONICAL_SYSTEM
+# _NCN_TOOL_PREFIXES:  Some stuff that oughtta be done in AC_CANONICAL_TARGET
 # or AC_INIT.
-# These demand that AC_CANONICAL_SYSTEM be called beforehand.
+# These demand that AC_CANONICAL_HOST and AC_CANONICAL_TARGET be called beforehand.
 AC_DEFUN([_NCN_TOOL_PREFIXES],
 [ncn_tool_prefix=
 test -n "$host_alias" && ncn_tool_prefix=$host_alias-
@@ -139,11 +139,11 @@ fi
 
 for ncn_progname in $2; do
   if test -n "$ncn_tool_prefix"; then
-    AC_CHECK_PROG([$1], [${ncn_tool_prefix}${ncn_progname}],
+    AC_CHECK_PROG([$1], [${ncn_tool_prefix}${ncn_progname}], 
                   [${ncn_tool_prefix}${ncn_progname}], , [$4])
   fi
   if test -z "$ac_cv_prog_$1" && test $build = $host ; then
-    AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4])
+    AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4]) 
   fi
   test -n "$ac_cv_prog_$1" && break
 done
@@ -194,16 +194,16 @@ fi
 if test -z "$ac_cv_prog_$1"; then
   for ncn_progname in $2; do
     if test -n "$ncn_target_tool_prefix"; then
-      AC_CHECK_PROG([$1], [${ncn_target_tool_prefix}${ncn_progname}],
+      AC_CHECK_PROG([$1], [${ncn_target_tool_prefix}${ncn_progname}], 
                     [${ncn_target_tool_prefix}${ncn_progname}], , [$4])
     fi
     if test -z "$ac_cv_prog_$1" && test $build = $target ; then
-      AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4])
+      AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4]) 
     fi
     test -n "$ac_cv_prog_$1" && break
   done
 fi
-
+  
 if test -z "$ac_cv_prog_$1" ; then
   ifelse([$3],[], [set dummy $2
   if test $build = $target ; then
@@ -215,7 +215,7 @@ else
   $1="$ac_cv_prog_$1"
 fi
 ]) []dnl # NCN_STRICT_CHECK_TARGET_TOOLS
-
+  
 
 # Backported from Autoconf 2.5x; can go away when and if
 # we switch.  Put the OS path separator in $PATH_SEPARATOR.
@@ -228,15 +228,35 @@ if test "${PATH_SEPARATOR+set}" != set; then
   if (PATH="/nonexistent;."; conf$$.sh) >/dev/null 2>&1; then
     PATH_SEPARATOR=';'
   else
-    PATH_SEPARATOR=:
+    PATH_SEPARATOR=: 
   fi
   rm -f conf$$.sh
 fi
 ])
 
 
+dnl ####
+dnl # GCC_BASE_VER
+dnl # Determine GCC version number to use in compiler directories.
+
+AC_DEFUN([GCC_BASE_VER],
+[
+  get_gcc_base_ver="cat"
+  AC_ARG_WITH(gcc-major-version-only,
+  [AS_HELP_STRING([--with-gcc-major-version-only], [use only GCC major number in filesystem paths])],
+  [if test x$with_gcc_major_version_only = xyes ; then
+    changequote(,)dnl
+    get_gcc_base_ver="sed -e 's/^\([0-9]*\).*/\1/'"
+    changequote([,])dnl
+  fi
+  ])
+  AC_SUBST(get_gcc_base_ver)
+])
+
+
 AC_DEFUN([ACX_TOOL_DIRS], [
 AC_REQUIRE([ACX_PATH_SEP])
+AC_REQUIRE([GCC_BASE_VER])
 if test "x$exec_prefix" = xNONE; then
         if test "x$prefix" = xNONE; then
                 gcc_cv_tool_prefix=$ac_default_prefix
@@ -251,7 +271,13 @@ fi
 # case, if there is no compiler in the tree nobody should use
 # AS_FOR_TARGET and LD_FOR_TARGET.
 if test x$host = x$build && test -f $srcdir/gcc/BASE-VER; then
-    gcc_version=`cat $srcdir/gcc/BASE-VER`
+    if test x$with_gcc_major_version_only = xyes ; then
+        changequote(,)dnl
+        gcc_version=`sed -e 's/^\([0-9]*\).*$/\1/' $srcdir/gcc/BASE-VER`
+        changequote([,])dnl
+    else
+        gcc_version=`cat $srcdir/gcc/BASE-VER`
+    fi
     gcc_cv_tool_dirs="$gcc_cv_tool_prefix/libexec/gcc/$target_noncanonical/$gcc_version$PATH_SEPARATOR"
     gcc_cv_tool_dirs="$gcc_cv_tool_dirs$gcc_cv_tool_prefix/libexec/gcc/$target_noncanonical$PATH_SEPARATOR"
     gcc_cv_tool_dirs="$gcc_cv_tool_dirs/usr/lib/gcc/$target_noncanonical/$gcc_version$PATH_SEPARATOR"
@@ -367,9 +393,13 @@ AC_DEFUN([ACX_PROG_GNAT],
 AC_REQUIRE([AC_PROG_CC])
 AC_CHECK_TOOL(GNATBIND, gnatbind, no)
 AC_CHECK_TOOL(GNATMAKE, gnatmake, no)
-AC_CACHE_CHECK([whether compiler driver understands Ada],
+AC_CACHE_CHECK([whether compiler driver understands Ada and is recent enough],
 		 acx_cv_cc_gcc_supports_ada,
 [cat >conftest.adb <<EOF
+pragma Warnings (Off);
+with System.CRTL;
+pragma Warnings (On);
+use type System.CRTL.int64;
 procedure conftest is begin null; end conftest;
 EOF
 acx_cv_cc_gcc_supports_ada=no
@@ -394,6 +424,41 @@ else
 fi
 ])
 
+# Test for Rust
+# We require cargo and rustc for some parts of the rust compiler.
+AC_DEFUN([ACX_PROG_CARGO],
+[AC_CHECK_PROGS(CARGO, cargo, no)
+if test "x$CARGO" != xno; then
+  have_cargo=yes
+else
+  have_cargo=no
+fi])
+
+# Test for D.
+AC_DEFUN([ACX_PROG_GDC],
+[AC_REQUIRE([AC_CHECK_TOOL_PREFIX])
+AC_REQUIRE([AC_PROG_CC])
+AC_CHECK_TOOL(GDC, gdc, no)
+AC_CACHE_CHECK([whether the D compiler works],
+		 acx_cv_d_compiler_works,
+[cat >conftest.d <<EOF
+module conftest; int main() { return 0; }
+EOF
+acx_cv_d_compiler_works=no
+if test "x$GDC" != xno; then
+  errors=`(${GDC} $1[]m4_ifval([$1], [ ])-c conftest.d) 2>&1 || echo failure`
+  if test x"$errors" = x && test -f conftest.$ac_objext; then
+    acx_cv_d_compiler_works=yes
+  fi
+  rm -f conftest.*
+fi])
+if test "x$GDC" != xno && test x$acx_cv_d_compiler_works != xno; then
+  have_gdc=yes
+else
+  have_gdc=no
+fi
+])
+
 dnl 'make compare' can be significantly faster, if cmp itself can
 dnl skip bytes instead of using tail.  The test being performed is
 dnl "if cmp --ignore-initial=2 t1 t2 && ! cmp --ignore-initial=1 t1 t2"
@@ -404,7 +469,7 @@ AC_DEFUN([ACX_PROG_CMP_IGNORE_INITIAL],
 [AC_CACHE_CHECK([how to compare bootstrapped objects], gcc_cv_prog_cmp_skip,
 [ echo abfoo >t1
   echo cdfoo >t2
-  gcc_cv_prog_cmp_skip='tail +16c $$f1 > tmp-foo1; tail +16c $$f2 > tmp-foo2; cmp tmp-foo1 tmp-foo2'
+  gcc_cv_prog_cmp_skip='tail -c +17 $$f1 > tmp-foo1; tail -c +17 $$f2 > tmp-foo2; cmp tmp-foo1 tmp-foo2'
   if cmp t1 t2 2 2 > /dev/null 2>&1; then
     if cmp t1 t2 1 1 > /dev/null 2>&1; then
       :
@@ -501,7 +566,7 @@ else
     *" patsubst([$4], [/.*], []) "*) ;;
     *) ok=no ;;
   esac
-  ifelse([$5],,,
+  ifelse([$5],,, 
   [case ,${enable_languages}, in
     *,$5,*) ;;
     *) ok=no ;;
@@ -599,7 +664,7 @@ AC_DEFUN([ACX_BUGURL],[
 
 dnl ####
 dnl # ACX_CHECK_CYGWIN_CAT_WORKS
-dnl # On Cygwin hosts, check that the cat command ignores
+dnl # On Cygwin hosts, check that the cat command ignores 
 dnl # carriage returns as otherwise builds will not work.
 dnl # See binutils PR 4334 for more details.
 AC_DEFUN([ACX_CHECK_CYGWIN_CAT_WORKS],[
@@ -615,7 +680,7 @@ else
   Please either mount the build directory in binary mode or run the following
   commands before running any configure script:
 set -o igncr
-export SHELLOPTS
+export SHELLOPTS 
   ])
 fi
 ])
