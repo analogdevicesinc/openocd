@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0+
-// Copyright (C) 2022-2025 Analog Devices, Inc.
+// Copyright (C) 2022-2026 Analog Devices, Inc.
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -1203,10 +1203,10 @@ static int perform_scan(uint8_t **rdata)
 		// size to avoid this situation.
 		// The response must also be taken into account and if collecting DOF data it is always
 		// cur_len / 2 + RAW_SCAN_OVERHEAD_SZ bytes long.
-		if ((cur_len + RAW_SCAN_OVERHEAD_SZ == USB_HS_BULK_MAX_PACKET_SIZE) ||
-				(cur_len / 2 + RAW_SCAN_OVERHEAD_SZ == USB_HS_BULK_MAX_PACKET_SIZE)) {
+		if (((cur_len + RAW_SCAN_OVERHEAD_SZ) % USB_HS_BULK_MAX_PACKET_SIZE == 0) ||
+				((cur_len / 2 + RAW_SCAN_OVERHEAD_SZ) % USB_HS_BULK_MAX_PACKET_SIZE == 0)) {
 			LOG_DEBUG("Adjusting USB packet size to avoid USB zero-length packet");
-			cur_len -= USB_HS_BULK_MAX_PACKET_ADJUSTMENT;
+			cur_len -= 2 * USB_HS_BULK_MAX_PACKET_ADJUSTMENT;
 		}
 
 		bytes_read = do_rawscan(firstpkt, lastpkt, collect_data, cur_len, &in[idx_in] - cable_params.tap_pair_start_idx,
