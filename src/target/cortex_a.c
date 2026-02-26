@@ -28,7 +28,7 @@
  *   Copyright (C) 2016 Chengyu Zheng                                      *
  *   chengyu.zheng@polimi.it : watchpoint support                          *
  *                                                                         *
- *   Portions Copyright (C) 2023 Analog Devices, Inc.                      *
+ *   Portions Copyright (C) 2023-2026 Analog Devices, Inc.                 *
  *                                                                         *
  *   Cortex-A8(tm) TRM, ARM DDI 0344H                                      *
  *   Cortex-A9(tm) TRM, ARM DDI 0407F                                      *
@@ -1697,7 +1697,7 @@ static int cortex_a_set_watchpoint(struct target *target, struct watchpoint *wat
 	uint32_t address;
 	uint8_t address_mask;
 	uint8_t byte_address_select;
-	uint8_t load_store_access_control = 0x3;
+	uint8_t load_store_access_control;
 	struct cortex_a_common *cortex_a = target_to_cortex_a(target);
 	struct armv7a_common *armv7a = &cortex_a->armv7a_common;
 	struct cortex_a_wrp *wrp_list = cortex_a->wrp_list;
@@ -1705,6 +1705,22 @@ static int cortex_a_set_watchpoint(struct target *target, struct watchpoint *wat
 	if (watchpoint->is_set) {
 		LOG_WARNING("watchpoint already set");
 		return retval;
+	}
+
+	/* Set access control based on watchpoint type */
+	switch (watchpoint->rw) {
+	case WPT_READ:
+		load_store_access_control = 0x1;	/* Load only */
+		break;
+	case WPT_WRITE:
+		load_store_access_control = 0x2;	/* Store only */
+		break;
+	case WPT_ACCESS:
+		load_store_access_control = 0x3;	/* Both load and store */
+		break;
+	default:
+		LOG_ERROR("Invalid watchpoint type: %d", watchpoint->rw);
+		return ERROR_FAIL;
 	}
 
 	/* check available context WRPs */
