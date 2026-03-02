@@ -13334,6 +13334,104 @@ For quickstart instructions run:
 openocd -f tools/firmware-recovery.tcl -c firmware_help
 @end example
 
+@section ELF Parser Library
+@cindex ELF
+@cindex symbol lookup
+@cindex entry point
+
+The script @file{elf_parser.tcl} provides a lightweight ELF32/ELF64
+parser that can extract entry points and resolve symbol addresses for
+use in debugging or automated boot sequences.
+
+@subsection Features
+
+@itemize @bullet
+@item Automatic detection of ELF32 and ELF64 formats
+@item Extraction of the ELF entry point
+@item Optional lookup of a symbol address for breakpoint placement
+@item Basic endianness handling
+@end itemize
+
+@subsection Limitations
+
+@itemize @minus
+@item Only static symbol tables (@code{.symtab}) are scanned
+@item Symbol lookup is linear and may be slow for large applications
+@item Big-endian ELF support is present but not extensively tested
+@end itemize
+
+@section Automatic Multi-Stage Boot Support
+@cindex boot
+@cindex autoboot
+@cindex u-boot
+@cindex SPL
+
+OpenOCD provides Tcl scripts that implement automated, multi-stage
+booting of ELF images. This is useful for bootloaders such as U-Boot,
+where multiple binaries (for example SPL and U-Boot proper) must be
+loaded and executed in sequence.
+
+The autoboot framework consists of:
+
+@itemize @bullet
+@item @file{auto_boot.tcl} - Core boot logic
+@item @file{boot.tcl} - Generic multi-stage boot script
+@item @file{u-boot.tcl} - Predefined boot sequence for U-Boot
+@end itemize
+
+@subsection Generic Multi-Stage Booting
+
+The script @file{boot.tcl} allows users to define a boot sequence using
+the @code{BOOT_SEQ} variable.
+
+Each stage is defined as:
+
+@example
+    <elf-file> <symbol-to-break-on>
+@end example
+
+@subsubsection Usage Example
+
+@example
+openocd -f interface/debug.cfg \
+        -f target/device.cfg \
+        -c "set BOOT_SEQ \"stage1 ; stage2 ; stage3\"" \
+        -f tools/boot.tcl
+@end example
+
+@subsection U-Boot Default Boot Script
+
+@example
+openocd -f interface/jlink.cfg \
+        -f target/mytarget.cfg \
+        -f tools/u-boot.tcl
+@end example
+
+This loads @file{u-boot-spl} (with a breakpoint at @code{board_init_r})
+and then @file{u-boot}.
+
+@subsection Boot Logic
+
+The core procedure @code{autoboot_elf} performs:
+
+@enumerate
+@item Halt the target and enable polling
+@item For each boot stage:
+@itemize @bullet
+@item Validate the ELF file
+@item Parse entry point and optional symbol address
+@item Load the ELF image
+@item Set the program counter
+@item Install a hardware breakpoint (if requested)
+@item Resume execution
+@item Wait for breakpoint hit (if applicable)
+@end itemize
+@item Print a completion message
+@end enumerate
+
+The boot logic is triggered automatically on @code{reset-init} with a
+150 ms delay.
+
 @node GDB and OpenOCD
 @chapter GDB and OpenOCD
 @cindex GDB
