@@ -24,6 +24,8 @@
  *                                                                         *
  *   Copyright (C) 2011 Andreas Fritiofson                                 *
  *   andreas.fritiofson@gmail.com                                          *
+ *                                                                         *
+ *   Portions Copyright (C) 2023-2026 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -107,6 +109,7 @@ static struct target_type *target_types[] = {
 	&quark_d20xx_target,
 	&quark_x10xx_target,
 	&riscv_target,
+	&rvmax_target,
 	&stm8_target,
 	&testee_target,
 	&xscale_target,
