@@ -219,6 +219,9 @@ endif
 if XVC
 DRIVERFILES += %D%/xvc.c
 endif
+if USE_USBMUX
+DRIVERFILES += %D%/usbmux.c
+endif
 
 DRIVERHEADERS = \
 	%D%/bitbang.h \

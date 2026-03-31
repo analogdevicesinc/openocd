@@ -377,6 +377,11 @@ AC_ARG_ENABLE([internal-libjaylink],
   [Enable building internal libjaylink]),
   [use_internal_libjaylink=$enableval], [use_internal_libjaylink=no])
 
+AC_ARG_ENABLE([usbmux],
+  AS_HELP_STRING([--enable-usbmux],
+  [Enable building usbmux for heterogeneous debugging support of ADSP-SC598 when used with CrossCore Debugger. This option is only supported for a Windows host]),
+  [use_usbmux=$enableval], [use_usbmux=no])
+
 AS_CASE(["${host_cpu}"],
   [i?86|x86*], [],
   [
@@ -457,6 +462,9 @@ AS_IF([test "x$is_mingw" = "xyes"], [
 AS_IF([test "x$is_win32" = "xyes"], [
     AC_DEFINE([IS_WIN32], [1], [1 if building for Win32.])
 ], [
+    AS_IF([test "x$use_usbmux" = "xyes"], [
+      AC_MSG_ERROR([usbmux is only supported by Windows hosts])
+    ])
     AC_DEFINE([IS_WIN32], [0], [0 if not building for Win32.])
 ])
 
@@ -692,6 +700,10 @@ AS_IF([test "x$enable_jlink" != "xno"], [
   ])
 ])
 
+AS_IF([test "x$enable_usbmux" = "xyes"], [
+  AC_DEFINE([_ADI_USB_MUX_],[1], [Use USB Mux when performing heterogeneous debug of ADSP-SC598 using CrossCore Debugger])
+])
+
 # Presto needs the bitq module
 AS_IF([test "x$enable_presto" != "xno"], [
   build_bitq=yes
@@ -717,6 +729,7 @@ AM_CONDITIONAL([USE_LIBFTDI], [test "x$use_libftdi" = "xyes"])
 AM_CONDITIONAL([USE_LIBGPIOD], [test "x$use_libgpiod" = "xyes"])
 AM_CONDITIONAL([USE_HIDAPI], [test "x$use_hidapi" = "xyes"])
 AM_CONDITIONAL([USE_LIBJAYLINK], [test "x$use_libjaylink" = "xyes"])
+AM_CONDITIONAL([USE_USBMUX], [test "x$use_usbmux" = "xyes"])
 AM_CONDITIONAL([HAVE_CAPSTONE], [test "x$enable_capstone" != "xno"])
 
 AM_CONDITIONAL([INTERNAL_JIMTCL], [test "x$use_internal_jimtcl" = "xyes"])
