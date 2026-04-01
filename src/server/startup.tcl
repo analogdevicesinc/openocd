@@ -96,6 +96,12 @@ proc "gdb_save_tdesc" {} {
 	eval gdb save_tdesc
 }
 
+lappend _telnet_autocomplete_skip "gdb_warn_target_extended_remote"
+proc "gdb_warn_target_extended_remote" {override} {
+	echo "DEPRECATED! use 'gdb warn_target_extended_remote', not 'gdb_warn_target_extended_remote'"
+	eval gdb warn_target_extended_remote $override
+}
+
 lappend _telnet_autocomplete_skip "tcl_port"
 proc "tcl_port" {args} {
 	echo "DEPRECATED! use 'tcl port' not 'tcl_port'"
