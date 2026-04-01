@@ -19,6 +19,7 @@ dated @value{UPDATED},
 of the Open On-Chip Debugger (OpenOCD).
 
 @itemize @bullet
+@item Portions Copyright @copyright{} 2015-2023 Analog Devices, Inc.
 @item Copyright @copyright{} 2008-2025 The OpenOCD Project
 @item Copyright @copyright{} 2007-2008 Spencer Oliver @email{spen@@spen-soft.co.uk}
 @item Copyright @copyright{} 2008-2010 Oyvind Harboe @email{oyvind.harboe@@zylin.com}
@@ -327,6 +328,36 @@ Ethernet port needed?
 @item @b{RTCK} Do you expect to use it with ARM chips and boards with
 RTCK support (also known as ``adaptive clocking'')?
 @end enumerate
+
+@section USB Analog Devices ICE-1000 and ICE-2000
+
+The Analog Devices ICE-1000 and ICE-2000 support debugging Analog Devices
+processors. Both of them support JTAG and SWD.
+
+ICE-1000 supports frequency up to 5 MHz (1 MHz, 2 MHz, 5 MHz).
+ICE-2000 supports frequency up to 46 MHz (1 MHz, 2 MHz, 5 MHz, 9 MHz, 15 MHz, 23 MHz, 46 MHz).
+
+ICE-1000 and ICE-2000 feature a multi-color LED for indicating emulator status:
+
+@itemize @bullet
+@item @b{Green}
+@* indicates the emulator is ready for operations.
+@item @b{Yellow}
+@* indicates the emulator has an issue.
+@item @b{Magenta}
+@* indicates the emulator is in JTAG mode.
+@item @b{Cyan}
+@* indicates the emulator is in SWD mode.
+@end itemize
+
+Their firmwares can be updated using OpenOCD firmware command.
+
+@example
+openocd -f interface/ice1000.cfg \
+        -c "firmware Ice1000_firmware.hex"
+@end example
+
+For the latest firmwares or more information, visit: @url{http://www.analog.com/ice1000} and @url{http://www.analog.com/ice2000}
 
 @section USB FT2232 Based
 
@@ -2858,6 +2889,25 @@ stability at higher JTAG clocks.
 
 For example adapter definitions, see the configuration files shipped in the
 @file{interface/ftdi} directory.
+
+@end deffn
+
+@deffn {Interface Driver} {ice1000}
+Analog Devices ICE-1000 USB emulator. It supports JTAG and SWD transports.
+@end deffn
+
+@deffn {Interface Driver} {ice2000}
+Analog Devices ICE-2000 USB emulator. It supports JTAG and SWD transports.
+It has one driver-specific command:
+
+@deffn {Config Command} {ice2000_voltage} @option{1}|@option{2}|@option{3}
+Set voltage:
+@itemize @minus
+@item @option{1}: 1.8 V
+@item @option{2}: 2.5 V
+@item @option{3}: 3.3 V
+@end itemize
+@end deffn
 
 @end deffn
 

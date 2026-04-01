@@ -219,6 +219,13 @@ endif
 if XVC
 DRIVERFILES += %D%/xvc.c
 endif
+if ICE_1000
+DRIVERFILES += %D%/ice1000.c
+else
+if ICE_2000
+DRIVERFILES += %D%/ice1000.c
+endif
+endif
 if USE_USBMUX
 DRIVERFILES += %D%/usbmux.c
 endif

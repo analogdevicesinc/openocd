@@ -9,6 +9,8 @@
  *                                                                         *
  *   Copyright (C) 2009 Zachary T Welch                                    *
  *   zw@superlucidity.net                                                  *
+ *                                                                         *
+ *   Portions Copyright (C) 2023-2026 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 #ifndef OPENOCD_JTAG_INTERFACE_H
@@ -390,6 +392,8 @@ extern struct adapter_driver ft232r_adapter_driver;
 extern struct adapter_driver ftdi_adapter_driver;
 extern struct adapter_driver gw16012_adapter_driver;
 extern struct adapter_driver hl_adapter_driver;
+extern struct adapter_driver ice1000_adapter_driver;
+extern struct adapter_driver ice2000_adapter_driver;
 extern struct adapter_driver imx_gpio_adapter_driver;
 extern struct adapter_driver jlink_adapter_driver;
 extern struct adapter_driver jtag_dpi_adapter_driver;

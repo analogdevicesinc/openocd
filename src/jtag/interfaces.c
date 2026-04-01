@@ -15,6 +15,8 @@
  *   zw@superlucidity.net                                                  *
  *                                                                         *
  *   Copyright (C) 2020, Ampere Computing LLC                              *
+ *                                                                         *
+ *   Portions Copyright (C) 2023-2026 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -91,6 +93,12 @@ struct adapter_driver *adapter_drivers[] = {
 #endif
 #if BUILD_HLADAPTER == 1
 		&hl_adapter_driver,
+#endif
+#if BUILD_ICE_1000 == 1
+		&ice1000_adapter_driver,
+#endif
+#if BUILD_ICE_2000 == 1
+		&ice2000_adapter_driver,
 #endif
 #if BUILD_IMX_GPIO == 1
 		&imx_gpio_adapter_driver,
