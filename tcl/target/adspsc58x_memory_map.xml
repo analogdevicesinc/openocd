@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE memory-map SYSTEM "openocd_memory_map.dtd">
+<memory-map>
+    <processor name="adspsc58x">
+        <memory     name="ahb_mem"         start="0x20000000" length="0xe0000000" access="rw" />
+    </processor>
+</memory-map>
