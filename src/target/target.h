@@ -15,6 +15,8 @@
  *                                                                         *
  *   Copyright (C) ST-Ericsson SA 2011                                     *
  *   michel.jaouen@stericsson.com : smp minimum support                    *
+ *                                                                         *
+ *   Portions Copyright (C) 2026 Analog Devices, Inc.                      *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_TARGET_H
@@ -826,6 +828,7 @@ int target_profiling_default(struct target *target, uint32_t *samples, uint32_t
 #define ERROR_TARGET_SIZE_NOT_SUPPORTED  (-313)
 #define ERROR_TARGET_PACKING_NOT_SUPPORTED  (-314)
 #define ERROR_TARGET_HALTED_DO_RESUME  (-315)	/* used to workaround incorrect debug halt */
+#define ERROR_TARGET_EXCEPTION_LEVEL (-316)
 
 extern bool get_target_reset_nag(void);
 
