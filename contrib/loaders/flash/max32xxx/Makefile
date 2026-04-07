@@ -5,8 +5,13 @@ ENTRY=algo_write
 
 BIN2C = ../../../../src/helper/bin2char.sh
 
+ifeq "$(RISCV)" ""
 PREFIX=arm-none-eabi
 CFLAGS=-mthumb -mcpu=cortex-m4 -Wa,-mimplicit-it=thumb
+else
+PREFIX=riscv-none-embed
+CFLAGS=-march=rv32imc -mabi=ilp32 -Wall -g3 -ggdb -DDEBUG -O0
+endif
 
 all: $(TARGET).inc
 

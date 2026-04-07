@@ -13,7 +13,7 @@
 #include "tpu_regs.h"
 #include "gcr_regs.h"
 #include "flc_regs.h"
-#include "algo_options.h"
+#include "../../../../src/flash/nor/max32xxx_options.h"
 
 #ifdef ALGO_TEST
 #include <stdio.h>
