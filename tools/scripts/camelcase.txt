@@ -107,6 +107,7 @@ Jim_GetDouble
 Jim_GetEnum
 Jim_GetExitCode
 Jim_GetGlobalVariableStr
+Jim_GetLong
 Jim_GetResult
 Jim_GetString
 Jim_GetWide
