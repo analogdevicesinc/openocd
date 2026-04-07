@@ -36,3 +36,33 @@ proc mmw {reg setbits clearbits} {
 
 add_usage_text mmw "address setbits clearbits"
 add_help_text mmw "Modify word in memory. new_val = (old_val & ~clearbits) | setbits;"
+
+# pmrw: "physical memory read word", returns value of $reg
+proc pmrw {reg} {
+	return [read_memory $reg 32 1 phys]
+}
+
+add_usage_text pmrw "address"
+add_help_text pmrw "Returns value of word in physical memory."
+
+# pmmw: "physical memory modify word", updates value of $reg
+#       $reg <== ((value & ~$clearbits) | $setbits)
+proc pmmw {reg setbits clearbits} {
+	set old [pmrw $reg]
+	set new [expr {($old & ~$clearbits) | $setbits}]
+	mww phys $reg $new
+}
+
+add_usage_text pmmw "address setbits clearbits"
+add_help_text pmmw "Modify word in physical memory. new_val = (old_val & ~clearbits) | setbits;"
+
+# memap_mmw: "mem-ap memory modify word", updates value of $reg using mem-ap
+#       $reg <== ((value & ~$clearbits) | $setbits)
+proc memap_mmw {reg setbits clearbits} {
+	set old [mem_ap_read_reg $reg]
+	set new [expr {($old & ~$clearbits) | $setbits}]
+	mem_ap_write_reg $reg $new
+}
+
+add_usage_text memap_mmw "address setbits clearbits"
+add_help_text memap_mmw "Modify word in memory using mem-ap. new_val = (old_val & ~clearbits) | setbits;"

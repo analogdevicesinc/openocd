@@ -4840,6 +4840,9 @@ enum target_cfg_param {
 	TCFG_DEFER_EXAMINE,
 	TCFG_GDB_PORT,
 	TCFG_GDB_MAX_CONNECTIONS,
+	TCFG_RESTART_CTI_REG_ADDR,
+	TCFG_RESTART_CTI_CHANNEL,
+	TCFG_HALT_CTI_CHANNEL,
 };
 
 static struct nvp nvp_config_opts[] = {
@@ -4857,6 +4860,9 @@ static struct nvp nvp_config_opts[] = {
 	{ .name = "-defer-examine",    .value = TCFG_DEFER_EXAMINE },
 	{ .name = "-gdb-port",         .value = TCFG_GDB_PORT },
 	{ .name = "-gdb-max-connections",   .value = TCFG_GDB_MAX_CONNECTIONS },
+	{ .name = "-restart-cti-reg-addr",  .value = TCFG_RESTART_CTI_REG_ADDR },
+	{ .name = "-restart-cti-channel",   .value = TCFG_RESTART_CTI_CHANNEL },
+	{ .name = "-halt-cti-channel", .value = TCFG_HALT_CTI_CHANNEL },
 	{ .name = NULL, .value = -1 }
 };
 
@@ -5236,6 +5242,70 @@ static COMMAND_HELPER(target_configure, struct target *target, unsigned int inde
 				if (index != CMD_ARGC)
 					return ERROR_COMMAND_SYNTAX_ERROR;
 				command_print(CMD, "%d", target->gdb_max_connections);
+			}
+			/* loop for more */
+			break;
+
+		case TCFG_RESTART_CTI_REG_ADDR:
+			if (is_configure) {
+				if (index == CMD_ARGC) {
+					command_print(CMD, "missing argument to %s", CMD_ARGV[index - 1]);
+					return ERROR_COMMAND_ARGUMENT_INVALID;
+				}
+
+				if (CMD_CTX->mode != COMMAND_CONFIG) {
+					command_print(CMD, "-restart-cti-reg-addr must be configured before 'init'");
+					return ERROR_COMMAND_ARGUMENT_INVALID;
+				}
+				COMMAND_PARSE_NUMBER(u64, CMD_ARGV[index], target->restart_cti_reg_addr);
+				target->restart_use_cti = true;
+				index++;
+			} else {
+				if (index != CMD_ARGC)
+					return ERROR_COMMAND_SYNTAX_ERROR;
+				command_print(CMD, TARGET_ADDR_FMT, target->restart_cti_reg_addr);
+			}
+			/* loop for more */
+			break;
+
+		case TCFG_RESTART_CTI_CHANNEL:
+			if (is_configure) {
+				if (index == CMD_ARGC) {
+					command_print(CMD, "missing argument to %s", CMD_ARGV[index - 1]);
+					return ERROR_COMMAND_ARGUMENT_INVALID;
+				}
+
+				if (CMD_CTX->mode != COMMAND_CONFIG) {
+					command_print(CMD, "-restart-cti-channel must be configured before 'init'");
+					return ERROR_COMMAND_ARGUMENT_INVALID;
+				}
+				COMMAND_PARSE_NUMBER(int, CMD_ARGV[index], target->restart_cti_channel);
+				index++;
+			} else {
+				if (index != CMD_ARGC)
+					return ERROR_COMMAND_SYNTAX_ERROR;
+				command_print(CMD, "%d", target->restart_cti_channel);
+			}
+			/* loop for more */
+			break;
+
+		case TCFG_HALT_CTI_CHANNEL:
+			if (is_configure) {
+				if (index == CMD_ARGC) {
+					command_print(CMD, "missing argument to %s", CMD_ARGV[index - 1]);
+					return ERROR_COMMAND_ARGUMENT_INVALID;
+				}
+
+				if (CMD_CTX->mode != COMMAND_CONFIG) {
+					command_print(CMD, "-halt-cti-channel must be configured before 'init'");
+					return ERROR_COMMAND_ARGUMENT_INVALID;
+				}
+				COMMAND_PARSE_NUMBER(int, CMD_ARGV[index], target->halt_cti_channel);
+				index++;
+			} else {
+				if (index != CMD_ARGC)
+					return ERROR_COMMAND_SYNTAX_ERROR;
+				command_print(CMD, "%d", target->halt_cti_channel);
 			}
 			/* loop for more */
 			break;

@@ -456,6 +456,7 @@ struct armv8_common {
 
 	/* True if OpenOCD provides pointer auth related info to GDB */
 	bool enable_pauth;
+	struct arm_cti *sys_cti;
 
 	bool sticky_reset;
 

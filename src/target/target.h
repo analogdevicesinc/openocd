@@ -222,6 +222,12 @@ struct target {
 
 	/* The semihosting information, extracted from the target. */
 	struct semihosting *semihosting;
+
+	/* Some targets use CoreSight CTI to do restart */
+	bool restart_use_cti;
+	target_addr_t restart_cti_reg_addr;
+	int restart_cti_channel;
+	int halt_cti_channel;
 };
 
 struct target_list {
