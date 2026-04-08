@@ -16,7 +16,7 @@
  *   Copyright (C) ST-Ericsson SA 2011                                     *
  *   michel.jaouen@stericsson.com : smp minimum support                    *
  *                                                                         *
- *   Portions Copyright (C) 2026 Analog Devices, Inc.                      *
+ *   Portions Copyright (C) 2023-2026 Analog Devices, Inc.                 *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_TARGET_H
@@ -286,9 +286,10 @@ enum target_event {
 	TARGET_EVENT_DEBUG_HALTED,	/* target entered debug state, but was executing on behalf of the debugger */
 	TARGET_EVENT_DEBUG_RESUMED, /* target resumed to execute on behalf of the debugger */
 
-	TARGET_EVENT_EXAMINE_START,
+	TARGET_EVENT_EXAMINE_START, /* called before examine function is executed */
 	TARGET_EVENT_EXAMINE_FAIL,
 	TARGET_EVENT_EXAMINE_END,
+	TARGET_EVENT_EXAMINE_FIRST, /* first thing called as soon as target examined flag is set */
 
 	TARGET_EVENT_GDB_ATTACH,
 	TARGET_EVENT_GDB_DETACH,
