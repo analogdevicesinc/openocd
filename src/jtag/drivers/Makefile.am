@@ -198,6 +198,22 @@ endif
 if CMSIS_DAP_TCP
 DRIVERFILES += %D%/cmsis_dap_tcp.c
 endif
+if ADI_DBGAGENT
+DRIVERFILES += %D%/adi_dbg_agent.c
+endif
+if ICE_1000
+DRIVERFILES += %D%/ice1000.c
+else
+if ICE_2000
+DRIVERFILES += %D%/ice1000.c
+endif
+endif
+if ICE_1500
+DRIVERFILES += %D%/ice1500.c
+endif
+if USE_USBMUX
+DRIVERFILES += %D%/usbmux.c
+endif
 if IMX_GPIO
 DRIVERFILES += %D%/imx_gpio.c
 endif
@@ -218,16 +234,6 @@ DRIVERFILES += %D%/cklink.c
 endif
 if XVC
 DRIVERFILES += %D%/xvc.c
-endif
-if ICE_1000
-DRIVERFILES += %D%/ice1000.c
-else
-if ICE_2000
-DRIVERFILES += %D%/ice1000.c
-endif
-endif
-if USE_USBMUX
-DRIVERFILES += %D%/usbmux.c
 endif
 
 DRIVERHEADERS = \

@@ -135,7 +135,9 @@ m4_define([ADAPTER_OPT], [m4_translit(ADAPTER_ARG($1), [_], [-])])
 
 m4_define([USB1_ADAPTERS],
 	[[[ice1000], [Analog Devices ICE-1000], [ICE_1000]],
+	[[ice1500], [Analog Devices ICE-1500], [ICE_1500]],
 	[[ice2000], [Analog Devices ICE-2000], [ICE_2000]],
+	[[adi_dbgagent], [Analog Devices Debug Agent], [ADI_DBGAGENT]],
 	[[ftdi], [MPSSE mode of FTDI based devices], [FTDI]],
 	[[ftdi_cjtag], [cJTAG (OScan1, JScan3) tunneled thru MPSSE], [FTDI_CJTAG]],
 	[[ch347], [CH347 based devices], [CH347]],
