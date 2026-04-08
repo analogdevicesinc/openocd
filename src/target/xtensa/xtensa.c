@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /***************************************************************************
+ *   ADSPSC83x Target Support for OpenOCD                                  *
+ *   Portions Copyright (C) 2022-2026 Analog Devices, Inc.                 *
+ *                                                                         *
  *   Generic Xtensa target API for OpenOCD                                 *
  *   Copyright (C) 2020-2022 Cadence Design Systems, Inc.                  *
  *   Copyright (C) 2016-2019 Espressif Systems Ltd.                        *
@@ -186,6 +189,9 @@
 #define XT_SW_BREAKPOINTS_MAX_NUM       32
 #define XT_HW_IBREAK_MAX_NUM            2
 #define XT_HW_DBREAK_MAX_NUM            2
+#define XTMEM_TYPES					"<icache|dcache|iram|irom|dram|drom|sram|srom|l2ram"\
+									"|sysmmr|spi_range<1,2,3>|dram_mp|iram_mp|dram_arm"\
+									"|iram_arm|srom_arm>"
 
 struct xtensa_reg_desc xtensa_regs[XT_NUM_REGS] = {
 	XT_MK_REG_DESC("pc", XT_PC_REG_NUM_VIRTUAL, XT_REG_SPECIAL, 0),
@@ -297,10 +303,20 @@ struct xtensa_reg_desc xtensa_regs[XT_NUM_REGS] = {
 enum xtensa_mem_region_type {
 	XTENSA_MEM_REG_IROM = 0x0,
 	XTENSA_MEM_REG_IRAM,
+	XTENSA_MEM_REG_IRAM_ARM,
+	XTENSA_MEM_REG_IRAM_MP,
 	XTENSA_MEM_REG_DROM,
 	XTENSA_MEM_REG_DRAM,
+	XTENSA_MEM_REG_DRAM_ARM,
+	XTENSA_MEM_REG_DRAM_MP,
 	XTENSA_MEM_REG_SRAM,
 	XTENSA_MEM_REG_SROM,
+	XTENSA_MEM_REG_SROM_ARM,
+	XTENSA_MEM_REG_L2RAM,
+	XTENSA_MEM_REG_SPI_RANGE_1,
+	XTENSA_MEM_REG_SPI_RANGE_2,
+	XTENSA_MEM_REG_SPI_RANGE_3,
+	XTENSA_MEM_REG_SYSMMR,
 	XTENSA_MEM_REGS_NUM
 };
 
@@ -353,14 +369,34 @@ static inline const struct xtensa_local_mem_config *xtensa_get_mem_config(
 		return &xtensa->core_config->irom;
 	case XTENSA_MEM_REG_IRAM:
 		return &xtensa->core_config->iram;
+	case XTENSA_MEM_REG_IRAM_ARM:
+		return &xtensa->core_config->iram_arm;
+	case XTENSA_MEM_REG_IRAM_MP:
+		return &xtensa->core_config->iram_mp;
 	case XTENSA_MEM_REG_DROM:
 		return &xtensa->core_config->drom;
 	case XTENSA_MEM_REG_DRAM:
 		return &xtensa->core_config->dram;
+	case XTENSA_MEM_REG_DRAM_ARM:
+		return &xtensa->core_config->dram_arm;
+	case XTENSA_MEM_REG_DRAM_MP:
+		return &xtensa->core_config->dram_mp;
 	case XTENSA_MEM_REG_SRAM:
 		return &xtensa->core_config->sram;
 	case XTENSA_MEM_REG_SROM:
 		return &xtensa->core_config->srom;
+	case XTENSA_MEM_REG_SROM_ARM:
+		return &xtensa->core_config->srom_arm;
+	case XTENSA_MEM_REG_L2RAM:
+		return &xtensa->core_config->l2ram;
+	case XTENSA_MEM_REG_SPI_RANGE_1:
+		return &xtensa->core_config->spi_range1;
+	case XTENSA_MEM_REG_SPI_RANGE_2:
+		return &xtensa->core_config->spi_range2;
+	case XTENSA_MEM_REG_SPI_RANGE_3:
+		return &xtensa->core_config->spi_range3;
+	case XTENSA_MEM_REG_SYSMMR:
+		return &xtensa->core_config->sysmmr;
 	default:
 		return NULL;
 	}
@@ -411,21 +447,35 @@ static inline bool xtensa_is_cacheable(const struct xtensa_cache_config *cache,
 		return false;
 	return xtensa_memory_region_find(mem, address);
 }
-
 static inline bool xtensa_is_icacheable(struct xtensa *xtensa, target_addr_t address)
 {
-	return xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram, address) ||
-	       xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->irom, address) ||
-	       xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->sram, address) ||
-	       xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->srom, address);
+	return (xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->irom, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->sram, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->srom, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->l2ram, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range1, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range2, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->spi_range3, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram_mp, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->iram_arm, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->srom_arm, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->icache, &xtensa->core_config->l2ram, address));
 }
 
 static inline bool xtensa_is_dcacheable(struct xtensa *xtensa, target_addr_t address)
 {
-	return xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram, address) ||
-	       xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->drom, address) ||
-	       xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->sram, address) ||
-	       xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->srom, address);
+	return (xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->drom, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->sram, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->srom, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range1, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range2, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->spi_range3, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram_mp, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->dram_arm, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->srom_arm, address) ||
+		xtensa_is_cacheable(&xtensa->core_config->dcache, &xtensa->core_config->l2ram, address));
 }
 
 static int xtensa_core_reg_get(struct reg *reg)
@@ -981,6 +1031,21 @@ static inline void xtensa_reg_set_value(struct reg *reg, xtensa_reg_val_t value)
 {
 	buf_set_u32(reg->value, 0, 32, value);
 	reg->dirty = true;
+}
+
+/* Trigger a CTI channel. The XTENSA OCD does not support triggering CTI
+ * when resuming therefore causing peripherals connected to a System CTI
+ * to remain halted.  It can be triggered using xtensa_trigger_cti_apppulse
+ * thereby halting the peripherals.  It will not be synchronised with the
+ * core resuming and should not be relied upon for synchronous halt/resume
+ * operation */
+static int xtensa_trigger_cti_apppulse(struct target *target, uint32_t channel)
+{
+	struct xtensa *xtensa = target_to_xtensa(target);
+	int res = mem_ap_write_atomic_u32(xtensa->dbg_mod.debug_ap,
+			target->restart_cti_reg_addr, 1 << channel);
+
+	return res;
 }
 
 static int xtensa_imprecise_exception_occurred(struct target *target)
@@ -1563,6 +1628,7 @@ int xtensa_mmu_is_enabled(struct target *target, bool *enabled)
 	return ERROR_OK;
 }
 
+/* TODO: Handle MP break-in/break-out */
 int xtensa_halt(struct target *target)
 {
 	struct xtensa *xtensa = target_to_xtensa(target);
@@ -1687,6 +1753,13 @@ int xtensa_resume(struct target *target,
 	if (res != ERROR_OK) {
 		LOG_TARGET_ERROR(target, "Failed to resume!");
 		return res;
+	}
+
+	if (target->restart_use_cti) {
+		/* Send DBGRESTART signal to System CTI */
+		res = xtensa_trigger_cti_apppulse(target, target->restart_cti_channel);
+		if (res != ERROR_OK)
+			return res;
 	}
 
 	target->debug_reason = DBG_REASON_NOTHALTED;
@@ -1946,6 +2019,12 @@ int xtensa_do_step(struct target *target, bool current, target_addr_t address,
 int xtensa_step(struct target *target, bool current, target_addr_t address,
 		bool handle_breakpoints)
 {
+	if (target->restart_use_cti) {
+		/* Send DBGRESTART signal */
+		int res = xtensa_trigger_cti_apppulse(target, target->restart_cti_channel);
+		if (res != ERROR_OK)
+			return res;
+	}
 	int retval = xtensa_do_step(target, current, address, handle_breakpoints);
 	if (retval != ERROR_OK)
 		return retval;
@@ -2121,8 +2200,11 @@ int xtensa_write_memory(struct target *target,
 
 	if (!xtensa->permissive_mode) {
 		if (!xtensa_memory_op_validate_range(xtensa, address, (size * count), XT_MEM_ACCESS_WRITE)) {
-			LOG_WARNING("address " TARGET_ADDR_FMT " not writable", address);
-			return ERROR_FAIL;
+			LOG_INFO("address " TARGET_ADDR_FMT " not writable, skipped", address);
+
+			/* To skip writing flash sections we need to return ERROR_OK
+			 * otherwise GDB will quit trying to load the program */
+			return ERROR_OK;
 		}
 	}
 
@@ -2537,10 +2619,27 @@ static int xtensa_sw_breakpoint_add(struct target *target,
 		return ret;
 	}
 
-	sw_bp->insn_sz = MIN(XT_ISNS_SZ_MAX, breakpoint->length);
-	sw_bp->oocd_bp = breakpoint;
+	uint64_t break_insn;
 
-	uint32_t break_insn = sw_bp->insn_sz == XT_ISNS_SZ_MAX ? XT_INS_BREAK(xtensa, 0, 0) : XT_INS_BREAKN(xtensa, 0);
+	if ((sw_bp->insn[0] & 0x08) == 0) {
+		// bit 3 of the first byte being clear indicates a 3 byte instruction
+		sw_bp->insn_sz = XT_BRK_INSN_3BYTE;
+		// use 3 byte breakpoint instruction
+		break_insn = XT_INS_BREAK(xtensa, 0, 0);
+	} else if (((sw_bp->insn[0] & 0x02) == 0) || ((sw_bp->insn[0] & 0x04) == 0)) {
+		// bit 1 or 2 of the first byte being clear indicates a 2 byte instruction
+		sw_bp->insn_sz = XT_BRK_INSN_2BYTE;
+		// use 2 byte breakpoint instruction
+		break_insn = XT_INS_BREAKN(xtensa, 0);
+	} else {
+		// instruction size is bigger than 2 or 3 bytes so set to MAX needed
+		// to replace the original instruction and not cause an exception
+		sw_bp->insn_sz = XT_ISNS_SZ_MAX;
+		// max instruction size includes breakpoint instruction + isync replacement
+		break_insn = XT_INS_ISYNC(xtensa);
+		break_insn = (XT_INS_ISYNC(xtensa)) << 16 | XT_INS_BREAKN(xtensa, 0);
+	}
+	sw_bp->oocd_bp = breakpoint;
 
 	/* Underlying memory write will convert instruction endianness, don't do that here */
 	ret = xtensa_update_instruction(target, breakpoint->address, sw_bp->insn_sz, (uint8_t *)&break_insn);
@@ -2832,7 +2931,7 @@ int xtensa_wait_algorithm(struct target *target,
 		retval = target_halt(target);
 		if (retval != ERROR_OK)
 			return retval;
-		retval = target_wait_state(target, TARGET_HALTED, 500);
+		retval = target_wait_state(target, TARGET_HALTED, timeout_ms);
 		if (retval != ERROR_OK)
 			return retval;
 		LOG_TARGET_ERROR(target, "not halted %d, pc 0x%" PRIx32 ", ps 0x%" PRIx32, retval,
@@ -3005,6 +3104,20 @@ static int xtensa_build_reg_cache(struct target *target)
 	xtensa->dbregs_num = last_dbreg_num + 1;
 	reg_cache->reg_list = reg_list;
 	reg_cache->num_regs = reg_list_size;
+
+	xtensa->algo_context_backup = calloc(reg_cache->num_regs, sizeof(void *));
+	if (!xtensa->algo_context_backup) {
+		LOG_ERROR("Failed to alloc mem for algorithm context backup!");
+		return ERROR_FAIL;
+	}
+	for (unsigned int i = 0; i < reg_cache->num_regs; i++) {
+		struct reg *reg = &reg_cache->reg_list[i];
+		xtensa->algo_context_backup[i] = calloc(1, DIV_ROUND_UP(reg->size, 8));
+		if (!xtensa->algo_context_backup[i]) {
+			LOG_ERROR("Failed to alloc mem for algorithm context!");
+			return ERROR_FAIL;
+		}
+	}
 
 	LOG_TARGET_DEBUG(target, "xtensa->total_regs_num %d reg_list_size %d xtensa->dbregs_num %d",
 		xtensa->total_regs_num, reg_list_size, xtensa->dbregs_num);
@@ -3748,7 +3861,7 @@ COMMAND_HELPER(xtensa_cmd_xtmem_do, struct xtensa *xtensa)
 {
 	struct xtensa_cache_config *cachep = NULL;
 	struct xtensa_local_mem_config *memp = NULL;
-	int mem_access = 0;
+	int mem_access = XT_MEM_ACCESS_NONE;
 	bool is_dcache = false;
 
 	if (CMD_ARGC == 0)
@@ -3766,25 +3879,47 @@ COMMAND_HELPER(xtensa_cmd_xtmem_do, struct xtensa *xtensa)
 		/* TODO: support L2 cache */
 	} else if (strcasecmp(mem_name, "iram") == 0) {
 		memp = &xtensa->core_config->iram;
-		mem_access = XT_MEM_ACCESS_READ | XT_MEM_ACCESS_WRITE;
 	} else if (strcasecmp(mem_name, "dram") == 0) {
 		memp = &xtensa->core_config->dram;
-		mem_access = XT_MEM_ACCESS_READ | XT_MEM_ACCESS_WRITE;
 	} else if (strcasecmp(mem_name, "sram") == 0) {
 		memp = &xtensa->core_config->sram;
-		mem_access = XT_MEM_ACCESS_READ | XT_MEM_ACCESS_WRITE;
 	} else if (strcasecmp(mem_name, "irom") == 0) {
 		memp = &xtensa->core_config->irom;
-		mem_access = XT_MEM_ACCESS_READ;
 	} else if (strcasecmp(mem_name, "drom") == 0) {
 		memp = &xtensa->core_config->drom;
-		mem_access = XT_MEM_ACCESS_READ;
 	} else if (strcasecmp(mem_name, "srom") == 0) {
 		memp = &xtensa->core_config->srom;
-		mem_access = XT_MEM_ACCESS_READ;
+	} else if (strcasecmp(mem_name, "l2ram") == 0) {
+		memp = &xtensa->core_config->l2ram;
+	} else if (strcasecmp(mem_name, "sysmmr") == 0) {
+		memp = &xtensa->core_config->sysmmr;
+	} else if (strcasecmp(mem_name, "dram_mp") == 0) {
+		memp = &xtensa->core_config->dram_mp;
+	} else if (strcasecmp(mem_name, "iram_mp") == 0) {
+		memp = &xtensa->core_config->iram_mp;
+	} else if (strcasecmp(mem_name, "dram_arm") == 0) {
+		memp = &xtensa->core_config->dram_arm;
+	} else if (strcasecmp(mem_name, "iram_arm") == 0) {
+		memp = &xtensa->core_config->iram_arm;
+	} else if (strcasecmp(mem_name, "srom_arm") == 0) {
+		memp = &xtensa->core_config->srom_arm;
 	} else {
-		command_print(CMD, "xtmem types: <icache|dcache|l2cache|l2addr|iram|irom|dram|drom|sram|srom>\n");
-		return ERROR_COMMAND_ARGUMENT_INVALID;
+		/* Check if we're dealing with a spi_range mem type */
+		if (strncasecmp(mem_name, "spi_range", (sizeof("spi_range") - 1)) == 0) {
+			if (strcasecmp(mem_name, "spi_range1") == 0) {
+				memp = &xtensa->core_config->spi_range1;
+			} else if (strcasecmp(mem_name, "spi_range2") == 0) {
+				memp = &xtensa->core_config->spi_range2;
+			} else if (strcasecmp(mem_name, "spi_range3") == 0) {
+				memp = &xtensa->core_config->spi_range3;
+			} else {
+				LOG_ERROR("Invalid xtmem type %s, use: %s\n", mem_name, XTMEM_TYPES);
+				return ERROR_COMMAND_ARGUMENT_INVALID;
+			}
+		} else {
+			LOG_ERROR("Invalid xtmem type %s, use: %s\n", mem_name, XTMEM_TYPES);
+			return ERROR_COMMAND_ARGUMENT_INVALID;
+		}
 	}
 
 	if (cachep) {
@@ -3796,11 +3931,25 @@ COMMAND_HELPER(xtensa_cmd_xtmem_do, struct xtensa *xtensa)
 		cachep->writeback = ((CMD_ARGC == 5) && is_dcache) ?
 			strtoul(CMD_ARGV[4], NULL, 0) : 0;
 	} else if (memp) {
-		if (CMD_ARGC != 3)
+		if (CMD_ARGC != 4) {
+			LOG_ERROR("xtmem <memtype> <baseaddr> <bytes> <access type>\n");
 			return ERROR_COMMAND_SYNTAX_ERROR;
+		}
 		struct xtensa_local_mem_region_config *memcfgp = &memp->regions[memp->count];
 		memcfgp->base = strtoul(CMD_ARGV[1], NULL, 0);
 		memcfgp->size = strtoul(CMD_ARGV[2], NULL, 0);
+
+		if (strcasecmp(CMD_ARGV[3], "rw") == 0) {
+			mem_access = XT_MEM_ACCESS_READ | XT_MEM_ACCESS_WRITE;
+		} else if (strcasecmp(CMD_ARGV[3], "ro") == 0) {
+			mem_access = XT_MEM_ACCESS_READ;
+		} else if (strcasecmp(CMD_ARGV[3], "none") == 0) {
+			mem_access = XT_MEM_ACCESS_NONE;
+		} else {
+			LOG_ERROR("Invalid xtmem access type, please use <rw,ro, or none>\n");
+			return ERROR_COMMAND_ARGUMENT_INVALID;
+		}
+
 		memcfgp->access = mem_access;
 		memp->count++;
 	}
