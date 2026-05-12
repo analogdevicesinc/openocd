@@ -2136,10 +2136,6 @@ static int target_free_working_area_restore(struct target *target, struct workin
 			area->size, area->address);
 
 	/* mark user pointer invalid */
-	/* TODO: Is this really safe? It points to some previous caller's memory.
-	 * How could we know that the area pointer is still in that place and not
-	 * some other vital data? What's the purpose of this, anyway? */
-	*area->user = NULL;
 	area->user = NULL;
 
 	target_merge_working_areas(target);
@@ -2169,7 +2165,6 @@ static void target_free_all_working_areas_restore(struct target *target, int res
 			if (restore)
 				target_restore_working_area(target, c);
 			c->free = true;
-			*c->user = NULL; /* Same as above */
 			c->user = NULL;
 		}
 		c = c->next;
