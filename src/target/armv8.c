@@ -3916,7 +3916,7 @@ static const struct {
 	{ ARMV8_MDCR_EL2, "MDCR_EL2", 64, ARMV8_64_EL2H, REG_TYPE_UINT64, "Virtualization Extensions", "net.sourceforge.openocd.virtext", NULL},
 	{ ARMV8_MDCR_EL3, "MDCR_EL3", 64, ARMV8_64_EL3H, REG_TYPE_UINT64, "Virtualization Extensions", "net.sourceforge.openocd.virtext", NULL},
 
-	{ ARMV8_ERRIDR_EL1, "ERRID_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Error System Registers", "net.sourceforge.openocd.esr", NULL},
+	{ ARMV8_ERRIDR_EL1, "ERRIDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Error System Registers", "net.sourceforge.openocd.esr", NULL},
 	{ ARMV8_ERRSELR_EL1, "ERRSELR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Error System Registers", "net.sourceforge.openocd.esr", NULL},
 	{ ARMV8_ERXADDR_EL1, "ERXADDR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Error System Registers", "net.sourceforge.openocd.esr", NULL},
 	{ ARMV8_ERXCTLR_EL1, "ERXCTLR_EL1", 64, ARMV8_64_EL1H, REG_TYPE_UINT64, "Error System Registers", "net.sourceforge.openocd.esr", NULL},
