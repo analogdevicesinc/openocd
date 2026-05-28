@@ -1531,9 +1531,8 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 				ARMV8_MSR_GP(SYSTEM_ELR_EL3, 0), value_64);
 		break;
 	case ARMV8_CTR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CTR, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CTR, 0), value_64);
 		break;
 	case ARMV8_ESR_EL1:
 		if (curel < SYSTEM_CUREL_EL1) {
@@ -1563,59 +1562,48 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 				ARMV8_MSR_GP(SYSTEM_ESR_EL3, 0), value_64);
 		break;
 	case ARMV8_ERRIDR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ERRIDR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ERRIDR_EL1, 0), value_64);
 		break;
 	case ARMV8_ERRSELR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ERRSELR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ERRSELR_EL1, 0), value_64);
 		break;
 	case ARMV8_ERXADDR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ERXADDR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ERXADDR_EL1, 0), value_64);
 		break;
 	case ARMV8_ERXCTLR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ERXCTLR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ERXCTLR_EL1, 0), value_64);
 		break;
 	case ARMV8_ERXFR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ERXFR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ERXFR_EL1, 0), value_64);
 		break;
 	case ARMV8_ERXMISC0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ERXMISC0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ERXMISC0_EL1, 0), value_64);
 		break;
 	case ARMV8_ERXMISC1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ERXMISC1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ERXMISC1_EL1, 0), value_64);
 		break;
 	case ARMV8_ERXSTATUS_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ERXSTATUS_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ERXSTATUS_EL1, 0), value_64);
 		break;
 	case ARMV8_HACR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_HACR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_HACR_EL2, 0), value_64);
 		break;
 	case ARMV8_HSTR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_HSTR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_HSTR_EL2, 0), value_64);
 		break;
 	case ARMV8_PAR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PAR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PAR_EL1, 0), value_64);
 		break;
 	case ARMV8_SPSR_EL1:
 		if (curel < SYSTEM_CUREL_EL1) {
@@ -1645,969 +1633,776 @@ static int armv8_write_reg(struct armv8_common *armv8, int regnum, uint64_t valu
 				ARMV8_MSR_GP(SYSTEM_SPSR_EL3, 0), value_64);
 		break;
 	case ARMV8_FAR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_FAR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_FAR_EL1, 0), value_64);
 		break;
 	case ARMV8_FAR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_FAR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_FAR_EL2, 0), value_64);
 		break;
 	case ARMV8_FAR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_FAR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_FAR_EL3, 0), value_64);
 		break;
 	case ARMV8_SCTLR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_SCTLR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL1, 0), value_64);
 		break;
 	case ARMV8_SCTLR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_SCTLR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL2, 0), value_64);
 		break;
 	case ARMV8_SCTLR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_SCTLR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_SCTLR_EL3, 0), value_64);
 		break;
 	case ARMV8_TTBR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TTBR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TTBR0_EL1, 0), value_64);
 		break;
 	case ARMV8_TTBR0_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TTBR0_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TTBR0_EL2, 0), value_64);
 		break;
 	case ARMV8_TTBR0_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TTBR0_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TTBR0_EL3, 0), value_64);
 		break;
 	case ARMV8_VBAR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VBAR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VBAR_EL1, 0), value_64);
 		break;
 	case ARMV8_VBAR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VBAR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VBAR_EL2, 0), value_64);
 		break;
 	case ARMV8_VBAR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VBAR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VBAR_EL3, 0), value_64);
 		break;
 	case ARMV8_VMPIDR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VMPIDR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VMPIDR_EL2, 0), value_64);
 		break;
 	case ARMV8_VPIDR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VPIDR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VPIDR_EL2, 0), value_64);
 		break;
 	case ARMV8_ACTLR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ACTLR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ACTLR_EL1, 0), value_64);
 		break;
 	case ARMV8_ACTLR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ACTLR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ACTLR_EL2, 0), value_64);
 		break;
 	case ARMV8_ACTLR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ACTLR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ACTLR_EL3, 0), value_64);
 		break;
 	case ARMV8_AFSR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_AFSR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_AFSR0_EL1, 0), value_64);
 		break;
 	case ARMV8_AFSR0_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_AFSR0_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_AFSR0_EL2, 0), value_64);
 		break;
 	case ARMV8_AFSR0_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_AFSR0_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_AFSR0_EL3, 0), value_64);
 		break;
 	case ARMV8_AFSR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_AFSR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_AFSR1_EL1, 0), value_64);
 		break;
 	case ARMV8_AFSR1_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_AFSR1_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_AFSR1_EL2, 0), value_64);
 		break;
 	case ARMV8_AFSR1_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_AFSR1_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_AFSR1_EL3, 0), value_64);
 		break;
 	case ARMV8_CONTEXTIDR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CONTEXTIDR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CONTEXTIDR_EL1, 0), value_64);
 		break;
 	case ARMV8_CONTEXTIDR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CONTEXTIDR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CONTEXTIDR_EL2, 0), value_64);
 		break;
 	case ARMV8_CNTFRQ_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTFRQ_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTFRQ_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTPCT_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTPCT_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTPCT_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTVCT_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTVCT_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTVCT_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTP_TVAL_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTP_TVAL_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTP_TVAL_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTP_CTL_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTP_CTL_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTP_CTL_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTP_CVAL_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTP_CVAL_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTP_CVAL_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTV_TVAL_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTV_TVAL_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTV_TVAL_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTV_CTL_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTV_CTL_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTV_CTL_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTV_CVAL_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTV_CVAL_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTV_CVAL_EL0, 0), value_64);
 		break;
 	case ARMV8_CNTKCTL_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTKCTL_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTKCTL_EL1, 0), value_64);
 		break;
 	case ARMV8_CNTPS_TVAL_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTPS_TVAL_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTPS_TVAL_EL1, 0), value_64);
 		break;
 	case ARMV8_CNTPS_CTL_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTPS_CTL_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTPS_CTL_EL1, 0), value_64);
 		break;
 	case ARMV8_CNTPS_CVAL_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTPS_CVAL_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTPS_CVAL_EL1, 0), value_64);
 		break;
 	case ARMV8_CNTVOFF_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTVOFF_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTVOFF_EL2, 0), value_64);
 		break;
 	case ARMV8_CNTHCTL_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTHCTL_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTHCTL_EL2, 0), value_64);
 		break;
 	case ARMV8_CNTHP_TVAL_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTHP_TVAL_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTHP_TVAL_EL2, 0), value_64);
 		break;
 	case ARMV8_CNTHP_CTL_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTHP_CTL_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTHP_CTL_EL2, 0), value_64);
 		break;
 	case ARMV8_CNTHP_CVAL_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTHP_CVAL_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTHP_CVAL_EL2, 0), value_64);
 		break;
 	case ARMV8_CNTHV_TVAL_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTHV_TVAL_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTHV_TVAL_EL2, 0), value_64);
 		break;
 	case ARMV8_CNTHV_CTL_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTHV_CTL_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTHV_CTL_EL2, 0), value_64);
 		break;
 	case ARMV8_CNTHV_CVAL_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CNTHV_CVAL_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CNTHV_CVAL_EL2, 0), value_64);
 		break;
 	case ARMV8_CPACR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CPACR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CPACR_EL1, 0), value_64);
 		break;
 	case ARMV8_CPTR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CPTR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CPTR_EL2, 0), value_64);
 		break;
 	case ARMV8_CPTR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CPTR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CPTR_EL3, 0), value_64);
 		break;
 	case ARMV8_CSSELR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_CSSELR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_CSSELR_EL1, 0), value_64);
 		break;
 	case ARMV8_DACR32_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_DACR32_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_DACR32_EL2, 0), value_64);
 		break;
 	case ARMV8_DISR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_DISR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_DISR_EL1, 0), value_64);
 		break;
 	case ARMV8_HCR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_HCR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_HCR_EL2, 0), value_64);
 		break;
 	case ARMV8_HPFAR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_HPFAR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_HPFAR_EL2, 0), value_64);
 		break;
 	case ARMV8_IFSR32_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_IFSR32_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_IFSR32_EL2, 0), value_64);
 		break;
 	case ARMV8_ISR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ISR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ISR_EL1, 0), value_64);
 		break;
 	case ARMV8_MAIR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_MAIR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_MAIR_EL1, 0), value_64);
 		break;
 	case ARMV8_MAIR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_MAIR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_MAIR_EL2, 0), value_64);
 		break;
 	case ARMV8_MAIR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_MAIR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_MAIR_EL3, 0), value_64);
 		break;
 	case ARMV8_SCR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_SCR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_SCR_EL3, 0), value_64);
 		break;
 	case ARMV8_TCR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TCR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TCR_EL1, 0), value_64);
 		break;
 	case ARMV8_TCR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TCR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TCR_EL2, 0), value_64);
 		break;
 	case ARMV8_TCR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TCR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TCR_EL3, 0), value_64);
 		break;
 	case ARMV8_TTBR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TTBR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TTBR1_EL1, 0), value_64);
 		break;
 	case ARMV8_TTBR1_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TTBR1_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TTBR1_EL2, 0), value_64);
 		break;
 	case ARMV8_VTCR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VTCR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VTCR_EL2, 0), value_64);
 		break;
 	case ARMV8_VTTBR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VTTBR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VTTBR_EL2, 0), value_64);
 		break;
 	case ARMV8_RMR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_RMR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_RMR_EL3, 0), value_64);
 		break;
 	case ARMV8_RVBAR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_RVBAR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_RVBAR_EL3, 0), value_64);
 		break;
 	case ARMV8_SDER32_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_SDER32_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_SDER32_EL3, 0), value_64);
 		break;
 	case ARMV8_TPIDRRO_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TPIDRRO_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TPIDRRO_EL0, 0), value_64);
 		break;
 	case ARMV8_TPIDR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TPIDR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TPIDR_EL0, 0), value_64);
 		break;
 	case ARMV8_TPIDR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TPIDR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TPIDR_EL1, 0), value_64);
 		break;
 	case ARMV8_TPIDR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TPIDR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TPIDR_EL2, 0), value_64);
 		break;
 	case ARMV8_TPIDR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_TPIDR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_TPIDR_EL3, 0), value_64);
 		break;
 	case ARMV8_VDISR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VDISR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VDISR_EL2, 0), value_64);
 		break;
 	case ARMV8_VSESR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_VSESR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_VSESR_EL2, 0), value_64);
 		break;
 	case ARMV8_ICC_AP0R0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_AP0R0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_AP0R0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_AP1R0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_AP1R0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_AP1R0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_ASGI1R_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_ASGI1R_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_ASGI1R_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_BPR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_BPR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_BPR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_BPR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_BPR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_BPR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_CTLR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_CTLR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_CTLR_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_DIR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_DIR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_DIR_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_EOIR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_EOIR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_EOIR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_EOIR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_EOIR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_EOIR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_HPPIR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_HPPIR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_HPPIR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_HPPIR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_HPPIR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_HPPIR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_IAR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_IAR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_IAR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_IAR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_IAR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_IAR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_IGRPEN0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_IGRPEN0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_IGRPEN0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_IGRPEN1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_IGRPEN1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_IGRPEN1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_PMR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_PMR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_PMR_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_RPR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_RPR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_RPR_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_SGI0R_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_SGI0R_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_SGI0R_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_SGI1R_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_SGI1R_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_SGI1R_EL1, 0), value_64);
 		break;
 	case ARMV8_ICC_SRE_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_SRE_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_SRE_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_AP0R0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_AP0R0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_AP0R0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_AP1R0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_AP1R0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_AP1R0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_BPR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_BPR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_BPR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_BPR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_BPR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_BPR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_CTLR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_CTLR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_CTLR_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_DIR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_DIR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_DIR_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_EOIR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_EOIR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_EOIR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_EOIR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_EOIR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_EOIR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_HPPIR0_EL1:
-		value = value_64;
-		retval = dpm->instr_write_data_r0(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_HPPIR0_EL1, 0), value);
+		retval = dpm->instr_write_data_r0_64(dpm,
+				ARMV8_MSR_GP(SYSTEM_ICV_HPPIR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_HPPIR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_HPPIR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_HPPIR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_IAR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_IAR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_IAR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_IAR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_IAR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_IAR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_IGRPEN0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_IGRPEN0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_IGRPEN0_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_IGRPEN1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_IGRPEN1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_IGRPEN1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_PMR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_PMR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_PMR_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64AFR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64AFR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64AFR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64AFR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64AFR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64AFR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64DFR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64DFR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64DFR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64DFR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64DFR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64DFR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64ISAR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64ISAR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64ISAR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64ISAR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64ISAR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64ISAR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64MMFR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64MMFR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64MMFR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64MMFR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64MMFR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64MMFR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64MMFR2_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64MMFR2_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64MMFR2_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64PFR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64PFR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64PFR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AA64PFR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AA64PFR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AA64PFR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_AFR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_AFR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_AFR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_ISAR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_ISAR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_ISAR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_ISAR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_ISAR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_ISAR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_ISAR2_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_ISAR2_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_ISAR2_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_ISAR3_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_ISAR3_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_ISAR3_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_ISAR4_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_ISAR4_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_ISAR4_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_ISAR5_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_ISAR5_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_ISAR5_EL1, 0), value_64);
 		break;
 	case ARMV8_LORID_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_LORID_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_LORID_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_MMFR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_MMFR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_MMFR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_MMFR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_MMFR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_MMFR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_MMFR2_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_MMFR2_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_MMFR2_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_MMFR3_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_MMFR3_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_MMFR3_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_MMFR4_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_MMFR4_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_MMFR4_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_PFR0_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_PFR0_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_PFR0_EL1, 0), value_64);
 		break;
 	case ARMV8_ID_PFR1_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ID_PFR1_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ID_PFR1_EL1, 0), value_64);
 		break;
 	case ARMV8_ICV_RPR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICV_RPR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICV_RPR_EL1, 0), value_64);
 		break;
 	case ARMV8_ICH_AP0R0_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_AP0R0_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_AP0R0_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_AP1R0_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_AP1R0_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_AP1R0_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_EISR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_EISR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_EISR_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_ELRSR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_ELRSR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_ELRSR_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_HCR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_HCR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_HCR_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_LR0_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_LR0_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_LR0_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_LR1_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_LR1_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_LR1_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_LR2_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_LR2_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_LR2_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_LR3_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_LR3_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_LR3_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_MISR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_MISR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_MISR_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_VMCR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_VMCR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_VMCR_EL2, 0), value_64);
 		break;
 	case ARMV8_ICH_VTR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICH_VTR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICH_VTR_EL2, 0), value_64);
 		break;
 	case ARMV8_ICC_SRE_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_SRE_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_SRE_EL2, 0), value_64);
 		break;
 	case ARMV8_ICC_CTLR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_CTLR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_CTLR_EL3, 0), value_64);
 		break;
 	case ARMV8_ICC_IGRPEN1_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_IGRPEN1_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_IGRPEN1_EL3, 0), value_64);
 		break;
 	case ARMV8_ICC_SRE_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_ICC_SRE_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_ICC_SRE_EL3, 0), value_64);
 		break;
 	case ARMV8_MDCCINT_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_MDCCINT_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_MDCCINT_EL1, 0), value_64);
 		break;
 	case ARMV8_MDCCSR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_MDCCSR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_MDCCSR_EL0, 0), value_64);
 		break;
 	case ARMV8_MDSCR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_MDSCR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_MDSCR_EL1, 0), value_64);
 		break;
 	case ARMV8_MDCR_EL2:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_MDCR_EL2, 0), value);
+				ARMV8_MSR_GP(SYSTEM_MDCR_EL2, 0), value_64);
 		break;
 	case ARMV8_MDCR_EL3:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_MDCR_EL3, 0), value);
+				ARMV8_MSR_GP(SYSTEM_MDCR_EL3, 0), value_64);
 		break;
 	case ARMV8_OSDLR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_OSDLR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_OSDLR_EL1, 0), value_64);
 		break;
 	case ARMV8_OSDTRRX_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_OSDTRRX_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_OSDTRRX_EL1, 0), value_64);
 		break;
 	case ARMV8_OSDTRTX_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_OSDTRTX_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_OSDTRTX_EL1, 0), value_64);
 		break;
 	case ARMV8_OSECCR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_OSECCR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_OSECCR_EL1, 0), value_64);
 		break;
 	case ARMV8_OSLSR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_OSLSR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_OSLSR_EL1, 0), value_64);
 		break;
 	case ARMV8_PMCCFILTR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMCCFILTR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMCCFILTR_EL0, 0), value_64);
 		break;
 	case ARMV8_PMCCNTR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMCCNTR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMCCNTR_EL0, 0), value_64);
 		break;
 	case ARMV8_PMCEID0_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMCEID0_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMCEID0_EL0, 0), value_64);
 		break;
 	case ARMV8_PMCEID1_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMCEID1_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMCEID1_EL0, 0), value_64);
 		break;
 	case ARMV8_PMCNTENCLR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMCNTENCLR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMCNTENCLR_EL0, 0), value_64);
 		break;
 	case ARMV8_PMCNTENSET_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMCNTENSET_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMCNTENSET_EL0, 0), value_64);
 		break;
 	case ARMV8_PMCR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMCR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMCR_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVCNTR0_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVCNTR0_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVCNTR0_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVCNTR1_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVCNTR1_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVCNTR1_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVCNTR2_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVCNTR2_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVCNTR2_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVCNTR3_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVCNTR3_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVCNTR3_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVCNTR4_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVCNTR4_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVCNTR4_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVCNTR5_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVCNTR5_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVCNTR5_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVTYPER0_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVTYPER0_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVTYPER0_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVTYPER1_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVTYPER1_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVTYPER1_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVTYPER2_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVTYPER2_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVTYPER2_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVTYPER3_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVTYPER3_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVTYPER3_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVTYPER4_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVTYPER4_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVTYPER4_EL0, 0), value_64);
 		break;
 	case ARMV8_PMEVTYPER5_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMEVTYPER5_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMEVTYPER5_EL0, 0), value_64);
 		break;
 	case ARMV8_PMINTENCLR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMINTENCLR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMINTENCLR_EL1, 0), value_64);
 		break;
 	case ARMV8_PMINTENSET_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMINTENSET_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMINTENSET_EL1, 0), value_64);
 		break;
 	case ARMV8_PMOVSCLR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMOVSCLR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMOVSCLR_EL0, 0), value_64);
 		break;
 	case ARMV8_PMOVSSET_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMOVSSET_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMOVSSET_EL0, 0), value_64);
 		break;
 	case ARMV8_PMSELR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMSELR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMSELR_EL0, 0), value_64);
 		break;
 	case ARMV8_PMUSERENR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMUSERENR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMUSERENR_EL0, 0), value_64);
 		break;
 	case ARMV8_PMXEVCNTR_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMXEVCNTR_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMXEVCNTR_EL0, 0), value_64);
 		break;
 	case ARMV8_PMXEVTYPER_EL0:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_PMXEVTYPER_EL0, 0), value);
+				ARMV8_MSR_GP(SYSTEM_PMXEVTYPER_EL0, 0), value_64);
 		break;
 	case ARMV8_REVIDR_EL1:
-		value = value_64;
 		retval = dpm->instr_write_data_r0_64(dpm,
-				ARMV8_MSR_GP(SYSTEM_REVIDR_EL1, 0), value);
+				ARMV8_MSR_GP(SYSTEM_REVIDR_EL1, 0), value_64);
 		break;
 	default:
 		retval = ERROR_FAIL;
