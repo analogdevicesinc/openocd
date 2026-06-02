@@ -156,8 +156,8 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define CURRENT_ICE1500_FW_VERSION 0x0104
 
 /* frequency settings for ICE-1500 */
-#define MAX_FREQ_1500 2
-static const int valid_freq_set[MAX_FREQ_1500] = {1000, 5000};
+#define MAX_FREQ_1500 1
+static const int valid_freq_set[MAX_FREQ_1500] = {5000};
 
 /*
  * Internal Macros
@@ -503,8 +503,7 @@ static int ice1500_speed_div(int speed, int *khz)
 			return ERROR_OK;
 		}
 	}
-	LOG_ERROR("\nInvalid frequency %d\n\tValid frequencies(kHz) are: %d, %d\n", *khz, valid_freq_set[0],
-			  valid_freq_set[1]);
+	LOG_ERROR("\nInvalid frequency %d\n\tValid frequencies(kHz) are: %d\n", *khz, valid_freq_set[0]);
 	return ERROR_FAIL;
 }
 /*
