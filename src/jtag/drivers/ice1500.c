@@ -121,6 +121,9 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 #define DAT_SZ_INC 0x40 /* size to increase if data full */
 
 #define RESET_TARGET_DURATION 140 /* Reset target duration of 140 ms */
+/* Delay after reset to allow initialization to complete.
+ * Value determined through testing, adding a safety buffer to when it started working */
+#define RESET_TARGET_DELAY_MS 160
 
 /* USB Emulator Commands */
 #define HOST_GET_FW_VERSION 0x01  /* get the firmware version */
@@ -363,8 +366,11 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	cable_params.max_raw_data_tx_items = cable_params.wr_buf_sz - cable_params.tap_pair_start_idx;
 	cable_params.num_rcv_hdr_bytes = RAW_SCAN_HDR_SZ; // this is where our TDO actually starts
 
-	if (cable_params.reset_hw_on_connection)
+	if (cable_params.reset_hw_on_connection) {
 		do_host_cmd(HOST_HARD_RESET_KIT, RESET_TARGET_DURATION, 0);
+		/* Wait for target to complete reset and DAP initialization. */
+		alive_sleep(RESET_TARGET_DURATION + RESET_TARGET_DELAY_MS);
+	}
 
 	return ERROR_OK;
 }
