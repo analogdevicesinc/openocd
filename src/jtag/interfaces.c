@@ -127,6 +127,9 @@ struct adapter_driver *adapter_drivers[] = {
 #if BUILD_LINUXSPIDEV == 1
 		&linuxspidev_adapter_driver,
 #endif
+#if BUILD_ADI_MPDBGAGENT == 1
+		&mp_dbgagent_adapter_driver,
+#endif
 #if BUILD_OPENDOUS == 1
 		&opendous_adapter_driver,
 #endif

@@ -155,6 +155,7 @@ static uint16_t do_host_cmd(uint8_t cmd, uint8_t param, int32_t r_data);
 
 /* Latest firmware version for Debug Agent */
 #define CURRENT_USBDA_FW_VERSION 0x0009
+#define CURRENT_MP_USBDA_FW_VERSION 0x0001
 
 #define MAX_USB_IDS 8
 /* vid = pid = 0 marks the end of the list */
@@ -261,6 +262,8 @@ static const char *adi_cable_name(void)
 
 	if (strcmp(adapter_driver->name, "dbgagent") == 0)
 		return "ADI Debug Agent";
+	else if (strcmp(adapter_driver->name, "mpdbgagent") == 0)
+		return "ADI Multi-processor Debug Agent";
 	else
 		return "unknown";
 }
@@ -363,8 +366,13 @@ static int adi_connect(const uint16_t *vids, const uint16_t *pids)
 	LOG_INFO("%s firmware version is %d.%d.%d", cable_name, ((cable_params.version >> 8) & 0xFF),
 			 ((cable_params.version >> 4) & 0x0F), ((cable_params.version) & 0x0F));
 
-	if (cable_params.version < CURRENT_USBDA_FW_VERSION)
-		LOG_WARNING("This firmware version is obsolete. Please update to the latest version.");
+	if (strcmp(cable_name, "ADI Debug Agent") == 0) {
+		if (cable_params.version < CURRENT_USBDA_FW_VERSION)
+			LOG_WARNING("This firmware version is obsolete. Please update to the latest version.");
+	} else {
+		if (cable_params.version < CURRENT_MP_USBDA_FW_VERSION)
+			LOG_WARNING("This firmware version is obsolete. Please update to the latest version.");
+	}
 
 	do_host_cmd(HOST_SET_TRST, 1, 0);
 	usleep(4);
@@ -1426,6 +1434,21 @@ static struct jtag_interface dbgagent_interface = {
 
 struct adapter_driver dbgagent_adapter_driver = {
 	.name = "dbgagent",
+	.transport_ids = TRANSPORT_JTAG,
+	.transport_preferred_id = TRANSPORT_JTAG,
+	.commands = dbgagent_command_handlers,
+
+	.init = dbgagent_init,
+	.quit = dbgagent_quit,
+	.speed = dbgagent_speed,
+	.khz = dbgagent_khz,
+	.speed_div = dbgagent_speed_div,
+
+	.jtag_ops = &dbgagent_interface,
+};
+
+struct adapter_driver mp_dbgagent_adapter_driver = {
+	.name = "mpdbgagent",
 	.transport_ids = TRANSPORT_JTAG,
 	.transport_preferred_id = TRANSPORT_JTAG,
 	.commands = dbgagent_command_handlers,

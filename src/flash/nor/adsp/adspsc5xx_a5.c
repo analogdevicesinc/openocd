@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /****************************************************************************
- *	Copyright (C) 2022-2024 Analog Devices, Inc.							*
+ *	Copyright (C) 2022-2026 Analog Devices, Inc.							*
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -9,6 +9,7 @@
 #endif
 
 #include "../imp.h"
+#include <ctype.h>
 #include <helper/time_support.h>
 #include <target/algorithm.h>
 #include "../spi.h"
@@ -41,6 +42,7 @@ struct adspsc5xx_a5_flash_bank {
 	struct custom_algorithm adspsc5xx_a5_algorithm;
 	uint32_t sectorsize;
 	uint32_t size_in_bytes;
+	struct adspsc5xx_a5_algo_params algo_params;
 };
 
 static int adspsc5xx_a5_quit(struct flash_bank *bank)
@@ -148,7 +150,6 @@ static int adspsc5xx_a5_init(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
 	struct adspsc5xx_a5_flash_bank *adspsc5xx_a5_flash_info = bank->driver_priv;
-	struct adspsc5xx_a5_algo_params algo_params = {0};
 	int retval;
 
 	if (!adspsc5xx_a5_flash_info) {
@@ -201,7 +202,7 @@ static int adspsc5xx_a5_init(struct flash_bank *bank)
 	}
 
 	retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.parameter_address,
-				sizeof(algo_params), (uint8_t *)&algo_params);
+				sizeof(adspsc5xx_a5_flash_info->algo_params), (uint8_t *)&adspsc5xx_a5_flash_info->algo_params);
 
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Failed to load flash helper algorithm");
@@ -243,7 +244,6 @@ static int adspsc5xx_a5_erase(struct flash_bank *bank, unsigned int first, unsig
 {
 	struct target *target = bank->target;
 	struct adspsc5xx_a5_flash_bank *adspsc5xx_a5_flash_info = bank->driver_priv;
-	struct adspsc5xx_a5_algo_params algo_params = {0};
 	int retval;
 
 	if (!adspsc5xx_a5_flash_info->probed) {
@@ -263,12 +263,11 @@ static int adspsc5xx_a5_erase(struct flash_bank *bank, unsigned int first, unsig
 		}
 
 		// Check if algorithm is running, if not run it
-		if (target->state != TARGET_DEBUG_RUNNING) {
+		if (target->state != TARGET_DEBUG_RUNNING && target->state != TARGET_RUNNING) {
 			retval = adspsc5xx_a5_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
 		}
-
 		for (unsigned int counter = first; counter <= last; counter++) {
 			/* Calculate the address based on the counter and configured sector size */
 			address = counter * adspsc5xx_a5_flash_info->sectorsize;
@@ -298,14 +297,14 @@ static int adspsc5xx_a5_erase(struct flash_bank *bank, unsigned int first, unsig
 			}
 
 			// hardcode to issue read command to algorithm
-			algo_params.command = SECTOR_ERASE_COMMAND;
+			adspsc5xx_a5_flash_info->algo_params.command = SECTOR_ERASE_COMMAND;
 
 			// write algo parameters
-			algo_params.address = address;
-			algo_params.ready = ALGO_READY;
+			adspsc5xx_a5_flash_info->algo_params.address = address;
+			adspsc5xx_a5_flash_info->algo_params.ready = ALGO_READY;
 
 			retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.parameter_address,
-					sizeof(algo_params), (uint8_t *)&algo_params);
+					sizeof(adspsc5xx_a5_flash_info->algo_params), (uint8_t *)&adspsc5xx_a5_flash_info->algo_params);
 
 			// Resume running algorithm with parameters
 			target_resume(target, USE_PC_VAL, 0, HANDLE_BREAKPOINTS, DEBUG_EXECUTION);
@@ -313,7 +312,7 @@ static int adspsc5xx_a5_erase(struct flash_bank *bank, unsigned int first, unsig
 			retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 			if (retval != ERROR_OK) {
-				LOG_ERROR_ALGO_PARAMS(algo_params);
+				LOG_ERROR_ALGO_PARAMS(adspsc5xx_a5_flash_info->algo_params);
 				return retval;
 			}
 		}
@@ -338,7 +337,6 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 {
 	struct target *target = bank->target;
 	struct adspsc5xx_a5_flash_bank *adspsc5xx_a5_flash_info = bank->driver_priv;
-	struct adspsc5xx_a5_algo_params algo_params = {0};
 	int retval;
 	unsigned int write_size = 0;
 	unsigned int buffer_index = 0;
@@ -366,7 +364,7 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 		}
 
 		/* First write any bytes if the specified offset is not on the buffer size boundary */
-		if (0 != (current_address % buffer_size)) {
+		if ((current_address % buffer_size) != 0) {
 			/* Calculate the write size to use, the modulo remainder of the buffer size  (unless the specified count is smaller) */
 			write_size = buffer_size - (current_address % buffer_size);
 			if (write_size > count)
@@ -397,20 +395,20 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 			}
 
 			// Issue program command to algorithm
-			algo_params.command = PROGRAM_COMMAND;
+			adspsc5xx_a5_flash_info->algo_params.command = PROGRAM_COMMAND;
 
 			/* Put next block of data to flash into buffer */
 			retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.buffer_address,
 			write_size, &buffer[buffer_index]);
 
 			// write algo parameters
-			algo_params.address = current_address;
-			algo_params.length = write_size;
-			algo_params.ready = ALGO_READY;
+			adspsc5xx_a5_flash_info->algo_params.address = current_address;
+			adspsc5xx_a5_flash_info->algo_params.length = write_size;
+			adspsc5xx_a5_flash_info->algo_params.ready = ALGO_READY;
 
 			/* Put next block of data to flash into buffer */
 			retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.parameter_address,
-					sizeof(algo_params), (uint8_t *)&algo_params);
+					sizeof(adspsc5xx_a5_flash_info->algo_params), (uint8_t *)&adspsc5xx_a5_flash_info->algo_params);
 
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to write data to target memory");
@@ -425,7 +423,7 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 			retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 			if (retval != ERROR_OK) {
-				LOG_ERROR_ALGO_PARAMS(algo_params);
+				LOG_ERROR_ALGO_PARAMS(adspsc5xx_a5_flash_info->algo_params);
 				return retval;
 			}
 
@@ -470,7 +468,7 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 			}
 
 			// Issue program command to algorithm
-			algo_params.command = PROGRAM_COMMAND;
+			adspsc5xx_a5_flash_info->algo_params.command = PROGRAM_COMMAND;
 
 			/* Put next block of data to flash into buffer */
 			retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.buffer_address,
@@ -478,13 +476,13 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 
 			// write algo parameters
 
-			algo_params.address = current_address;
-			algo_params.length = write_size;
-			algo_params.ready = ALGO_READY;
+			adspsc5xx_a5_flash_info->algo_params.address = current_address;
+			adspsc5xx_a5_flash_info->algo_params.length = write_size;
+			adspsc5xx_a5_flash_info->algo_params.ready = ALGO_READY;
 
 			/* Put next block of data to flash into buffer */
 			retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.parameter_address,
-					sizeof(algo_params), (uint8_t *)&algo_params);
+					sizeof(adspsc5xx_a5_flash_info->algo_params), (uint8_t *)&adspsc5xx_a5_flash_info->algo_params);
 
 			if (retval != ERROR_OK) {
 				LOG_ERROR("Unable to write data to target memory");
@@ -499,7 +497,7 @@ static int adspsc5xx_a5_write(struct flash_bank *bank, const uint8_t *buffer,
 			retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 			if (retval != ERROR_OK) {
-				LOG_ERROR_ALGO_PARAMS(algo_params);
+				LOG_ERROR_ALGO_PARAMS(adspsc5xx_a5_flash_info->algo_params);
 				return retval;
 			}
 
@@ -530,7 +528,6 @@ static int adspsc5xx_a5_read(struct flash_bank *bank,
 {
 	struct target *target = bank->target;
 	struct adspsc5xx_a5_flash_bank *adspsc5xx_a5_flash_info = bank->driver_priv;
-	struct adspsc5xx_a5_algo_params algo_params = {0};
 	uint32_t buffer_size = adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.buffer_size;
 	int retval;
 
@@ -544,7 +541,7 @@ static int adspsc5xx_a5_read(struct flash_bank *bank,
 	}
 
 	// Check if algorithm is running, if not run it
-	if (target->state != TARGET_DEBUG_RUNNING) {
+	if (target->state != TARGET_DEBUG_RUNNING && target->state != TARGET_RUNNING) {
 		retval = adspsc5xx_a5_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
@@ -590,15 +587,15 @@ static int adspsc5xx_a5_read(struct flash_bank *bank,
 		uint32_t address = offset + read_bytes;
 
 		// hardcode to issue read command to algorithm
-		algo_params.command = READ_COMMAND;
+		adspsc5xx_a5_flash_info->algo_params.command = READ_COMMAND;
 
 		// write algo parameters
-		algo_params.address = address;
-		algo_params.length = read_size;
-		algo_params.ready = ALGO_READY;
+		adspsc5xx_a5_flash_info->algo_params.address = address;
+		adspsc5xx_a5_flash_info->algo_params.length = read_size;
+		adspsc5xx_a5_flash_info->algo_params.ready = ALGO_READY;
 
 		retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.parameter_address,
-				sizeof(algo_params), (uint8_t *)&algo_params);
+				sizeof(adspsc5xx_a5_flash_info->algo_params), (uint8_t *)&adspsc5xx_a5_flash_info->algo_params);
 
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to read data from target memory");
@@ -623,7 +620,7 @@ static int adspsc5xx_a5_read(struct flash_bank *bank,
 		retval = target_read_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.buffer_address,
 		read_size, &buffer[read_bytes]);
 		if (retval != ERROR_OK) {
-			LOG_ERROR_ALGO_PARAMS(algo_params);
+			LOG_ERROR_ALGO_PARAMS(adspsc5xx_a5_flash_info->algo_params);
 			/* Close down algo */
 			(void)adspsc5xx_a5_quit(bank);
 			return retval;
@@ -632,7 +629,7 @@ static int adspsc5xx_a5_read(struct flash_bank *bank,
 		retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 		if (retval != ERROR_OK) {
-			LOG_ERROR_ALGO_PARAMS(algo_params);
+			LOG_ERROR_ALGO_PARAMS(adspsc5xx_a5_flash_info->algo_params);
 			return retval;
 		}
 
@@ -742,16 +739,12 @@ static int adspsc5xx_a5_probe(struct flash_bank *bank)
 {
 	struct target *target = bank->target;
 	struct adspsc5xx_a5_flash_bank *adspsc5xx_a5_flash_info = bank->driver_priv;
-	struct adspsc5xx_a5_algo_params algo_params = {0};
 	struct flash_sector *sectors = NULL;
 	int retval;
 	uint32_t jedec_id = 0u;
 
-	char *dot_pos = strchr(bank->name, '.');
-	if (dot_pos) {
-		if (strcmp(dot_pos + 1, "spi") == 0)
-			return adspsc5xx_a5_auto_probe(bank);
-	}
+	if (!strstr(bank->name, SPI_NAME))
+		return adspsc5xx_a5_auto_probe(bank);
 
 	LOG_INFO("Setting up flash area for %s...", bank->name);
 
@@ -793,7 +786,7 @@ static int adspsc5xx_a5_probe(struct flash_bank *bank)
 	}
 
 	// Check if algorithm is running, if not run it
-	if (target->state != TARGET_DEBUG_RUNNING) {
+	if (target->state != TARGET_DEBUG_RUNNING && target->state != TARGET_RUNNING) {
 		retval = adspsc5xx_a5_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
@@ -818,13 +811,13 @@ static int adspsc5xx_a5_probe(struct flash_bank *bank)
 	}
 
 	// hardcode to issue device id read command to algorithm
-	algo_params.command = READ_ID_CODE_COMMAND;
+	adspsc5xx_a5_flash_info->algo_params.command = READ_ID_CODE_COMMAND;
 
 	// write algo parameters
-	algo_params.ready = ALGO_READY;
+	adspsc5xx_a5_flash_info->algo_params.ready = ALGO_READY;
 
 	retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.parameter_address,
-				sizeof(algo_params), (uint8_t *)&algo_params);
+				sizeof(adspsc5xx_a5_flash_info->algo_params), (uint8_t *)&adspsc5xx_a5_flash_info->algo_params);
 
 	if (retval != ERROR_OK) {
 		LOG_ERROR("Unable to write algorithm parameters");
@@ -839,7 +832,7 @@ static int adspsc5xx_a5_probe(struct flash_bank *bank)
 	retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX);
 
 	if (retval != ERROR_OK) {
-		LOG_ERROR_ALGO_PARAMS(algo_params);
+		LOG_ERROR_ALGO_PARAMS(adspsc5xx_a5_flash_info->algo_params);
 		return retval;
 	}
 
@@ -869,12 +862,14 @@ static int adspsc5xx_a5_probe(struct flash_bank *bank)
 		return retval;
 	}
 
-	LOG_DEBUG("Got SPI Flash device ID: 0x%08X", jedec_id);
+	LOG_INFO("Got SPI Flash device ID: 0x%08X", jedec_id);
+
+	adspsc5xx_a5_flash_info->algo_params.device_id = jedec_id;
 
 	bool found_device = false;
-	for (const struct flash_device *flash_dev = flash_devices; flash_dev->name; flash_dev++) {
-		if (flash_dev->device_id == jedec_id) {
-			adspsc5xx_a5_flash_info->dev = *flash_dev;
+	for (const struct flash_device *flash_device = flash_devices; flash_device->name; flash_device++) {
+		if (flash_device->device_id == jedec_id) {
+			adspsc5xx_a5_flash_info->dev = *flash_device;
 			found_device = true;
 			break;
 		}
@@ -960,7 +955,7 @@ FLASH_BANK_COMMAND_HANDLER(adspsc5xx_a5_flash_bank_command)
 	int byte_count = 0;
 	int count = 0;
 	uint32_t temp_parse;
-	char temp_str[2];
+	char temp_str[3];
 	uint8_t converted_hex;
 	FILE *algo_file;
 	FILE *parameter_file;
@@ -993,7 +988,8 @@ FLASH_BANK_COMMAND_HANDLER(adspsc5xx_a5_flash_bank_command)
 
 	if (!algo_file) {
 		LOG_ERROR("File %s can't be opened\n", CMD_ARGV[7]);
-		return -1;
+		free(adspsc5xx_a5_flash_info);
+		return ERROR_FAIL;
 	}
 
 	/* Size of file */
@@ -1001,20 +997,23 @@ FLASH_BANK_COMMAND_HANDLER(adspsc5xx_a5_flash_bank_command)
 	adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.size = ftell(algo_file);
 	fseek(algo_file, 0, SEEK_SET);
 	adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.adspsc5xx_a5_algo = malloc(sizeof(uint8_t) * adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.size);
-	// Get 2 characters at a time to form byte. Convert byte and
-	// store into spi algorithm buffer
-	do {
-		temp_str[0] = fgetc(algo_file);
-		// read/skip over LF (UNIX) and CR (Windows)
-		if (temp_str[0] != '\n' && temp_str[0] != '\r') {
-			temp_str[1] = fgetc(algo_file);
+
+	int current_char;
+	int hex_digit_count = 0;
+	// Parse two hex digits at a time from the full file stream.
+	while ((current_char = fgetc(algo_file)) != EOF) {
+		if (!isxdigit((unsigned char)current_char))
+			continue;
+
+		temp_str[hex_digit_count++] = (char)current_char;
+		if (hex_digit_count == 2) {
+			temp_str[2] = '\0';
 			converted_hex = strtoul((const char *)temp_str, NULL, 16);
 			adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.adspsc5xx_a5_algo[byte_count] = converted_hex;
 			byte_count++;
+			hex_digit_count = 0;
 		}
-	// Checking if character is not EOF.
-	// If it is EOF stop reading.
-	} while (temp_str[1] != EOF);
+	}
 
 	// Closing the file
 	fclose(algo_file);
@@ -1024,7 +1023,9 @@ FLASH_BANK_COMMAND_HANDLER(adspsc5xx_a5_flash_bank_command)
 
 	if (!parameter_file) {
 		LOG_ERROR("File %s can't be opened\n", CMD_ARGV[8]);
-		return -1;
+		free(adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.adspsc5xx_a5_algo);
+		free(adspsc5xx_a5_flash_info);
+		return ERROR_FAIL;
 	}
 
 	// Loop through each line in the file
@@ -1061,6 +1062,11 @@ FLASH_BANK_COMMAND_HANDLER(adspsc5xx_a5_flash_bank_command)
 
 	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[6], temp_parse);
 	adspsc5xx_a5_flash_info->sectorsize = temp_parse;
+	COMMAND_PARSE_NUMBER(u32, CMD_ARGV[2], temp_parse);
+	adspsc5xx_a5_flash_info->size_in_bytes = temp_parse;
+
+	// initialize algorithm parameters to zero upon startup
+	adspsc5xx_a5_flash_info->algo_params = (struct adspsc5xx_a5_algo_params){0};
 
 	adspsc5xx_a5_flash_info->probed = false;
 	bank->driver_priv = adspsc5xx_a5_flash_info;
@@ -1078,7 +1084,6 @@ COMMAND_HANDLER(adspsc5xx_a5_mass_erase_handler)
 	struct flash_bank *bank;
 	struct target *target;
 	struct adspsc5xx_a5_flash_bank *adspsc5xx_a5_flash_info;
-	struct adspsc5xx_a5_algo_params algo_params = {0};
 	int retval;
 
 	if (CMD_ARGC != 1)
@@ -1105,7 +1110,7 @@ COMMAND_HANDLER(adspsc5xx_a5_mass_erase_handler)
 		}
 
 		// Check if algorithm is running, if not run it
-		if (target->state != TARGET_DEBUG_RUNNING) {
+		if (target->state != TARGET_DEBUG_RUNNING && target->state != TARGET_RUNNING) {
 			retval = adspsc5xx_a5_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
@@ -1136,13 +1141,13 @@ COMMAND_HANDLER(adspsc5xx_a5_mass_erase_handler)
 		}
 
 		// hardcode to issue mass erase command to algorithm
-		algo_params.command = MASS_ERASE_COMMAND;
+		adspsc5xx_a5_flash_info->algo_params.command = MASS_ERASE_COMMAND;
 
 		// write algo parameters
-		algo_params.ready = ALGO_READY;
+		adspsc5xx_a5_flash_info->algo_params.ready = ALGO_READY;
 
 		retval = target_write_buffer(target, adspsc5xx_a5_flash_info->adspsc5xx_a5_algorithm.parameter_address,
-					sizeof(algo_params), (uint8_t *)&algo_params);
+					sizeof(adspsc5xx_a5_flash_info->algo_params), (uint8_t *)&adspsc5xx_a5_flash_info->algo_params);
 
 		if (retval != ERROR_OK) {
 			LOG_ERROR("Unable to write algorithm parameters");
@@ -1157,7 +1162,7 @@ COMMAND_HANDLER(adspsc5xx_a5_mass_erase_handler)
 		retval = wait_for_breakpoint_and_check_status(bank, ALGO_TIMEOUT_MAX_MASS_ERASE);
 
 		if (retval != ERROR_OK) {
-			LOG_ERROR_ALGO_PARAMS(algo_params);
+			LOG_ERROR_ALGO_PARAMS(adspsc5xx_a5_flash_info->algo_params);
 			return retval;
 		}
 	}
@@ -1195,6 +1200,38 @@ COMMAND_HANDLER(adspsc5xx_a5_get_algorithm_version_handler)
 	return retval;
 }
 
+COMMAND_HANDLER(adspsc5xx_a5_read_device_id_handler)
+{
+	struct flash_bank *bank;
+	struct adspsc5xx_a5_flash_bank *adspsc5xx_a5_flash_info;
+
+	int retval;
+
+	if (CMD_ARGC != 1)
+		return ERROR_COMMAND_SYNTAX_ERROR;
+
+	retval = CALL_COMMAND_HANDLER(flash_command_get_bank_probe_optional, 0, &bank, false);
+	if (retval != ERROR_OK)
+		return retval;
+
+	adspsc5xx_a5_flash_info = bank->driver_priv;
+	if (strstr(bank->name, SPI_NAME)) {
+		retval = adspsc5xx_a5_probe(bank);
+	} else {
+		LOG_ERROR("Reading device id from %s is not supported", bank->name);
+		return ERROR_FAIL;
+	}
+
+	if (retval == ERROR_OK) {
+		command_print(CMD, "Device id is 0x%08X", adspsc5xx_a5_flash_info->algo_params.device_id);
+	} else {
+		LOG_ERROR("Could not read device id from %s", bank->name);
+		retval = ERROR_FAIL;
+	}
+
+	return retval;
+}
+
 static const struct command_registration adspsc5xx_a5_exec_command_handlers[] = {
 	{
 		.name		= "mass_erase",
@@ -1209,6 +1246,13 @@ static const struct command_registration adspsc5xx_a5_exec_command_handlers[] = 
 		.mode		= COMMAND_EXEC,
 		.usage		= "bank_id",
 		.help		= "Get algorithm version.",
+	},
+	{
+		.name       = "read_device_id",
+		.handler    = adspsc5xx_a5_read_device_id_handler,
+		.mode       = COMMAND_EXEC,
+		.usage      = "bank_id",
+		.help       = "Read device id.",
 	},
 	COMMAND_REGISTRATION_DONE
 };

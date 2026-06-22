@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /***************************************************************************
+ *   ADSPSC8xx Target Support for OpenOCD                                  *
+ *   Portions Copyright (C) 2025 Analog Devices, Inc.                      *
+ *                                                                         *
  *   Xtensa Debug Module (XDM) Support for OpenOCD                         *
  *   Copyright (C) 2020-2022 Cadence Design Systems, Inc.                  *
  *   Copyright (C) 2019 Espressif Systems Ltd.                             *
@@ -75,10 +78,11 @@ int xtensa_dm_init(struct xtensa_debug_module *dm, const struct xtensa_debug_mod
 {
 	if (!dm || !cfg)
 		return ERROR_FAIL;
+	/* A SHARC-FX APB address of 0x80002000 is used for debug on ADSPSC-84x devices,
+		but it is 16kB aligned using an internal RTL mapping scheme. */
 	if (!IS_ALIGNED(cfg->ap_offset, XTENSA_DM_APB_ALIGN)) {
-		LOG_ERROR("Xtensa DM APB offset must be aligned to a %dKB multiple",
+		LOG_WARNING("Xtensa DM APB offset must be aligned to a %dKB multiple",
 			XTENSA_DM_APB_ALIGN / 1024);
-		return ERROR_FAIL;
 	}
 
 	dm->pwr_ops = cfg->pwr_ops;

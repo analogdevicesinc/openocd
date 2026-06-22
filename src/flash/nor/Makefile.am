@@ -9,8 +9,8 @@ noinst_LTLIBRARIES += %D%/libocdflashnor.la
 	$(NORHEADERS)
 
 NOR_DRIVERS = \
-	%D%/adsp/adsp2183x.c \
-	%D%/adsp/adsp2183x_otp.c \
+	%D%/adsp/adsp218xx.c \
+	%D%/adsp/adsp_helper.c \
 	%D%/adsp/adspsc5xx_a5.c \
 	%D%/adsp/adspsc59x_a55_dma.c \
 	%D%/adsp/spi/adsp_spi.c \

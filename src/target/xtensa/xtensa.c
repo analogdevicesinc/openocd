@@ -1228,14 +1228,20 @@ int xtensa_assert_reset(struct target *target)
 	struct xtensa *xtensa = target_to_xtensa(target);
 
 	LOG_TARGET_DEBUG(target, " begin");
-	xtensa_queue_pwr_reg_write(xtensa,
-		XDMREG_PWRCTL,
-		PWRCTL_JTAGDEBUGUSE(xtensa) | PWRCTL_DEBUGWAKEUP(xtensa) | PWRCTL_MEMWAKEUP(xtensa) |
-		PWRCTL_COREWAKEUP(xtensa) | PWRCTL_CORERESET(xtensa));
-	xtensa_dm_queue_tdi_idle(&xtensa->dbg_mod);
-	int res = xtensa_dm_queue_execute(&xtensa->dbg_mod);
-	if (res != ERROR_OK)
-		return res;
+
+	/* Allow for user defined reset actions. */
+	if (target_has_event_action(target, TARGET_EVENT_RESET_ASSERT)) {
+		target_handle_event(target, TARGET_EVENT_RESET_ASSERT);
+	} else {
+		xtensa_queue_pwr_reg_write(xtensa,
+			XDMREG_PWRCTL,
+			PWRCTL_JTAGDEBUGUSE(xtensa) | PWRCTL_DEBUGWAKEUP(xtensa) | PWRCTL_MEMWAKEUP(xtensa) |
+			PWRCTL_COREWAKEUP(xtensa) | PWRCTL_CORERESET(xtensa));
+		xtensa_dm_queue_tdi_idle(&xtensa->dbg_mod);
+		int res = xtensa_dm_queue_execute(&xtensa->dbg_mod);
+		if (res != ERROR_OK)
+			return res;
+	}
 
 	/* registers are now invalid */
 	xtensa->reset_asserted = true;

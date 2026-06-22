@@ -240,6 +240,8 @@ const struct flash_driver *flash_driver_find_by_name(const char *name);
 // Keep in alphabetic order this list of drivers
 extern const struct flash_driver adsp2183x_flash;
 extern const struct flash_driver adsp2183x_otp;
+extern const struct flash_driver adsp2184x_flash;
+extern const struct flash_driver adsp2184x_otp;
 extern const struct flash_driver adspsc5xx_a5_flash;
 extern const struct flash_driver adspsc59x_a55_flash;
 extern const struct flash_driver aduc702x_flash;

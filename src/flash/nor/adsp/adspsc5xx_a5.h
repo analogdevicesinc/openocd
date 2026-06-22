@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
-/* Copyright (C) 2024 Analog Devices, Inc. */
+/* Copyright (C) 2024-2026 Analog Devices, Inc. */
 
 #ifndef ADSPSC5XX_A5_H
 #define ADSPSC5XX_A5_H
@@ -14,6 +14,8 @@ struct custom_algorithm {
 	unsigned long size;
 	unsigned long buffer_size;
 };
+
+#define SPI_NAME ".spi"
 
 #define PARAMETER_FILE_COUNT 6
 #define BYTE_COUNT 8
