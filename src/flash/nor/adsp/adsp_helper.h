@@ -28,7 +28,7 @@
 
 #define ALGO_TIMEOUT_KEEP_ALIVE 500
 #define ALGO_TIMEOUT_MAX 20000
-#define ALGO_TIMEOUT_MAX_MASS_ERASE 500000
+#define ALGO_TIMEOUT_MAX_MASS_ERASE 800000
 
 #define SPI_MAX_READ_COUNT 0xFFFF
 
@@ -107,6 +107,6 @@ int adsp_wait_algo_done(struct flash_bank *bank, uint32_t params_addr);
 int wait_for_breakpoint_and_check_status(struct flash_bank *bank, long long timeout);
 int adsp_init(struct flash_bank *bank);
 int adsp_run_flash_command(struct flash_bank *bank, long long timeout);
-int adsp_target_poll_check_state(struct flash_bank *bank, enum target_state expected_state);
+int adsp_target_poll_check_state(struct flash_bank *bank, enum target_state expected_state, long long timeout);
 
 #endif // ADSP_HELPER_H

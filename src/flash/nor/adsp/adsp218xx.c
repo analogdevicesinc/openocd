@@ -50,7 +50,7 @@ static int adsp218xx_erase(struct flash_bank *bank, unsigned int first, unsigned
 		uint32_t address;
 
 		// Check if algorithm is running, if not run it
-		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING)) {
+		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING, ALGO_TIMEOUT_MAX)) {
 			retval = adsp_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
@@ -70,7 +70,7 @@ static int adsp218xx_erase(struct flash_bank *bank, unsigned int first, unsigned
 			}
 
 			/* Check device is halted and has been probed first */
-			if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+			if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 				LOG_ERROR("Cannot read from flash. Target is not halted!");
 				return ERROR_TARGET_NOT_HALTED;
 			}
@@ -115,7 +115,7 @@ static int adsp218xx_write_otp(struct flash_bank *bank, const uint8_t *buffer,
 		retval = ERROR_FLASH_DST_OUT_OF_BANK;
 	} else {
 		// Check if algorithm is running, if not run it
-		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING)) {
+		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING, ALGO_TIMEOUT_MAX)) {
 			retval = adsp_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
@@ -143,7 +143,7 @@ static int adsp218xx_write_otp(struct flash_bank *bank, const uint8_t *buffer,
 		}
 
 		/* Check device is halted and has been probed first */
-		if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+		if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 			LOG_ERROR("Cannot read from flash. Target is not halted!");
 			return ERROR_TARGET_NOT_HALTED;
 		}
@@ -197,7 +197,7 @@ static int adsp218xx_read_otp(struct flash_bank *bank,
 		retval = ERROR_FLASH_DST_OUT_OF_BANK;
 	} else {
 		// Check if algorithm is running, if not run it
-		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING)) {
+		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING, ALGO_TIMEOUT_MAX)) {
 			retval = adsp_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
@@ -220,7 +220,7 @@ static int adsp218xx_read_otp(struct flash_bank *bank,
 		}
 
 		/* Check device is halted and has been probed first */
-		if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+		if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 			LOG_ERROR("Cannot read from flash. Target is not halted!");
 			return ERROR_TARGET_NOT_HALTED;
 		}
@@ -246,7 +246,7 @@ static int adsp218xx_read_otp(struct flash_bank *bank,
 		}
 
 		/* Check device is halted and has been probed first */
-		if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+		if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 			LOG_ERROR("Cannot read from flash. Target is not halted!");
 			return ERROR_TARGET_NOT_HALTED;
 		}
@@ -295,7 +295,7 @@ static int adsp218xx_write(struct flash_bank *bank, const uint8_t *buffer, uint3
 		retval = ERROR_FLASH_DST_OUT_OF_BANK;
 	} else {
 		// Check if algorithm is running, if not run it
-		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING)) {
+		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING, ALGO_TIMEOUT_MAX)) {
 			retval = adsp_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
@@ -319,7 +319,7 @@ static int adsp218xx_write(struct flash_bank *bank, const uint8_t *buffer, uint3
 			}
 
 			/* Check device is halted and has been probed first */
-			if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+			if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 				LOG_ERROR("Cannot read from flash. Target is not halted!");
 				return ERROR_TARGET_NOT_HALTED;
 			}
@@ -376,7 +376,7 @@ static int adsp218xx_write(struct flash_bank *bank, const uint8_t *buffer, uint3
 			}
 
 			/* Check device is halted and has been probed first */
-			if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+			if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 				LOG_ERROR("Cannot read from flash. Target is not halted!");
 				return ERROR_TARGET_NOT_HALTED;
 			}
@@ -432,10 +432,20 @@ static int adsp218xx_read(struct flash_bank *bank, uint8_t *buffer, uint32_t off
 		retval = ERROR_FLASH_DST_OUT_OF_BANK;
 	} else {
 		// Check if algorithm is running, if not run it
-		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING)) {
+		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING, ALGO_TIMEOUT_MAX)) {
 			retval = adsp_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
+		}
+
+		// Validate buffer size before use. read_size is computed as buffer_size - 1,
+		// so a buffer_size < 2 would yield read_size == 0, causing the
+		// while (count) loop to never make progress (count -= read_size) and
+		// effectively hang OpenOCD. Fail early instead.
+		if (buffer_size < 2) {
+			LOG_ERROR("Flash helper buffer_size (%" PRIu32 ") is too small; "
+				"must be at least 2 bytes", buffer_size);
+			return ERROR_FAIL;
 		}
 
 		/* Make sure read is not larger than buffer size to be passed */
@@ -445,15 +455,15 @@ static int adsp218xx_read(struct flash_bank *bank, uint8_t *buffer, uint32_t off
 			// read size threshold is only applicable to SPI protocol. For xSPI the current
 			// implementation requires a valid read size divisible by 4
 			if (!BANK_NAME_IS(bank, SPI_NAME)) {
-				read_size = count;
+				read_size = buffer_size;
 			} else {
 				/* Maximum read size*/
 				read_size = buffer_size - 1;
-
-				/* Then if the actual count is smaller than the buffer size, use the count */
-				if (count < read_size)
-					read_size = count;
 			}
+
+			/* Then if the actual count is smaller than the buffer size, use the count */
+			if (count < read_size)
+				read_size = count;
 
 			// Need to halt before reads/writes
 			retval = target_halt(target);
@@ -465,7 +475,7 @@ static int adsp218xx_read(struct flash_bank *bank, uint8_t *buffer, uint32_t off
 			}
 
 			/* Check device is halted and has been probed first */
-			if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+			if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 				LOG_ERROR("Cannot read from flash. Target is not halted!");
 				return ERROR_TARGET_NOT_HALTED;
 			}
@@ -496,7 +506,7 @@ static int adsp218xx_read(struct flash_bank *bank, uint8_t *buffer, uint32_t off
 			}
 
 			/* Check device is halted and has been probed first */
-			if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+			if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 				LOG_ERROR("Cannot read from flash. Target is not halted!");
 				return ERROR_TARGET_NOT_HALTED;
 			}
@@ -578,7 +588,7 @@ static int adsp218xx_auto_probe(struct flash_bank *bank)
 	}
 
 	/* Check device is halted and has been probed first */
-	if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+	if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 		LOG_ERROR("Cannot read from flash. Target is not halted!");
 		return ERROR_TARGET_NOT_HALTED;
 	}
@@ -659,7 +669,7 @@ static int adsp218xx_probe(struct flash_bank *bank)
 	}
 
 	// Check if algorithm is running, if not run it
-	if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING)) {
+	if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING, ALGO_TIMEOUT_MAX)) {
 		retval = adsp_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
@@ -675,7 +685,7 @@ static int adsp218xx_probe(struct flash_bank *bank)
 	}
 
 	/* Check device is halted and has been probed first */
-	if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+	if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 		LOG_ERROR("Cannot read from flash. Target is not halted!");
 		return ERROR_TARGET_NOT_HALTED;
 	}
@@ -699,7 +709,7 @@ static int adsp218xx_probe(struct flash_bank *bank)
 	}
 
 	/* Check device is halted and has been probed first */
-	if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+	if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 		LOG_ERROR("Cannot read from flash. Target is not halted!");
 		return ERROR_TARGET_NOT_HALTED;
 	}
@@ -974,7 +984,7 @@ COMMAND_HANDLER(adsp218xx_mass_erase_handler)
 		retval = ERROR_FLASH_BANK_NOT_PROBED;
 	} else {
 		// Check if algorithm is running, if not run it
-		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING)) {
+		if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING, ALGO_TIMEOUT_MAX)) {
 			retval = adsp_init(bank);
 			if (retval != ERROR_OK)
 				return retval;
@@ -990,7 +1000,7 @@ COMMAND_HANDLER(adsp218xx_mass_erase_handler)
 		}
 
 		/* Check device is halted and has been probed first */
-		if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+		if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 			LOG_ERROR("Cannot read from flash. Target is not halted!");
 			return ERROR_TARGET_NOT_HALTED;
 		}
@@ -1044,7 +1054,7 @@ COMMAND_HANDLER(adsp218xx_emmc_command_handler)
 	}
 
 	// Check if algorithm is running, if not run it
-	if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING)) {
+	if (adsp_target_poll_check_state(bank, TARGET_DEBUG_RUNNING, ALGO_TIMEOUT_MAX)) {
 		retval = adsp_init(bank);
 		if (retval != ERROR_OK)
 			return retval;
@@ -1060,7 +1070,7 @@ COMMAND_HANDLER(adsp218xx_emmc_command_handler)
 	}
 
 	/* Check device is halted and has been probed first */
-	if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+	if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 		LOG_ERROR("Cannot read from flash. Target is not halted!");
 		return ERROR_TARGET_NOT_HALTED;
 	}

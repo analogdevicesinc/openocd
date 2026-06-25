@@ -65,7 +65,7 @@ int wait_for_breakpoint_and_check_status(struct flash_bank *bank, long long time
 	int retval;
 
 	// poll target to update state and wait for algorithm to hit breakpoint to halt target
-	if (adsp_target_poll_check_state(bank, TARGET_HALTED))
+	if (adsp_target_poll_check_state(bank, TARGET_HALTED, timeout))
 		return ERROR_FAIL;
 
 	// get status from buffer to determine result of algorithm initialization
@@ -119,7 +119,7 @@ int adsp_init(struct flash_bank *bank)
 	}
 
 	// poll target to update state
-	if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+	if (adsp_target_poll_check_state(bank, TARGET_HALTED, ALGO_TIMEOUT_MAX)) {
 		LOG_ERROR("Cannot initialize target. Target is not halted!");
 		return ERROR_TARGET_NOT_HALTED;
 	}
@@ -182,7 +182,7 @@ int adsp_run_flash_command(struct flash_bank *bank, long long timeout)
 	return retval;
 }
 
-int adsp_target_poll_check_state(struct flash_bank *bank, enum target_state expected_state)
+int adsp_target_poll_check_state(struct flash_bank *bank, enum target_state expected_state, long long timeout)
 {
 	struct target *target = bank->target;
 	struct adsp_flash_bank *adsp_flash_info = bank->driver_priv;
@@ -192,7 +192,7 @@ int adsp_target_poll_check_state(struct flash_bank *bank, enum target_state expe
 	long long elapsed_ms;
 	long long timeout_ms;
 
-	timeout_ms = ALGO_TIMEOUT_MAX;
+	timeout_ms = timeout;
 
 	start_ms = timeval_ms();
 

@@ -547,11 +547,21 @@ static int adspsc5xx_a5_read(struct flash_bank *bank,
 			return retval;
 	}
 
+	// Validate buffer size before use. read_size is computed as buffer_size - 1,
+	// so a buffer_size < 2 would yield read_size == 0, causing the
+	// while (count) loop to never make progress (count -= read_size) and
+	// effectively hang OpenOCD. Fail early instead.
+	if (buffer_size < 2) {
+		LOG_ERROR("Flash helper buffer_size (%" PRIu32 ") is too small; "
+			"must be at least 2 bytes", buffer_size);
+		return ERROR_FAIL;
+	}
+
 	/* Make sure read is not larger than buffer size to be passed */
 	uint32_t read_bytes = 0;
 	while (count) {
-		/* Maximum read size*/
-		uint32_t read_size = buffer_size;
+		// read size threshold of 0xFFFF is applicable to SPI protocol.
+		uint32_t read_size = buffer_size - 1;
 
 		/* Then if the actual count is smaller than the buffer size, use the count */
 		if (count < read_size)
