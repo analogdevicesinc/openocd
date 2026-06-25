@@ -108,7 +108,7 @@ static int adsp218xx_write_otp(struct flash_bank *bank, const uint8_t *buffer,
 	struct adsp_flash_bank *adsp218xx_flash_info = bank->driver_priv;
 
 	int retval;
-	int i, byte_count_orig, byte_count_rounded;
+	uint32_t byte_count_rounded;
 
 	if (offset + count > bank->size) {
 		LOG_ERROR("Write would go beyond end of supported flash size.");
@@ -121,22 +121,17 @@ static int adsp218xx_write_otp(struct flash_bank *bank, const uint8_t *buffer,
 				return retval;
 		}
 
-		byte_count_orig = (count / 2) + (count % 2);
+		/* The OTP buffer is programmed with raw binary data, rounded up to a
+		 * 32-bit word boundary.
+		 *
+		 * Any padding needed to reach the word boundary is filled with 0x00, the
+		 * erased OTP state. Writing 0x00 leaves those OTP bits unprogrammed so the
+		 * padded locations can still be written later. */
+		byte_count_rounded = ROUNDUP(count, 4);
 
-		if (byte_count_orig % 4 != 0)
-			byte_count_rounded = ROUNDUP(byte_count_orig, 4);
-		else
-			byte_count_rounded = byte_count_orig;
-
-		uint32_t send_buf[byte_count_rounded / 4];
-		char hex_str[BYTE_COUNT + 1];
-
-		for (i = 0; i < (byte_count_rounded / 4); i++) {
-			memcpy(hex_str, buffer, BYTE_COUNT);
-			hex_str[BYTE_COUNT] = '\0';
-			buffer += BYTE_COUNT;
-			send_buf[i] = (uint32_t)strtoul(hex_str, NULL, 16);
-		}
+		uint8_t send_buf[byte_count_rounded];
+		memset(send_buf, 0x00, byte_count_rounded);
+		memcpy(send_buf, buffer, count);
 
 		// Need to halt before reads/writes
 		retval = target_halt(target);
@@ -240,6 +235,21 @@ static int adsp218xx_read_otp(struct flash_bank *bank,
 
 		if (adsp_run_flash_command(bank, ALGO_TIMEOUT_MAX))
 			return ERROR_FAIL;
+
+		// Need to halt before reads/writes
+		retval = target_halt(target);
+		if (retval != ERROR_OK) {
+			LOG_ERROR("Target is not halted!");
+			target_free_working_area(target, adsp218xx_flash_info->working_area);
+			adsp218xx_flash_info->working_area = NULL;
+			return retval;
+		}
+
+		/* Check device is halted and has been probed first */
+		if (adsp_target_poll_check_state(bank, TARGET_HALTED)) {
+			LOG_ERROR("Cannot read from flash. Target is not halted!");
+			return ERROR_TARGET_NOT_HALTED;
+		}
 
 		/* Put next block of data from flash into buffer */
 		retval = target_read_buffer(target, adsp218xx_flash_info->adsp_algorithm.buffer_address,
