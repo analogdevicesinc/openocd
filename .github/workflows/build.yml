@@ -246,5 +246,5 @@ jobs:
 
       - name: Publish to Cloudsmith
         run: |
-          cloudsmith push deb adi/external/any-distro/any-version *.deb
-          cloudsmith push rpm adi/external/any-distro/any-version *.rpm
+          cloudsmith push deb adi/external/any-distro/any-version ./pkgs/*.deb
+          cloudsmith push rpm adi/external/any-distro/any-version ./pkgs/*.rpm
