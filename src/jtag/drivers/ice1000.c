@@ -2183,7 +2183,7 @@ static int ice1000_swd_queue_cmd(uint8_t cmd, uint32_t *dst, uint32_t data, uint
 		return retval;
 
 	/* all allocated packets are freed in ice1000_swd_run_queue */
-	packet = calloc(sizeof(struct swd_packet), 1);
+	packet = calloc(1, sizeof(struct swd_packet));
 	if (!packet)
 		return ERROR_FAIL;
 
