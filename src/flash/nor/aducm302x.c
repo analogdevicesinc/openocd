@@ -630,7 +630,7 @@ FLASH_BANK_COMMAND_HANDLER(aducm302x_flash_bank_command)
 	if (CMD_ARGC < 6)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
-	aducm302x_info = calloc(sizeof(struct aducm302x_flash_bank), 1);
+	aducm302x_info = calloc(1, sizeof(struct aducm302x_flash_bank));
 	if (!aducm302x_info) {
 		LOG_ERROR("calloc failed");
 		return ERROR_FAIL;
@@ -657,7 +657,7 @@ FLASH_BANK_COMMAND_HANDLER(aducm4x50_flash_bank_command)
 	if (CMD_ARGC < 6)
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
-	aducm302x_info = calloc(sizeof(struct aducm302x_flash_bank), 1);
+	aducm302x_info = calloc(1, sizeof(struct aducm302x_flash_bank));
 	if (!aducm302x_info) {
 		LOG_ERROR("calloc failed");
 		return ERROR_FAIL;
